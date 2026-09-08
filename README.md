@@ -5,7 +5,7 @@ Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 ## Intel dossiers
 
 - Intel has no global `ALL` filter: categories and their own file lists remain permanently visible in the left sidebar.
-- Common-unit photographs use the Sniper's aged beige dossier language with a large red `CLASSIFIED` stamp. Advanced units keep a separate charcoal dossier with electric-blue accents.
+- Common-unit photographs reproduce the Sniper's physical aged-paper dossier: distressed military/typewriter ink, embedded archival metadata and a worn red `CLASSIFIED` stamp. Advanced units keep a separate charcoal dossier with electric-blue accents.
 - Flags are shown only when the supplied record confirms the unit's origin; no unknown allegiance is invented.
 - SIEGE menu music is controlled by its own toggle and plays through the audible master/UI mix instead of Minecraft's ambient-music slider.
 - Common units use one consistent aged grayscale record treatment with red accents.

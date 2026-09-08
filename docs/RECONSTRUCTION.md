@@ -20,7 +20,7 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - GUI scales 1-4 retain the same left-side category and file navigation; the sidebar and record pane resize independently.
 - Supplied unit captures remain in Minecraft style, are normalized to 640x360 and receive aged paper, photographic wear and a large category-colored `CLASSIFIED` stamp that overlaps only the lower part of the subject.
 - Patriot is a confirmed Nusia unit. Its image uses the authentic supplied Nusia flag and its file does not invent missing abilities or affiliation.
-- Every common-unit image uses the Sniper's beige aged-paper archive style, desaturated Minecraft photography and a large red `CLASSIFIED` stamp crossing the lower part of the troop. Advanced dossiers deliberately use a separate dark charcoal and blue treatment.
+- Every common-unit image uses the Sniper's beige aged-paper archive style, desaturated Minecraft photography, distressed ink embedded into the paper, secondary metadata blocks and a worn red `CLASSIFIED` stamp crossing the lower part of the troop. Clean digital overlay typography is not used. Advanced dossiers deliberately use a separate dark charcoal and blue treatment.
 - Jetpacker and Stalker use their corrected owner-supplied Minecraft captures. Troop models retain Minecraft proportions and equipment.
 - Only records explicitly confirmed as Nusia display the supplied Nusia flag. Unconfirmed records display no flag and make no origin claim.
 - Singleplayer has no visible button. Staff can open the vanilla world-selection screen with the undocumented Ctrl+S chord.
