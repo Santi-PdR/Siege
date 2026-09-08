@@ -3,11 +3,13 @@ name: Build Forge mod
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'dist/**'
   pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -28,3 +30,19 @@ jobs:
           name: siege-menu-${{ github.sha }}
           path: build/libs/*.jar
           if-no-files-found: error
+      - name: Publish validated jar for Windows installer
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          jar_path="$(find build/libs -maxdepth 1 -type f -name 'siege-menu-*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -n 1)"
+          test -n "$jar_path"
+          mkdir -p dist
+          rm -f dist/siege-menu-*.jar
+          cp "$jar_path" dist/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f dist/
+          if ! git diff --cached --quiet; then
+            git commit -m "build: publish validated Siege jar [skip ci]"
+            git push
+          fi

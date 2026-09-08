@@ -25,9 +25,11 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 
 ## Builds
 
-- GitHub Actions compiles every main-branch push using Temurin Java 17 and Gradle 8.8, then uploads the jar as a workflow artifact.
-- `scripts/build-and-deploy.ps1` downloads the same Gradle version, builds locally and deploys only to SKLauncher instance `test-1`.
-- `scripts/install-latest.ps1` is the standalone Windows entry point: it clones a clean copy of `main`, builds it with Java 17 and replaces only previous `siege-menu-*.jar` files in `test-1`.
+- GitHub Actions is the only compilation environment. Every pull request and main-branch source push is compiled and verified with Temurin Java 17 and Gradle 8.8.
+- After a successful main build, the workflow publishes the validated runtime JAR in `dist/` and uploads the normal workflow artifact.
+- `scripts/build-and-deploy.ps1` performs deployment only: it copies the GitHub-built JAR to SKLauncher instance `test-1`. It never invokes Java or Gradle.
+- `scripts/install-latest.ps1` is the standalone Windows entry point: it clones a clean copy of `main` and installs the validated JAR, replacing only previous `siege-menu-*.jar` files in `test-1`.
+- The Java version installed on the player's computer does not affect deployment.
 
 ## Design rule
 
