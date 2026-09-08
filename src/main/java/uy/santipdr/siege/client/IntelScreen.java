@@ -185,7 +185,7 @@ public final class IntelScreen extends Screen {
 
     private void renderFile(GuiGraphics g, IntelEntry e, int x, int y, int availableW, boolean compact) {
         IntelEntry.IntelText t = e.text(spanish());
-        int accent = e.threat() >= 4 ? 0xFFFFB020 : e.category().equals("ADVANCED") ? 0xFFFF5555 : 0xFF56C8FF;
+        int accent = categoryAccent(e.category());
         g.drawString(font, (compact ? "" : "FILE: ") + e.code() + " / " + e.name(), x, y, 0xFFF4F4F4, false);
         g.drawString(font, stars(e.threat()) + "  HP " + e.hp() + "  " + categoryLabel(e.category()), x, y + 16, accent, false);
         int imageW = compact ? Math.min(168, Math.max(104, width / 3)) : Math.min(240, Math.max(180, availableW / 2));
@@ -204,6 +204,17 @@ public final class IntelScreen extends Screen {
     }
 
     private String label(String es, String en) { return spanish() ? es : en; }
+    private int categoryAccent(String value) {
+        return switch (value) {
+            case "UNIT" -> 0xFFD94A4A;
+            case "ADVANCED" -> 0xFF2F80FF;
+            case "TANK" -> 0xFFD98A2B;
+            case "BOSS" -> 0xFFB5162D;
+            case "ELITE" -> 0xFF9B59D0;
+            case "SUPER-UNIT" -> 0xFFE0B93F;
+            default -> 0xFFB8C0C8;
+        };
+    }
     private String stars(int count) { return "★".repeat(Math.max(0, count)) + "☆".repeat(Math.max(0, 5 - count)); }
     private static IntelEntry file(String code, String name, String category, int threat, String hp, String image,
                                    String esOrigin, String esArmament, String esVariants, String esStatus, String esDescription, String esAdvisory,
