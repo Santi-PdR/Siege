@@ -15,6 +15,8 @@ public final class SiegeClientEvents {
     public static void onScreenOpening(ScreenEvent.Opening event) {
         if (event.getScreen() instanceof TitleScreen) {
             event.setNewScreen(new SiegeTitleScreen());
+        } else if (!(event.getScreen() instanceof SiegeTitleScreen) && !(event.getScreen() instanceof IntelScreen)) {
+            SiegeMusic.stop();
         }
     }
 }

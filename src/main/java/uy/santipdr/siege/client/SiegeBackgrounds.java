@@ -10,7 +10,8 @@ import java.util.List;
 public final class SiegeBackgrounds {
     private static final List<ResourceLocation> SCENES = List.of(
             scene("dummies_assault"), scene("anniversary"), scene("frontline_19"),
-            scene("cyborg"), scene("last_stand"), scene("vought_siege"), scene("earth_orbit")
+            scene("cyborg"), scene("last_stand"), scene("vought_siege"), scene("earth_orbit"),
+            scene("canyon_engagement"), scene("night_battle")
     );
     private static final long SCENE_MS = 18_000L;
     private static final long FADE_MS = 1_600L;

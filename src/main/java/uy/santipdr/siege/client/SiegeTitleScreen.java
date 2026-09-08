@@ -6,7 +6,9 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 
 public final class SiegeTitleScreen extends Screen {
     public SiegeTitleScreen() { super(Component.literal("Eternal Craft: SIEGE")); }
@@ -30,6 +32,7 @@ public final class SiegeTitleScreen extends Screen {
     }
 
     @Override public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        SiegeMusic.ensurePlaying();
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         Component eternal = Component.literal("ETERNAL CRAFT");
         Component siege = Component.literal("S  I  E  G  E");
@@ -41,5 +44,12 @@ public final class SiegeTitleScreen extends Screen {
     }
 
     @Override public boolean isPauseScreen() { return false; }
-}
 
+    @Override public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_S && Screen.hasControlDown()) {
+            minecraft.setScreen(new SelectWorldScreen(this));
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+}

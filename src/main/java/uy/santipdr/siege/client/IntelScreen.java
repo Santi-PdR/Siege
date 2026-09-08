@@ -37,6 +37,7 @@ public final class IntelScreen extends Screen {
     }
 
     @Override public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        SiegeMusic.ensurePlaying();
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, 66, 0xEB050505);
         g.fill(0, 66, 368, height, 0xD927252A);
@@ -67,4 +68,3 @@ public final class IntelScreen extends Screen {
 
     @Override public void onClose() { minecraft.setScreen(parent); }
 }
-
