@@ -13,19 +13,30 @@ import java.util.List;
 
 public final class SiegeMusic {
     private static final List<RegistryObject<SoundEvent>> TRACKS = List.of(
-            SiegeMod.TALE_CRUEL_WORLD, SiegeMod.DARKEST_OF_DAYS,
-            SiegeMod.KAPTAIN_MUSIC_BOX, SiegeMod.HEAVENS_GIFT
+            SiegeMod.TALE_CRUEL_WORLD,
+            SiegeMod.DARKEST_OF_DAYS,
+            SiegeMod.KAPTAIN_MUSIC_BOX,
+            SiegeMod.HEAVENS_GIFT
     );
     private static final List<Integer> queue = new ArrayList<>();
     private static SoundInstance active;
     private static int previous = -1;
+    private static long lastStartAttempt;
 
-    private SiegeMusic() {}
+    private SiegeMusic() { }
 
     public static void ensurePlaying() {
-        if (!SiegeConfig.music) { stop(); return; }
-        var manager = Minecraft.getInstance().getSoundManager();
+        Minecraft minecraft = Minecraft.getInstance();
+        minecraft.getMusicManager().stopPlaying();
+        if (!SiegeConfig.music) {
+            stop();
+            return;
+        }
+        var manager = minecraft.getSoundManager();
         if (active != null && manager.isActive(active)) return;
+        long now = System.currentTimeMillis();
+        if (now - lastStartAttempt < 750L) return;
+        lastStartAttempt = now;
         playNext(false);
     }
 
@@ -36,15 +47,17 @@ public final class SiegeMusic {
 
     private static void playNext(boolean stopCurrent) {
         var manager = Minecraft.getInstance().getSoundManager();
-        if (stopCurrent && active != null) manager.stop(active);
+        if (active != null && (stopCurrent || manager.isActive(active))) manager.stop(active);
         if (queue.isEmpty()) refillQueue();
         int next = queue.remove(0);
         previous = next;
         active = SimpleSoundInstance.forMusic(TRACKS.get(next).get());
         manager.play(active);
+        lastStartAttempt = System.currentTimeMillis();
     }
 
     private static void refillQueue() {
+        queue.clear();
         for (int i = 0; i < TRACKS.size(); i++) queue.add(i);
         Collections.shuffle(queue);
         if (queue.size() > 1 && queue.get(0) == previous) Collections.swap(queue, 0, 1);
