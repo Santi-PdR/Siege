@@ -8,8 +8,9 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - Cinematic rotating backgrounds with crossfades, restrained camera drift, scanlines and contrast overlays.
 - Main commands: Deployment, Intel, Armory, Command Terminal and Quit.
 - Intel opens an intelligence database with category filters, file list, threat, armament, variants, status, description and tactical advisory.
-- Intel contains nine illustrated records reconstructed from the supplied field manual: Infantry, Shielder, Saboteur, Stalker, Natzuka, Sniper, Grenadier, Gunner and Jetpacker.
-- Patriot remains excluded because the supplied manual contains only its heading, without enough canonical information for a record.
+- Intel categories are Units, Advanced, Tanks, Bosses, Elites and Super-Unit.
+- The ten current records are all Units: Infantry, Shielder, Saboteur, Stalker, Natzuka, Sniper, Grenadier, Gunner, Jetpacker and Patriot.
+- Patriot intentionally uses an incomplete classified record and provisional lore until the complete SIEGE canon is supplied.
 - Singleplayer has no visible button. Staff can open the vanilla world-selection screen with the undocumented Ctrl+S chord.
 - Menu music is randomized without immediate repeats and stops outside SIEGE menu screens.
 - `DVN lobby music.ogg` contributes only Kaptain - Music Box (02:58–05:19).
