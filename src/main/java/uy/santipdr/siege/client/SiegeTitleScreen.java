@@ -15,11 +15,12 @@ public final class SiegeTitleScreen extends Screen {
     @Override protected void init() {
         SiegeUiSounds.resetHover();
         int w = Math.min(294, Math.max(170, width - 24));
-        int h = height < 320 ? 22 : 30;
-        int gap = height < 320 ? 4 : 9;
+        int h = height < 220 ? 18 : height < 320 ? 22 : 30;
+        int gap = height < 220 ? 2 : height < 320 ? 4 : 9;
         int total = h * 5 + gap * 4;
         int x = width < 700 ? (width - w) / 2 : Math.min(30, width - w - 12);
-        int y = Math.max(88, Math.min(height - total - 24, (height - total) / 2 + 22));
+        int y = height < 220 ? Math.max(52, Math.min(70, height - total - 10))
+                : Math.max(76, Math.min(height - total - 18, (height - total) / 2 + 16));
         addRenderableWidget(command(x, y, w, h, "siege.menu.deployment", b -> minecraft.setScreen(new JoinMultiplayerScreen(this))));
         addRenderableWidget(command(x, y += h + gap, w, h, "siege.menu.intel", b -> minecraft.setScreen(new IntelScreen(this))));
         addRenderableWidget(command(x, y += h + gap, w, h, "siege.menu.armory", b -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
@@ -38,7 +39,7 @@ public final class SiegeTitleScreen extends Screen {
 
     @Override public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying(); SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
-        int titleY = height < 300 ? 42 : 54;
+        int titleY = height < 220 ? 34 : height < 300 ? 42 : 54;
         g.drawCenteredString(font, Component.literal("ETERNAL CRAFT"), width / 2, titleY, 0xFFF4F1E9);
         g.drawCenteredString(font, Component.literal("S  I  E  G  E"), width / 2, titleY + 18, 0xFFFF5555);
         if (width >= 520) g.drawString(font, "REC", width - 54, 38, 0xFFFF5555, false);

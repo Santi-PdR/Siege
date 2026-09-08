@@ -16,11 +16,11 @@ public final class SiegeSettingsScreen extends Screen {
     @Override protected void init() {
         SiegeUiSounds.resetHover();
         int w = Math.min(360, Math.max(180, width - 32));
-        int h = height < 300 ? 20 : 24;
-        int gap = height < 300 ? 4 : 7;
+        int h = height < 220 ? 18 : height < 300 ? 20 : 24;
+        int gap = height < 220 ? 2 : height < 300 ? 4 : 7;
         int total = h * 6 + gap * 5;
         int x = (width - w) / 2;
-        int y = Math.max(48, (height - total) / 2);
+        int y = Math.max(height < 220 ? 32 : 48, (height - total) / 2);
         addRenderableWidget(toggle(x, y, w, h, "siege.settings.music", () -> {
             SiegeConfig.music = !SiegeConfig.music;
             if (!SiegeConfig.music) SiegeMusic.stop(); else SiegeMusic.ensurePlaying();
@@ -57,7 +57,7 @@ public final class SiegeSettingsScreen extends Screen {
         SiegeMusic.ensurePlaying();
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, 0x79000000);
-        g.drawCenteredString(font, title, width / 2, 22, 0xFFFF5555);
+        g.drawCenteredString(font, title, width / 2, height < 220 ? 14 : 22, 0xFFFF5555);
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
     }
