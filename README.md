@@ -13,6 +13,6 @@ The full category palette and verified unit-origin rules are documented in `docs
 
 ## Build and deploy
 
-Requirements: Git and Java 17.
+GitHub Actions is the only build environment. It compiles and verifies the mod with Temurin Java 17 and Gradle 8.8, then publishes the validated JAR in `dist/`.
 
-Run `scripts/install-latest.ps1` from PowerShell to clone the current `main`, compile the mod and deploy it exclusively to the SKLauncher instance `test-1`.
+Windows only requires Git. Run `scripts/install-latest.ps1` from PowerShell to clone the current `main` and copy the GitHub-built JAR exclusively to the SKLauncher instance `test-1`. The installer does not invoke local Java or Gradle, so the system Java version is irrelevant.
