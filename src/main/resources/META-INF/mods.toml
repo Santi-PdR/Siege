@@ -1,0 +1,26 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="siege"
+version="${version}"
+displayName="Eternal Craft: SIEGE Menu"
+authors="Santi-PdR"
+description='''A cinematic client menu and intelligence database for Eternal Craft: SIEGE.'''
+displayTest="IGNORE_SERVER_VERSION"
+
+[[dependencies.siege]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.siege]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.21)"
+ordering="NONE"
+side="CLIENT"
+

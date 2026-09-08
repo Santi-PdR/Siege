@@ -1,0 +1,11 @@
+{
+  "siege.menu.deployment": "DESPLIEGUE",
+  "siege.menu.intel": "INTEL",
+  "siege.menu.armory": "ARSENAL",
+  "siege.menu.command": "TERMINAL DE MANDO",
+  "siege.menu.quit": "SALIR DEL JUEGO",
+  "siege.intel.title": "BASE DE DATOS DE INTELIGENCIA",
+  "siege.intel.return": "VOLVER",
+  "siege.intel.classified": "CLASIFICADO"
+}
+

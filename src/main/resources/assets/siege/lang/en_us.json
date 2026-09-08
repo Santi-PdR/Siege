@@ -1,0 +1,11 @@
+{
+  "siege.menu.deployment": "DEPLOYMENT",
+  "siege.menu.intel": "INTEL",
+  "siege.menu.armory": "ARMORY",
+  "siege.menu.command": "COMMAND TERMINAL",
+  "siege.menu.quit": "QUIT GAME",
+  "siege.intel.title": "INTELLIGENCE DATABASE",
+  "siege.intel.return": "RETURN",
+  "siege.intel.classified": "CLASSIFIED"
+}
+
