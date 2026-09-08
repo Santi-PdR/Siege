@@ -51,7 +51,9 @@ public final class SiegeMusic {
         if (queue.isEmpty()) refillQueue();
         int next = queue.remove(0);
         previous = next;
-        active = SimpleSoundInstance.forMusic(TRACKS.get(next).get());
+        // SIEGE owns its menu soundtrack toggle.  Using the UI/master channel keeps the
+        // soundtrack audible even when Minecraft's unrelated ambient-music slider is at 0.
+        active = SimpleSoundInstance.forUI(TRACKS.get(next).get(), 1.0F, 0.72F);
         manager.play(active);
         lastStartAttempt = System.currentTimeMillis();
     }
