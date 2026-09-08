@@ -41,11 +41,10 @@ public final class SiegeBackgrounds {
         RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
         int overscan = 8;
         int x = -overscan + Math.round(drift * w);
-        g.blit(texture, x, -overscan, 0, 0, w + overscan * 2, h + overscan * 2,
-                w + overscan * 2, h + overscan * 2);
+        g.blit(texture, x, -overscan, w + overscan * 2, h + overscan * 2,
+                0, 0, 960, 540, 960, 540);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
     }
 
     private static float smooth(float x) { return x * x * (3f - 2f * x); }
 }
-
