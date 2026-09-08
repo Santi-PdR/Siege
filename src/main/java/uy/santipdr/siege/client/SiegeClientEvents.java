@@ -10,13 +10,10 @@ import uy.santipdr.siege.SiegeMod;
 @Mod.EventBusSubscriber(modid = SiegeMod.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class SiegeClientEvents {
     private SiegeClientEvents() {}
-
-    @SubscribeEvent
-    public static void onScreenOpening(ScreenEvent.Opening event) {
-        if (event.getScreen() instanceof TitleScreen) {
-            event.setNewScreen(new SiegeTitleScreen());
-        } else if (!(event.getScreen() instanceof SiegeTitleScreen) && !(event.getScreen() instanceof IntelScreen)) {
-            SiegeMusic.stop();
-        }
+    @SubscribeEvent public static void onScreenOpening(ScreenEvent.Opening event) {
+        if (event.getScreen() instanceof TitleScreen) event.setNewScreen(new SiegeTitleScreen());
+        else if (!(event.getScreen() instanceof SiegeTitleScreen)
+                && !(event.getScreen() instanceof IntelScreen)
+                && !(event.getScreen() instanceof SiegeSettingsScreen)) SiegeMusic.stop();
     }
 }

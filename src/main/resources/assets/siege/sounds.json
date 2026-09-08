@@ -2,5 +2,9 @@
   "music.tale_cruel_world": {"sounds":[{"name":"siege:music/tale_cruel_world","stream":true}]},
   "music.darkest_of_days": {"sounds":[{"name":"siege:music/darkest_of_days","stream":true}]},
   "music.kaptain_music_box": {"sounds":[{"name":"siege:music/kaptain_music_box","stream":true}]},
-  "music.heavens_hell_sent_gift": {"sounds":[{"name":"siege:music/heavens_hell_sent_gift","stream":true}]}
+  "music.heavens_hell_sent_gift": {"sounds":[{"name":"siege:music/heavens_hell_sent_gift","stream":true}]},
+  "ui.hover": {"sounds":[{"name":"siege:ui/hover"}]},
+  "ui.click": {"sounds":[{"name":"siege:ui/click"}]},
+  "ui.back": {"sounds":[{"name":"siege:ui/back"}]},
+  "ui.track": {"sounds":[{"name":"siege:ui/track"}]}
 }
