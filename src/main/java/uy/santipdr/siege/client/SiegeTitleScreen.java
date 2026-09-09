@@ -44,7 +44,7 @@ public final class SiegeTitleScreen extends Screen {
         addRenderableWidget(command(menuX, y, menuWidth, buttonHeight, "siege.menu.deployment",
                 b -> minecraft.setScreen(new JoinMultiplayerScreen(this))));
         addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.intel",
-                b -> minecraft.setScreen(new IntelScreenV2(this))));
+                b -> minecraft.setScreen(new IntelScreenV3(this))));
         addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.armory",
                 b -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
         addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.settings",
@@ -99,7 +99,7 @@ public final class SiegeTitleScreen extends Screen {
                     height - 14, 0xFF929AA1, false);
         }
         if (width >= 610) {
-            graphics.drawString(font, "BUILD 0.6.1 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
+            graphics.drawString(font, "BUILD 0.6.2 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -130,51 +130,76 @@ public final class SiegeTitleScreen extends Screen {
     }
 
     /**
-     * Reduced Intel feed: Units + Advanced only. It disappears automatically when
-     * the logical screen is too small, which keeps GUI scale 4 and small windows clean.
+     * Small operational Intel cards. GUI scale 1-2 gets one Unit and one Advanced
+     * card at the same time; scale 3 gets a single alternating card; GUI scale 4
+     * deliberately hides the feed so the command menu keeps enough room.
      */
     private void renderIntelPreview(GuiGraphics g, int leftPanelRight) {
-        if (width < 720 || height < 350) return;
-        List<IntelEntry> entries = IntelCatalog.previewable();
-        if (entries.isEmpty()) return;
+        if (minecraft == null) return;
+        double guiScale = minecraft.getWindow().getGuiScale();
+        if (guiScale >= 3.75D || width < 460 || height < 248) return;
 
-        int previewWidth = Math.min(300, Math.max(230, width / 5));
-        int previewHeight = 112;
-        int x = width - previewWidth - 16;
-        int y = Math.max(52, height - previewHeight - 34);
-        if (x <= leftPanelRight + 18) return;
+        List<IntelEntry> units = IntelCatalog.filtered("UNIT");
+        List<IntelEntry> advanced = IntelCatalog.filtered("ADVANCED");
+        if (units.isEmpty() && advanced.isEmpty()) return;
 
-        int index = (int)((System.currentTimeMillis() / 7000L) % entries.size());
-        IntelEntry entry = entries.get(index);
+        boolean dual = guiScale < 2.75D && width >= 650 && height >= 330 && !units.isEmpty() && !advanced.isEmpty();
+        int cardWidth = dual ? Math.min(270, Math.max(218, width / 4)) : Math.min(250, Math.max(190, width / 3));
+        int cardHeight = dual ? 78 : 92;
+        int x = width - cardWidth - 14;
+        if (x <= leftPanelRight + 16) {
+            x = leftPanelRight + 16;
+            cardWidth = width - x - 14;
+        }
+        if (cardWidth < 176) return;
+
+        long epoch = System.currentTimeMillis() / 8_500L;
+        if (dual) {
+            int totalHeight = cardHeight * 2 + 8;
+            int y = Math.max(50, Math.min(height - totalHeight - 28, (height - totalHeight) / 2));
+            IntelEntry unit = units.get((int) (epoch % units.size()));
+            IntelEntry adv = advanced.get((int) ((epoch + 2) % advanced.size()));
+            renderIntelCard(g, unit, x, y, cardWidth, cardHeight, false);
+            renderIntelCard(g, adv, x, y + cardHeight + 8, cardWidth, cardHeight, false);
+        } else {
+            boolean showAdvanced = !advanced.isEmpty() && (units.isEmpty() || (epoch & 1L) == 1L);
+            List<IntelEntry> source = showAdvanced ? advanced : units;
+            IntelEntry entry = source.get((int) ((epoch / 2L) % source.size()));
+            int y = Math.max(52, height - cardHeight - 31);
+            renderIntelCard(g, entry, x, y, cardWidth, cardHeight, true);
+        }
+    }
+
+    private void renderIntelCard(GuiGraphics g, IntelEntry entry, int x, int y, int w, int h, boolean twoLines) {
         IntelEntry.IntelText text = entry.text(spanish());
-        int accent = entry.category().equals("ADVANCED") ? 0xFF2F80FF : 0xFFD94A4A;
+        boolean advanced = entry.category().equals("ADVANCED");
+        int accent = advanced ? 0xFF2F80FF : 0xFFD94A4A;
+        String type = advanced ? label("AVANZADO", "ADVANCED") : label("UNIDAD", "UNIT");
 
-        g.fill(x + 3, y + 3, x + previewWidth + 3, y + previewHeight + 3, 0x60000000);
-        g.fill(x, y, x + previewWidth, y + previewHeight, 0xE90A0F13);
-        g.fill(x, y, x + previewWidth, y + 2, accent);
-        g.fill(x, y, x + 2, y + previewHeight, accent);
-        g.fill(x + 8, y + 26, x + previewWidth - 8, y + 27, 0xFF28343C);
+        g.fill(x + 3, y + 3, x + w + 3, y + h + 3, 0x5A000000);
+        g.fill(x, y, x + w, y + h, 0xEA080D11);
+        g.fill(x, y, x + w, y + 2, accent);
+        g.fill(x, y, x + 2, y + h, accent);
+        g.fill(x + 8, y + 23, x + w - 8, y + 24, 0xFF27343C);
 
-        String header = label("INTEL DE CAMPO // RESUMEN", "FIELD INTEL // SUMMARY");
-        g.drawString(font, header, x + 9, y + 8, 0xFF9CA8AF, false);
-        String counter = String.format("%02d/%02d", index + 1, entries.size());
-        g.drawString(font, counter, x + previewWidth - 9 - font.width(counter), y + 8, 0xFF68747C, false);
+        String header = type + " // " + entry.code();
+        g.drawString(font, font.plainSubstrByWidth(header, w - 18), x + 9, y + 7, 0xFF9EA9B0, false);
+        g.drawString(font, entry.name(), x + 9, y + 29, 0xFFF1EEE8, false);
 
-        String categoryText = entry.category().equals("ADVANCED") ? label("AVANZADO", "ADVANCED") : label("UNIDAD", "UNIT");
-        g.drawString(font, entry.name(), x + 9, y + 33, 0xFFF1EEE8, false);
-        String meta = entry.code() + " // " + categoryText + " // " + label("AMENAZA ", "THREAT ") + entry.threat() + "/5 // HP " + entry.hp();
-        g.drawString(font, font.plainSubstrByWidth(meta, previewWidth - 18), x + 9, y + 46, accent, false);
+        String meta = label("AMENAZA ", "THREAT ") + entry.threat() + "/5  //  HP " + entry.hp();
+        g.drawString(font, font.plainSubstrByWidth(meta, w - 18), x + 9, y + 41, accent, false);
 
-        int textY = y + 61;
-        int linesDrawn = 0;
-        for (FormattedCharSequence line : font.split(Component.literal(text.description()), previewWidth - 18)) {
-            if (linesDrawn >= 2) break;
-            g.drawString(font, line, x + 9, textY + linesDrawn * 11, 0xFFC2C8CC, false);
-            linesDrawn++;
+        int textY = y + 54;
+        int maxLines = twoLines ? 2 : 1;
+        int lines = 0;
+        for (FormattedCharSequence line : font.split(Component.literal(text.description()), w - 18)) {
+            if (lines >= maxLines) break;
+            g.drawString(font, line, x + 9, textY + lines * 10, 0xFFBCC4C9, false);
+            lines++;
         }
 
-        String footer = label("> MÁS INFORMACIÓN: ABRIR INTEL", "> MORE INFORMATION: OPEN INTEL");
-        g.drawString(font, font.plainSubstrByWidth(footer, previewWidth - 18), x + 9, y + previewHeight - 15, 0xFF7FC7D9, false);
+        String footer = label("> INTEL: EXPEDIENTE COMPLETO", "> INTEL: OPEN FULL FILE");
+        g.drawString(font, font.plainSubstrByWidth(footer, w - 18), x + 9, y + h - 12, 0xFF7FC7D9, false);
     }
 
     private boolean spanish() {

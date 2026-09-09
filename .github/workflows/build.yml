@@ -23,6 +23,29 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.8'
+      - name: Restore generated Intel source
+        shell: bash
+        run: |
+          gzip -dc assets-source/generated/IntelScreenV3.java.gz > src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+      - name: Prepare Intel dossier overlays
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet pillow numpy
+          python3 scripts/prepare-intel-assets.py
+      - name: Prepare full SIEGE soundtrack
+        shell: bash
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
+            # Chrome is unrelated to this build and its hosted-runner mirror can become
+            # temporarily inconsistent. Disable any Chrome source file (.list or .sources)
+            # before refreshing the Ubuntu package indexes used for ffmpeg.
+            while IFS= read -r source_file; do
+              sudo mv "$source_file" "$source_file.disabled"
+            done < <(grep -rl 'dl\.google\.com/linux/chrome' /etc/apt/sources.list.d 2>/dev/null || true)
+            sudo apt-get update -o Acquire::Retries=3
+            sudo apt-get install -y --no-install-recommends ffmpeg
+          fi
+          bash scripts/prepare-music.sh
       - name: Compile and verify
         run: gradle --no-daemon clean build
       - uses: actions/upload-artifact@v4
