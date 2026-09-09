@@ -19,6 +19,8 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - The six Advanced records are Specialist, Demoman, Artiller, Cloaker, APU and Missiler. All originate from the Republic of Nusia.
 - The five Tank records are Zapper, Combatant, Agreement, Jagant and Strider. Zapper and Combatant are confirmed Nusia units; Agreement is linked to Secure Contain Protect; Jagant and Strider retain unknown origins.
 - Zapper, Combatant and Agreement report 3,000 HP / 100 DEF. Jagant and Strider report 2,500 HP / 100 DEF. Missing threat, armament or role data is displayed as unknown instead of being invented.
+- The nine Boss records are Tempest, Fusilier, Achilles, Trident, Prometheus, Daedalus, Hermes, Lelantos and Gaia. Known HP values are preserved exactly; Daedalus remains `N/D` because no HP value was supplied.
+- Tempest, Fusilier, Achilles, Trident, Prometheus and Daedalus use the supplied operational descriptions and warnings. Hermes, Lelantos and Gaia contain only their supplied HP and recovered video status; appearance is never used to invent abilities.
 - Demoman intentionally reports `NAN HP`. APU reports 120,000 HP and 0.75 defence, adjusted by difficulty.
 - Confirmed Nusia records are Sniper, Grenadier, Gunner, Patriot, Specialist, Demoman, Artiller, Cloaker, APU and Missiler. No flag or country is assigned to Infantry, Shielder, Saboteur, Stalker, Natzuka or Jetpacker because their supplied records do not confirm an origin.
 - The authentic Nusia flag uses vertical yellow, blue and green fields with four yellow stars on the central blue field. Substitute flags and real-world national flags are forbidden.
@@ -27,11 +29,12 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - Intel records and tactical text are available in Spanish and English, including their configured Minecraft locale variants.
 - Supplied unit captures remain in Minecraft style, are normalized to 640x360 and receive their category-specific dossier treatment. Strider retains its recovered non-Minecraft render because that is the only supplied visual record.
 - Patriot is a confirmed Nusia unit. Its file does not invent missing abilities or deployment details.
-- Patriot is the deliberate exception to the supplied-pixel rule: the incorrect Minecraft stand-in is replaced by an owner-requested, visible charcoal portrait of an unidentified person. The dossier frame, Nusia affiliation and censorship treatment remain intact.
+- Patriot is the deliberate exception to the supplied-pixel rule: the incorrect Minecraft-style scene is replaced by an owner-requested, paper-rooted sketch that preserves the supplied Roblox silhouette, helmet, rifle and Nusia flag. It must look drawn into the physical file rather than pasted onto a game background.
 - Jetpacker and Stalker use their corrected owner-supplied Minecraft captures. Troop models retain Minecraft proportions and equipment.
-- The named folders in the owner's definitive ZIP remain the portrait source for common and advanced records. `assets-source/intel-raw/tanks` preserves the five owner-supplied Tank captures used by the deterministic dossier generator.
-- The main menu shows reduced Intel summaries containing Unit, Advanced and Tank records when logical space permits. GUI scales 1-2 may show two rotating records simultaneously, scale 3 uses one rotating card, and scale 4 hides the preview to protect readability.
-- Main-menu Intel cards use curated complete-sentence summaries. The line budget never slices a troop description in the middle of a phrase, and `INTEL: EXPEDIENTE COMPLETO` is rendered without substring truncation.
+- The named folders in the owner's definitive ZIP remain the portrait source for common and advanced records. `assets-source/intel-raw/tanks` preserves the five owner-supplied Tank captures, while `assets-source/intel-raw/bosses` preserves six representative frames per owner-supplied Boss video.
+- Full MP4 files are not packaged into Minecraft. CI deterministically turns the 54 source frames into compact 640x360 dossier PNGs, giving every boss—including Hermes—the same classified motion-record presentation.
+- The main menu shows reduced Intel summaries containing Unit, Advanced, Tank and Boss records when logical space permits. GUI scales 1-2 may show two rotating records simultaneously, scale 3 uses one rotating card, and scale 4 hides the preview to protect readability.
+- Main-menu Intel cards use longer curated summaries and prefer two complete sentences. When the line budget is smaller, the renderer removes complete trailing sentences; it never slices a description in the middle of a phrase, and `INTEL: EXPEDIENTE COMPLETO` remains complete.
 - Singleplayer has no visible button. Staff can open the vanilla world-selection screen with the undocumented Ctrl+S chord.
 
 ## Settings architecture
@@ -41,8 +44,8 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - Overview is informational and explains the responsibility of the other sections while showing a reduced client-status summary.
 - Wide layouts use a SIEGE tactical navigation rail. Compact/high-GUI-scale layouts use a responsive section grid.
 - Music contains menu-music enable/disable, live volume, current playback state and manual track advance.
-- Interface contains UI feedback sounds and rotating-background behavior.
-- Accessibility contains reduced motion.
+- Interface contains UI feedback sounds, rotating-background behavior and an independent Boss Intel animation switch.
+- Accessibility contains reduced motion, which also freezes Boss motion records on their first frame.
 - Graphics owns the menu visual profile.
 - Section navigation and controls use SIEGE-owned buttons/sliders rather than vanilla button textures or vanilla click audio.
 
@@ -57,7 +60,7 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - The shuffled queue completes a full cycle before refilling and avoids an immediate repeat at cycle boundaries.
 - Vanilla menu music is periodically suppressed while SIEGE owns menu audio so two soundtracks cannot overlap.
 - GitHub Actions converts owner soundtrack sources to Ogg Vorbis and measures their actual encoded duration with `ffprobe` before compiling the JAR.
-- Repository-history soundtrack binaries have been integrity-audited. Their valid Ogg audio ends at roughly 22.8s (`Tale of a Cruel World`), 25.0s (`Darkest of Days`), 25.1s (`Kaptain Music Box`) and 24.0s (`Heaven's Hell-Sent Gift`); the remaining historical bytes are damaged/trailing data and do not contain recoverable valid pages. Clean full masters must be supplied again to restore longer versions.
+- CI rejects the earlier damaged 22-25 second soundtrack blobs. The current authoritative owner-supplied masters are converted and measured during the build, so truncated audio cannot silently ship again.
 
 ## Background presentation
 
@@ -68,7 +71,7 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 ## Builds
 
 - GitHub Actions is the only compilation environment. It uses Temurin Java 17 and Gradle 8.8, uploads the artifact and publishes the validated runtime JAR under `dist/`.
-- CI restores the generated Intel V3 source, applies dossier overlays, prepares/validates soundtrack assets and only then compiles Forge.
+- CI restores the generated Intel V3 source, applies dossier overlays, generates and validates all Boss motion-record frames, prepares/validates soundtrack assets and only then compiles Forge.
 - Windows scripts never invoke local Java or Gradle. They install only the GitHub-built JAR in SKLauncher instance `test-1`.
 - Packaged menu music must be valid Ogg Vorbis; Opus-in-Ogg is not used directly by Minecraft 1.20.1.
 

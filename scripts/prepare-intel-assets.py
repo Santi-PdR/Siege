@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Polish dossier affiliation blocks while preserving supplied troop pixels."""
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 import math
 import random
 import zlib
@@ -10,6 +10,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 INTEL = ROOT / "src/main/resources/assets/siege/textures/gui/intel"
 RAW_TANKS = ROOT / "assets-source/intel-raw/tanks"
+RAW_BOSSES = ROOT / "assets-source/intel-raw/bosses"
 
 CONFIRMED = {
     "sniper", "grenadier", "gunner", "patriot",
@@ -25,6 +26,18 @@ TANK_SPECS = {
     "jagant": ("TNK-004", "JAGANT"),
     "strider": ("TNK-005", "STRIDER"),
 }
+BOSS_SPECS = {
+    "tempest": ("BOS-001", "TEMPEST"),
+    "fusilier": ("BOS-002", "FUSILIER"),
+    "achilles": ("BOS-003", "ACHILLES"),
+    "trident": ("BOS-004", "TRIDENT"),
+    "prometheus": ("BOS-005", "PROMETHEUS"),
+    "daedalus": ("BOS-006", "DAEDALUS"),
+    "hermes": ("BOS-007", "HERMES"),
+    "lelantos": ("BOS-008", "LELANTOS"),
+    "gaia": ("BOS-009", "GAIA"),
+}
+BOSS_FRAME_COUNT = 6
 EXPECTED = {
     "infantry", "shielder", "saboteur", "stalker", "natzuka", "sniper", "grenadier", "gunner", "jetpacker", "patriot",
     "specialist", "demoman", "artiller", "cloaker", "apu", "missiler",
@@ -192,6 +205,112 @@ def generate_tank_dossiers():
         raise SystemExit("Missing Tank sources: " + ", ".join(missing))
 
 
+def boss_dossier_frame(name, code, display_name, frame_index, source, destination):
+    """Turn one supplied boss-video frame into a compact archival motion record."""
+    seed = seed_for(name, 30 + frame_index)
+    rng = random.Random(seed)
+    canvas = paper_noise((640, 360), (199, 190, 169), seed, 8)
+    draw = ImageDraw.Draw(canvas, "RGBA")
+    accent = (157, 25, 39, 235)
+
+    raw = Image.open(source).convert("RGBA")
+    # The supplied videos carry a presentation title in the upper-left corner.
+    # Remove that capture-only overlay before fitting the evidence into SIEGE's dossier.
+    raw = raw.crop((0, min(120, raw.height // 4), raw.width, raw.height))
+    photo_box = (13, 58, 627, 326)
+    photo_size = (photo_box[2] - photo_box[0], photo_box[3] - photo_box[1])
+    photo = fit_cover(raw, photo_size)
+    photo = ImageEnhance.Color(photo).enhance(.58)
+    photo = ImageEnhance.Contrast(photo).enhance(1.12)
+    gray = photo.convert("L").convert("RGBA")
+    photo = Image.blend(photo, gray, .18)
+    tint = Image.new("RGBA", photo_size, (72, 33, 28, 22))
+    photo = Image.alpha_composite(photo, tint)
+
+    canvas.alpha_composite(photo, (photo_box[0], photo_box[1]))
+    draw.rectangle(photo_box, outline=(58, 48, 39, 205), width=2)
+    for scan_y in range(photo_box[1] + 2, photo_box[3], 5):
+        draw.line((photo_box[0] + 2, scan_y, photo_box[2] - 2, scan_y), fill=(27, 24, 22, 24), width=1)
+    for _ in range(18):
+        y = rng.randrange(photo_box[1] + 2, photo_box[3] - 2)
+        x = rng.randrange(photo_box[0] + 2, photo_box[2] - 24)
+        draw.line((x, y, min(photo_box[2] - 2, x + rng.randrange(8, 55)), y), fill=(228, 218, 191, 18), width=1)
+
+    draw.rectangle((3, 3, 636, 356), outline=accent, width=5)
+    draw.line((20, 51, 438, 51), fill=(67, 55, 44, 170), width=2)
+    draw.text((20, 13), f"{code} / {display_name}", font=font(FONT_SERIF_B, 24), fill=(39, 32, 27, 245))
+    draw.text((24, 76), "FIELD INTEL: BOSS", font=font(FONT_MONO_B, 8), fill=(231, 219, 194, 205))
+    draw.text((24, 89), "SOURCE: ARCHIVAL VIDEO", font=font(FONT_MONO, 8), fill=(231, 219, 194, 185))
+    draw.text((24, 102), f"FRAME: {frame_index + 1:02d}/{BOSS_FRAME_COUNT:02d}", font=font(FONT_MONO_B, 8), fill=(194, 73, 68, 220))
+
+    tag = paper_noise((168, 52), (208, 198, 177), seed_for(name, 60 + frame_index), 5)
+    tag_draw = ImageDraw.Draw(tag, "RGBA")
+    tag_draw.rectangle((0, 0, 167, 51), outline=(72, 61, 49, 170), width=1)
+    tag_draw.text((8, 8), "MOTION RECORD", font=font(FONT_MONO_B, 9), fill=(54, 47, 39, 230))
+    tag_draw.text((8, 23), "STRONGHOLD 5-5", font=font(FONT_MONO_B, 8), fill=(112, 42, 40, 210))
+    tag_draw.text((8, 37), "VISUAL EVIDENCE", font=font(FONT_MONO, 7), fill=(73, 65, 55, 190))
+    tag.putalpha(distress_alpha(tag.size, seed_for(name, 70 + frame_index), .025))
+    canvas.alpha_composite(tag, (459, 8))
+
+    stamp = Image.new("RGBA", (330, 62), (0, 0, 0, 0))
+    stamp_draw = ImageDraw.Draw(stamp, "RGBA")
+    stamp_draw.rectangle((5, 6, 324, 56), outline=(153, 18, 27, 210), width=4)
+    stamp_draw.text((23, 13), "BOSS // CLASSIFIED", font=font(FONT_SERIF_B, 28), fill=(161, 20, 30, 215))
+    stamp = stamp.rotate(8, resample=Image.Resampling.BICUBIC, expand=True)
+    original_alpha = np.array(stamp.getchannel("A"), dtype=np.uint16)
+    wear = np.array(distress_alpha(stamp.size, seed_for(name, 80 + frame_index), .09), dtype=np.uint16)
+    stamp.putalpha(Image.fromarray((original_alpha * wear // 255).astype(np.uint8), "L"))
+    canvas.alpha_composite(stamp, (286, 272))
+
+    draw.rectangle((18, 330, 238, 351), outline=(82, 68, 49, 130), width=1)
+    draw.text((26, 336), "TACTICAL VIDEO INTELLIGENCE", font=font(FONT_MONO_B, 7), fill=(61, 52, 41, 190))
+    draw.rectangle((482, 330, 622, 351), outline=(82, 68, 49, 130), width=1)
+    draw.text((492, 336), "ACCESS: PRIORITY-01", font=font(FONT_MONO_B, 7), fill=(130, 48, 39, 180))
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    canvas.convert("RGB").save(destination, compress_level=6)
+
+
+def generate_boss_dossiers():
+    missing = []
+    unexpected = []
+    expected_directories = set(BOSS_SPECS)
+    if RAW_BOSSES.exists():
+        unexpected.extend(
+            str(path.relative_to(ROOT))
+            for path in RAW_BOSSES.iterdir()
+            if path.is_dir() and path.name not in expected_directories
+        )
+    for name, (code, display_name) in BOSS_SPECS.items():
+        expected_sources = {f"frame_{index:02d}.jpg" for index in range(BOSS_FRAME_COUNT)}
+        source_directory = RAW_BOSSES / name
+        if source_directory.exists():
+            unexpected.extend(
+                str(path.relative_to(ROOT))
+                for path in source_directory.iterdir()
+                if path.is_file() and path.name not in expected_sources
+            )
+        for frame_index in range(BOSS_FRAME_COUNT):
+            source = source_directory / f"frame_{frame_index:02d}.jpg"
+            if not source.exists():
+                missing.append(str(source.relative_to(ROOT)))
+                continue
+            destination = INTEL / "bosses" / name / f"frame_{frame_index:02d}.png"
+            boss_dossier_frame(name, code, display_name, frame_index, source, destination)
+            with Image.open(destination) as verified:
+                verified.verify()
+            with Image.open(destination) as verified:
+                if verified.size != (640, 360) or verified.format != "PNG":
+                    raise SystemExit(
+                        f"Boss frame must be a valid 640x360 PNG: {destination.relative_to(ROOT)}"
+                    )
+        print(f"SIEGE intel: prepared {display_name} motion record ({BOSS_FRAME_COUNT} frames)")
+    if missing:
+        raise SystemExit("Missing Boss frame sources: " + ", ".join(missing))
+    if unexpected:
+        raise SystemExit("Unexpected Boss frame sources: " + ", ".join(sorted(unexpected)))
+
+
 def common_patch(base, name, confirmed):
     x, y, w, h = 454, 10, 174, 60
     seed = seed_for(name)
@@ -272,6 +391,7 @@ def secure_patch(base, name):
 
 def main():
     generate_tank_dossiers()
+    generate_boss_dossiers()
     files = sorted(INTEL.glob("*.png"))
     names = {path.stem for path in files}
     if names != EXPECTED:

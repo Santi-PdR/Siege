@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class IntelScreen extends Screen {
+    private static final int BOSS_FRAME_COUNT = 6;
     private static final List<String> CATEGORIES = List.of("ALL", "UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT");
     private static final List<IntelEntry> FILES = List.of(
             file("HU-001", "INFANTRY", "UNIT", 1, "100", "infantry",
@@ -160,7 +161,70 @@ public final class IntelScreen extends Screen {
                     "No aproximarse basándose únicamente en su apariencia. Priorizar observación remota y registrar cualquier patrón de movimiento o emisión de energía.",
                     "No confirmed record", "Information not recovered", "Recovered render", "INCOMPLETE FILE",
                     "A render of a long-legged mechanical structure identified as Strider was recovered. There is no verified information about weapons, mobility, autonomy, origin or combat behaviour.",
-                    "Do not approach based on appearance alone. Prioritise remote observation and record any movement pattern or energy emission."));
+                    "Do not approach based on appearance alone. Prioritise remote observation and record any movement pattern or energy emission."),
+            bossFile("BOS-001", "TEMPEST", 5, "8,000", "tempest",
+                    "Sin registro confirmado", "Pistola de rayos + descarga eléctrica + bobinas Tesla", "Eléctrico / semiacuático / sabotaje", "JEFE HOSTIL",
+                    "Jefe especializado en controlar multitudes mediante armamento eléctrico y semiacuático. Su pistola de rayos daña a grupos completos y la descarga de corto alcance puede freír instantáneamente a las víctimas cercanas. Dos bobinas Tesla alimentan el sistema. El daño aumenta cuanto menor sea la distancia y Tempest también puede sabotear habilidades.",
+                    "Reconocimiento Aéreo, Stronghold 5-5: Tempest se dirige hacia la zona. No amontonarse, mantener una separación amplia y evitar por completo su descarga de corto alcance.",
+                    "No confirmed record", "Ray pistol + electric discharge + Tesla coils", "Electric / semi-aquatic / sabotage", "HOSTILE BOSS",
+                    "A crowd-control boss equipped with electric and semi-aquatic weaponry. Its ray pistol damages entire groups and its short-range discharge can instantly fry nearby victims. Two Tesla coils power the system. Damage rises as distance closes, and Tempest can also sabotage abilities.",
+                    "Aerial Recon, Stronghold 5-5: Tempest is moving towards the area. Do not cluster, keep wide spacing and avoid its short-range discharge completely."),
+            bossFile("BOS-002", "FUSILIER", 5, "8,000", "fusilier",
+                    "Sin registro confirmado", "Lanzagranadas de seis disparos + pala", "Bombardeo de largo alcance", "JEFE HOSTIL // LENTO",
+                    "Jefe blindado de largo alcance que bombardea posiciones con un lanzagranadas de seis disparos. Si un jugador consigue acercarse, utiliza una pala como defensa. El registro visual confirma gorro, gafas protectoras, armadura pesada y movilidad reducida.",
+                    "Reconocimiento Aéreo, sector 5-5: se detectó un Fusilier. Abandonar inmediatamente el área marcada por el proyectil y aprovechar su lentitud para cambiar de cobertura.",
+                    "No confirmed record", "Six-shot grenade launcher + shovel", "Long-range bombardment", "HOSTILE BOSS // SLOW",
+                    "A long-range armoured boss that bombards positions with a six-shot grenade launcher. If a player closes the distance, it uses a shovel for defence. Visual records confirm a cap, protective goggles, heavy armour and reduced mobility.",
+                    "Aerial Recon, sector 5-5: a Fusilier has been detected. Leave the projectile impact area immediately and exploit its slow movement to change cover."),
+            bossFile("BOS-003", "ACHILLES", 5, "15,000", "achilles",
+                    "Sin registro confirmado", "Francotirador Armour Peeler de alta frecuencia", "Perforación total de armadura", "JEFE HOSTIL // AGONÍA // LENTO",
+                    "Jefe francotirador equipado con un Armour Peeler de alta frecuencia. El proyectil ignora por completo la armadura y causa todavía más daño a objetivos protegidos. Su puntería es promedio y se desplaza lentamente; el registro muestra armadura ligera, auriculares y una radio de comunicaciones.",
+                    "Reconocimiento Aéreo, Stronghold 5-5: una unidad Achilles apoya a las fuerzas enemigas. Romper las líneas de visión y atacar únicamente durante las ventanas en que sus defensas estén desactivadas.",
+                    "No confirmed record", "High-frequency Armour Peeler sniper", "Complete armour penetration", "HOSTILE BOSS // AGONY // SLOW",
+                    "A sniper boss equipped with a high-frequency Armour Peeler. Its projectile completely ignores armour and deals even more damage to protected targets. Its aim is average and movement is slow; records show light armour, headphones and a communications radio.",
+                    "Aerial Recon, Stronghold 5-5: an Achilles unit is supporting enemy forces. Break dangerous sight lines and attack only during windows when its defences are disabled."),
+            bossFile("BOS-004", "TRIDENT", 5, "38,000", "trident",
+                    "Sin registro confirmado", "Machete de alta frecuencia + gancho de resistencia máxima", "Gancho / ejecución / carga", "JEFE HOSTIL",
+                    "Agente fuertemente blindado que atrae jugadores con un gancho y desenvaina un machete de alta frecuencia al tenerlos cerca. El golpe próximo es una ejecución instantánea y puede rematar objetivos caídos. Si la víctima se aleja demasiado, Trident carga a gran velocidad. Porta visera opaca, pantalones hazmat mostaza, hombreras y guantes negros.",
+                    "Reconocimiento Aéreo, Stronghold 5-5: tenemos un Trident. Mantener distancia, permanecer coordinados y cortar la trayectoria del gancho; acercarse permite su ejecución inmediata.",
+                    "No confirmed record", "High-frequency machete + maximum-strength hook", "Hook / execution / charge", "HOSTILE BOSS",
+                    "A heavily armoured agent that pulls players in with a hook and draws a high-frequency machete at close range. The nearby strike is an instant execution and can finish downed targets. If a victim moves too far away, Trident charges at high speed. It wears an opaque visor, mustard hazmat trousers, shoulder pads and black gloves.",
+                    "Aerial Recon, Stronghold 5-5: a Trident is present. Keep distance, remain coordinated and break the hook trajectory; moving close enables its immediate execution."),
+            bossFile("BOS-005", "PROMETHEUS", 5, "8,000", "prometheus",
+                    "Sin registro confirmado", "FAHRENNEIT-3000 + dos tanques de combustible", "Incineración / dispositivo de alejamiento", "JEFE HOSTIL",
+                    "Jefe incendiario equipado con un lanzallamas FAHRENNEIT-3000 y dos tanques de combustible. Su arma prende fuego a los jugadores y un dispositivo defensivo castiga a quienes se acercan demasiado, expulsándolos con gran fuerza y daño. El agente usa máscara de gas, frac, chaleco, hombreras y muñequeras tácticas.",
+                    "Reconocimiento Aéreo, Stronghold 5-5: Prometheus fue desplegado. Mantenerse fuera del arco del lanzallamas y concentrar los ataques sobre sus tanques de combustible.",
+                    "No confirmed record", "FAHRENNEIT-3000 + two fuel tanks", "Incineration / repulsion device", "HOSTILE BOSS",
+                    "An incendiary boss equipped with a FAHRENNEIT-3000 flamethrower and two fuel tanks. Its weapon sets players ablaze, while a defensive device punishes anyone who moves too close by throwing them away with severe damage. The agent wears a gas mask, tailcoat, tactical vest, shoulder pads and wrist guards.",
+                    "Aerial Recon, Stronghold 5-5: Prometheus has been deployed. Stay outside the flamethrower arc and concentrate attacks on its fuel tanks."),
+            bossFile("BOS-006", "DAEDALUS", 5, "N/D", "daedalus",
+                    "Sin registro confirmado", "Pico de combate de acero de improbabilidad", "Minería supersónica / emboscada subterránea", "JEFE HOSTIL",
+                    "Jefe minero capaz de excavar bajo tierra a velocidad supersónica para emerger delante o detrás de su objetivo. Su pico parece común, pero está forjado con lingotes de acero de improbabilidad de frecuencia media. Puede dejar fuera de combate a un rival en tres a cinco golpes, o en uno solo si no lleva armadura pesada o moderna. También porta casco minero con rayos X, armadura naranja y vendas de curación pasiva.",
+                    "Reconocimiento Aéreo, Stronghold 5-5: un Daedalus está en movimiento. Vigilar la retaguardia, no deambular solo y cambiar de posición cuando desaparezca bajo tierra.",
+                    "No confirmed record", "Improbability-steel combat pickaxe", "Supersonic mining / underground ambush", "HOSTILE BOSS",
+                    "A mining boss capable of tunnelling underground at supersonic speed before emerging ahead of or behind its target. Its pickaxe appears ordinary but is forged from medium-frequency improbability steel. It can incapacitate an opponent in three to five hits, or one hit without heavy or modern armour. It also carries an X-ray mining helmet, orange tactical armour and passive self-healing bandages.",
+                    "Aerial Recon, Stronghold 5-5: a Daedalus is moving. Watch your rear, never wander alone and relocate whenever it disappears underground."),
+            bossFile("BOS-007", "HERMES", 0, "45,000", "hermes",
+                    "Sin registro confirmado", "Información no recuperada", "Video de archivo recuperado", "EXPEDIENTE INCOMPLETO",
+                    "Existe metraje de archivo asociado a la designación Hermes y una resistencia estimada de 45.000 HP. No hay datos verificados sobre origen, armamento, capacidades, comportamiento o condiciones de despliegue.",
+                    "No deducir habilidades únicamente a partir del video. Mantener observación remota, registrar cada movimiento y tratar a Hermes como un jefe hostil hasta completar el expediente.",
+                    "No confirmed record", "Information not recovered", "Recovered archival video", "INCOMPLETE FILE",
+                    "Archival footage linked to the Hermes designation exists, along with an estimated durability of 45,000 HP. There is no verified information about origin, weapons, capabilities, behaviour or deployment conditions.",
+                    "Do not infer abilities from the video alone. Maintain remote observation, record every movement and treat Hermes as a hostile boss until the dossier is complete."),
+            bossFile("BOS-008", "LELANTOS", 0, "8,000", "lelantos",
+                    "Sin registro confirmado", "Información no recuperada", "Video de archivo recuperado", "EXPEDIENTE INCOMPLETO",
+                    "Solo se recuperaron la designación Lelantos, un video de reconocimiento y una resistencia estimada de 8.000 HP. Su armamento, habilidades, origen y patrón táctico permanecen sin confirmar.",
+                    "No completar la información con suposiciones. Analizar el metraje, evitar el contacto cercano y documentar cualquier capacidad observada en combate.",
+                    "No confirmed record", "Information not recovered", "Recovered archival video", "INCOMPLETE FILE",
+                    "Only the Lelantos designation, reconnaissance footage and an estimated durability of 8,000 HP were recovered. Its weapons, abilities, origin and tactical pattern remain unconfirmed.",
+                    "Do not fill missing information with assumptions. Analyse the footage, avoid close contact and document any capability observed in combat."),
+            bossFile("BOS-009", "GAIA", 0, "20,000", "gaia",
+                    "Sin registro confirmado", "Información no recuperada", "Video de archivo recuperado", "EXPEDIENTE INCOMPLETO",
+                    "El archivo de Gaia contiene metraje parcial y una resistencia estimada de 20.000 HP. No existen registros verificados sobre armamento, capacidades, afiliación o comportamiento de combate.",
+                    "La presencia de otras figuras en el metraje no confirma aliados ni duplicados. Mantener distancia y registrar el primer encuentro operativo antes de clasificar a Gaia.",
+                    "No confirmed record", "Information not recovered", "Recovered archival video", "INCOMPLETE FILE",
+                    "The Gaia file contains partial footage and an estimated durability of 20,000 HP. There are no verified records about weapons, capabilities, affiliation or combat behaviour.",
+                    "Other figures visible in the footage do not confirm allies or duplicates. Keep your distance and record the first operational encounter before classifying Gaia."));
 
     private final Screen parent;
     private final List<SiegeButton> categoryButtons = new ArrayList<>();
@@ -512,10 +576,18 @@ public final class IntelScreen extends Screen {
         else imageWidth = Math.max(126, Math.min(318, availableWidth * 42 / 100));
         int imageHeight = imageWidth * 9 / 16;
         int imageX = headerX;
-        ResourceLocation portrait = new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/intel/" + entry.image() + ".png");
+        int mediaFrame = bossFrame(entry);
+        ResourceLocation portrait = portraitTexture(entry, mediaFrame);
         g.fill(imageX - 3, imageY - 3, imageX + imageWidth + 3, imageY + imageHeight + 3, paperDark);
         g.blit(portrait, imageX, imageY, imageWidth, imageHeight, 0, 0, 640, 360, 640, 360);
         g.fill(imageX, imageY, imageX + imageWidth, imageY + 2, accent);
+        if (entry.category().equals("BOSS") && imageWidth >= 90) {
+            String record = (SiegeConfig.animatedIntel && !SiegeConfig.reducedMotion ? "REC " : "STILL ")
+                    + String.format("%02d/%02d", mediaFrame + 1, BOSS_FRAME_COUNT);
+            int recordWidth = font.width(record) + 6;
+            g.fill(imageX + 3, imageY + 5, imageX + 3 + recordWidth, imageY + 17, 0xB2080A0C);
+            g.drawString(font, record, imageX + 6, imageY + 7, 0xFFFF6B66, false);
+        }
 
         int metaX = imageX + imageWidth + (compactMode ? 8 : 13);
         int metaWidth = Math.max(54, x + availableWidth - pad - metaX);
@@ -593,6 +665,19 @@ public final class IntelScreen extends Screen {
         return advanced ? 0xFF245F86 : 0xFF8C302B;
     }
 
+    private int bossFrame(IntelEntry entry) {
+        if (!entry.category().equals("BOSS") || !SiegeConfig.animatedIntel || SiegeConfig.reducedMotion) return 0;
+        return Math.floorMod((int) (System.currentTimeMillis() / 450L), BOSS_FRAME_COUNT);
+    }
+
+    private ResourceLocation portraitTexture(IntelEntry entry, int frame) {
+        String image = entry.image();
+        if (entry.category().equals("BOSS")) {
+            image = image.substring(0, image.length() - 2) + String.format("%02d", frame);
+        }
+        return new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/intel/" + image + ".png");
+    }
+
     private String label(String spanishValue, String englishValue) { return spanish() ? spanishValue : englishValue; }
 
     private int categoryAccent(String value) {
@@ -622,6 +707,14 @@ public final class IntelScreen extends Screen {
                                        String esOrigin, String esArmament, String esVariants, String esStatus, String esDescription, String esAdvisory,
                                        String enOrigin, String enArmament, String enVariants, String enStatus, String enDescription, String enAdvisory) {
         return new IntelEntry(code, name, "TANK", threat, hp, defense, image,
+                new IntelEntry.IntelText(esOrigin, esArmament, esVariants, esStatus, esDescription, esAdvisory),
+                new IntelEntry.IntelText(enOrigin, enArmament, enVariants, enStatus, enDescription, enAdvisory));
+    }
+
+    private static IntelEntry bossFile(String code, String name, int threat, String hp, String image,
+                                       String esOrigin, String esArmament, String esVariants, String esStatus, String esDescription, String esAdvisory,
+                                       String enOrigin, String enArmament, String enVariants, String enStatus, String enDescription, String enAdvisory) {
+        return new IntelEntry(code, name, "BOSS", threat, hp, "N/D", "bosses/" + image + "/frame_00",
                 new IntelEntry.IntelText(esOrigin, esArmament, esVariants, esStatus, esDescription, esAdvisory),
                 new IntelEntry.IntelText(enOrigin, enArmament, enVariants, enStatus, enDescription, enAdvisory));
     }
