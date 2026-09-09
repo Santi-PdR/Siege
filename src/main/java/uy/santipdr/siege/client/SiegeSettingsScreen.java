@@ -14,6 +14,7 @@ public final class SiegeSettingsScreen extends Screen {
     private int panelWidth;
     private int panelBottom;
     private boolean compact;
+    private boolean shortLayout;
 
     public SiegeSettingsScreen(Screen parent) {
         super(Component.translatable("siege.settings.title"));
@@ -29,6 +30,7 @@ public final class SiegeSettingsScreen extends Screen {
         panelWidth = Math.max(220, panelWidth);
         panelX = (width - panelWidth) / 2;
         panelY = compact ? 39 : 55;
+        shortLayout = compact && height < 250 && panelWidth >= 292;
 
         addRenderableWidget(new SiegeButton(8, 7, Math.min(82, Math.max(62, width / 6)), 19,
                 Component.translatable("siege.common.back"), b -> onClose(), WARNING));
@@ -53,7 +55,7 @@ public final class SiegeSettingsScreen extends Screen {
 
         addRenderableWidget(new SiegeSlider(left, y += h + rowGap, columnWidth, 30,
                 Component.literal(label("VOLUMEN DE MÚSICA", "MUSIC VOLUME")), SiegeConfig.musicVolume,
-                value -> SiegeMusic.setVolumeLive(value)));
+                SiegeMusic::setVolumeLive));
 
         addRenderableWidget(new SiegeButton(left, y += 30 + rowGap, columnWidth, h,
                 Component.translatable("siege.menu.next_track"), b -> {
@@ -80,6 +82,39 @@ public final class SiegeSettingsScreen extends Screen {
         int y = panelY + 27;
         int h = 18;
         int gap = 3;
+
+        if (shortLayout) {
+            int colGap = 4;
+            int colWidth = (w - colGap) / 2;
+            int right = x + colWidth + colGap;
+
+            addRenderableWidget(toggle(x, y, colWidth, h, "siege.settings.music", () -> {
+                SiegeConfig.music = !SiegeConfig.music;
+                if (SiegeConfig.music) SiegeMusic.ensurePlaying(); else SiegeMusic.stop();
+            }, () -> SiegeConfig.music));
+            addRenderableWidget(toggle(right, y, colWidth, h, "siege.settings.ui_sounds",
+                    () -> SiegeConfig.uiSounds = !SiegeConfig.uiSounds, () -> SiegeConfig.uiSounds));
+
+            y += h + gap;
+            addRenderableWidget(new SiegeSlider(x, y, w, 24,
+                    Component.literal(label("VOLUMEN", "VOLUME")), SiegeConfig.musicVolume,
+                    SiegeMusic::setVolumeLive));
+
+            y += 24 + gap;
+            addRenderableWidget(new SiegeButton(x, y, colWidth, h, Component.translatable("siege.menu.next_track"), b -> {
+                SiegeUiSounds.nextTrack();
+                SiegeMusic.nextTrack();
+            }, 0xFFD6A94B));
+            addRenderableWidget(toggle(right, y, colWidth, h, "siege.settings.backgrounds",
+                    () -> SiegeConfig.animatedBackgrounds = !SiegeConfig.animatedBackgrounds, () -> SiegeConfig.animatedBackgrounds));
+
+            y += h + gap;
+            addRenderableWidget(toggle(x, y, colWidth, h, "siege.settings.reduced_motion",
+                    () -> SiegeConfig.reducedMotion = !SiegeConfig.reducedMotion, () -> SiegeConfig.reducedMotion));
+            addRenderableWidget(graphicsButton(right, y, colWidth, h));
+            panelBottom = y + h + 29;
+            return;
+        }
 
         addRenderableWidget(toggle(x, y, w, h, "siege.settings.music", () -> {
             SiegeConfig.music = !SiegeConfig.music;
@@ -158,7 +193,7 @@ public final class SiegeSettingsScreen extends Screen {
             g.drawCenteredString(font, label("INTERFAZ // GRÁFICOS", "INTERFACE // GRAPHICS"), rightCenter, titleY, ACCENT);
             g.fill(panelX + panelWidth / 2, panelY + 25, panelX + panelWidth / 2 + 1, bottom - 31, 0x6637444D);
         } else {
-            g.drawCenteredString(font, "AUDIO // UI // GRAPHICS", width / 2, panelY + 7, ACCENT);
+            g.drawCenteredString(font, shortLayout ? "AUDIO // UI" : "AUDIO // UI // GRAPHICS", width / 2, panelY + 7, ACCENT);
         }
 
         int statusY = bottom - 24;
@@ -166,7 +201,7 @@ public final class SiegeSettingsScreen extends Screen {
                 + SiegeConfig.musicVolume + "%  //  " + SiegeMusic.transitionLabel(spanish());
         g.drawCenteredString(font, font.plainSubstrByWidth(status, Math.max(120, panelWidth - 22)), width / 2, statusY, 0xFFA7B0B6);
 
-        if (height >= 235) {
+        if (height >= 250) {
             String rule = label(
                     "La música termina cada pista antes de continuar. No se reproduce en mundos, servidores ni pausa.",
                     "Each track finishes before the next. Music never plays in worlds, servers or pause screens.");
