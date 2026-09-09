@@ -5,9 +5,11 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraftforge.registries.RegistryObject;
 import uy.santipdr.siege.SiegeMod;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 /** Menu soundtrack controller. Never owns audio while a world/server is loaded. */
 public final class SiegeMusic {
@@ -17,21 +19,40 @@ public final class SiegeMusic {
             SiegeMod.KAPTAIN_MUSIC_BOX,
             SiegeMod.HEAVENS_GIFT
     );
+    private static final List<String> TRACK_KEYS = List.of(
+            "tale_cruel_world",
+            "darkest_of_days",
+            "kaptain_music_box",
+            "heavens_hell_sent_gift"
+    );
     private static final List<String> TRACK_NAMES = List.of(
             "Tale of a Cruel World",
             "Darkest of Days",
             "Kaptain Music Box",
             "Heaven's Hell-Sent Gift"
     );
+    private static final long[] FALLBACK_DURATIONS_MS = {
+            22_000L, 24_000L, 24_209L, 23_000L
+    };
+    private static final long[] TRACK_DURATIONS_MS = loadDurations();
     private static final List<Integer> queue = new ArrayList<>();
 
-    private static final int FADE_TICKS = 32;
-    private static final long STARTUP_GRACE_MS = 3500L;
+    /** Natural crossfade begins exactly eight seconds before the encoded track ends. */
+    private static final long NATURAL_FADE_OUT_MS = 8_000L;
+    private static final long MANUAL_FADE_OUT_MS = 1_250L;
+    private static final long FADE_IN_MS = 2_200L;
+    private static final long ACTIVATION_GRACE_MS = 5_000L;
 
     private static SiegeTrackSound active;
     private static int previous = -1;
-    private static long activeStartedAt;
+    private static long startRequestedAt;
+    private static long playbackAnchorAt;
+    private static boolean clockAnchored;
     private static float fadeGain;
+    private static float fadeFromGain;
+    private static long fadeStartedAt;
+    private static long fadeDurationMs;
+    private static boolean naturalFadeOut;
     private static FadeState fadeState = FadeState.NONE;
     private static int maintenanceTicks;
 
@@ -49,42 +70,57 @@ public final class SiegeMusic {
 
         Minecraft minecraft = Minecraft.getInstance();
         var manager = minecraft.getSoundManager();
-        long aliveFor = System.currentTimeMillis() - activeStartedAt;
+        long now = System.currentTimeMillis();
 
-        // Keep vanilla menu music from appearing underneath SIEGE without
-        // hammering MusicManager every tick.
+        // Anchor the duration clock only after Minecraft confirms the stream became active.
+        // If the backend never reports activation, fall back after a generous grace period
+        // instead of advancing early because isActive() briefly returned false.
+        if (!clockAnchored) {
+            if (manager.isActive(active)) {
+                playbackAnchorAt = now;
+                clockAnchored = true;
+            } else if (now - startRequestedAt >= ACTIVATION_GRACE_MS) {
+                playbackAnchorAt = startRequestedAt;
+                clockAnchored = true;
+            }
+        }
+
         maintenanceTicks++;
         if (maintenanceTicks >= 100) {
             minecraft.getMusicManager().stopPlaying();
             maintenanceTicks = 0;
         }
 
-        // The stream advances only after Minecraft reports that it really ended.
-        // A startup grace protects asynchronously loaded streamed OGG files.
-        if (fadeState != FadeState.OUT && aliveFor > STARTUP_GRACE_MS && !manager.isActive(active)) {
-            active = null;
-            fadeGain = 0.0F;
-            startNext(true);
-            return;
+        long elapsed = clockAnchored ? Math.max(0L, now - playbackAnchorAt) : 0L;
+        long duration = currentDurationMs();
+
+        // Never use a transient isActive(false) as the automatic-next signal. The encoded
+        // duration is authoritative, so a song cannot be cut in the middle by the sound engine.
+        if (clockAnchored && fadeState != FadeState.OUT && duration > 0L
+                && elapsed >= Math.max(0L, duration - NATURAL_FADE_OUT_MS)) {
+            beginFadeOut(NATURAL_FADE_OUT_MS, true);
         }
 
         if (fadeState == FadeState.IN) {
-            fadeGain = Math.min(1.0F, fadeGain + 1.0F / FADE_TICKS);
-            if (fadeGain >= 0.999F) {
+            float progress = progress(now, fadeStartedAt, fadeDurationMs);
+            fadeGain = progress;
+            applyLiveVolume();
+            if (progress >= 1.0F) {
                 fadeGain = 1.0F;
                 fadeState = FadeState.NONE;
             }
-            applyLiveVolume();
         } else if (fadeState == FadeState.OUT) {
-            fadeGain = Math.max(0.0F, fadeGain - 1.0F / FADE_TICKS);
+            float progress = progress(now, fadeStartedAt, fadeDurationMs);
+            fadeGain = Math.max(0.0F, fadeFromGain * (1.0F - progress));
             applyLiveVolume();
-            if (fadeGain <= 0.001F) {
+            if (progress >= 1.0F || (naturalFadeOut && clockAnchored && elapsed >= duration)) {
                 manager.stop(active);
                 active = null;
                 fadeGain = 0.0F;
                 startNext(true);
             }
         } else {
+            fadeGain = 1.0F;
             applyLiveVolume();
         }
     }
@@ -104,7 +140,7 @@ public final class SiegeMusic {
         }
     }
 
-    /** Manual skip uses a real fade-out before starting the next shuffled track. */
+    /** Manual skip uses a short deliberate fade; natural transitions reserve the final eight seconds. */
     public static void nextTrack() {
         if (!SiegeConfig.music) {
             SiegeConfig.music = true;
@@ -115,16 +151,15 @@ public final class SiegeMusic {
             startNext(true);
             return;
         }
-        if (fadeState != FadeState.OUT) fadeState = FadeState.OUT;
+        beginFadeOut(MANUAL_FADE_OUT_MS, false);
     }
 
-    /** Applies SIEGE's own volume to the currently playing stream without restarting it. */
+    /** Applies SIEGE's own volume to the active stream without restarting it. */
     public static void setVolumeLive(int percent) {
         SiegeConfig.musicVolume = SiegeConfig.clampVolume(percent);
         applyLiveVolume();
     }
 
-    /** Backwards-compatible alias for older callers. No restart occurs. */
     public static void refreshVolume() {
         applyLiveVolume();
     }
@@ -134,25 +169,33 @@ public final class SiegeMusic {
     }
 
     public static boolean isActuallyPlaying() {
-        return active != null && Minecraft.getInstance().getSoundManager().isActive(active);
+        return active != null;
+    }
+
+    public static long currentDurationMs() {
+        if (previous < 0 || previous >= TRACK_DURATIONS_MS.length) return 0L;
+        return TRACK_DURATIONS_MS[previous];
+    }
+
+    public static long currentRemainingMs() {
+        if (!clockAnchored || active == null) return currentDurationMs();
+        return Math.max(0L, currentDurationMs() - (System.currentTimeMillis() - playbackAnchorAt));
     }
 
     public static String transitionLabel(boolean spanish) {
         if (active == null) return spanish ? "ESPERANDO AUDIO" : "WAITING FOR AUDIO";
         return switch (fadeState) {
             case IN -> spanish ? "ENTRADA SUAVE" : "FADING IN";
-            case OUT -> spanish ? "CAMBIO SUAVE" : "FADING OUT";
-            case NONE -> spanish ? "REPRODUCCIÓN COMPLETA" : "FULL TRACK";
+            case OUT -> naturalFadeOut
+                    ? (spanish ? "FADE FINAL · 8S" : "FINAL FADE · 8S")
+                    : (spanish ? "CAMBIO SUAVE" : "FADING OUT");
+            case NONE -> spanish ? "PISTA COMPLETA" : "FULL TRACK";
         };
     }
 
     private static boolean shouldPlay() {
         Minecraft minecraft = Minecraft.getInstance();
-        // Volume 0 is a live mute, not a stop condition. Keeping the stream alive
-        // means moving the slider back above zero resumes the same song position.
-        return SiegeConfig.music
-                && minecraft.level == null
-                && minecraft.screen != null;
+        return SiegeConfig.music && minecraft.level == null && minecraft.screen != null;
     }
 
     private static void startNext(boolean fadeIn) {
@@ -169,11 +212,33 @@ public final class SiegeMusic {
         if (active != null) manager.stop(active);
 
         active = new SiegeTrackSound(TRACKS.get(index).get());
+        startRequestedAt = System.currentTimeMillis();
+        playbackAnchorAt = startRequestedAt;
+        clockAnchored = false;
+        naturalFadeOut = false;
+        fadeFromGain = 1.0F;
         fadeGain = fadeIn ? 0.0F : 1.0F;
         fadeState = fadeIn ? FadeState.IN : FadeState.NONE;
+        fadeStartedAt = startRequestedAt;
+        fadeDurationMs = fadeIn ? FADE_IN_MS : 1L;
         applyLiveVolume();
         manager.play(active);
-        activeStartedAt = System.currentTimeMillis();
+    }
+
+    private static void beginFadeOut(long durationMs, boolean natural) {
+        if (active == null) return;
+        if (fadeState == FadeState.OUT && naturalFadeOut == natural) return;
+        fadeFromGain = Math.max(0.0F, Math.min(1.0F, fadeGain));
+        if (fadeState == FadeState.NONE) fadeFromGain = 1.0F;
+        fadeState = FadeState.OUT;
+        fadeStartedAt = System.currentTimeMillis();
+        fadeDurationMs = Math.max(1L, durationMs);
+        naturalFadeOut = natural;
+    }
+
+    private static float progress(long now, long start, long duration) {
+        if (duration <= 0L) return 1.0F;
+        return Math.max(0.0F, Math.min(1.0F, (now - start) / (float) duration));
     }
 
     private static void applyLiveVolume() {
@@ -189,12 +254,34 @@ public final class SiegeMusic {
         if (queue.size() > 1 && queue.get(0) == previous) Collections.swap(queue, 0, 1);
     }
 
+    private static long[] loadDurations() {
+        long[] values = FALLBACK_DURATIONS_MS.clone();
+        Properties props = new Properties();
+        try (InputStream in = SiegeMusic.class.getClassLoader()
+                .getResourceAsStream("assets/siege/music_durations.properties")) {
+            if (in == null) return values;
+            props.load(in);
+            for (int i = 0; i < TRACK_KEYS.size(); i++) {
+                String raw = props.getProperty(TRACK_KEYS.get(i));
+                if (raw == null) continue;
+                long parsed = Long.parseLong(raw.trim());
+                if (parsed > 1_000L) values[i] = parsed;
+            }
+        } catch (Exception ignored) {
+            // A missing/corrupt metadata file must never crash the menu; fallbacks remain usable.
+        }
+        return values;
+    }
+
     public static void stop() {
         if (active != null) Minecraft.getInstance().getSoundManager().stop(active);
         active = null;
         fadeGain = 0.0F;
+        fadeFromGain = 0.0F;
         fadeState = FadeState.NONE;
+        naturalFadeOut = false;
         maintenanceTicks = 0;
+        clockAnchored = false;
     }
 
     private enum FadeState { NONE, IN, OUT }
