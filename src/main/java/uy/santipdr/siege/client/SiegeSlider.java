@@ -48,7 +48,7 @@ public final class SiegeSlider extends AbstractSliderButton {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         int left = getX();
         int top = getY();
         int right = left + getWidth();
