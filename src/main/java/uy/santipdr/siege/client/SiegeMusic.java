@@ -148,8 +148,9 @@ public final class SiegeMusic {
 
     private static boolean shouldPlay() {
         Minecraft minecraft = Minecraft.getInstance();
+        // Volume 0 is a live mute, not a stop condition. Keeping the stream alive
+        // means moving the slider back above zero resumes the same song position.
         return SiegeConfig.music
-                && SiegeConfig.musicVolume > 0
                 && minecraft.level == null
                 && minecraft.screen != null;
     }
