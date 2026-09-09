@@ -41,7 +41,13 @@ public final class SiegeMusic {
     }
 
     public static void nextTrack() {
-        if (!SiegeConfig.music) return;
+        // The explicit soundtrack button must always produce an audible result.
+        // If an older client configuration disabled music, pressing it restores
+        // the SIEGE soundtrack and persists that choice.
+        if (!SiegeConfig.music) {
+            SiegeConfig.music = true;
+            SiegeConfig.save();
+        }
         playNext(true);
     }
 
@@ -53,7 +59,7 @@ public final class SiegeMusic {
         previous = next;
         // SIEGE owns its menu soundtrack toggle.  Using the UI/master channel keeps the
         // soundtrack audible even when Minecraft's unrelated ambient-music slider is at 0.
-        active = SimpleSoundInstance.forUI(TRACKS.get(next).get(), 1.0F, 0.72F);
+        active = SimpleSoundInstance.forUI(TRACKS.get(next).get(), 1.0F, 1.0F);
         manager.play(active);
         lastStartAttempt = System.currentTimeMillis();
     }

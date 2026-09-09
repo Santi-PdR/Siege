@@ -22,9 +22,10 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - Patriot is a confirmed Nusia unit. Its image uses the authentic supplied Nusia flag and its file does not invent missing abilities or affiliation.
 - Every common-unit image uses the Sniper's beige aged-paper archive style, desaturated Minecraft photography, distressed ink embedded into the paper, secondary metadata blocks and a worn red `CLASSIFIED` stamp crossing the lower part of the troop. Clean digital overlay typography is not used. Advanced dossiers deliberately use a separate dark charcoal and blue treatment.
 - Jetpacker and Stalker use their corrected owner-supplied Minecraft captures. Troop models retain Minecraft proportions and equipment.
+- The named folders in the owner's definitive ZIP are the sole portrait source: `Unidades` supplies the ten common records and `Avanzados` supplies the six advanced records. The source pixels are never replaced with generated characters.
 - Only records explicitly confirmed as Nusia display the supplied Nusia flag. Unconfirmed records display no flag and make no origin claim.
 - Singleplayer has no visible button. Staff can open the vanilla world-selection screen with the undocumented Ctrl+S chord.
-- Menu music is randomized without immediate repeats, stops outside SIEGE menu screens, and uses the UI/master mix so it remains audible when Minecraft's ambient-music volume is disabled.
+- Menu music is randomized without immediate repeats, loudness-normalized, stops outside SIEGE menu screens, and uses the UI/master mix at full track volume so it remains audible when Minecraft's ambient-music volume is disabled. Pressing `Next Track` re-enables a soundtrack disabled by an older saved configuration.
 
 ## Builds
 
