@@ -18,6 +18,12 @@ public final class SiegeMusic {
             SiegeMod.KAPTAIN_MUSIC_BOX,
             SiegeMod.HEAVENS_GIFT
     );
+    private static final List<String> TRACK_NAMES = List.of(
+            "Tale of a Cruel World",
+            "Darkest of Days",
+            "Kaptain Music Box",
+            "Heaven's Hell-Sent Gift"
+    );
     private static final List<Integer> queue = new ArrayList<>();
     private static SoundInstance active;
     private static int previous = -1;
@@ -25,15 +31,24 @@ public final class SiegeMusic {
 
     private SiegeMusic() { }
 
+    /** Called every client tick so vanilla menu screens keep the SIEGE soundtrack too. */
+    public static void tick() {
+        if (shouldPlay()) ensurePlaying();
+        else stop();
+    }
+
     public static void ensurePlaying() {
         Minecraft minecraft = Minecraft.getInstance();
-        minecraft.getMusicManager().stopPlaying();
-        if (!SiegeConfig.music) {
+        if (!shouldPlay()) {
             stop();
             return;
         }
+
+        // SIEGE owns music only while there is no loaded world. Gameplay music is never touched.
+        minecraft.getMusicManager().stopPlaying();
         var manager = minecraft.getSoundManager();
         if (active != null && manager.isActive(active)) return;
+
         long now = System.currentTimeMillis();
         if (now - lastStartAttempt < 750L) return;
         lastStartAttempt = now;
@@ -41,25 +56,50 @@ public final class SiegeMusic {
     }
 
     public static void nextTrack() {
-        // The explicit soundtrack button must always produce an audible result.
-        // If an older client configuration disabled music, pressing it restores
-        // the SIEGE soundtrack and persists that choice.
         if (!SiegeConfig.music) {
             SiegeConfig.music = true;
             SiegeConfig.save();
         }
+        if (!shouldPlay()) return;
         playNext(true);
     }
 
+    public static void refreshVolume() {
+        if (!shouldPlay()) {
+            stop();
+            return;
+        }
+        if (previous < 0) {
+            ensurePlaying();
+            return;
+        }
+        playIndex(previous, true);
+    }
+
+    public static String currentTrackName() {
+        return previous >= 0 && previous < TRACK_NAMES.size() ? TRACK_NAMES.get(previous) : "--";
+    }
+
+    private static boolean shouldPlay() {
+        Minecraft minecraft = Minecraft.getInstance();
+        return SiegeConfig.music
+                && SiegeConfig.musicVolume > 0
+                && minecraft.level == null
+                && minecraft.screen != null;
+    }
+
     private static void playNext(boolean stopCurrent) {
-        var manager = Minecraft.getInstance().getSoundManager();
-        if (active != null && (stopCurrent || manager.isActive(active))) manager.stop(active);
         if (queue.isEmpty()) refillQueue();
         int next = queue.remove(0);
         previous = next;
-        // SIEGE owns its menu soundtrack toggle.  Using the UI/master channel keeps the
-        // soundtrack audible even when Minecraft's unrelated ambient-music slider is at 0.
-        active = SimpleSoundInstance.forUI(TRACKS.get(next).get(), 1.0F, 1.0F);
+        playIndex(next, stopCurrent);
+    }
+
+    private static void playIndex(int index, boolean stopCurrent) {
+        var manager = Minecraft.getInstance().getSoundManager();
+        if (active != null && (stopCurrent || manager.isActive(active))) manager.stop(active);
+        float volume = SiegeConfig.clampVolume(SiegeConfig.musicVolume) / 100.0F;
+        active = SimpleSoundInstance.forUI(TRACKS.get(index).get(), 1.0F, volume);
         manager.play(active);
         lastStartAttempt = System.currentTimeMillis();
     }
