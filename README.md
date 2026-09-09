@@ -2,7 +2,7 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
-## SIEGE 0.6.4
+## SIEGE 0.6.5
 
 ### Intel dossiers
 
@@ -10,17 +10,22 @@ Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 - Arrow controls, mouse wheel and keyboard arrows move through troops in the active category. Number keys `0-6` switch categories directly.
 - The wide `CATEGORIES` header no longer shares a full-width rule with its label. `FILES` keeps its separate darker divider because that treatment remains readable.
 - GUI scale 4 has a dedicated compact layout with reduced navigation chrome, condensed metadata and more height for dossier text.
-- The main menu rotates reduced Unit, Advanced and Tank Intel cards at normal GUI scales and hides them automatically when the logical viewport is too small.
-- Every main-menu Intel summary is a short complete sentence; previews no longer stop mid-phrase above the full-file prompt.
+- The main menu rotates reduced Unit, Advanced, Tank and Boss Intel cards at normal GUI scales and hides them automatically when the logical viewport is too small.
+- Main-menu Intel cards are taller and use curated two-sentence summaries where space permits. Narrow layouts remove whole sentences instead of cutting a phrase in half.
 - Tank dossiers now include Zapper, Combatant, Agreement, Jagant and Strider with their supplied HP/DEF data and owner-provided renders.
-- Patriot uses a visible hand-painted anonymous portrait instead of an invented Minecraft character; its unknown identity and incomplete record remain explicit.
+- Boss dossiers now include Tempest, Fusilier, Achilles, Trident, Prometheus, Daedalus, Hermes, Lelantos and Gaia. Each uses the same six-frame classified-video treatment derived from its owner-supplied footage.
+- Hermes receives exactly the same dossier-video treatment as every other boss. Hermes, Lelantos and Gaia keep their unknown abilities explicit rather than inventing information from their appearance.
+- Patriot uses a visible paper-rooted sketch preserving the silhouette of its supplied Roblox form, helmet, rifle and Nusia flag; the unrelated Minecraft background and stand-in presentation are gone.
 - Intel now shows a proportional reading scrollbar, Page Up/Page Down support and real `0-6` category shortcuts. Metadata and body text no longer overlap at narrow sizes.
 - Nusia affiliation blocks use worn printed/technical treatment; unknown origins use distressed censor ink instead of digital-looking `REDACTED` overlays.
+- Boss footage advances as a lightweight archival contact sequence and can be disabled independently. Reduced Motion also freezes every record on its first frame.
 
 ### SIEGE Settings
 
 - Settings remain divided into `Overview`, `Music`, `Interface`, `Accessibility` and `Graphics` sections.
 - Music keeps the custom live 0-100 slider, current-track state and manual `Next Track` control.
+- The main-screen track control is the compact `> MÚSICA` / `> MUSIC`, so its complete label fits. The `M` key triggers the same short manual fade.
+- Interface settings now include an independent Intel-animation toggle alongside UI sounds and rotating backgrounds.
 - SIEGE controls use custom tactical widgets rather than vanilla button textures or vanilla click sounds.
 
 ### Complete soundtrack masters

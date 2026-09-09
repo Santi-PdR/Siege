@@ -52,12 +52,9 @@ public final class SiegeTitleScreen extends Screen {
         addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.quit",
                 b -> minecraft.stop()));
 
-        int trackWidth = Math.min(126, Math.max(86, width / 9));
+        int trackWidth = compact ? 88 : 100;
         addRenderableWidget(new SiegeButton(width - trackWidth - 9, 9, trackWidth, compact ? 18 : 20,
-                Component.translatable("siege.menu.next_track"), b -> {
-                    SiegeUiSounds.nextTrack();
-                    SiegeMusic.nextTrack();
-                }, 0xFFD64B4B));
+                Component.literal(label("> MÚSICA", "> MUSIC")), b -> changeTrack(), 0xFFD64B4B));
     }
 
     private SiegeButton command(int x, int y, int width, int height, String key, Button.OnPress press) {
@@ -99,7 +96,7 @@ public final class SiegeTitleScreen extends Screen {
                     height - 14, 0xFF929AA1, false);
         }
         if (width >= 610) {
-            graphics.drawString(font, "BUILD 0.6.4 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
+            graphics.drawString(font, "BUILD 0.6.5 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -143,8 +140,8 @@ public final class SiegeTitleScreen extends Screen {
         if (previewable.isEmpty()) return;
 
         boolean dual = guiScale < 2.75D && width >= 650 && height >= 350 && previewable.size() > 1;
-        int cardWidth = dual ? Math.min(286, Math.max(224, width / 4)) : Math.min(270, Math.max(204, width / 3));
-        int cardHeight = dual ? 92 : 104;
+        int cardWidth = dual ? Math.min(310, Math.max(240, width / 4)) : Math.min(300, Math.max(220, width / 3));
+        int cardHeight = dual ? 112 : 122;
         int x = width - cardWidth - 14;
         if (x <= leftPanelRight + 16) {
             x = leftPanelRight + 16;
@@ -172,11 +169,13 @@ public final class SiegeTitleScreen extends Screen {
         int accent = switch (entry.category()) {
             case "ADVANCED" -> 0xFF2F80FF;
             case "TANK" -> 0xFFD98A2B;
+            case "BOSS" -> 0xFFB5162D;
             default -> 0xFFD94A4A;
         };
         String type = switch (entry.category()) {
             case "ADVANCED" -> label("AVANZADO", "ADVANCED");
             case "TANK" -> label("TANQUE", "TANK");
+            case "BOSS" -> label("JEFE", "BOSS");
             default -> label("UNIDAD", "UNIT");
         };
 
@@ -198,11 +197,10 @@ public final class SiegeTitleScreen extends Screen {
         int textY = y + 54;
         int footerY = y + h - 12;
         int maxLines = Math.max(1, (footerY - textY - 2) / 10);
-        int lines = 0;
-        for (FormattedCharSequence line : font.split(Component.literal(previewSummary(entry)), w - 18)) {
-            if (lines >= maxLines) break;
-            g.drawString(font, line, x + 9, textY + lines * 10, 0xFFBCC4C9, false);
-            lines++;
+        List<FormattedCharSequence> summaryLines = font.split(
+                Component.literal(fitCompleteSummary(previewSummary(entry), w - 18, maxLines)), w - 18);
+        for (int line = 0; line < summaryLines.size(); line++) {
+            g.drawString(font, summaryLines.get(line), x + 9, textY + line * 10, 0xFFBCC4C9, false);
         }
 
         String footer = label("> INTEL: EXPEDIENTE COMPLETO", "> INTEL: OPEN FULL FILE");
@@ -211,53 +209,86 @@ public final class SiegeTitleScreen extends Screen {
 
     private String previewSummary(IntelEntry entry) {
         if (spanish()) return switch (entry.name()) {
-            case "INFANTRY" -> "Unidad básica que coordina ataques.";
-            case "SHIELDER" -> "Emboscador blindado de corto alcance.";
-            case "SABOTEUR" -> "Infiltrado con C4 y sabotaje electrónico.";
-            case "STALKER" -> "Espía camuflado con rastreador GPS.";
-            case "NATZUKA" -> "Cuadrúpedo armado de bajo costo.";
-            case "SNIPER" -> "Francotirador nusiano de largo alcance.";
-            case "GRENADIER" -> "Retaguardia equipada con gas y granadas.";
-            case "GUNNER" -> "Tanque común de fuego sostenido.";
-            case "JETPACKER" -> "Unidad explosiva de velocidad sónica.";
-            case "PATRIOT" -> "Identidad y capacidades desconocidas.";
-            case "SPECIALIST" -> "Estratega invisible y líder de escuadra.";
-            case "DEMOMAN" -> "Kamikaze avanzado con carga extrema.";
-            case "ARTILLER" -> "Bombardea a distancia mediante radio.";
-            case "CLOAKER" -> "Cazador veloz con impacto letal.";
-            case "APU" -> "Mech pesado con lanzallamas.";
-            case "MISSILER" -> "Francotirador de misiles guiados.";
-            case "ZAPPER" -> "Tanque eléctrico con bobinas Tesla.";
-            case "COMBATANT" -> "Tanque de asalto con M48 Tomahawk.";
-            case "AGREEMENT" -> "Expediente corporativo sin datos.";
-            case "JAGANT" -> "Capacidades todavía desconocidas.";
-            case "STRIDER" -> "Render recuperado; perfil desconocido.";
+            case "INFANTRY" -> "Unidad básica que comparte información y coordina ataques en grupo. Su fuerza aumenta cuando logra formar una escuadra.";
+            case "SHIELDER" -> "Emboscador blindado con escopeta y dos escudos frontales. Es vulnerable cuando se lo obliga a girar.";
+            case "SABOTEUR" -> "Infiltrado invisible equipado con C4 y sabotaje electrónico. Puede inutilizar defensas y marcar estructuras.";
+            case "STALKER" -> "Espía camuflado que observa bases y coloca rastreadores GPS. Suele operar dentro de escuadras de infiltración.";
+            case "NATZUKA" -> "Cuadrúpedo armado capaz de cruzar terrenos difíciles. Puede terminar el ataque con una carga explosiva.";
+            case "SNIPER" -> "Francotirador nusiano que amenaza desde gran distancia. Su láser revela brevemente la línea de tiro.";
+            case "GRENADIER" -> "Unidad de retaguardia equipada con gas y granadas. Obliga a abandonar coberturas y espacios cerrados.";
+            case "GUNNER" -> "Tanque común de fuego sostenido con gran reserva de munición. Conviene atacarlo desde cobertura sólida.";
+            case "JETPACKER" -> "Unidad aérea explosiva capaz de alcanzar velocidad sónica. Su trayectoria debe cortarse antes del impacto.";
+            case "PATRIOT" -> "Solo se recuperó un boceto de Patriot y su vínculo con Nusia. Sus capacidades continúan clasificadas.";
+            case "SPECIALIST" -> "Estratega invisible que dirige escuadras y prepara trampas complejas. Puede teletransportarse y cambiar de plan.";
+            case "DEMOMAN" -> "Kamikaze avanzado con rifle y una carga corporal extrema. Su demora de detonación permite una breve retirada.";
+            case "ARTILLER" -> "Especialista oculto que solicita bombardeos mediante radio. Debe interrumpirse antes de completar la transmisión.";
+            case "CLOAKER" -> "Cazador de velocidad extrema cuyo impacto ignora armaduras. El chillido anuncia el inicio de la carga.";
+            case "APU" -> "Mech pesado con lanzallamas que ignora la invulnerabilidad temporal. Su defensa disminuye dentro del agua.";
+            case "MISSILER" -> "Francotirador invisible que dispara misiles guiados. Un destello amarillo concede cinco segundos para escapar.";
+            case "ZAPPER" -> "Tanque eléctrico con bastón y bobinas Tesla recargables. Sus impactos pueden encadenar aturdimientos prolongados.";
+            case "COMBATANT" -> "Tanque de asalto pesado con M48 Tomahawk. Su carga causa daño devastador y puede ignorar defensas.";
+            case "AGREEMENT" -> "Solo se confirmó su vínculo con Secure Contain Protect. Armamento y capacidades permanecen sin datos.";
+            case "JAGANT" -> "La captura y sus valores de resistencia son los únicos datos recuperados. Su método de ataque sigue desconocido.";
+            case "STRIDER" -> "Se recuperó el render de una estructura mecánica de patas largas. Su origen y comportamiento siguen desconocidos.";
+            case "TEMPEST" -> "Jefe eléctrico que castiga a grupos y objetivos cercanos. También puede sabotear habilidades durante el combate.";
+            case "FUSILIER" -> "Jefe lento que bombardea a distancia con seis granadas. Usa una pala para defenderse a corta distancia.";
+            case "ACHILLES" -> "Francotirador lento cuyo Armour Peeler atraviesa toda armadura. Las líneas de visión son su principal ventaja.";
+            case "TRIDENT" -> "Jefe blindado que atrae víctimas con un gancho y las ejecuta con machete. También carga contra objetivos lejanos.";
+            case "PROMETHEUS" -> "Jefe incendiario armado con el FAHRENNEIT-3000. Sus tanques de combustible constituyen su punto vulnerable.";
+            case "DAEDALUS" -> "Jefe minero que excava a velocidad supersónica para emboscar. Puede derrotar sin armadura con un solo golpe.";
+            case "HERMES" -> "El video y una resistencia de 45.000 HP son los únicos datos confirmados. Sus capacidades permanecen desconocidas.";
+            case "LELANTOS" -> "Solo existen un video y una resistencia estimada de 8.000 HP. El resto del expediente sigue sin confirmar.";
+            case "GAIA" -> "El archivo contiene metraje parcial y una resistencia estimada de 20.000 HP. No hay capacidades verificadas.";
             default -> "Expediente operativo disponible.";
         };
         return switch (entry.name()) {
-            case "INFANTRY" -> "Basic unit that coordinates attacks.";
-            case "SHIELDER" -> "Armoured close-range ambusher.";
-            case "SABOTEUR" -> "Infiltrator with C4 and sabotage gear.";
-            case "STALKER" -> "Camouflaged spy with a GPS tracker.";
-            case "NATZUKA" -> "Low-cost armed quadruped.";
-            case "SNIPER" -> "Long-range Nusian marksman.";
-            case "GRENADIER" -> "Rear-line gas and grenade unit.";
-            case "GUNNER" -> "Common tank with sustained fire.";
-            case "JETPACKER" -> "Sonic-speed explosive unit.";
-            case "PATRIOT" -> "Identity and capabilities unknown.";
-            case "SPECIALIST" -> "Invisible strategist and squad leader.";
-            case "DEMOMAN" -> "Advanced kamikaze with a massive charge.";
-            case "ARTILLER" -> "Calls remote bombardments by radio.";
-            case "CLOAKER" -> "High-speed hunter with a lethal impact.";
-            case "APU" -> "Heavy mech equipped with a flamethrower.";
-            case "MISSILER" -> "Guided-missile marksman.";
-            case "ZAPPER" -> "Electric tank with Tesla coils.";
-            case "COMBATANT" -> "Assault tank with an M48 Tomahawk.";
-            case "AGREEMENT" -> "Corporate dossier with no verified data.";
-            case "JAGANT" -> "Capabilities remain unknown.";
-            case "STRIDER" -> "Render recovered; profile unknown.";
+            case "INFANTRY" -> "A basic unit that shares information and coordinates group attacks. Its strength rises after forming a squad.";
+            case "SHIELDER" -> "An armoured ambusher with a shotgun and two frontal shields. It is vulnerable when forced to turn.";
+            case "SABOTEUR" -> "An invisible infiltrator carrying C4 and electronic sabotage gear. It can disable defences and mark structures.";
+            case "STALKER" -> "A camouflaged spy that watches bases and plants GPS trackers. It usually operates in infiltration squads.";
+            case "NATZUKA" -> "An armed quadruped designed to cross difficult terrain. It can finish an attack with an explosive charge.";
+            case "SNIPER" -> "A Nusian marksman that threatens targets from long range. Its laser briefly reveals the firing line.";
+            case "GRENADIER" -> "A rear-line unit equipped with gas and grenades. It forces targets out of cover and enclosed spaces.";
+            case "GUNNER" -> "A common tank built for sustained fire with a large ammunition reserve. Solid cover is essential.";
+            case "JETPACKER" -> "An airborne explosive unit capable of sonic speed. Its trajectory must be broken before impact.";
+            case "PATRIOT" -> "Only a Patriot sketch and a connection to Nusia were recovered. Its capabilities remain classified.";
+            case "SPECIALIST" -> "An invisible strategist that commands squads and prepares complex traps. It can teleport and change plans.";
+            case "DEMOMAN" -> "An advanced kamikaze carrying a rifle and an extreme body charge. Its delay leaves a brief escape window.";
+            case "ARTILLER" -> "A hidden specialist that calls bombardments by radio. The transmission must be interrupted before completion.";
+            case "CLOAKER" -> "An extreme-speed hunter whose impact ignores armour. Its screech announces the beginning of a charge.";
+            case "APU" -> "A heavy flamethrower mech that ignores temporary invulnerability. Its defence drops while submerged.";
+            case "MISSILER" -> "An invisible marksman that launches guided missiles. A yellow flash grants five seconds to escape.";
+            case "ZAPPER" -> "An electric tank with a staff and rechargeable Tesla coils. Its hits can chain prolonged stuns.";
+            case "COMBATANT" -> "A heavy assault tank carrying an M48 Tomahawk. Its charge deals devastating damage and may ignore defence.";
+            case "AGREEMENT" -> "Only its link to Secure Contain Protect is confirmed. Weapons and capabilities remain unknown.";
+            case "JAGANT" -> "The image and durability values are the only recovered data. Its attack method remains unknown.";
+            case "STRIDER" -> "A render of a long-legged mechanical structure was recovered. Its origin and behaviour remain unknown.";
+            case "TEMPEST" -> "An electric boss that punishes groups and nearby targets. It can also sabotage abilities during combat.";
+            case "FUSILIER" -> "A slow boss that bombards targets with six grenades. It uses a shovel for close-range defence.";
+            case "ACHILLES" -> "A slow sniper whose Armour Peeler bypasses all armour. Dangerous sight lines are its main advantage.";
+            case "TRIDENT" -> "An armoured boss that hooks victims and executes them with a machete. It also charges distant targets.";
+            case "PROMETHEUS" -> "An incendiary boss armed with the FAHRENNEIT-3000. Its fuel tanks are the critical weak point.";
+            case "DAEDALUS" -> "A mining boss that tunnels at supersonic speed to ambush targets. One hit can defeat an unarmoured victim.";
+            case "HERMES" -> "The video and an estimated 45,000 HP are the only confirmed data. Its capabilities remain unknown.";
+            case "LELANTOS" -> "Only a video and an estimated 8,000 HP are available. The rest of the dossier remains unconfirmed.";
+            case "GAIA" -> "The file contains partial footage and an estimated 20,000 HP. No capabilities are verified.";
             default -> "Operational dossier available.";
         };
+    }
+
+    private String fitCompleteSummary(String summary, int width, int maxLines) {
+        String best = "";
+        for (String sentence : summary.split("(?<=[.!?])\\s+")) {
+            String candidate = best.isEmpty() ? sentence : best + " " + sentence;
+            if (font.split(Component.literal(candidate), width).size() > maxLines) break;
+            best = candidate;
+        }
+        return best.isEmpty() ? label("Expediente disponible.", "Dossier available.") : best;
+    }
+
+    private void changeTrack() {
+        SiegeUiSounds.nextTrack();
+        SiegeMusic.nextTrack();
     }
 
     private boolean spanish() {
@@ -275,6 +306,10 @@ public final class SiegeTitleScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_M) {
+            changeTrack();
+            return true;
+        }
         if (keyCode == GLFW.GLFW_KEY_S && Screen.hasControlDown()) {
             minecraft.setScreen(new SelectWorldScreen(this));
             return true;

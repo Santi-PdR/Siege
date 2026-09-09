@@ -152,6 +152,10 @@ public final class SiegeSettingsScreen extends Screen {
                 addRenderableWidget(toggle(contentX, y += h + gap, w, h, "siege.settings.backgrounds",
                         () -> SiegeConfig.animatedBackgrounds = !SiegeConfig.animatedBackgrounds,
                         () -> SiegeConfig.animatedBackgrounds));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("ANIMACIONES DE INTEL", "INTEL ANIMATIONS"),
+                        () -> SiegeConfig.animatedIntel = !SiegeConfig.animatedIntel,
+                        () -> SiegeConfig.animatedIntel));
             }
             case ACCESSIBILITY -> {
                 addRenderableWidget(toggle(contentX, y, w, h, "siege.settings.reduced_motion",
@@ -182,6 +186,17 @@ public final class SiegeSettingsScreen extends Screen {
         return button.setSelected(flag.get());
     }
 
+    private SiegeButton literalToggle(int x, int y, int w, int h, String text, Runnable action, Flag flag) {
+        SiegeButton button = new SiegeButton(x, y, w, h, literalToggleLabel(text, flag.get()), b -> {
+            SiegeUiSounds.click();
+            action.run();
+            SiegeConfig.save();
+            b.setMessage(literalToggleLabel(text, flag.get()));
+            ((SiegeButton)b).setSelected(flag.get());
+        }, ACCENT);
+        return button.setSelected(flag.get());
+    }
+
     private Component graphicsLabel() {
         return Component.translatable("siege.settings.graphics").append(": ")
                 .append(Component.translatable("siege.settings.graphics." + SiegeConfig.graphics.name().toLowerCase()));
@@ -190,6 +205,10 @@ public final class SiegeSettingsScreen extends Screen {
     private Component toggleLabel(String key, boolean enabled) {
         return Component.translatable(key).append(": ")
                 .append(Component.translatable(enabled ? "siege.common.on" : "siege.common.off"));
+    }
+
+    private Component literalToggleLabel(String text, boolean enabled) {
+        return Component.literal(text + ": " + label(enabled ? "SÍ" : "NO", enabled ? "ON" : "OFF"));
     }
 
     @Override
@@ -250,7 +269,7 @@ public final class SiegeSettingsScreen extends Screen {
         int infoY;
         if (section == Section.OVERVIEW) infoY = contentY + (compact ? 43 : 51);
         else if (section == Section.AUDIO) infoY = contentY + (compact ? 132 : 159);
-        else if (section == Section.INTERFACE) infoY = contentY + (compact ? 92 : 112);
+        else if (section == Section.INTERFACE) infoY = contentY + (compact ? 115 : 143);
         else infoY = contentY + (compact ? 69 : 82);
 
         int availableBottom = bottom - 12;
@@ -332,8 +351,8 @@ public final class SiegeSettingsScreen extends Screen {
                     "La banda sonora usa su propio volumen, conserva la posición de la pista mientras mueves el slider y cambia de canción con una transición suave.",
                     "The soundtrack uses its own volume, keeps the current track position while the slider moves and changes songs with a smooth transition.");
             case INTERFACE -> label(
-                    "Controla la respuesta sonora de los controles y si los fondos del menú cambian automáticamente.",
-                    "Controls UI feedback sounds and whether menu backgrounds rotate automatically.");
+                    "Controla sonidos, rotación de fondos y reproducción de los registros animados de Intel.",
+                    "Controls UI sounds, background rotation and playback of animated Intel records.");
             case ACCESSIBILITY -> label(
                     "Movimiento reducido limita desplazamientos y animaciones ambientales del menú sin eliminar su identidad visual.",
                     "Reduced motion limits menu camera movement and ambient animation without removing the visual identity.");

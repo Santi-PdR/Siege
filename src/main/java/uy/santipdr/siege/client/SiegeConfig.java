@@ -19,6 +19,7 @@ public final class SiegeConfig {
     public static int musicVolume = 75;
     public static boolean uiSounds = true;
     public static boolean animatedBackgrounds = true;
+    public static boolean animatedIntel = true;
     public static boolean reducedMotion = false;
     public static Graphics graphics = Graphics.CINEMATIC;
 
@@ -34,6 +35,7 @@ public final class SiegeConfig {
         musicVolume = integer(p, "musicVolume", 75, 0, 100);
         uiSounds = bool(p, "uiSounds", true);
         animatedBackgrounds = bool(p, "animatedBackgrounds", true);
+        animatedIntel = bool(p, "animatedIntel", true);
         reducedMotion = bool(p, "reducedMotion", false);
         try { graphics = Graphics.valueOf(p.getProperty("graphics", Graphics.CINEMATIC.name())); }
         catch (IllegalArgumentException ignored) { graphics = Graphics.CINEMATIC; }
@@ -45,6 +47,7 @@ public final class SiegeConfig {
         p.setProperty("musicVolume", Integer.toString(musicVolume));
         p.setProperty("uiSounds", Boolean.toString(uiSounds));
         p.setProperty("animatedBackgrounds", Boolean.toString(animatedBackgrounds));
+        p.setProperty("animatedIntel", Boolean.toString(animatedIntel));
         p.setProperty("reducedMotion", Boolean.toString(reducedMotion));
         p.setProperty("graphics", graphics.name());
         try {
