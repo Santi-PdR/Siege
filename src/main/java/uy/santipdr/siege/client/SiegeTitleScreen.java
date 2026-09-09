@@ -99,7 +99,7 @@ public final class SiegeTitleScreen extends Screen {
                     height - 14, 0xFF929AA1, false);
         }
         if (width >= 610) {
-            graphics.drawString(font, "BUILD 0.6.0 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
+            graphics.drawString(font, "BUILD 0.6.1 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
