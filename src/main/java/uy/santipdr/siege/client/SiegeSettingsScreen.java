@@ -46,7 +46,7 @@ public final class SiegeSettingsScreen extends Screen {
             if (!SiegeConfig.music) SiegeMusic.stop(); else SiegeMusic.ensurePlaying();
         }, () -> SiegeConfig.music));
 
-        addRenderableWidget(action(right, row0, cellWidth, cellHeight, volumeLabel(), () -> adjustVolume(-10)));
+        addRenderableWidget(action(right, row0, cellWidth, cellHeight, volumeDownLabel(), () -> adjustVolume(-10)));
         addRenderableWidget(action(gridX, row1, cellWidth, cellHeight, volumeUpLabel(), () -> adjustVolume(10)));
         addRenderableWidget(new SiegeButton(right, row1, cellWidth, cellHeight,
                 Component.translatable("siege.menu.next_track"), b -> {
@@ -92,16 +92,10 @@ public final class SiegeSettingsScreen extends Screen {
         SiegeConfig.musicVolume = SiegeConfig.clampVolume(SiegeConfig.musicVolume + amount);
         SiegeConfig.save();
         SiegeMusic.refreshVolume();
-        rebuildWidgets();
     }
 
-    private Component volumeLabel() {
-        return Component.literal(label("MÚSICA -10%", "MUSIC -10%"));
-    }
-
-    private Component volumeUpLabel() {
-        return Component.literal(label("MÚSICA +10%", "MUSIC +10%"));
-    }
+    private Component volumeDownLabel() { return Component.literal(label("MÚSICA -10%", "MUSIC -10%")); }
+    private Component volumeUpLabel() { return Component.literal(label("MÚSICA +10%", "MUSIC +10%")); }
 
     private Component graphicsLabel() {
         return Component.translatable("siege.settings.graphics").append(": ")
