@@ -1,7 +1,6 @@
 package uy.santipdr.siege.client;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -84,42 +83,42 @@ public final class IntelScreen extends Screen {
                     "Republic of Nusia", "Military rifle — incomplete data", "Insufficient information", "INCOMPLETE FILE",
                     "Partially redacted dossier. The recovered flag and corrected record confirm allegiance to the Republic of Nusia. There is not enough verified information about special capabilities, deployment pattern or exact role within Nusian forces.",
                     "Do not fill missing information with assumptions. Treat it as hostile until confirmed operational data is recovered."),
-            file("ADV-001", "SPECIALIST", "ADVANCED", 2, "500", "specialist",
+            file("ADV-001", "SPECIALIST", "ADVANCED", 5, "500", "specialist",
                     "República de Nusia", "C4 + bombas nucleares + teletransportación", "Planificador / líder de escuadra", "HOSTIL",
                     "Maestro de operaciones, planificación y estrategia. Se infiltra en invisibilidad y, si el jugador está dentro de una base, rodea la estructura con C4 antes de detonarla de una vez. Puede sellar pozos con capas de obsidiana y rodear la salida con explosivos nucleares. En grupos grandes asume el liderazgo, crea estrategias y distribuye órdenes. Posee teletransportación, autoconsciencia e IA cercana al nivel de jugadores PVP UHC.",
                     "No permanecer dentro de estructuras ni pozos después de detectarlo. Romper el grupo antes de que asuma el mando y cambiar constantemente de plan.",
                     "Republic of Nusia", "C4 + nuclear bombs + teleportation", "Planner / squad leader", "HOSTILE",
                     "Master of operations, planning and strategy. It infiltrates invisibly and, when a player is inside a base, surrounds the structure with C4 before detonating everything at once. It can seal pits with layered obsidian and ring the exit with nuclear explosives. In large groups it assumes command, creates strategies and issues orders. It possesses teleportation, self-awareness and AI approaching UHC PVP players.",
                     "Do not remain inside structures or pits after detection. Break the group before it assumes command and change tactics constantly."),
-            file("ADV-002", "DEMOMAN", "ADVANCED", 2, "NAN", "demoman",
+            file("ADV-002", "DEMOMAN", "ADVANCED", 4, "NAN", "demoman",
                     "República de Nusia", "Rifle de asalto + dinamita corporal", "Kamikaze avanzado", "HOSTIL",
                     "Maestro del suicidio definitivo y enemigo silencioso. Porta un rifle de asalto y una cantidad extrema de dinamita adherida al cuerpo. Tarda más en detonar que una unidad Kamikaze común, pero la explosión resultante es considerablemente mayor y más letal.",
                     "Identificar la carga roja y eliminarlo a máxima distancia. El tiempo adicional de detonación es la única ventana fiable de escape.",
                     "Republic of Nusia", "Assault rifle + body-mounted dynamite", "Advanced kamikaze", "HOSTILE",
                     "Master of ultimate suicide tactics and a silent enemy. It carries an assault rifle and an extreme quantity of dynamite attached to its body. Detonation takes longer than a common Kamikaze unit, but the resulting explosion is considerably larger and deadlier.",
                     "Identify the red payload and eliminate it at maximum range. The longer detonation time is the only reliable escape window."),
-            file("ADV-003", "ARTILLER", "ADVANCED", 2, "500", "artiller",
+            file("ADV-003", "ARTILLER", "ADVANCED", 5, "500", "artiller",
                     "República de Nusia", "SMG + Radio Striker", "Flame Strike / misiles / nuclear", "HOSTIL",
                     "Especialista en bombardeo encubierto. En lugar de correr hacia el jugador, selecciona un punto seguro, permanece oculto y solicita ataques con su Radio Striker. Puede ordenar Flame Strikes, misiles pequeños, medianos o grandes y, en el extremo superior, bombas nucleares.",
                     "Localizar la transmisión y obligarlo a abandonar su posición antes de que complete la solicitud. No permanecer dentro de la zona marcada.",
                     "Republic of Nusia", "SMG + Striker Radio", "Flame Strike / missiles / nuclear", "HOSTILE",
                     "A covert bombardment specialist. Instead of rushing the player, it selects a protected location, remains hidden and calls attacks through a Striker Radio. Available strikes include Flame Strikes, small, medium and large missiles and, at the highest level, nuclear bombs.",
                     "Locate the transmission and force it from its position before the request completes. Never remain inside the marked zone."),
-            file("ADV-004", "CLOAKER", "ADVANCED", 2, "150", "cloaker",
+            file("ADV-004", "CLOAKER", "ADVANCED", 5, "150", "cloaker",
                     "República de Nusia", "Exoesqueleto + visión nocturna", "Cazador de alta velocidad", "HOSTIL",
                     "Maestro de caza absoluta. Aunque no porta un arma convencional, su exoesqueleto permite velocidades extremas y saltos muy altos. Emite pulsos de radar antes de correr hacia el objetivo con un chillido. Al alcanzarlo ejecuta un dropkick de 100.000 de daño que ignora completamente la armadura y mata en cualquier dificultad. Sus gafas nocturnas permiten cazar en oscuridad total.",
                     "El chillido confirma la carga. Separarse y cortar inmediatamente su trayectoria; no existe armadura capaz de resistir el impacto.",
                     "Republic of Nusia", "Exoskeleton + night vision", "High-speed hunter", "HOSTILE",
                     "Master of absolute hunting. Although it carries no conventional weapon, its exoskeleton enables extreme speed and very high jumps. It emits radar pulses before sprinting at the target with a screech. On contact it performs a 100,000-damage dropkick that completely ignores armour and kills on every difficulty. Night-vision goggles allow it to hunt in total darkness.",
                     "The screech confirms the charge. Split up and break its path immediately; no armour can survive the impact."),
-            file("ADV-005", "APU", "ADVANCED", 2, "120,000", "apu",
+            file("ADV-005", "APU", "ADVANCED", 5, "120,000", "apu",
                     "República de Nusia", "Mech de californita + lanzallamas", "Defensa reducida en agua", "HOSTIL",
                     "Maestro de la robótica hostil. Un piloto con casco de protección controla un exoesqueleto de californita armado con lanzallamas. Cuenta con 120.000 HP y 0,75 de defensa, ajustables por dificultad. Al acercarse quema continuamente, ignora los I-frames y vuelve inútiles los tótems. Su defensa cae dentro del agua.",
                     "Mantener distancia, atraerlo al agua y evitar por completo su arco frontal. No confiar en tótems ni en invulnerabilidad temporal.",
                     "Republic of Nusia", "Californite mech + flamethrower", "Reduced defence in water", "HOSTILE",
                     "Master of hostile robotics. A helmeted pilot controls a Californite exoskeleton armed with a flamethrower. It has 120,000 HP and 0.75 defence, adjusted by difficulty. At close range it burns continuously, ignores I-frames and renders totems useless. Its defence falls in water.",
                     "Keep it at range, lure it into water and avoid its frontal fire arc completely. Do not rely on totems or temporary invulnerability."),
-            file("ADV-006", "MISSILER", "ADVANCED", 1, "250", "missiler",
+            file("ADV-006", "MISSILER", "ADVANCED", 4, "250", "missiler",
                     "República de Nusia", "PVS-14 + Javelin + 8 DEF", "Francotirador de misiles guiados", "HOSTIL",
                     "Maestro de los teledirigidos y evolución avanzada del Sniper. Se desplaza en invisibilidad, elige una posición lejana y lanza misiles guiados. No proyecta un láser: aparece un destello amarillo que concede cinco segundos para escapar. Si detecta jugadores acercándose, desaparece nuevamente y selecciona otra posición.",
                     "Abandonar el área inmediatamente al ver el destello amarillo. Acercarse en grupo obliga al Missiler a interrumpir el ataque y reposicionarse.",
@@ -128,8 +127,8 @@ public final class IntelScreen extends Screen {
                     "Leave the area immediately when the yellow flash appears. A coordinated approach forces the Missiler to interrupt its attack and relocate."));
 
     private final Screen parent;
-    private final List<Button> categoryButtons = new ArrayList<>();
-    private final List<Button> fileButtons = new ArrayList<>();
+    private final List<SiegeButton> categoryButtons = new ArrayList<>();
+    private final List<SiegeButton> fileButtons = new ArrayList<>();
     private String category = "UNIT";
     private int selected;
     private int listOffset;
@@ -137,31 +136,70 @@ public final class IntelScreen extends Screen {
     private int maxDetailScroll;
     private int sidebarWidth;
     private int listTop;
+    private int contentTop;
+    private boolean compact;
 
     public IntelScreen(Screen parent) {
         super(Component.translatable("siege.intel.title"));
         this.parent = parent;
     }
 
-    @Override protected void init() {
+    @Override
+    protected void init() {
         SiegeUiSounds.resetHover();
         categoryButtons.clear();
-        sidebarWidth = Math.min(250, Math.max(148, width / 5));
-        int buttonHeight = height < 320 ? 17 : 20;
-        int gap = height < 320 ? 2 : 3;
-        addRenderableWidget(Button.builder(Component.literal("< ").append(Component.translatable("siege.intel.return")), b -> onClose())
-                .bounds(10, 10, sidebarWidth - 20, 22).build());
-        int categoryY = 52;
+        fileButtons.clear();
+        compact = width < 560 || height < 295;
+
+        if (compact) initCompact();
+        else initWide();
+
+        refreshCategoryLabels();
+        rebuildFileButtons();
+    }
+
+    private void initWide() {
+        sidebarWidth = Math.min(232, Math.max(158, width / 5));
+        int buttonHeight = height < 360 ? 18 : 20;
+        int gap = height < 360 ? 2 : 3;
+        addRenderableWidget(new SiegeButton(10, 10, sidebarWidth - 20, 21,
+                Component.literal("< ").append(Component.translatable("siege.intel.return")), b -> onClose(), 0xFFD64B4B));
+
+        int categoryY = 48;
         for (String value : CATEGORIES) {
-            Button button = Button.builder(Component.literal(categoryLabel(value)), b -> setCategory(value))
-                    .bounds(10, categoryY, sidebarWidth - 20, buttonHeight).build();
+            SiegeButton button = new SiegeButton(10, categoryY, sidebarWidth - 20, buttonHeight,
+                    Component.literal(categoryLabel(value)), b -> setCategory(value), categoryAccent(value));
             categoryButtons.add(button);
             addRenderableWidget(button);
             categoryY += buttonHeight + gap;
         }
-        listTop = categoryY + 25;
-        refreshCategoryLabels();
-        rebuildFileButtons();
+        listTop = categoryY + 21;
+        contentTop = 55;
+    }
+
+    private void initCompact() {
+        sidebarWidth = 0;
+        addRenderableWidget(new SiegeButton(8, 7, Math.min(76, Math.max(60, width / 5)), 18,
+                Component.literal("< ").append(Component.translatable("siege.intel.return")), b -> onClose(), 0xFFD64B4B));
+
+        int margin = 8;
+        int gap = 3;
+        int buttonHeight = 18;
+        int categoryWidth = Math.max(54, (width - margin * 2 - gap * 2) / 3);
+        int startY = 31;
+        for (int i = 0; i < CATEGORIES.size(); i++) {
+            String value = CATEGORIES.get(i);
+            int col = i % 3;
+            int row = i / 3;
+            int x = margin + col * (categoryWidth + gap);
+            int y = startY + row * (buttonHeight + 3);
+            SiegeButton button = new SiegeButton(x, y, categoryWidth, buttonHeight,
+                    Component.literal(categoryLabel(value)), b -> setCategory(value), categoryAccent(value));
+            categoryButtons.add(button);
+            addRenderableWidget(button);
+        }
+        listTop = startY + 2 * (buttonHeight + 3) + 1;
+        contentTop = listTop + 23;
     }
 
     private void setCategory(String value) {
@@ -178,29 +216,65 @@ public final class IntelScreen extends Screen {
     private void refreshCategoryLabels() {
         for (int i = 0; i < categoryButtons.size(); i++) {
             String value = CATEGORIES.get(i);
-            categoryButtons.get(i).setMessage(Component.literal((value.equals(category) ? "> " : "  ") + categoryLabel(value)));
+            boolean active = value.equals(category);
+            categoryButtons.get(i).setMessage(Component.literal(categoryLabel(value)));
+            categoryButtons.get(i).setSelected(active);
         }
     }
 
     private void rebuildFileButtons() {
-        for (Button button : fileButtons) removeWidget(button);
+        for (SiegeButton button : fileButtons) removeWidget(button);
         fileButtons.clear();
         List<IntelEntry> files = filtered();
+
+        if (compact) {
+            int navY = listTop;
+            int arrowWidth = Math.min(44, Math.max(32, width / 10));
+            SiegeButton previous = new SiegeButton(8, navY, arrowWidth, 18, Component.literal("<"), b -> stepFile(-1), categoryAccent(category));
+            SiegeButton next = new SiegeButton(width - arrowWidth - 8, navY, arrowWidth, 18, Component.literal(">"), b -> stepFile(1), categoryAccent(category));
+            previous.active = files.size() > 1;
+            next.active = files.size() > 1;
+            fileButtons.add(previous);
+            fileButtons.add(next);
+            addRenderableWidget(previous);
+            addRenderableWidget(next);
+            contentTop = navY + 23;
+            return;
+        }
+
         int visible = visibleFiles();
         listOffset = Math.max(0, Math.min(listOffset, Math.max(0, files.size() - visible)));
         int y = listTop;
         for (int i = listOffset; i < files.size() && i < listOffset + visible; i++) {
             int index = i;
             IntelEntry entry = files.get(i);
-            Button button = Button.builder(Component.literal(entry.code() + "  " + entry.name()), b -> {
+            SiegeButton button = new SiegeButton(10, y, sidebarWidth - 20, 20,
+                    Component.literal(entry.code() + "  " + entry.name()), b -> {
                 SiegeUiSounds.click();
                 selected = index;
                 detailScroll = 0;
-            }).bounds(10, y, sidebarWidth - 20, 20).build();
+                refreshFileSelection();
+            }, categoryAccent(category));
+            button.setSelected(i == selected);
             fileButtons.add(button);
             addRenderableWidget(button);
             y += 23;
         }
+    }
+
+    private void refreshFileSelection() {
+        if (compact) return;
+        for (int i = 0; i < fileButtons.size(); i++) {
+            fileButtons.get(i).setSelected(listOffset + i == selected);
+        }
+    }
+
+    private void stepFile(int direction) {
+        List<IntelEntry> files = filtered();
+        if (files.isEmpty()) return;
+        SiegeUiSounds.click();
+        selected = Math.floorMod(selected + direction, files.size());
+        detailScroll = 0;
     }
 
     private int visibleFiles() { return Math.max(1, (height - listTop - 16) / 23); }
@@ -214,6 +288,26 @@ public final class IntelScreen extends Screen {
     private boolean spanish() { return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_"); }
 
     private String categoryLabel(String value) {
+        if (compact) {
+            if (spanish()) return switch (value) {
+                case "UNIT" -> "UNIDADES";
+                case "ADVANCED" -> "AVANZ.";
+                case "TANK" -> "TANQUES";
+                case "BOSS" -> "JEFES";
+                case "ELITE" -> "ÉLITES";
+                case "SUPER-UNIT" -> "SUPER";
+                default -> value;
+            };
+            return switch (value) {
+                case "UNIT" -> "UNITS";
+                case "ADVANCED" -> "ADVANCED";
+                case "TANK" -> "TANKS";
+                case "BOSS" -> "BOSSES";
+                case "ELITE" -> "ELITES";
+                case "SUPER-UNIT" -> "SUPER";
+                default -> value;
+            };
+        }
         if (!spanish()) return switch (value) {
             case "UNIT" -> "COMMON UNITS";
             case "ADVANCED" -> "ADVANCED UNITS";
@@ -234,101 +328,185 @@ public final class IntelScreen extends Screen {
         };
     }
 
-    @Override public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (mouseX < sidebarWidth && mouseY >= listTop) {
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (!compact && mouseX < sidebarWidth && mouseY >= listTop) {
             int max = Math.max(0, filtered().size() - visibleFiles());
             int next = Math.max(0, Math.min(max, listOffset + (delta < 0 ? 1 : -1)));
-            if (next != listOffset) { listOffset = next; rebuildFileButtons(); }
+            if (next != listOffset) {
+                listOffset = next;
+                rebuildFileButtons();
+            }
             return true;
         }
-        if (mouseX >= sidebarWidth) {
+        if (compact || mouseX >= sidebarWidth) {
             detailScroll = Math.max(0, Math.min(maxDetailScroll, detailScroll + (delta < 0 ? 2 : -2)));
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
-    @Override public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    @Override
+    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         int accent = categoryAccent(category);
-        g.fill(0, 0, width, 42, 0xF207080A);
-        g.fill(0, 42, sidebarWidth, height, 0xEE111317);
-        g.fill(sidebarWidth, 42, width, height, 0xD808090B);
-        g.fill(sidebarWidth - 2, 42, sidebarWidth, height, accent);
-        g.fill(0, 40, width, 42, accent);
-        g.drawCenteredString(font, title, (sidebarWidth + width) / 2, 16, accent);
-        g.drawString(font, "// " + label("CATEGORÍAS", "CATEGORIES"), 12, 39, 0xFF777C83, false);
-        g.drawString(font, "// " + label("EXPEDIENTES", "FILES") + " [" + filtered().size() + "]", 12, listTop - 16, 0xFF777C83, false);
+
+        g.fill(0, 0, width, height, 0x9506090B);
+        if (compact) renderCompactChrome(g, accent);
+        else renderWideChrome(g, accent);
+
         List<IntelEntry> files = filtered();
         if (files.isEmpty()) {
-            g.drawCenteredString(font, label("SIN EXPEDIENTES EN ESTA CATEGORÍA", "NO FILES IN THIS CATEGORY"), (sidebarWidth + width) / 2, height / 2, 0xFF888888);
+            g.drawCenteredString(font, label("SIN EXPEDIENTES EN ESTA CATEGORÍA", "NO FILES IN THIS CATEGORY"),
+                    compact ? width / 2 : (sidebarWidth + width) / 2, height / 2, 0xFF8A9298);
         } else {
             selected = Math.max(0, Math.min(selected, files.size() - 1));
-            renderFile(g, files.get(selected), sidebarWidth + 16, 55, width - sidebarWidth - 32);
-            g.drawString(font, String.format("%02d/%02d", selected + 1, files.size()), width - 48, 17, 0xFF8B8E94, false);
+            if (compact) {
+                IntelEntry entry = files.get(selected);
+                String nav = String.format("%02d/%02d  //  %s  %s", selected + 1, files.size(), entry.code(), entry.name());
+                int available = width - 112;
+                g.drawCenteredString(font, font.plainSubstrByWidth(nav, Math.max(80, available)), width / 2, listTop + 5, 0xFFDDE2E5);
+                renderFile(g, entry, 8, contentTop, width - 16, true);
+            } else {
+                renderFile(g, files.get(selected), sidebarWidth + 16, contentTop, width - sidebarWidth - 32, false);
+                g.drawString(font, String.format("%02d/%02d", selected + 1, files.size()), width - 48, 17, 0xFF8B939A, false);
+            }
         }
+
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
     }
 
-    private void renderFile(GuiGraphics g, IntelEntry entry, int x, int y, int availableWidth) {
-        IntelEntry.IntelText text = entry.text(spanish());
-        int accent = categoryAccent(entry.category());
-        g.fill(x - 4, y - 5, x + availableWidth + 4, height - 12, 0xB9040506);
-        g.fill(x - 4, y - 5, x + availableWidth + 4, y - 3, accent);
-        g.pose().pushPose();
-        g.pose().scale(1.12f, 1.12f, 1f);
-        g.drawString(font, entry.code() + " / " + entry.name(), Math.round(x / 1.12f), Math.round(y / 1.12f), 0xFFF4F4F4, false);
-        g.pose().popPose();
-        g.drawString(font, stars(entry.threat()) + "   HP " + entry.hp() + "   " + categoryLabel(entry.category()), x, y + 17, accent, false);
-        int imageY = y + 34;
-        int imageWidth = Math.max(118, Math.min(320, availableWidth * 40 / 100));
-        int imageHeight = imageWidth * 9 / 16;
-        ResourceLocation portrait = new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/intel/" + entry.image() + ".png");
-        g.blit(portrait, x, imageY, imageWidth, imageHeight, 0, 0, 640, 360, 640, 360);
-        g.fill(x, imageY, x + imageWidth, imageY + 2, accent);
-        int metaX = x + imageWidth + 12;
-        int metaWidth = Math.max(80, availableWidth - imageWidth - 12);
-        int metaY = imageY;
-        metaY = drawMeta(g, label("ORIGEN", "ORIGIN"), text.origin(), metaX, metaY, metaWidth, 0xFFE0E0E0);
-        metaY = drawMeta(g, label("ARMAMENTO", "ARMAMENT"), text.armament(), metaX, metaY + 4, metaWidth, 0xFFE0E0E0);
-        metaY = drawMeta(g, label("VARIANTES", "VARIANTS"), text.variants(), metaX, metaY + 4, metaWidth, 0xFFE0E0E0);
-        drawMeta(g, label("ESTADO", "STATUS"), text.status(), metaX, metaY + 4, metaWidth, accent);
-        int bodyTop = Math.max(imageY + imageHeight + 12, y + 146);
-        int bodyBottom = height - 24;
-        int bodyWidth = availableWidth - 12;
-        List<DetailLine> lines = new ArrayList<>();
-        appendWrapped(lines, label("PERFIL OPERATIVO", "OPERATIONAL PROFILE"), bodyWidth, accent);
-        appendWrapped(lines, text.description(), bodyWidth, 0xFFD6D6D6);
-        lines.add(new DetailLine(FormattedCharSequence.forward(" ", net.minecraft.network.chat.Style.EMPTY), 0x00000000));
-        appendWrapped(lines, label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), bodyWidth, 0xFFFFB020);
-        appendWrapped(lines, text.advisory(), bodyWidth, 0xFFFFD073);
-        int visibleLines = Math.max(1, (bodyBottom - bodyTop) / 12);
-        maxDetailScroll = Math.max(0, lines.size() - visibleLines);
-        detailScroll = Math.min(detailScroll, maxDetailScroll);
-        g.enableScissor(x, bodyTop, x + availableWidth, bodyBottom);
-        int lineY = bodyTop - detailScroll * 12;
-        for (DetailLine line : lines) {
-            if (lineY >= bodyTop - 12 && lineY < bodyBottom) g.drawString(font, line.value(), x, lineY, line.color(), false);
-            lineY += 12;
-        }
-        g.disableScissor();
-        if (maxDetailScroll > 0) g.drawString(font, label("RUEDA: LEER MÁS", "WHEEL: READ MORE"), x + availableWidth - 104, bodyBottom + 2, 0xFF7F858C, false);
+    private void renderWideChrome(GuiGraphics g, int accent) {
+        g.fill(0, 0, width, 42, 0xF207090B);
+        g.fill(0, 42, sidebarWidth, height, 0xF00B1014);
+        g.fill(sidebarWidth, 42, width, height, 0x76080A0C);
+        g.fill(sidebarWidth - 2, 42, sidebarWidth, height, accent);
+        g.fill(0, 40, width, 42, accent);
+        for (int y = 46; y < height; y += 28) g.fill(0, y, sidebarWidth, y + 1, 0x1519A5BC);
+        g.drawCenteredString(font, title, (sidebarWidth + width) / 2, 16, 0xFFE9E9E4);
+        g.drawString(font, "// " + label("CATEGORÍAS", "CATEGORIES"), 12, 37, 0xFF79838B, false);
+        g.drawString(font, "// " + label("EXPEDIENTES", "FILES") + " [" + filtered().size() + "]", 12, listTop - 15, 0xFF79838B, false);
     }
 
-    private int drawMeta(GuiGraphics g, String label, String value, int x, int y, int width, int color) {
-        g.drawString(font, label + ":", x, y, 0xFF8C9299, false);
-        int nextY = y + 11;
+    private void renderCompactChrome(GuiGraphics g, int accent) {
+        g.fill(0, 0, width, 28, 0xF207090B);
+        g.fill(0, 27, width, 29, accent);
+        String compactTitle = label("INTEL CLASIFICADO", "CLASSIFIED INTEL");
+        g.drawCenteredString(font, compactTitle, width / 2, 10, 0xFFEDEBE5);
+        g.fill(0, contentTop - 3, width, contentTop - 2, 0x66454E55);
+    }
+
+    private void renderFile(GuiGraphics g, IntelEntry entry, int x, int y, int availableWidth, boolean compactMode) {
+        IntelEntry.IntelText text = entry.text(spanish());
+        int accent = categoryAccent(entry.category());
+        boolean advanced = entry.category().equals("ADVANCED");
+        int paper = advanced ? 0xFFE0E7EB : 0xFFE6DEC7;
+        int paperDark = advanced ? 0xFFBBC7CE : 0xFFC9BEA3;
+        int ink = advanced ? 0xFF13232D : 0xFF2B281F;
+        int muted = advanced ? 0xFF53646E : 0xFF6D6553;
+        int warning = advanced ? 0xFF8C2532 : 0xFF8B2E25;
+        int bottom = height - 8;
+        if (bottom <= y + 24 || availableWidth < 80) return;
+
+        g.fill(x + 3, y + 3, x + availableWidth + 3, bottom + 3, 0x65000000);
+        g.fill(x, y, x + availableWidth, bottom, paper);
+        g.fill(x, y, x + availableWidth, y + 3, accent);
+        g.fill(x, y, x + 1, bottom, paperDark);
+        g.fill(x + availableWidth - 1, y, x + availableWidth, bottom, paperDark);
+
+        int pad = compactMode ? 7 : 10;
+        int headerX = x + pad;
+        int headerY = y + 7;
+        String ref = label("EXPEDIENTE", "FILE") + " " + entry.code();
+        g.drawString(font, ref, headerX, headerY, muted, false);
+        String stamp = label("CLASIFICADO", "CLASSIFIED");
+        if (availableWidth > 240) {
+            g.drawString(font, stamp, x + availableWidth - pad - font.width(stamp), headerY, accent, false);
+        }
+        g.drawString(font, entry.name(), headerX, headerY + 12, ink, false);
+        String threat = label("AMENAZA", "THREAT") + " " + stars(entry.threat()) + "   HP " + entry.hp();
+        g.drawString(font, font.plainSubstrByWidth(threat, availableWidth - pad * 2), headerX, headerY + 24, warning, false);
+
+        int imageY = headerY + 39;
+        int imageWidth;
+        if (compactMode) imageWidth = Math.min(118, Math.max(88, availableWidth * 34 / 100));
+        else imageWidth = Math.max(126, Math.min(318, availableWidth * 42 / 100));
+        int imageHeight = imageWidth * 9 / 16;
+        int imageX = headerX;
+        ResourceLocation portrait = new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/intel/" + entry.image() + ".png");
+        g.fill(imageX - 3, imageY - 3, imageX + imageWidth + 3, imageY + imageHeight + 3, paperDark);
+        g.blit(portrait, imageX, imageY, imageWidth, imageHeight, 0, 0, 640, 360, 640, 360);
+        g.fill(imageX, imageY, imageX + imageWidth, imageY + 2, accent);
+
+        int metaX = imageX + imageWidth + (compactMode ? 8 : 13);
+        int metaWidth = Math.max(54, x + availableWidth - pad - metaX);
+        int metaY = imageY;
+        metaY = drawMeta(g, label("ORIGEN", "ORIGIN"), text.origin(), metaX, metaY, metaWidth, muted, ink);
+        metaY = drawMeta(g, label("ESTADO", "STATUS"), text.status(), metaX, metaY + 4, metaWidth, muted, warning);
+        if (!compactMode) {
+            metaY = drawMeta(g, label("ARMAMENTO", "ARMAMENT"), text.armament(), metaX, metaY + 4, metaWidth, muted, ink);
+            drawMeta(g, label("VARIANTES", "VARIANTS"), text.variants(), metaX, metaY + 4, metaWidth, muted, ink);
+        }
+
+        int bodyTop = imageY + imageHeight + 9;
+        int bodyBottom = bottom - 12;
+        int bodyWidth = availableWidth - pad * 2;
+        List<DetailLine> lines = new ArrayList<>();
+        if (compactMode) {
+            appendWrapped(lines, label("ARMAMENTO", "ARMAMENT") + ": " + text.armament(), bodyWidth, muted);
+            appendWrapped(lines, label("VARIANTES", "VARIANTS") + ": " + text.variants(), bodyWidth, muted);
+            lines.add(blankLine());
+        }
+        appendWrapped(lines, label("PERFIL OPERATIVO", "OPERATIONAL PROFILE"), bodyWidth, accentInk(accent, advanced));
+        appendWrapped(lines, text.description(), bodyWidth, ink);
+        lines.add(blankLine());
+        appendWrapped(lines, label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), bodyWidth, warning);
+        appendWrapped(lines, text.advisory(), bodyWidth, warning);
+
+        int visibleLines = Math.max(1, (bodyBottom - bodyTop) / 11);
+        maxDetailScroll = Math.max(0, lines.size() - visibleLines);
+        detailScroll = Math.min(detailScroll, maxDetailScroll);
+        if (bodyBottom > bodyTop) {
+            g.fill(headerX, bodyTop - 4, x + availableWidth - pad, bodyTop - 3, paperDark);
+            g.enableScissor(headerX, bodyTop, x + availableWidth - pad, bodyBottom);
+            int lineY = bodyTop - detailScroll * 11;
+            for (DetailLine line : lines) {
+                if (lineY >= bodyTop - 11 && lineY < bodyBottom) g.drawString(font, line.value(), headerX, lineY, line.color(), false);
+                lineY += 11;
+            }
+            g.disableScissor();
+        }
+        if (maxDetailScroll > 0) {
+            String hint = label("RUEDA: LEER MÁS", "WHEEL: READ MORE");
+            g.drawString(font, hint, x + availableWidth - pad - font.width(hint), bottom - 10, muted, false);
+        }
+    }
+
+    private DetailLine blankLine() {
+        return new DetailLine(FormattedCharSequence.forward(" ", net.minecraft.network.chat.Style.EMPTY), 0x00000000);
+    }
+
+    private int drawMeta(GuiGraphics g, String label, String value, int x, int y, int width, int labelColor, int valueColor) {
+        if (width <= 8) return y;
+        g.drawString(font, label + ":", x, y, labelColor, false);
+        int nextY = y + 10;
         for (FormattedCharSequence line : font.split(Component.literal(value), width)) {
-            g.drawString(font, line, x, nextY, color, false);
-            nextY += 11;
+            g.drawString(font, line, x, nextY, valueColor, false);
+            nextY += 10;
         }
         return nextY;
     }
 
     private void appendWrapped(List<DetailLine> target, String value, int width, int color) {
-        for (FormattedCharSequence line : font.split(Component.literal(value), width)) target.add(new DetailLine(line, color));
+        for (FormattedCharSequence line : font.split(Component.literal(value), Math.max(20, width))) {
+            target.add(new DetailLine(line, color));
+        }
+    }
+
+    private int accentInk(int accent, boolean advanced) {
+        return advanced ? 0xFF245F86 : 0xFF8C302B;
     }
 
     private String label(String spanishValue, String englishValue) { return spanish() ? spanishValue : englishValue; }
@@ -355,7 +533,12 @@ public final class IntelScreen extends Screen {
                 new IntelEntry.IntelText(enOrigin, enArmament, enVariants, enStatus, enDescription, enAdvisory));
     }
 
-    @Override public void onClose() { SiegeUiSounds.back(); minecraft.setScreen(parent); }
+    @Override
+    public void onClose() {
+        SiegeUiSounds.back();
+        minecraft.setScreen(parent);
+    }
+
     @Override public boolean isPauseScreen() { return false; }
     private record DetailLine(FormattedCharSequence value, int color) { }
 }
