@@ -6,12 +6,15 @@ import net.minecraft.network.chat.Component;
 
 public final class SiegeSettingsScreen extends Screen {
     private static final int ACCENT = 0xFF55BFD9;
+    private static final int WARNING = 0xFFD65A4B;
+
     private final Screen parent;
-    private int gridX;
-    private int gridY;
-    private int gridWidth;
-    private int cellHeight;
-    private int rowGap;
+    private int panelX;
+    private int panelY;
+    private int panelWidth;
+    private int panelBottom;
+    private boolean compact;
+    private boolean shortLayout;
 
     public SiegeSettingsScreen(Screen parent) {
         super(Component.translatable("siege.settings.title"));
@@ -21,59 +24,128 @@ public final class SiegeSettingsScreen extends Screen {
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
-        boolean compact = width < 520 || height < 300;
-        int margin = compact ? 8 : 14;
-        gridWidth = Math.min(560, width - margin * 2);
-        gridWidth = Math.max(220, gridWidth);
-        gridX = (width - gridWidth) / 2;
-        gridY = compact ? 48 : 68;
-        cellHeight = compact ? 20 : 24;
-        rowGap = compact ? 4 : 6;
-        int colGap = compact ? 4 : 7;
-        int cellWidth = (gridWidth - colGap) / 2;
+        compact = width < 620 || height < 340;
+        int margin = compact ? 7 : 14;
+        panelWidth = Math.min(compact ? 420 : 650, width - margin * 2);
+        panelWidth = Math.max(220, panelWidth);
+        panelX = (width - panelWidth) / 2;
+        panelY = compact ? 39 : 55;
+        shortLayout = compact && height < 250 && panelWidth >= 292;
 
-        addRenderableWidget(new SiegeButton(8, 8, Math.min(82, Math.max(64, width / 6)), 19,
-                Component.translatable("siege.common.back"), b -> onClose(), 0xFFD64B4B));
+        addRenderableWidget(new SiegeButton(8, 7, Math.min(82, Math.max(62, width / 6)), 19,
+                Component.translatable("siege.common.back"), b -> onClose(), WARNING));
 
-        int row0 = gridY;
-        int row1 = row0 + cellHeight + rowGap;
-        int row2 = row1 + cellHeight + rowGap;
-        int row3 = row2 + cellHeight + rowGap;
-        int right = gridX + cellWidth + colGap;
+        if (compact) initCompactControls(); else initWideControls();
+    }
 
-        addRenderableWidget(toggle(gridX, row0, cellWidth, cellHeight, "siege.settings.music", () -> {
+    private void initWideControls() {
+        int pad = 13;
+        int gap = 8;
+        int columnWidth = (panelWidth - pad * 2 - gap) / 2;
+        int left = panelX + pad;
+        int right = left + columnWidth + gap;
+        int y = panelY + 33;
+        int h = 24;
+        int rowGap = 7;
+
+        addRenderableWidget(toggle(left, y, columnWidth, h, "siege.settings.music", () -> {
             SiegeConfig.music = !SiegeConfig.music;
-            if (!SiegeConfig.music) SiegeMusic.stop(); else SiegeMusic.ensurePlaying();
+            if (SiegeConfig.music) SiegeMusic.ensurePlaying(); else SiegeMusic.stop();
         }, () -> SiegeConfig.music));
 
-        addRenderableWidget(action(right, row0, cellWidth, cellHeight, volumeDownLabel(), () -> adjustVolume(-10)));
-        addRenderableWidget(action(gridX, row1, cellWidth, cellHeight, volumeUpLabel(), () -> adjustVolume(10)));
-        addRenderableWidget(new SiegeButton(right, row1, cellWidth, cellHeight,
+        addRenderableWidget(new SiegeSlider(left, y += h + rowGap, columnWidth, 30,
+                Component.literal(label("VOLUMEN DE MÚSICA", "MUSIC VOLUME")), SiegeConfig.musicVolume,
+                SiegeMusic::setVolumeLive));
+
+        addRenderableWidget(new SiegeButton(left, y += 30 + rowGap, columnWidth, h,
                 Component.translatable("siege.menu.next_track"), b -> {
                     SiegeUiSounds.nextTrack();
                     SiegeMusic.nextTrack();
                 }, 0xFFD6A94B));
 
-        addRenderableWidget(toggle(gridX, row2, cellWidth, cellHeight, "siege.settings.ui_sounds",
+        int rightY = panelY + 33;
+        addRenderableWidget(toggle(right, rightY, columnWidth, h, "siege.settings.ui_sounds",
                 () -> SiegeConfig.uiSounds = !SiegeConfig.uiSounds, () -> SiegeConfig.uiSounds));
-        addRenderableWidget(toggle(right, row2, cellWidth, cellHeight, "siege.settings.backgrounds",
+        addRenderableWidget(toggle(right, rightY += h + rowGap, columnWidth, h, "siege.settings.backgrounds",
                 () -> SiegeConfig.animatedBackgrounds = !SiegeConfig.animatedBackgrounds, () -> SiegeConfig.animatedBackgrounds));
-        addRenderableWidget(toggle(gridX, row3, cellWidth, cellHeight, "siege.settings.reduced_motion",
+        addRenderableWidget(toggle(right, rightY += h + rowGap, columnWidth, h, "siege.settings.reduced_motion",
                 () -> SiegeConfig.reducedMotion = !SiegeConfig.reducedMotion, () -> SiegeConfig.reducedMotion));
+        addRenderableWidget(graphicsButton(right, rightY += h + rowGap, columnWidth, h));
 
-        SiegeButton graphics = new SiegeButton(right, row3, cellWidth, cellHeight, graphicsLabel(), b -> {
+        panelBottom = Math.max(y + h + 42, rightY + h + 42);
+    }
+
+    private void initCompactControls() {
+        int pad = 8;
+        int x = panelX + pad;
+        int w = panelWidth - pad * 2;
+        int y = panelY + 27;
+        int h = 18;
+        int gap = 3;
+
+        if (shortLayout) {
+            int colGap = 4;
+            int colWidth = (w - colGap) / 2;
+            int right = x + colWidth + colGap;
+
+            addRenderableWidget(toggle(x, y, colWidth, h, "siege.settings.music", () -> {
+                SiegeConfig.music = !SiegeConfig.music;
+                if (SiegeConfig.music) SiegeMusic.ensurePlaying(); else SiegeMusic.stop();
+            }, () -> SiegeConfig.music));
+            addRenderableWidget(toggle(right, y, colWidth, h, "siege.settings.ui_sounds",
+                    () -> SiegeConfig.uiSounds = !SiegeConfig.uiSounds, () -> SiegeConfig.uiSounds));
+
+            y += h + gap;
+            addRenderableWidget(new SiegeSlider(x, y, w, 24,
+                    Component.literal(label("VOLUMEN", "VOLUME")), SiegeConfig.musicVolume,
+                    SiegeMusic::setVolumeLive));
+
+            y += 24 + gap;
+            addRenderableWidget(new SiegeButton(x, y, colWidth, h, Component.translatable("siege.menu.next_track"), b -> {
+                SiegeUiSounds.nextTrack();
+                SiegeMusic.nextTrack();
+            }, 0xFFD6A94B));
+            addRenderableWidget(toggle(right, y, colWidth, h, "siege.settings.backgrounds",
+                    () -> SiegeConfig.animatedBackgrounds = !SiegeConfig.animatedBackgrounds, () -> SiegeConfig.animatedBackgrounds));
+
+            y += h + gap;
+            addRenderableWidget(toggle(x, y, colWidth, h, "siege.settings.reduced_motion",
+                    () -> SiegeConfig.reducedMotion = !SiegeConfig.reducedMotion, () -> SiegeConfig.reducedMotion));
+            addRenderableWidget(graphicsButton(right, y, colWidth, h));
+            panelBottom = y + h + 29;
+            return;
+        }
+
+        addRenderableWidget(toggle(x, y, w, h, "siege.settings.music", () -> {
+            SiegeConfig.music = !SiegeConfig.music;
+            if (SiegeConfig.music) SiegeMusic.ensurePlaying(); else SiegeMusic.stop();
+        }, () -> SiegeConfig.music));
+
+        addRenderableWidget(new SiegeSlider(x, y += h + gap, w, 24,
+                Component.literal(label("VOLUMEN", "VOLUME")), SiegeConfig.musicVolume,
+                SiegeMusic::setVolumeLive));
+        y += 24 + gap;
+
+        addRenderableWidget(new SiegeButton(x, y, w, h, Component.translatable("siege.menu.next_track"), b -> {
+            SiegeUiSounds.nextTrack();
+            SiegeMusic.nextTrack();
+        }, 0xFFD6A94B));
+        addRenderableWidget(toggle(x, y += h + gap, w, h, "siege.settings.ui_sounds",
+                () -> SiegeConfig.uiSounds = !SiegeConfig.uiSounds, () -> SiegeConfig.uiSounds));
+        addRenderableWidget(toggle(x, y += h + gap, w, h, "siege.settings.backgrounds",
+                () -> SiegeConfig.animatedBackgrounds = !SiegeConfig.animatedBackgrounds, () -> SiegeConfig.animatedBackgrounds));
+        addRenderableWidget(toggle(x, y += h + gap, w, h, "siege.settings.reduced_motion",
+                () -> SiegeConfig.reducedMotion = !SiegeConfig.reducedMotion, () -> SiegeConfig.reducedMotion));
+        addRenderableWidget(graphicsButton(x, y += h + gap, w, h));
+        panelBottom = y + h + 31;
+    }
+
+    private SiegeButton graphicsButton(int x, int y, int w, int h) {
+        return new SiegeButton(x, y, w, h, graphicsLabel(), b -> {
             SiegeUiSounds.click();
             SiegeConfig.graphics = SiegeConfig.graphics.next();
             b.setMessage(graphicsLabel());
             SiegeConfig.save();
-        }, ACCENT);
-        addRenderableWidget(graphics);
-    }
-
-    private SiegeButton action(int x, int y, int w, int h, Component text, Runnable action) {
-        return new SiegeButton(x, y, w, h, text, b -> {
-            SiegeUiSounds.click();
-            action.run();
         }, ACCENT);
     }
 
@@ -88,15 +160,6 @@ public final class SiegeSettingsScreen extends Screen {
         return button.setSelected(flag.get());
     }
 
-    private void adjustVolume(int amount) {
-        SiegeConfig.musicVolume = SiegeConfig.clampVolume(SiegeConfig.musicVolume + amount);
-        SiegeConfig.save();
-        SiegeMusic.refreshVolume();
-    }
-
-    private Component volumeDownLabel() { return Component.literal(label("MÚSICA -10%", "MUSIC -10%")); }
-    private Component volumeUpLabel() { return Component.literal(label("MÚSICA +10%", "MUSIC +10%")); }
-
     private Component graphicsLabel() {
         return Component.translatable("siege.settings.graphics").append(": ")
                 .append(Component.translatable("siege.settings.graphics." + SiegeConfig.graphics.name().toLowerCase()));
@@ -107,42 +170,54 @@ public final class SiegeSettingsScreen extends Screen {
                 .append(Component.translatable(enabled ? "siege.common.on" : "siege.common.off"));
     }
 
-    private boolean spanish() {
-        return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_");
-    }
-
-    private String label(String es, String en) { return spanish() ? es : en; }
-
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
-        g.fill(0, 0, width, height, 0xA3070A0D);
+        g.fill(0, 0, width, height, 0xA8070A0D);
 
-        int panelTop = Math.max(34, gridY - 14);
-        int panelBottom = Math.min(height - 24, gridY + (cellHeight + rowGap) * 4 + 31);
-        g.fill(gridX - 8, panelTop, gridX + gridWidth + 8, panelBottom, 0xE50B1015);
-        g.fill(gridX - 8, panelTop, gridX + gridWidth + 8, panelTop + 2, ACCENT);
-        g.fill(gridX - 8, panelBottom - 1, gridX + gridWidth + 8, panelBottom, 0xFF29343D);
+        int bottom = Math.min(height - 19, panelBottom);
+        g.fill(panelX - 7, panelY - 8, panelX + panelWidth + 7, bottom, 0xF00B1015);
+        g.fill(panelX - 7, panelY - 8, panelX + panelWidth + 7, panelY - 5, ACCENT);
+        g.fill(panelX - 7, bottom - 1, panelX + panelWidth + 7, bottom, 0xFF2A353D);
 
-        g.drawCenteredString(font, title, width / 2, 13, 0xFFF0EEE8);
+        g.drawCenteredString(font, label("CONFIGURACIÓN SIEGE", "SIEGE SETTINGS"), width / 2, 11, 0xFFF0EEE8);
         g.drawCenteredString(font, label("CONTROL DE INTERFAZ // CLIENTE", "INTERFACE CONTROL // CLIENT"), width / 2,
-                height < 300 ? 31 : 39, 0xFF778690);
+                compact ? 26 : 31, 0xFF7B8790);
 
-        int statusY = gridY + (cellHeight + rowGap) * 4 + 5;
-        if (statusY < height - 24) {
-            String state = label("VOLUMEN", "VOLUME") + " " + SiegeConfig.musicVolume + "%  //  "
-                    + label("PISTA", "TRACK") + " " + SiegeMusic.currentTrackName();
-            g.drawCenteredString(font, font.plainSubstrByWidth(state, Math.max(120, gridWidth - 18)), width / 2, statusY, 0xFF9DA7AE);
+        if (!compact) {
+            int titleY = panelY + 8;
+            int leftCenter = panelX + panelWidth / 4;
+            int rightCenter = panelX + panelWidth * 3 / 4;
+            g.drawCenteredString(font, "AUDIO // MENU", leftCenter, titleY, ACCENT);
+            g.drawCenteredString(font, label("INTERFAZ // GRÁFICOS", "INTERFACE // GRAPHICS"), rightCenter, titleY, ACCENT);
+            g.fill(panelX + panelWidth / 2, panelY + 25, panelX + panelWidth / 2 + 1, bottom - 31, 0x6637444D);
+        } else {
+            g.drawCenteredString(font, shortLayout ? "AUDIO // UI" : "AUDIO // UI // GRAPHICS", width / 2, panelY + 7, ACCENT);
         }
 
+        int statusY = bottom - 24;
+        String status = label("PISTA", "TRACK") + "  " + SiegeMusic.currentTrackName() + "  //  "
+                + SiegeConfig.musicVolume + "%  //  " + SiegeMusic.transitionLabel(spanish());
+        g.drawCenteredString(font, font.plainSubstrByWidth(status, Math.max(120, panelWidth - 22)), width / 2, statusY, 0xFFA7B0B6);
+
         if (height >= 250) {
-            String rule = label("La música se reproduce solo fuera del gameplay.", "Music plays only outside gameplay.");
-            g.drawCenteredString(font, rule, width / 2, height - 14, 0xFF69747C);
+            String rule = label(
+                    "La música termina cada pista antes de continuar. No se reproduce en mundos, servidores ni pausa.",
+                    "Each track finishes before the next. Music never plays in worlds, servers or pause screens.");
+            g.drawCenteredString(font, font.plainSubstrByWidth(rule, Math.max(120, width - 24)), width / 2, height - 13, 0xFF6E7981);
         }
 
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
+    }
+
+    private boolean spanish() {
+        return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_");
+    }
+
+    private String label(String es, String en) {
+        return spanish() ? es : en;
     }
 
     @Override
@@ -152,6 +227,10 @@ public final class SiegeSettingsScreen extends Screen {
         minecraft.setScreen(parent);
     }
 
-    @Override public boolean isPauseScreen() { return false; }
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
     private interface Flag { boolean get(); }
 }
