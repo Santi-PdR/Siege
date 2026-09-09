@@ -2,7 +2,7 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
-## SIEGE 0.6.3
+## SIEGE 0.6.4
 
 ### Intel dossiers
 
@@ -10,7 +10,11 @@ Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 - Arrow controls, mouse wheel and keyboard arrows move through troops in the active category. Number keys `0-6` switch categories directly.
 - The wide `CATEGORIES` header no longer shares a full-width rule with its label. `FILES` keeps its separate darker divider because that treatment remains readable.
 - GUI scale 4 has a dedicated compact layout with reduced navigation chrome, condensed metadata and more height for dossier text.
-- The main menu exposes reduced Unit/Advanced Intel cards at normal GUI scales and hides them automatically when the logical viewport is too small.
+- The main menu rotates reduced Unit, Advanced and Tank Intel cards at normal GUI scales and hides them automatically when the logical viewport is too small.
+- Every main-menu Intel summary is a short complete sentence; previews no longer stop mid-phrase above the full-file prompt.
+- Tank dossiers now include Zapper, Combatant, Agreement, Jagant and Strider with their supplied HP/DEF data and owner-provided renders.
+- Patriot uses a visible hand-painted anonymous portrait instead of an invented Minecraft character; its unknown identity and incomplete record remain explicit.
+- Intel now shows a proportional reading scrollbar, Page Up/Page Down support and real `0-6` category shortcuts. Metadata and body text no longer overlap at narrow sizes.
 - Nusia affiliation blocks use worn printed/technical treatment; unknown origins use distressed censor ink instead of digital-looking `REDACTED` overlays.
 
 ### SIEGE Settings

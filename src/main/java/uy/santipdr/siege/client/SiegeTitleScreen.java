@@ -99,7 +99,7 @@ public final class SiegeTitleScreen extends Screen {
                     height - 14, 0xFF929AA1, false);
         }
         if (width >= 610) {
-            graphics.drawString(font, "BUILD 0.6.2 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
+            graphics.drawString(font, "BUILD 0.6.4 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -139,42 +139,46 @@ public final class SiegeTitleScreen extends Screen {
         double guiScale = minecraft.getWindow().getGuiScale();
         if (guiScale >= 3.75D || width < 460 || height < 248) return;
 
-        List<IntelEntry> units = IntelCatalog.filtered("UNIT");
-        List<IntelEntry> advanced = IntelCatalog.filtered("ADVANCED");
-        if (units.isEmpty() && advanced.isEmpty()) return;
+        List<IntelEntry> previewable = IntelCatalog.previewable();
+        if (previewable.isEmpty()) return;
 
-        boolean dual = guiScale < 2.75D && width >= 650 && height >= 330 && !units.isEmpty() && !advanced.isEmpty();
-        int cardWidth = dual ? Math.min(270, Math.max(218, width / 4)) : Math.min(250, Math.max(190, width / 3));
-        int cardHeight = dual ? 78 : 92;
+        boolean dual = guiScale < 2.75D && width >= 650 && height >= 350 && previewable.size() > 1;
+        int cardWidth = dual ? Math.min(286, Math.max(224, width / 4)) : Math.min(270, Math.max(204, width / 3));
+        int cardHeight = dual ? 92 : 104;
         int x = width - cardWidth - 14;
         if (x <= leftPanelRight + 16) {
             x = leftPanelRight + 16;
             cardWidth = width - x - 14;
         }
-        if (cardWidth < 176) return;
+        if (cardWidth < 196) return;
 
         long epoch = System.currentTimeMillis() / 8_500L;
         if (dual) {
             int totalHeight = cardHeight * 2 + 8;
             int y = Math.max(50, Math.min(height - totalHeight - 28, (height - totalHeight) / 2));
-            IntelEntry unit = units.get((int) (epoch % units.size()));
-            IntelEntry adv = advanced.get((int) ((epoch + 2) % advanced.size()));
-            renderIntelCard(g, unit, x, y, cardWidth, cardHeight, false);
-            renderIntelCard(g, adv, x, y + cardHeight + 8, cardWidth, cardHeight, false);
+            int first = (int) (epoch % previewable.size());
+            IntelEntry firstEntry = previewable.get(first);
+            IntelEntry secondEntry = previewable.get((first + 1) % previewable.size());
+            renderIntelCard(g, firstEntry, x, y, cardWidth, cardHeight);
+            renderIntelCard(g, secondEntry, x, y + cardHeight + 8, cardWidth, cardHeight);
         } else {
-            boolean showAdvanced = !advanced.isEmpty() && (units.isEmpty() || (epoch & 1L) == 1L);
-            List<IntelEntry> source = showAdvanced ? advanced : units;
-            IntelEntry entry = source.get((int) ((epoch / 2L) % source.size()));
+            IntelEntry entry = previewable.get((int) (epoch % previewable.size()));
             int y = Math.max(52, height - cardHeight - 31);
-            renderIntelCard(g, entry, x, y, cardWidth, cardHeight, true);
+            renderIntelCard(g, entry, x, y, cardWidth, cardHeight);
         }
     }
 
-    private void renderIntelCard(GuiGraphics g, IntelEntry entry, int x, int y, int w, int h, boolean twoLines) {
-        IntelEntry.IntelText text = entry.text(spanish());
-        boolean advanced = entry.category().equals("ADVANCED");
-        int accent = advanced ? 0xFF2F80FF : 0xFFD94A4A;
-        String type = advanced ? label("AVANZADO", "ADVANCED") : label("UNIDAD", "UNIT");
+    private void renderIntelCard(GuiGraphics g, IntelEntry entry, int x, int y, int w, int h) {
+        int accent = switch (entry.category()) {
+            case "ADVANCED" -> 0xFF2F80FF;
+            case "TANK" -> 0xFFD98A2B;
+            default -> 0xFFD94A4A;
+        };
+        String type = switch (entry.category()) {
+            case "ADVANCED" -> label("AVANZADO", "ADVANCED");
+            case "TANK" -> label("TANQUE", "TANK");
+            default -> label("UNIDAD", "UNIT");
+        };
 
         g.fill(x + 3, y + 3, x + w + 3, y + h + 3, 0x5A000000);
         g.fill(x, y, x + w, y + h, 0xEA080D11);
@@ -186,20 +190,74 @@ public final class SiegeTitleScreen extends Screen {
         g.drawString(font, font.plainSubstrByWidth(header, w - 18), x + 9, y + 7, 0xFF9EA9B0, false);
         g.drawString(font, entry.name(), x + 9, y + 29, 0xFFF1EEE8, false);
 
-        String meta = label("AMENAZA ", "THREAT ") + entry.threat() + "/5  //  HP " + entry.hp();
+        String threat = entry.threat() > 0 ? entry.threat() + "/5" : label("SIN DATOS", "NO DATA");
+        String meta = label("AMENAZA ", "THREAT ") + threat + "  //  HP " + entry.hp();
+        if (!"N/D".equals(entry.defense())) meta += "  DEF " + entry.defense();
         g.drawString(font, font.plainSubstrByWidth(meta, w - 18), x + 9, y + 41, accent, false);
 
         int textY = y + 54;
-        int maxLines = twoLines ? 2 : 1;
+        int footerY = y + h - 12;
+        int maxLines = Math.max(1, (footerY - textY - 2) / 10);
         int lines = 0;
-        for (FormattedCharSequence line : font.split(Component.literal(text.description()), w - 18)) {
+        for (FormattedCharSequence line : font.split(Component.literal(previewSummary(entry)), w - 18)) {
             if (lines >= maxLines) break;
             g.drawString(font, line, x + 9, textY + lines * 10, 0xFFBCC4C9, false);
             lines++;
         }
 
         String footer = label("> INTEL: EXPEDIENTE COMPLETO", "> INTEL: OPEN FULL FILE");
-        g.drawString(font, font.plainSubstrByWidth(footer, w - 18), x + 9, y + h - 12, 0xFF7FC7D9, false);
+        g.drawString(font, footer, x + 9, footerY, 0xFF7FC7D9, false);
+    }
+
+    private String previewSummary(IntelEntry entry) {
+        if (spanish()) return switch (entry.name()) {
+            case "INFANTRY" -> "Unidad básica que coordina ataques.";
+            case "SHIELDER" -> "Emboscador blindado de corto alcance.";
+            case "SABOTEUR" -> "Infiltrado con C4 y sabotaje electrónico.";
+            case "STALKER" -> "Espía camuflado con rastreador GPS.";
+            case "NATZUKA" -> "Cuadrúpedo armado de bajo costo.";
+            case "SNIPER" -> "Francotirador nusiano de largo alcance.";
+            case "GRENADIER" -> "Retaguardia equipada con gas y granadas.";
+            case "GUNNER" -> "Tanque común de fuego sostenido.";
+            case "JETPACKER" -> "Unidad explosiva de velocidad sónica.";
+            case "PATRIOT" -> "Identidad y capacidades desconocidas.";
+            case "SPECIALIST" -> "Estratega invisible y líder de escuadra.";
+            case "DEMOMAN" -> "Kamikaze avanzado con carga extrema.";
+            case "ARTILLER" -> "Bombardea a distancia mediante radio.";
+            case "CLOAKER" -> "Cazador veloz con impacto letal.";
+            case "APU" -> "Mech pesado con lanzallamas.";
+            case "MISSILER" -> "Francotirador de misiles guiados.";
+            case "ZAPPER" -> "Tanque eléctrico con bobinas Tesla.";
+            case "COMBATANT" -> "Tanque de asalto con M48 Tomahawk.";
+            case "AGREEMENT" -> "Expediente corporativo sin datos.";
+            case "JAGANT" -> "Capacidades todavía desconocidas.";
+            case "STRIDER" -> "Render recuperado; perfil desconocido.";
+            default -> "Expediente operativo disponible.";
+        };
+        return switch (entry.name()) {
+            case "INFANTRY" -> "Basic unit that coordinates attacks.";
+            case "SHIELDER" -> "Armoured close-range ambusher.";
+            case "SABOTEUR" -> "Infiltrator with C4 and sabotage gear.";
+            case "STALKER" -> "Camouflaged spy with a GPS tracker.";
+            case "NATZUKA" -> "Low-cost armed quadruped.";
+            case "SNIPER" -> "Long-range Nusian marksman.";
+            case "GRENADIER" -> "Rear-line gas and grenade unit.";
+            case "GUNNER" -> "Common tank with sustained fire.";
+            case "JETPACKER" -> "Sonic-speed explosive unit.";
+            case "PATRIOT" -> "Identity and capabilities unknown.";
+            case "SPECIALIST" -> "Invisible strategist and squad leader.";
+            case "DEMOMAN" -> "Advanced kamikaze with a massive charge.";
+            case "ARTILLER" -> "Calls remote bombardments by radio.";
+            case "CLOAKER" -> "High-speed hunter with a lethal impact.";
+            case "APU" -> "Heavy mech equipped with a flamethrower.";
+            case "MISSILER" -> "Guided-missile marksman.";
+            case "ZAPPER" -> "Electric tank with Tesla coils.";
+            case "COMBATANT" -> "Assault tank with an M48 Tomahawk.";
+            case "AGREEMENT" -> "Corporate dossier with no verified data.";
+            case "JAGANT" -> "Capabilities remain unknown.";
+            case "STRIDER" -> "Render recovered; profile unknown.";
+            default -> "Operational dossier available.";
+        };
     }
 
     private boolean spanish() {

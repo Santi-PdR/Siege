@@ -5,13 +5,14 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
+import org.lwjgl.glfw.GLFW;
 import uy.santipdr.siege.SiegeMod;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public final class IntelScreen extends Screen {
-    private static final List<String> CATEGORIES = List.of("UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT");
+    private static final List<String> CATEGORIES = List.of("ALL", "UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT");
     private static final List<IntelEntry> FILES = List.of(
             file("HU-001", "INFANTRY", "UNIT", 1, "100", "infantry",
                     "Sin registro confirmado", "FN SCAR + armadura táctica", "Esqueleto / Pillager", "ACTIVO",
@@ -124,7 +125,42 @@ public final class IntelScreen extends Screen {
                     "Abandonar el área inmediatamente al ver el destello amarillo. Acercarse en grupo obliga al Missiler a interrumpir el ataque y reposicionarse.",
                     "Republic of Nusia", "PVS-14 + Javelin + 8 DEF", "Guided-missile sniper", "HOSTILE",
                     "Master of guided weaponry and an advanced evolution of the Sniper. It moves while invisible, selects a distant position and launches guided missiles. No laser is projected: a yellow flash grants five seconds to escape. If players approach, it vanishes again and selects another position.",
-                    "Leave the area immediately when the yellow flash appears. A coordinated approach forces the Missiler to interrupt its attack and relocate."));
+                    "Leave the area immediately when the yellow flash appears. A coordinated approach forces the Missiler to interrupt its attack and relocate."),
+            tankFile("TNK-001", "ZAPPER", 4, "3,000", "100", "zapper",
+                    "República de Nusia", "Bastón eléctrico + bobinas Tesla", "Melee / distancia / antitécnicas", "HOSTIL",
+                    "Unidad tanque nusiana y minijefe poco frecuente. Su bastón controla corrientes, ondas y láseres letales, mientras las bobinas Tesla de la espalda recargan el sistema. Puede combatir sin apoyo y adaptarse a distintos entornos. Un impacto directo contra un objetivo sin armadura puede electrocutarlo y aturdirlo durante varios minutos; los disparos adicionales prolongan el efecto.",
+                    "Usar aislamiento y cobertura sólida. Interrumpir la recarga de las bobinas, evitar encadenar impactos eléctricos y no enfrentarlo sin armadura.",
+                    "Republic of Nusia", "Electric staff + Tesla coils", "Melee / ranged / anti-technique", "HOSTILE",
+                    "A rare Nusian tank unit and field mini-boss. Its staff controls lethal currents, waves and lasers while the Tesla coils on its back recharge the system. It needs no common-unit support and can adapt to different environments. A direct hit on an unarmoured target can electrocute and stun for several minutes; additional shots extend the effect.",
+                    "Use insulation and solid cover. Interrupt the coil recharge, avoid chained electric hits and never engage it without armour."),
+            tankFile("TNK-002", "COMBATANT", 4, "3,000", "100", "combatant",
+                    "República de Nusia", "M48 Tomahawk + armadura pesada", "Carga con control de trayectoria", "HOSTIL",
+                    "Tanque de asalto pesado y deliberadamente ruidoso. Trota hasta localizar jugadores y se lanza al combate con una M48 Tomahawk capaz de proyectar ataques en varias direcciones. Su carga causa hasta 650 HP de daño y tiene un 75% de probabilidad de ignorar defensas, aunque puede esquivarse si el Combatant todavía no ha aprendido a corregir la trayectoria.",
+                    "Mantener distancia y concentrar fuego a distancia. No pelear cuerpo a cuerpo; guardar movilidad para esquivar la carga y atacar durante su recuperación.",
+                    "Republic of Nusia", "M48 Tomahawk + heavy armour", "Trajectory-controlled charge", "HOSTILE",
+                    "A loud heavy-assault tank. It trots until players are found, then commits to close combat with an M48 Tomahawk capable of projecting attacks in several directions. Its charge deals up to 650 HP and has a 75% chance to ignore defences, although it can be dodged while the Combatant has not learned to correct its trajectory.",
+                    "Keep your distance and focus ranged fire. Avoid close combat, preserve mobility for the charge and attack during its recovery."),
+            tankFile("TNK-003", "AGREEMENT", 0, "3,000", "100", "agreement",
+                    "Corporación Secure Contain Protect", "Información no recuperada", "Sin registro", "ARCHIVO INCOMPLETO",
+                    "Solo se confirmó la designación Agreement, su resistencia estimada y la vinculación corporativa con Secure Contain Protect. No existen datos verificados sobre armamento, habilidades, comportamiento o función de combate.",
+                    "No completar el expediente con suposiciones. Mantener observación y tratar la unidad como hostil hasta obtener evidencia operativa.",
+                    "Secure Contain Protect Corporation", "Information not recovered", "No record", "INCOMPLETE FILE",
+                    "Only the Agreement designation, estimated durability and corporate link to Secure Contain Protect have been confirmed. There is no verified data about weapons, abilities, behaviour or combat role.",
+                    "Do not fill the dossier with assumptions. Maintain observation and treat the unit as hostile until operational evidence is recovered."),
+            tankFile("TNK-004", "JAGANT", 0, "2,500", "100", "jagant",
+                    "Sin registro confirmado", "Información no recuperada", "Sin registro", "ARCHIVO INCOMPLETO",
+                    "El archivo únicamente conserva el nombre Jagant, una captura parcial y sus valores estimados de resistencia. Su origen, armamento, capacidades y patrón de despliegue siguen sin confirmar.",
+                    "Evitar conclusiones basadas solo en la imagen. Registrar cada encuentro y mantener distancia hasta identificar su método de ataque.",
+                    "No confirmed record", "Information not recovered", "No record", "INCOMPLETE FILE",
+                    "The file only preserves the Jagant name, a partial capture and estimated durability values. Its origin, weapons, capabilities and deployment pattern remain unconfirmed.",
+                    "Avoid conclusions based on the image alone. Record every encounter and keep your distance until its attack method is identified."),
+            tankFile("TNK-005", "STRIDER", 0, "2,500", "100", "strider",
+                    "Sin registro confirmado", "Información no recuperada", "Render recuperado", "ARCHIVO INCOMPLETO",
+                    "Se recuperó un render de una estructura mecánica de patas largas identificada como Strider. No existe información verificada sobre su armamento, movilidad, autonomía, origen o comportamiento en combate.",
+                    "No aproximarse basándose únicamente en su apariencia. Priorizar observación remota y registrar cualquier patrón de movimiento o emisión de energía.",
+                    "No confirmed record", "Information not recovered", "Recovered render", "INCOMPLETE FILE",
+                    "A render of a long-legged mechanical structure identified as Strider was recovered. There is no verified information about weapons, mobility, autonomy, origin or combat behaviour.",
+                    "Do not approach based on appearance alone. Prioritise remote observation and record any movement pattern or energy emission."));
 
     private final Screen parent;
     private final List<SiegeButton> categoryButtons = new ArrayList<>();
@@ -185,12 +221,14 @@ public final class IntelScreen extends Screen {
         int margin = 8;
         int gap = 3;
         int buttonHeight = 18;
-        int categoryWidth = Math.max(54, (width - margin * 2 - gap * 2) / 3);
+        int columns = width < 420 ? 3 : 4;
+        int rows = (CATEGORIES.size() + columns - 1) / columns;
+        int categoryWidth = Math.max(46, (width - margin * 2 - gap * (columns - 1)) / columns);
         int startY = 31;
         for (int i = 0; i < CATEGORIES.size(); i++) {
             String value = CATEGORIES.get(i);
-            int col = i % 3;
-            int row = i / 3;
+            int col = i % columns;
+            int row = i / columns;
             int x = margin + col * (categoryWidth + gap);
             int y = startY + row * (buttonHeight + 3);
             SiegeButton button = new SiegeButton(x, y, categoryWidth, buttonHeight,
@@ -198,7 +236,7 @@ public final class IntelScreen extends Screen {
             categoryButtons.add(button);
             addRenderableWidget(button);
         }
-        listTop = startY + 2 * (buttonHeight + 3) + 1;
+        listTop = startY + rows * (buttonHeight + 3) + 1;
         contentTop = listTop + 23;
     }
 
@@ -275,11 +313,18 @@ public final class IntelScreen extends Screen {
         SiegeUiSounds.click();
         selected = Math.floorMod(selected + direction, files.size());
         detailScroll = 0;
+        if (!compact) {
+            int visible = visibleFiles();
+            if (selected < listOffset) listOffset = selected;
+            if (selected >= listOffset + visible) listOffset = selected - visible + 1;
+            rebuildFileButtons();
+        }
     }
 
     private int visibleFiles() { return Math.max(1, (height - listTop - 16) / 23); }
 
     private List<IntelEntry> filtered() {
+        if ("ALL".equals(category)) return FILES;
         List<IntelEntry> result = new ArrayList<>();
         for (IntelEntry entry : FILES) if (entry.category().equals(category)) result.add(entry);
         return result;
@@ -290,6 +335,7 @@ public final class IntelScreen extends Screen {
     private String categoryLabel(String value) {
         if (compact) {
             if (spanish()) return switch (value) {
+                case "ALL" -> "TODOS";
                 case "UNIT" -> "UNIDADES";
                 case "ADVANCED" -> "AVANZ.";
                 case "TANK" -> "TANQUES";
@@ -299,6 +345,7 @@ public final class IntelScreen extends Screen {
                 default -> value;
             };
             return switch (value) {
+                case "ALL" -> "ALL";
                 case "UNIT" -> "UNITS";
                 case "ADVANCED" -> "ADVANCED";
                 case "TANK" -> "TANKS";
@@ -309,6 +356,7 @@ public final class IntelScreen extends Screen {
             };
         }
         if (!spanish()) return switch (value) {
+            case "ALL" -> "ALL FILES";
             case "UNIT" -> "COMMON UNITS";
             case "ADVANCED" -> "ADVANCED UNITS";
             case "TANK" -> "TANKS";
@@ -318,6 +366,7 @@ public final class IntelScreen extends Screen {
             default -> value;
         };
         return switch (value) {
+            case "ALL" -> "TODOS LOS ARCHIVOS";
             case "UNIT" -> "TROPAS COMUNES";
             case "ADVANCED" -> "TROPAS AVANZADAS";
             case "TANK" -> "TANQUES";
@@ -344,6 +393,32 @@ public final class IntelScreen extends Screen {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, delta);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode >= GLFW.GLFW_KEY_0 && keyCode <= GLFW.GLFW_KEY_6) {
+            int index = keyCode - GLFW.GLFW_KEY_0;
+            if (index < CATEGORIES.size()) setCategory(CATEGORIES.get(index));
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_LEFT) {
+            stepFile(-1);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_DOWN || keyCode == GLFW.GLFW_KEY_RIGHT) {
+            stepFile(1);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_PAGE_UP) {
+            detailScroll = Math.max(0, detailScroll - 5);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_PAGE_DOWN) {
+            detailScroll = Math.min(maxDetailScroll, detailScroll + 5);
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
@@ -426,7 +501,9 @@ public final class IntelScreen extends Screen {
             g.drawString(font, stamp, x + availableWidth - pad - font.width(stamp), headerY, accent, false);
         }
         g.drawString(font, entry.name(), headerX, headerY + 12, ink, false);
-        String threat = label("AMENAZA", "THREAT") + " " + stars(entry.threat()) + "   HP " + entry.hp();
+        String threatLevel = entry.threat() > 0 ? stars(entry.threat()) : label("SIN DATOS", "NO DATA");
+        String threat = label("AMENAZA", "THREAT") + " " + threatLevel + "   HP " + entry.hp();
+        if (!"N/D".equals(entry.defense())) threat += "   DEF " + entry.defense();
         g.drawString(font, font.plainSubstrByWidth(threat, availableWidth - pad * 2), headerX, headerY + 24, warning, false);
 
         int imageY = headerY + 39;
@@ -447,10 +524,10 @@ public final class IntelScreen extends Screen {
         metaY = drawMeta(g, label("ESTADO", "STATUS"), text.status(), metaX, metaY + 4, metaWidth, muted, warning);
         if (!compactMode) {
             metaY = drawMeta(g, label("ARMAMENTO", "ARMAMENT"), text.armament(), metaX, metaY + 4, metaWidth, muted, ink);
-            drawMeta(g, label("VARIANTES", "VARIANTS"), text.variants(), metaX, metaY + 4, metaWidth, muted, ink);
+            metaY = drawMeta(g, label("VARIANTES", "VARIANTS"), text.variants(), metaX, metaY + 4, metaWidth, muted, ink);
         }
 
-        int bodyTop = imageY + imageHeight + 9;
+        int bodyTop = Math.max(imageY + imageHeight, metaY) + 9;
         int bodyBottom = bottom - 12;
         int bodyWidth = availableWidth - pad * 2;
         List<DetailLine> lines = new ArrayList<>();
@@ -481,6 +558,13 @@ public final class IntelScreen extends Screen {
         if (maxDetailScroll > 0) {
             String hint = label("RUEDA: LEER MÁS", "WHEEL: READ MORE");
             g.drawString(font, hint, x + availableWidth - pad - font.width(hint), bottom - 10, muted, false);
+            int trackX = x + availableWidth - 4;
+            int trackTop = bodyTop;
+            int trackHeight = Math.max(8, bodyBottom - bodyTop);
+            int thumbHeight = Math.max(8, trackHeight * visibleLines / Math.max(visibleLines, lines.size()));
+            int thumbY = trackTop + (trackHeight - thumbHeight) * detailScroll / maxDetailScroll;
+            g.fill(trackX, trackTop, trackX + 2, trackTop + trackHeight, 0x44384143);
+            g.fill(trackX, thumbY, trackX + 2, thumbY + thumbHeight, accent);
         }
     }
 
@@ -513,6 +597,7 @@ public final class IntelScreen extends Screen {
 
     private int categoryAccent(String value) {
         return switch (value) {
+            case "ALL" -> 0xFF55BFD9;
             case "UNIT" -> 0xFFD94A4A;
             case "ADVANCED" -> 0xFF2F80FF;
             case "TANK" -> 0xFFD98A2B;
@@ -528,7 +613,15 @@ public final class IntelScreen extends Screen {
     private static IntelEntry file(String code, String name, String category, int threat, String hp, String image,
                                    String esOrigin, String esArmament, String esVariants, String esStatus, String esDescription, String esAdvisory,
                                    String enOrigin, String enArmament, String enVariants, String enStatus, String enDescription, String enAdvisory) {
-        return new IntelEntry(code, name, category, threat, hp, image,
+        return new IntelEntry(code, name, category, threat, hp, "N/D", image,
+                new IntelEntry.IntelText(esOrigin, esArmament, esVariants, esStatus, esDescription, esAdvisory),
+                new IntelEntry.IntelText(enOrigin, enArmament, enVariants, enStatus, enDescription, enAdvisory));
+    }
+
+    private static IntelEntry tankFile(String code, String name, int threat, String hp, String defense, String image,
+                                       String esOrigin, String esArmament, String esVariants, String esStatus, String esDescription, String esAdvisory,
+                                       String enOrigin, String enArmament, String enVariants, String enStatus, String enDescription, String enAdvisory) {
+        return new IntelEntry(code, name, "TANK", threat, hp, defense, image,
                 new IntelEntry.IntelText(esOrigin, esArmament, esVariants, esStatus, esDescription, esAdvisory),
                 new IntelEntry.IntelText(enOrigin, enArmament, enVariants, enStatus, enDescription, enAdvisory));
     }

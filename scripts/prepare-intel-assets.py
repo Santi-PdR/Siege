@@ -9,12 +9,27 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 INTEL = ROOT / "src/main/resources/assets/siege/textures/gui/intel"
+RAW_TANKS = ROOT / "assets-source/intel-raw/tanks"
 
 CONFIRMED = {
     "sniper", "grenadier", "gunner", "patriot",
     "specialist", "demoman", "artiller", "cloaker", "apu", "missiler",
+    "zapper", "combatant",
 }
 ADVANCED = {"specialist", "demoman", "artiller", "cloaker", "apu", "missiler"}
+SECURE = {"agreement"}
+TANK_SPECS = {
+    "zapper": ("TNK-001", "ZAPPER"),
+    "combatant": ("TNK-002", "COMBATANT"),
+    "agreement": ("TNK-003", "AGREEMENT"),
+    "jagant": ("TNK-004", "JAGANT"),
+    "strider": ("TNK-005", "STRIDER"),
+}
+EXPECTED = {
+    "infantry", "shielder", "saboteur", "stalker", "natzuka", "sniper", "grenadier", "gunner", "jetpacker", "patriot",
+    "specialist", "demoman", "artiller", "cloaker", "apu", "missiler",
+    *TANK_SPECS.keys(),
+}
 
 FONT_MONO = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
 FONT_MONO_B = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf"
@@ -85,6 +100,98 @@ def distress_alpha(size, seed, density=.035):
     return Image.fromarray(alpha, "L").filter(ImageFilter.GaussianBlur(.2))
 
 
+def fit_cover(image, size):
+    target_w, target_h = size
+    scale = max(target_w / image.width, target_h / image.height)
+    resized = image.resize((round(image.width * scale), round(image.height * scale)), Image.Resampling.LANCZOS)
+    left = (resized.width - target_w) // 2
+    top = (resized.height - target_h) // 2
+    return resized.crop((left, top, left + target_w, top + target_h))
+
+
+def fit_contain(image, size):
+    target_w, target_h = size
+    scale = min(target_w / image.width, target_h / image.height)
+    return image.resize((max(1, round(image.width * scale)), max(1, round(image.height * scale))), Image.Resampling.LANCZOS)
+
+
+def tank_dossier(name, code, display_name, source):
+    seed = seed_for(name, 7)
+    rng = random.Random(seed)
+    canvas = paper_noise((640, 360), (205, 194, 164), seed, 9)
+    draw = ImageDraw.Draw(canvas, "RGBA")
+    accent = (190, 116, 34, 245)
+
+    raw = Image.open(source).convert("RGBA")
+    photo_box = (13, 58, 627, 326)
+    photo_size = (photo_box[2] - photo_box[0], photo_box[3] - photo_box[1])
+    if name == "strider":
+        backdrop = paper_noise(photo_size, (47, 50, 47), seed_for(name, 8), 12)
+        for y in range(photo_size[1]):
+            shade = int(22 * y / max(1, photo_size[1] - 1))
+            ImageDraw.Draw(backdrop).line((0, y, photo_size[0], y), fill=(38 + shade, 42 + shade, 39 + shade, 255))
+        arr = np.array(raw)
+        alpha = 255 - np.clip((arr[:, :, :3].min(axis=2) - 210) * 6, 0, 255).astype(np.uint8)
+        arr[:, :, 3] = np.minimum(arr[:, :, 3], alpha)
+        cutout = fit_contain(Image.fromarray(arr, "RGBA"), (530, 225))
+        shadow = Image.new("RGBA", cutout.size, (0, 0, 0, 0))
+        shadow.putalpha(cutout.getchannel("A").filter(ImageFilter.GaussianBlur(7)))
+        px = (photo_size[0] - cutout.width) // 2
+        py = (photo_size[1] - cutout.height) // 2
+        backdrop.alpha_composite(shadow, (px + 5, py + 8))
+        backdrop.alpha_composite(cutout, (px, py))
+        photo = backdrop
+    else:
+        photo = fit_cover(raw, photo_size)
+        gray = photo.convert("L").convert("RGBA")
+        photo = Image.blend(photo, gray, .22)
+        photo = photo.filter(ImageFilter.GaussianBlur(.25))
+
+    canvas.alpha_composite(photo, (photo_box[0], photo_box[1]))
+    draw.rectangle(photo_box, outline=(64, 54, 42, 190), width=2)
+    draw.rectangle((3, 3, 636, 356), outline=accent, width=5)
+    draw.line((20, 51, 438, 51), fill=(74, 62, 46, 170), width=2)
+    draw.text((20, 13), f"{code} / {display_name}", font=font(FONT_SERIF_B, 24), fill=(42, 36, 28, 245))
+    draw.text((24, 76), "FIELD INTEL: TANK", font=font(FONT_MONO_B, 8), fill=(224, 214, 183, 190))
+    draw.text((24, 89), f"REF: {code}", font=font(FONT_MONO, 8), fill=(224, 214, 183, 170))
+    draw.text((24, 102), "STATUS: CLASSIFIED", font=font(FONT_MONO_B, 8), fill=(183, 65, 47, 205))
+
+    stamp = Image.new("RGBA", (390, 92), (0, 0, 0, 0))
+    stamp_draw = ImageDraw.Draw(stamp, "RGBA")
+    stamp_draw.rectangle((6, 8, 383, 84), outline=(161, 16, 13, 210), width=5)
+    stamp_draw.rectangle((13, 15, 376, 77), outline=(161, 16, 13, 155), width=2)
+    stamp_draw.text((31, 17), "CLASSIFIED", font=font(FONT_SERIF_B, 48), fill=(169, 17, 13, 215))
+    stamp = stamp.rotate(10, resample=Image.Resampling.BICUBIC, expand=True)
+    original_alpha = np.array(stamp.getchannel("A"), dtype=np.uint16)
+    wear = np.array(distress_alpha(stamp.size, seed_for(name, 9), .10), dtype=np.uint16)
+    stamp.putalpha(Image.fromarray((original_alpha * wear // 255).astype(np.uint8), "L"))
+    canvas.alpha_composite(stamp, (238, 225))
+
+    draw.rectangle((18, 330, 215, 351), outline=(82, 68, 49, 130), width=1)
+    draw.text((26, 336), "TACTICAL INTELLIGENCE ARCHIVE", font=font(FONT_MONO_B, 7), fill=(61, 52, 41, 190))
+    draw.rectangle((482, 330, 622, 351), outline=(82, 68, 49, 130), width=1)
+    draw.text((492, 336), "ACCESS: PRIORITY-03", font=font(FONT_MONO_B, 7), fill=(130, 48, 39, 170))
+
+    for _ in range(28):
+        x = rng.randrange(8, 632)
+        y = rng.randrange(6, 354)
+        length = rng.randrange(4, 34)
+        draw.line((x, y, min(633, x + length), y + rng.choice((-1, 0, 1))), fill=(80, 68, 50, rng.randrange(18, 55)), width=1)
+    canvas.convert("RGB").save(INTEL / f"{name}.png", optimize=True)
+
+
+def generate_tank_dossiers():
+    missing = []
+    for name, (code, display_name) in TANK_SPECS.items():
+        source = RAW_TANKS / f"{name}.png"
+        if not source.exists():
+            missing.append(str(source.relative_to(ROOT)))
+            continue
+        tank_dossier(name, code, display_name, source)
+    if missing:
+        raise SystemExit("Missing Tank sources: " + ", ".join(missing))
+
+
 def common_patch(base, name, confirmed):
     x, y, w, h = 454, 10, 174, 60
     seed = seed_for(name)
@@ -147,18 +254,43 @@ def advanced_patch(base, name):
     base.alpha_composite(patch, (x, y))
 
 
+def secure_patch(base, name):
+    x, y, w, h = 454, 10, 174, 60
+    seed = seed_for(name, 12)
+    patch = paper_noise((w, h), (207, 200, 181), seed, 5)
+    draw = ImageDraw.Draw(patch)
+    draw.rectangle((0, 0, w - 1, h - 1), outline=(69, 72, 66, 150), width=1)
+    draw.rectangle((8, 9, 52, 51), outline=(58, 62, 58, 185), width=2)
+    draw.text((19, 15), "S", font=font(FONT_SERIF_B, 23), fill=(40, 44, 41, 230))
+    draw.text((60, 10), "SECURE", font=font(FONT_SERIF_B, 9), fill=(48, 49, 44, 230))
+    draw.text((60, 22), "CONTAIN", font=font(FONT_SERIF_B, 9), fill=(48, 49, 44, 230))
+    draw.text((60, 34), "PROTECT", font=font(FONT_SERIF_B, 9), fill=(48, 49, 44, 230))
+    draw.text((60, 47), "CORP. FILE", font=font(FONT_MONO_B, 6), fill=(120, 49, 42, 180))
+    patch.putalpha(distress_alpha((w, h), seed_for(name, 13), .035))
+    base.alpha_composite(patch, (x, y))
+
+
 def main():
+    generate_tank_dossiers()
     files = sorted(INTEL.glob("*.png"))
-    if len(files) != 16:
-        raise SystemExit(f"Expected 16 Intel textures, found {len(files)}")
+    names = {path.stem for path in files}
+    if names != EXPECTED:
+        missing = ", ".join(sorted(EXPECTED - names)) or "none"
+        unexpected = ", ".join(sorted(names - EXPECTED)) or "none"
+        raise SystemExit(f"Intel texture set mismatch; missing: {missing}; unexpected: {unexpected}")
     for path in files:
         name = path.stem
         image = Image.open(path).convert("RGBA")
         if name in ADVANCED:
             advanced_patch(image, name)
+        elif name in SECURE:
+            secure_patch(image, name)
         else:
             common_patch(image, name, name in CONFIRMED)
         image.convert("RGB").save(path, optimize=True)
+        with Image.open(path) as verified:
+            if verified.size != (640, 360):
+                raise SystemExit(f"Intel texture must be 640x360: {path.name} is {verified.size}")
         print(f"SIEGE intel: polished {path.name}")
 
 
