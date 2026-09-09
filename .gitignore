@@ -5,3 +5,6 @@ out/
 *.iml
 .idea/
 
+# Generated only in the GitHub Actions build from the owner's full soundtrack masters.
+src/main/resources/assets/siege/sounds/music/*.ogg
+src/main/resources/assets/siege/music_durations.properties
