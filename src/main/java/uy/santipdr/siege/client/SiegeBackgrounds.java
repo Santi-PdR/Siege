@@ -13,36 +13,81 @@ public final class SiegeBackgrounds {
             scene("cyborg"), scene("last_stand"), scene("vought_siege"), scene("earth_orbit"),
             scene("canyon_engagement"), scene("night_battle")
     );
-    private static final long SCENE_MS = 18_000L;
-    private static final long FADE_MS = 1_600L;
-    private SiegeBackgrounds() {}
-    private static ResourceLocation scene(String id) { return new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/backgrounds/" + id + ".png"); }
+
+    private static final long SCENE_MS = 24_000L;
+    private static final long CROSSFADE_MS = 4_800L;
+
+    private SiegeBackgrounds() { }
+
+    private static ResourceLocation scene(String id) {
+        return new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/backgrounds/" + id + ".png");
+    }
 
     public static void render(GuiGraphics graphics, int width, int height, long now) {
-        long slot = SiegeConfig.animatedBackgrounds ? now / SCENE_MS : 0L;
-        float local = SiegeConfig.animatedBackgrounds ? (now % SCENE_MS) / (float) SCENE_MS : 0f;
+        boolean animated = SiegeConfig.animatedBackgrounds;
+        long slot = animated ? now / SCENE_MS : 0L;
+        long localMs = animated ? now % SCENE_MS : 0L;
+        float local = animated ? localMs / (float) SCENE_MS : 0.0F;
         int current = (int) (slot % SCENES.size());
-        float drift = SiegeConfig.reducedMotion || SiegeConfig.graphics == SiegeConfig.Graphics.PERFORMANCE
-                ? 0f : (float) Math.sin(local * Math.PI) * 0.012f;
-        drawCover(graphics, SCENES.get(current), width, height, 1f, drift);
-        if (SiegeConfig.animatedBackgrounds && !SiegeConfig.reducedMotion && local > 1f - FADE_MS / (float) SCENE_MS) {
-            float alpha = (local - (1f - FADE_MS / (float) SCENE_MS)) / (FADE_MS / (float) SCENE_MS);
-            drawCover(graphics, SCENES.get((current + 1) % SCENES.size()), width, height, smooth(alpha), -drift);
+        int next = (current + 1) % SCENES.size();
+
+        boolean allowPan = !SiegeConfig.reducedMotion && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE;
+        float currentProgress = allowPan ? local : 0.5F;
+        drawScene(graphics, SCENES.get(current), width, height, 1.0F, current, currentProgress, allowPan);
+
+        if (animated) {
+            long fadeStart = SCENE_MS - CROSSFADE_MS;
+            if (localMs >= fadeStart) {
+                float raw = (localMs - fadeStart) / (float) CROSSFADE_MS;
+                float alpha = smoother(raw);
+                float incomingProgress = allowPan ? Math.min(0.18F, raw * 0.18F) : 0.5F;
+                drawScene(graphics, SCENES.get(next), width, height, alpha, next, incomingProgress, allowPan);
+
+                // A very small midpoint veil masks large exposure differences between source images
+                // without turning the transition into a visible black flash.
+                int veilAlpha = Math.round((float) Math.sin(alpha * Math.PI) * 20.0F);
+                if (veilAlpha > 0) graphics.fill(0, 0, width, height, veilAlpha << 24);
+            }
         }
-        graphics.fill(0, 0, width, height, 0x3D000000);
-        graphics.fill(0, 0, Math.min(width, Math.max(220, width / 4)), height, 0x72000000);
+
+        graphics.fill(0, 0, width, height, 0x3A000000);
+        graphics.fill(0, 0, Math.min(width, Math.max(220, width / 4)), height, 0x70000000);
+
         if (SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE) {
             int spacing = SiegeConfig.graphics == SiegeConfig.Graphics.CINEMATIC ? 4 : 7;
-            for (int y = 0; y < height; y += spacing) graphics.fill(0, y, width, y + 1, 0x12000000);
+            for (int y = 0; y < height; y += spacing) {
+                graphics.fill(0, y, width, y + 1, 0x10000000);
+            }
         }
     }
 
-    private static void drawCover(GuiGraphics g, ResourceLocation texture, int w, int h, float alpha, float drift) {
-        RenderSystem.enableBlend(); RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
-        int overscan = drift == 0f ? 0 : 8;
-        int x = -overscan + Math.round(drift * w);
-        g.blit(texture, x, -overscan, w + overscan * 2, h + overscan * 2, 0, 0, 960, 540, 960, 540);
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+    private static void drawScene(GuiGraphics g, ResourceLocation texture, int w, int h, float alpha,
+                                  int sceneIndex, float progress, boolean allowPan) {
+        RenderSystem.enableBlend();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, Math.max(0.0F, Math.min(1.0F, alpha)));
+
+        int overscan;
+        if (!allowPan) overscan = 0;
+        else if (SiegeConfig.graphics == SiegeConfig.Graphics.CINEMATIC) overscan = 26;
+        else overscan = 16;
+
+        int directionX = ((sceneIndex * 31) & 1) == 0 ? 1 : -1;
+        int directionY = ((sceneIndex * 17) & 2) == 0 ? 1 : -1;
+        float travel = (progress - 0.5F) * 2.0F;
+        int panX = allowPan ? Math.round(directionX * travel * overscan * 0.58F) : 0;
+        int panY = allowPan ? Math.round(directionY * travel * overscan * 0.24F) : 0;
+
+        int x = -overscan + panX;
+        int y = -overscan + panY;
+        int drawW = w + overscan * 2;
+        int drawH = h + overscan * 2;
+        g.blit(texture, x, y, drawW, drawH, 0, 0, 960, 540, 960, 540);
+
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
-    private static float smooth(float x) { return x * x * (3f - 2f * x); }
+
+    private static float smoother(float x) {
+        x = Math.max(0.0F, Math.min(1.0F, x));
+        return x * x * x * (x * (x * 6.0F - 15.0F) + 10.0F);
+    }
 }
