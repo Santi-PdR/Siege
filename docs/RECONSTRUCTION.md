@@ -10,9 +10,10 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - Intel opens a responsive intelligence database with numbered categories: `0 ALL`, `1 UNITS`, `2 ADVANCED`, `3 TANKS`, `4 BOSSES`, `5 ELITES`, `6 SUPER-UNITS`.
 - Every category displays its live record count. The active category owns the current troop sequence.
 - Troops can be changed with dedicated up/down controls, mouse wheel and keyboard arrows. Number keys `0-6` switch categories directly.
-- Wide Intel layouts preserve a left category/file navigator. Compact layouts collapse the categories into two rows and use dedicated troop navigation controls.
+- Wide Intel layouts preserve a left category/file navigator. Compact layouts collapse categories and use dedicated troop navigation controls.
+- Wide sidebar section labels such as `CATEGORIES` and `FILES` must render on their own solid bands. Decorative cyan rules and grey telemetry scanlines are background decoration only and may not cross text.
 - GUI scales 1-4 must remain usable. Layout is driven by logical width/height rather than assuming a fixed resolution. Main-menu Intel preview content may disappear automatically when the logical viewport is too small.
-- Dossier body text starts after the greater of portrait height or wrapped metadata height. This is a hard layout rule to prevent the overlap seen when origin/status/armament text becomes taller than the image.
+- Dossier body text starts after the greater of portrait height or wrapped metadata height. This is a hard layout rule to prevent overlap when origin/status/armament text becomes taller than the image.
 - Operational profiles use the complete supplied source material and an independently scrollable tactical reading area.
 - The ten standard records are Units: Infantry, Shielder, Saboteur, Stalker, Natzuka, Sniper, Grenadier, Gunner, Jetpacker and Patriot.
 - The six Advanced records are Specialist, Demoman, Artiller, Cloaker, APU and Missiler. All originate from the Republic of Nusia.
@@ -30,14 +31,28 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - The main menu may show a small rotating Intel summary containing only Unit and Advanced records. It must show reduced information and direct the player to Intel for the full file.
 - Singleplayer has no visible button. Staff can open the vanilla world-selection screen with the undocumented Ctrl+S chord.
 
+## Settings architecture
+
+- SIEGE Settings is a section-based control center rather than one page containing every option.
+- Required sections are Overview, Music, Interface, Accessibility and Graphics.
+- Overview is informational and explains the responsibility of the other sections while showing a reduced client-status summary.
+- Wide layouts use a SIEGE tactical navigation rail. Compact/high-GUI-scale layouts use a responsive section grid.
+- Music contains menu-music enable/disable, live volume, current playback state and manual track advance.
+- Interface contains UI feedback sounds and rotating-background behavior.
+- Accessibility contains reduced motion.
+- Graphics owns the menu visual profile.
+- Section navigation and controls must use SIEGE-owned buttons/sliders rather than vanilla button textures or vanilla click audio.
+
 ## Menu audio
 
 - SIEGE owns music only while no world/server is loaded and a menu screen exists. It must stop immediately in gameplay and therefore never continue into pause, inventory or other world screens.
-- The normal Minecraft music-category volume is restored whenever SIEGE releases control.
+- SIEGE soundtrack playback is independent of Minecraft's ambient Music slider. The custom stream uses the master mix, so it still respects the user's global Master volume.
+- The track implementation must support starting at zero gain during fade-in without being discarded by Minecraft's sound engine.
 - The SIEGE settings screen uses a custom 0-100 music slider. Moving it changes the active stream live and must not restart the track.
 - Automatic advance occurs only after the sound engine reports that the current streamed OGG has ended. A startup grace period prevents asynchronous stream initialization from being interpreted as completion.
 - Manual `Next Track` fades the current music out and fades the next track in. Natural transitions fade the incoming track in.
 - The shuffled queue completes a full cycle before refilling and avoids an immediate repeat at cycle boundaries.
+- Vanilla menu music is periodically suppressed while SIEGE owns menu audio so two soundtracks cannot overlap.
 - SIEGE buttons/sliders do not use vanilla button textures or vanilla click audio.
 
 ## Builds
