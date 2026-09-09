@@ -25,6 +25,10 @@ public final class SiegeSlider extends AbstractSliderButton {
     @Override
     protected void updateMessage() {
         int percent = (int)Math.round(value * 100.0D);
+        if (label == null) {
+            setMessage(Component.literal(percent + "%"));
+            return;
+        }
         setMessage(label.copy().append(": " + percent + "%"));
     }
 
@@ -33,7 +37,7 @@ public final class SiegeSlider extends AbstractSliderButton {
         int percent = clamp((int)Math.round(value * 100.0D));
         if (percent == lastPercent) return;
         lastPercent = percent;
-        consumer.accept(percent);
+        if (consumer != null) consumer.accept(percent);
     }
 
     @Override
@@ -67,7 +71,7 @@ public final class SiegeSlider extends AbstractSliderButton {
 
     @Override
     public void playDownSound(SoundManager soundManager) {
-        // Custom UI audio is handled by SiegeUiSounds; never play the vanilla button click.
+        // Custom UI audio is handled by SiegeUiSounds; never play the vanilla slider/button click.
     }
 
     public int percent() {
