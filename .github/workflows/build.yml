@@ -23,6 +23,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.8'
+      - name: Restore generated Intel source
+        shell: bash
+        run: |
+          gzip -dc assets-source/generated/IntelScreenV3.java.gz > src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
       - name: Prepare Intel dossier overlays
         shell: bash
         run: |
