@@ -10,6 +10,12 @@ import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 public final class SiegeTitleScreen extends Screen {
+    private static final int ACCENT = 0xFF55BFD9;
+    private int menuX;
+    private int menuWidth;
+    private int menuTop;
+    private int menuBottom;
+
     public SiegeTitleScreen() {
         super(Component.literal("Eternal Craft: SIEGE"));
     }
@@ -17,45 +23,77 @@ public final class SiegeTitleScreen extends Screen {
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
-        int buttonWidth = Math.min(220, Math.max(148, width / 5));
-        int buttonHeight = height < 260 ? 18 : 22;
-        int gap = height < 260 ? 3 : 5;
+        boolean compact = width < 520 || height < 290;
+        int margin = compact ? 10 : Math.max(14, width / 55);
+        menuWidth = Math.min(compact ? 184 : 224, Math.max(138, width / (compact ? 2 : 5)));
+        menuWidth = Math.min(menuWidth, width - margin * 2);
+        int buttonHeight = compact ? 18 : 22;
+        int gap = compact ? 3 : 5;
         int totalHeight = buttonHeight * 5 + gap * 4;
-        int x = Math.max(14, width / 45);
-        int y = Math.max(70, (height - totalHeight) / 2 + 18);
+        menuX = margin;
+        menuTop = Math.max(compact ? 66 : 84, (height - totalHeight) / 2 + (compact ? 12 : 20));
+        menuTop = Math.min(menuTop, Math.max(48, height - totalHeight - 14));
+        menuBottom = menuTop + totalHeight;
 
-        addRenderableWidget(command(x, y, buttonWidth, buttonHeight, "siege.menu.deployment", b -> minecraft.setScreen(new JoinMultiplayerScreen(this))));
-        addRenderableWidget(command(x, y += buttonHeight + gap, buttonWidth, buttonHeight, "siege.menu.intel", b -> minecraft.setScreen(new IntelScreen(this))));
-        addRenderableWidget(command(x, y += buttonHeight + gap, buttonWidth, buttonHeight, "siege.menu.armory", b -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
-        addRenderableWidget(command(x, y += buttonHeight + gap, buttonWidth, buttonHeight, "siege.menu.settings", b -> minecraft.setScreen(new SiegeSettingsScreen(this))));
-        addRenderableWidget(command(x, y += buttonHeight + gap, buttonWidth, buttonHeight, "siege.menu.quit", b -> minecraft.stop()));
+        int y = menuTop;
+        addRenderableWidget(command(menuX, y, menuWidth, buttonHeight, "siege.menu.deployment", b -> minecraft.setScreen(new JoinMultiplayerScreen(this))));
+        addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.intel", b -> minecraft.setScreen(new IntelScreen(this))));
+        addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.armory", b -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
+        addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.settings", b -> minecraft.setScreen(new SiegeSettingsScreen(this))));
+        addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.quit", b -> minecraft.stop()));
 
-        int trackWidth = Math.min(124, Math.max(88, width / 9));
-        addRenderableWidget(command(width - trackWidth - 10, 10, trackWidth, 18, "siege.menu.next_track", b -> {
-            SiegeUiSounds.nextTrack();
-            SiegeMusic.nextTrack();
-        }));
+        int trackWidth = Math.min(126, Math.max(86, width / 9));
+        SiegeButton track = new SiegeButton(width - trackWidth - 9, 9, trackWidth, compact ? 18 : 20,
+                Component.translatable("siege.menu.next_track"), b -> {
+                    SiegeUiSounds.nextTrack();
+                    SiegeMusic.nextTrack();
+                }, 0xFFD64B4B);
+        addRenderableWidget(track);
     }
 
-    private Button command(int x, int y, int width, int height, String key, Button.OnPress press) {
-        return Button.builder(Component.translatable(key), button -> {
+    private SiegeButton command(int x, int y, int width, int height, String key, Button.OnPress press) {
+        return new SiegeButton(x, y, width, height, Component.translatable(key), button -> {
             SiegeUiSounds.click();
             press.onPress(button);
-        }).bounds(x, y, width, height).build();
+        }, ACCENT);
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
         SiegeBackgrounds.render(graphics, width, height, System.currentTimeMillis());
-        int panelWidth = Math.min(248, Math.max(176, width / 4));
-        graphics.fill(0, 0, panelWidth, height, 0x77000000);
-        graphics.fill(panelWidth - 1, 0, panelWidth, height, 0x6645B9D9);
-        int titleY = height < 240 ? 30 : 44;
-        graphics.drawCenteredString(font, Component.literal("ETERNAL CRAFT"), width / 2, titleY, 0xFFF4F1E9);
-        graphics.drawCenteredString(font, Component.literal("S  I  E  G  E"), width / 2, titleY + 16, 0xFFFF5555);
-        if (width >= 520) graphics.drawString(font, "REC", width - 50, 34, 0xFFFF5555, false);
-        if (width >= 420) graphics.drawString(font, "BUILD 0.5.3 // SECURE CHANNEL", Math.max(8, width - 220), height - 14, 0xFF8A8A8A, false);
+
+        boolean compact = width < 520 || height < 290;
+        int panelRight = Math.min(width, menuX + menuWidth + (compact ? 18 : 28));
+        graphics.fill(0, 0, panelRight, height, 0xB5090C10);
+        graphics.fill(panelRight - 2, 0, panelRight, height, 0x9955BFD9);
+        graphics.fill(0, 0, width, 2, 0xAA1F262D);
+
+        for (int y = 20; y < height; y += 32) {
+            graphics.fill(0, y, panelRight, y + 1, 0x181C9AB0);
+        }
+
+        int titleY = compact ? 24 : 35;
+        graphics.drawString(font, "ETERNAL CRAFT", menuX, titleY, 0xFFF1EEE7, false);
+        graphics.drawString(font, "S  I  E  G  E", menuX, titleY + 13, 0xFFFF5555, false);
+        graphics.fill(menuX, titleY + 26, Math.min(panelRight - 10, menuX + menuWidth), titleY + 27, 0x8855BFD9);
+
+        if (height >= 215) {
+            int infoY = Math.min(height - 26, menuBottom + 11);
+            if (infoY > menuBottom + 3) {
+                graphics.drawString(font, "// MENU COMMAND LINK", menuX, infoY, 0xFF77818A, false);
+            }
+        }
+
+        if (width >= 430) {
+            graphics.drawString(font, "REC", width - 46, 36, 0xFFFF5555, false);
+            String music = "AUDIO " + SiegeConfig.musicVolume + "% // " + SiegeMusic.currentTrackName();
+            graphics.drawString(font, font.plainSubstrByWidth(music, Math.max(80, width / 3)), width - Math.min(width / 3, 280) - 10, height - 14, 0xFF8C949B, false);
+        }
+        if (width >= 610) {
+            graphics.drawString(font, "BUILD 0.5.4 // SECURE CHANNEL", 10, height - 14, 0xFF727A81, false);
+        }
+
         super.render(graphics, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
     }

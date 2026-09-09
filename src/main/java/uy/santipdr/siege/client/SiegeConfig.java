@@ -16,6 +16,7 @@ public final class SiegeConfig {
 
     private static final Path FILE = FMLPaths.CONFIGDIR.get().resolve("siege-client.properties");
     public static boolean music = true;
+    public static int musicVolume = 75;
     public static boolean uiSounds = true;
     public static boolean animatedBackgrounds = true;
     public static boolean reducedMotion = false;
@@ -30,6 +31,7 @@ public final class SiegeConfig {
             catch (IOException ignored) { }
         }
         music = bool(p, "music", true);
+        musicVolume = integer(p, "musicVolume", 75, 0, 100);
         uiSounds = bool(p, "uiSounds", true);
         animatedBackgrounds = bool(p, "animatedBackgrounds", true);
         reducedMotion = bool(p, "reducedMotion", false);
@@ -40,6 +42,7 @@ public final class SiegeConfig {
     public static void save() {
         Properties p = new Properties();
         p.setProperty("music", Boolean.toString(music));
+        p.setProperty("musicVolume", Integer.toString(musicVolume));
         p.setProperty("uiSounds", Boolean.toString(uiSounds));
         p.setProperty("animatedBackgrounds", Boolean.toString(animatedBackgrounds));
         p.setProperty("reducedMotion", Boolean.toString(reducedMotion));
@@ -50,8 +53,15 @@ public final class SiegeConfig {
         } catch (IOException ignored) { }
     }
 
+    public static int clampVolume(int value) { return Math.max(0, Math.min(100, value)); }
+
     private static boolean bool(Properties p, String key, boolean fallback) {
         String value = p.getProperty(key);
         return value == null ? fallback : Boolean.parseBoolean(value);
+    }
+
+    private static int integer(Properties p, String key, int fallback, int min, int max) {
+        try { return Math.max(min, Math.min(max, Integer.parseInt(p.getProperty(key, Integer.toString(fallback))))); }
+        catch (NumberFormatException ignored) { return fallback; }
     }
 }
