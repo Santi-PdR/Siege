@@ -2,37 +2,41 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
-## SIEGE 0.6.2
+## SIEGE 0.6.3
 
 ### Intel dossiers
 
 - Intel keeps numbered `ALL`, `UNITS`, `ADVANCED`, `TANKS`, `BOSSES`, `ELITES` and `SUPER-UNITS` categories with live dossier counts.
 - Arrow controls, mouse wheel and keyboard arrows move through troops in the active category. Number keys `0-6` switch categories directly.
 - The wide `CATEGORIES` header no longer shares a full-width rule with its label. `FILES` keeps its separate darker divider because that treatment remains readable.
-- GUI scale 4 now gets a dedicated compact layout: short category controls, reduced navigation chrome, condensed metadata and more height for the dossier reading area.
-- The main menu exposes a reduced Intel feed at normal GUI scales. Scale 1-2 can show separate Unit and Advanced cards; scale 3 uses one alternating compact card; scale 4 intentionally hides the feed.
-- All sixteen photographs still come from the owner's named ZIP folders. No troop model is replaced or redrawn.
-- Nusia affiliation blocks are rebuilt across every dossier. Confirmed files use a worn printed flag/ledger treatment instead of a clean pasted badge; unknown origins use distressed censor ink rather than a generic digital `REDACTED` box.
-- Common units retain the beige field dossier. Advanced units retain the colder technical/blue treatment.
+- GUI scale 4 has a dedicated compact layout with reduced navigation chrome, condensed metadata and more height for dossier text.
+- The main menu exposes reduced Unit/Advanced Intel cards at normal GUI scales and hides them automatically when the logical viewport is too small.
+- Nusia affiliation blocks use worn printed/technical treatment; unknown origins use distressed censor ink instead of digital-looking `REDACTED` overlays.
 
 ### SIEGE Settings
 
 - Settings remain divided into `Overview`, `Music`, `Interface`, `Accessibility` and `Graphics` sections.
-- The Music section keeps the custom live 0-100 slider, current-track state and manual `Next Track` control.
+- Music keeps the custom live 0-100 slider, current-track state and manual `Next Track` control.
 - SIEGE controls use custom tactical widgets rather than vanilla button textures or vanilla click sounds.
 
-### Soundtrack timing and source integrity
+### Complete soundtrack masters
 
-- Automatic transitions are duration-driven. A transient `SoundManager.isActive(false)` can no longer skip a track early.
-- GitHub Actions converts the recovered owner soundtrack sources to Minecraft-safe Ogg Vorbis and measures the encoded duration with `ffprobe`; the exact durations are embedded in `music_durations.properties`.
-- Natural fade-out begins exactly eight seconds before the encoded end. Manual `Next Track` uses its own shorter fade. Volume changes remain live and never restart the stream, including a 0% live mute.
-- CI also audits the recovered Ogg pages before conversion. That audit proved the soundtrack binaries preserved in repository history are themselves truncated/corrupted after their valid audio pages. The currently recoverable audio lengths are `Tale of a Cruel World` 22.8s, `Darkest of Days` 25.0s, `Kaptain Music Box` 25.1s and `Heaven's Hell-Sent Gift` 24.0s.
-- 0.6.2 therefore plays every recoverable encoded track through its verified end without the controller cutting it prematurely. Restoring the genuinely longer original songs requires clean full source masters from the owner; missing audio cannot be reconstructed from the damaged repository blobs.
-- Music remains menu-only and stops immediately when a world/server is loaded.
+The authoritative soundtrack sources are the clean files supplied by the owner in chat on 2026-09-09. CI converts them to Minecraft-safe Ogg Vorbis and measures the encoded duration with `ffprobe` before compiling.
+
+- `The Tale of a Cruel World`: complete source, approximately 261.54 s.
+- `The Darkest of Days`: complete source, approximately 281.94 s.
+- `Heaven's Hell-Sent Gift`: complete source, approximately 217.22 s.
+- `DVN lobby music`: this 539.54 s compilation is **not** packaged whole. Only `Kaptain - Music Box` is used. Silence analysis of the supplied file places the Music Box section from 179.599646 s to 319.568250 s, approximately 139.97 s.
+
+`Tale`, `Darkest` and `Heaven` are always encoded from first packet to final packet: the build script deliberately uses no seek/time-cut filter for them. `DVN` is the only source intentionally split.
+
+Automatic transitions are duration-driven. `SoundManager.isActive(false)` is never used as the automatic-next signal. A natural fade-out starts exactly eight seconds before the measured encoded end, then the next shuffled track fades in. Manual `Next Track` uses its own shorter fade. Changing SIEGE volume never restarts the active stream.
+
+CI rejects the old damaged 22-25 second repository blobs by enforcing minimum source durations before compilation, so a truncated soundtrack cannot silently ship again.
 
 ### Background presentation
 
-- Background scenes hold longer and use a smoother 4.8-second quintic crossfade.
+- Background scenes hold longer and use a 4.8-second quintic crossfade.
 - Cinematic/Balanced modes use safe overscan with deterministic slow pan so transitions do not expose black edges or jump camera direction.
 - Reduced Motion keeps the crossfade but removes camera travel.
 
