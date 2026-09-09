@@ -55,7 +55,7 @@ public final class SiegeTitleScreen extends Screen {
         graphics.drawCenteredString(font, Component.literal("ETERNAL CRAFT"), width / 2, titleY, 0xFFF4F1E9);
         graphics.drawCenteredString(font, Component.literal("S  I  E  G  E"), width / 2, titleY + 16, 0xFFFF5555);
         if (width >= 520) graphics.drawString(font, "REC", width - 50, 34, 0xFFFF5555, false);
-        if (width >= 420) graphics.drawString(font, "BUILD 0.5.2 // SECURE CHANNEL", Math.max(8, width - 220), height - 14, 0xFF8A8A8A, false);
+        if (width >= 420) graphics.drawString(font, "BUILD 0.5.3 // SECURE CHANNEL", Math.max(8, width - 220), height - 14, 0xFF8A8A8A, false);
         super.render(graphics, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
     }
