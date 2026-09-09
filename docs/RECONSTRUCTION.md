@@ -17,17 +17,21 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - Operational profiles use the complete supplied source material and an independently scrollable tactical reading area.
 - The ten standard records are Units: Infantry, Shielder, Saboteur, Stalker, Natzuka, Sniper, Grenadier, Gunner, Jetpacker and Patriot.
 - The six Advanced records are Specialist, Demoman, Artiller, Cloaker, APU and Missiler. All originate from the Republic of Nusia.
+- The five Tank records are Zapper, Combatant, Agreement, Jagant and Strider. Zapper and Combatant are confirmed Nusia units; Agreement is linked to Secure Contain Protect; Jagant and Strider retain unknown origins.
+- Zapper, Combatant and Agreement report 3,000 HP / 100 DEF. Jagant and Strider report 2,500 HP / 100 DEF. Missing threat, armament or role data is displayed as unknown instead of being invented.
 - Demoman intentionally reports `NAN HP`. APU reports 120,000 HP and 0.75 defence, adjusted by difficulty.
 - Confirmed Nusia records are Sniper, Grenadier, Gunner, Patriot, Specialist, Demoman, Artiller, Cloaker, APU and Missiler. No flag or country is assigned to Infantry, Shielder, Saboteur, Stalker, Natzuka or Jetpacker because their supplied records do not confirm an origin.
 - The authentic Nusia flag uses vertical yellow, blue and green fields with four yellow stars on the central blue field. Substitute flags and real-world national flags are forbidden.
 - Nusia affiliation graphics must look physically printed/worn into common dossiers or technically integrated into advanced dossiers, never like a clean pasted badge. Unknown-origin records use distressed censor ink rather than a generic digital `REDACTED` overlay.
 - Dossier accents are category-owned rather than threat-owned: All cyan, Unit red, Advanced blue, Tank amber, Boss crimson, Elite violet and Super-Unit gold.
 - Intel records and tactical text are available in Spanish and English, including their configured Minecraft locale variants.
-- Supplied unit captures remain in Minecraft style, are normalized to 640x360 and receive their category-specific dossier treatment.
+- Supplied unit captures remain in Minecraft style, are normalized to 640x360 and receive their category-specific dossier treatment. Strider retains its recovered non-Minecraft render because that is the only supplied visual record.
 - Patriot is a confirmed Nusia unit. Its file does not invent missing abilities or deployment details.
+- Patriot is the deliberate exception to the supplied-pixel rule: the incorrect Minecraft stand-in is replaced by an owner-requested, visible charcoal portrait of an unidentified person. The dossier frame, Nusia affiliation and censorship treatment remain intact.
 - Jetpacker and Stalker use their corrected owner-supplied Minecraft captures. Troop models retain Minecraft proportions and equipment.
-- The named folders in the owner's definitive ZIP are the sole portrait source: `Unidades` supplies the ten common records and `Avanzados` supplies the six advanced records. The source pixels are never replaced with generated characters.
-- The main menu shows reduced Intel summaries containing only Unit and Advanced records when logical space permits. GUI scales 1-2 may show one of each simultaneously, scale 3 uses one alternating card, and scale 4 hides the preview to protect readability.
+- The named folders in the owner's definitive ZIP remain the portrait source for common and advanced records. `assets-source/intel-raw/tanks` preserves the five owner-supplied Tank captures used by the deterministic dossier generator.
+- The main menu shows reduced Intel summaries containing Unit, Advanced and Tank records when logical space permits. GUI scales 1-2 may show two rotating records simultaneously, scale 3 uses one rotating card, and scale 4 hides the preview to protect readability.
+- Main-menu Intel cards use curated complete-sentence summaries. The line budget never slices a troop description in the middle of a phrase, and `INTEL: EXPEDIENTE COMPLETO` is rendered without substring truncation.
 - Singleplayer has no visible button. Staff can open the vanilla world-selection screen with the undocumented Ctrl+S chord.
 
 ## Settings architecture

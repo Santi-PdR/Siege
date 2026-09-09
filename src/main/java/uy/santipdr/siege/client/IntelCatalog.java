@@ -8,7 +8,7 @@ import java.util.List;
  * Shared read-only view of the troop catalog.
  *
  * The dossier data still lives in IntelScreen so 0.6.0 can focus on rebuilding the
- * navigation/rendering layer without duplicating sixteen long lore records. Once
+ * navigation/rendering layer without duplicating the long lore records. Once
  * the legacy screen is removed in a later data migration this class can become the
  * canonical catalog directly.
  */
@@ -33,7 +33,9 @@ final class IntelCatalog {
     static List<IntelEntry> previewable() {
         List<IntelEntry> result = new ArrayList<>();
         for (IntelEntry entry : FILES) {
-            if (entry.category().equals("UNIT") || entry.category().equals("ADVANCED")) result.add(entry);
+            if (entry.category().equals("UNIT") || entry.category().equals("ADVANCED") || entry.category().equals("TANK")) {
+                result.add(entry);
+            }
         }
         return List.copyOf(result);
     }
