@@ -23,6 +23,19 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.8'
+      - name: Prepare Intel dossier overlays
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet pillow numpy
+          python3 scripts/prepare-intel-assets.py
+      - name: Prepare full SIEGE soundtrack
+        shell: bash
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+          bash scripts/prepare-music.sh
       - name: Compile and verify
         run: gradle --no-daemon clean build
       - uses: actions/upload-artifact@v4
