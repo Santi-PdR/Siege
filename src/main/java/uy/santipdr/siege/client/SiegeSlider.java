@@ -41,6 +41,13 @@ public final class SiegeSlider extends AbstractSliderButton {
     }
 
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        boolean handled = super.mouseClicked(mouseX, mouseY, button);
+        if (handled) SiegeUiSounds.click();
+        return handled;
+    }
+
+    @Override
     protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         int left = getX();
         int top = getY();
