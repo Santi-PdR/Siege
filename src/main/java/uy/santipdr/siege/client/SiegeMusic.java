@@ -1,10 +1,7 @@
 package uy.santipdr.siege.client;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.registries.RegistryObject;
 import uy.santipdr.siege.SiegeMod;
 
@@ -28,15 +25,15 @@ public final class SiegeMusic {
     );
     private static final List<Integer> queue = new ArrayList<>();
 
-    private static final int FADE_TICKS = 28;
-    private static final long STARTUP_GRACE_MS = 3000L;
+    private static final int FADE_TICKS = 32;
+    private static final long STARTUP_GRACE_MS = 3500L;
 
-    private static SoundInstance active;
+    private static SiegeTrackSound active;
     private static int previous = -1;
     private static long activeStartedAt;
     private static float fadeGain;
     private static FadeState fadeState = FadeState.NONE;
-    private static boolean ownsMusicSource;
+    private static int maintenanceTicks;
 
     private SiegeMusic() { }
 
@@ -50,11 +47,20 @@ public final class SiegeMusic {
         ensurePlaying();
         if (active == null) return;
 
-        var manager = Minecraft.getInstance().getSoundManager();
+        Minecraft minecraft = Minecraft.getInstance();
+        var manager = minecraft.getSoundManager();
         long aliveFor = System.currentTimeMillis() - activeStartedAt;
 
-        // A track advances only when the sound engine reports that the stream really ended.
-        // The startup grace prevents asynchronous streamed OGGs from being mistaken for a finished track.
+        // Keep vanilla menu music from appearing underneath SIEGE without
+        // hammering MusicManager every tick.
+        maintenanceTicks++;
+        if (maintenanceTicks >= 100) {
+            minecraft.getMusicManager().stopPlaying();
+            maintenanceTicks = 0;
+        }
+
+        // The stream advances only after Minecraft reports that it really ended.
+        // A startup grace protects asynchronously loaded streamed OGG files.
         if (fadeState != FadeState.OUT && aliveFor > STARTUP_GRACE_MS && !manager.isActive(active)) {
             active = null;
             fadeGain = 0.0F;
@@ -78,20 +84,24 @@ public final class SiegeMusic {
                 fadeGain = 0.0F;
                 startNext(true);
             }
+        } else {
+            applyLiveVolume();
         }
     }
 
     public static void ensurePlaying() {
-        Minecraft minecraft = Minecraft.getInstance();
         if (!shouldPlay()) {
             stop();
             return;
         }
 
-        // SIEGE owns only the no-world menu music channel. Gameplay music is never touched.
-        minecraft.getMusicManager().stopPlaying();
-        if (active == null) startNext(true);
-        else applyLiveVolume();
+        if (active == null) {
+            Minecraft.getInstance().getMusicManager().stopPlaying();
+            maintenanceTicks = 0;
+            startNext(true);
+        } else {
+            applyLiveVolume();
+        }
     }
 
     /** Manual skip uses a real fade-out before starting the next shuffled track. */
@@ -108,13 +118,13 @@ public final class SiegeMusic {
         if (fadeState != FadeState.OUT) fadeState = FadeState.OUT;
     }
 
-    /** Applies the custom SIEGE volume to the active stream without restarting it. */
+    /** Applies SIEGE's own volume to the currently playing stream without restarting it. */
     public static void setVolumeLive(int percent) {
         SiegeConfig.musicVolume = SiegeConfig.clampVolume(percent);
         applyLiveVolume();
     }
 
-    /** Backwards-compatible alias for older callers. No restart occurs anymore. */
+    /** Backwards-compatible alias for older callers. No restart occurs. */
     public static void refreshVolume() {
         applyLiveVolume();
     }
@@ -123,7 +133,12 @@ public final class SiegeMusic {
         return previous >= 0 && previous < TRACK_NAMES.size() ? TRACK_NAMES.get(previous) : "--";
     }
 
+    public static boolean isActuallyPlaying() {
+        return active != null && Minecraft.getInstance().getSoundManager().isActive(active);
+    }
+
     public static String transitionLabel(boolean spanish) {
+        if (active == null) return spanish ? "ESPERANDO AUDIO" : "WAITING FOR AUDIO";
         return switch (fadeState) {
             case IN -> spanish ? "ENTRADA SUAVE" : "FADING IN";
             case OUT -> spanish ? "CAMBIO SUAVE" : "FADING OUT";
@@ -152,27 +167,18 @@ public final class SiegeMusic {
         var manager = minecraft.getSoundManager();
         if (active != null) manager.stop(active);
 
-        active = SimpleSoundInstance.forMusic(TRACKS.get(index).get());
+        active = new SiegeTrackSound(TRACKS.get(index).get());
         fadeGain = fadeIn ? 0.0F : 1.0F;
         fadeState = fadeIn ? FadeState.IN : FadeState.NONE;
-        ownsMusicSource = true;
         applyLiveVolume();
         manager.play(active);
         activeStartedAt = System.currentTimeMillis();
     }
 
     private static void applyLiveVolume() {
-        if (!ownsMusicSource) return;
-        Minecraft minecraft = Minecraft.getInstance();
+        if (active == null) return;
         float configured = SiegeConfig.clampVolume(SiegeConfig.musicVolume) / 100.0F;
-        minecraft.getSoundManager().updateSourceVolume(SoundSource.MUSIC, configured * Math.max(0.0F, Math.min(1.0F, fadeGain)));
-    }
-
-    private static void restoreVanillaMusicVolume() {
-        if (!ownsMusicSource) return;
-        Minecraft minecraft = Minecraft.getInstance();
-        minecraft.getSoundManager().updateSourceVolume(SoundSource.MUSIC, minecraft.options.getSoundSourceVolume(SoundSource.MUSIC));
-        ownsMusicSource = false;
+        active.setGain(configured * Math.max(0.0F, Math.min(1.0F, fadeGain)));
     }
 
     private static void refillQueue() {
@@ -187,7 +193,7 @@ public final class SiegeMusic {
         active = null;
         fadeGain = 0.0F;
         fadeState = FadeState.NONE;
-        restoreVanillaMusicVolume();
+        maintenanceTicks = 0;
     }
 
     private enum FadeState { NONE, IN, OUT }
