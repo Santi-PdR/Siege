@@ -60,7 +60,9 @@ public final class IntelScreenV2 extends Screen {
                 Component.literal("< ").append(Component.translatable("siege.intel.return")),
                 b -> onClose(), 0xFFD64B4B));
 
-        categoryTop = 51;
+        // A dedicated header band lives between the cyan database rule and the
+        // first category button. Text is never drawn directly on the accent line.
+        categoryTop = 61;
         int y = categoryTop;
         for (String value : CATEGORIES) {
             SiegeButton button = new SiegeButton(margin, y, sidebarWidth - margin * 2, buttonHeight,
@@ -70,7 +72,9 @@ public final class IntelScreenV2 extends Screen {
             y += buttonHeight + gap;
         }
 
-        listTop = y + 24;
+        // Reserve a second solid band for the FILES heading. This prevents the
+        // grey sidebar scanline from visually cutting through the label.
+        listTop = y + 29;
         listBottom = height - 36;
         contentTop = 56;
     }
@@ -301,12 +305,26 @@ public final class IntelScreenV2 extends Screen {
         g.fill(sidebarWidth, 43, width, height, 0x70080A0C);
         g.fill(sidebarWidth - 2, 43, sidebarWidth, height, accent);
         g.fill(0, 41, width, 43, accent);
-        for (int y = 47; y < height; y += 28) g.fill(0, y, sidebarWidth, y + 1, 0x1519A5BC);
+
+        // Background telemetry lines are intentionally painted first. Solid
+        // section-header bands are then painted over them so labels never sit
+        // on top of a line with a different tone.
+        for (int y = 66; y < height; y += 28) g.fill(0, y, sidebarWidth, y + 1, 0x1519A5BC);
+
+        int categoryBandTop = 44;
+        int categoryBandBottom = categoryTop - 4;
+        g.fill(0, categoryBandTop, sidebarWidth, categoryBandBottom, 0xFC0B1014);
+        g.fill(10, categoryBandBottom - 2, sidebarWidth - 10, categoryBandBottom - 1, 0xFF24323A);
+
+        int filesBandTop = listTop - 27;
+        int filesBandBottom = listTop - 4;
+        g.fill(0, filesBandTop, sidebarWidth, filesBandBottom, 0xFC0B1014);
+        g.fill(10, filesBandBottom - 2, sidebarWidth - 10, filesBandBottom - 1, 0xFF24323A);
 
         g.drawCenteredString(font, label("BASE DE DATOS DE INTELIGENCIA", "INTELLIGENCE DATABASE"),
                 (sidebarWidth + width) / 2, 16, 0xFFF0EEE8);
-        g.drawString(font, "// " + label("CATEGORÍAS [0-6]", "CATEGORIES [0-6]"), 12, 38, 0xFF7C8790, false);
-        g.drawString(font, "// " + label("EXPEDIENTES", "FILES") + " [" + filtered().size() + "]", 12, listTop - 14, 0xFF7C8790, false);
+        g.drawString(font, "// " + label("CATEGORÍAS [0-6]", "CATEGORIES [0-6]"), 12, categoryBandTop + 5, 0xFF89959D, false);
+        g.drawString(font, "// " + label("EXPEDIENTES", "FILES") + " [" + filtered().size() + "]", 12, filesBandTop + 7, 0xFF89959D, false);
     }
 
     private void renderCompactChrome(GuiGraphics g, int accent) {
@@ -357,7 +375,6 @@ public final class IntelScreenV2 extends Screen {
         imageWidth = Math.min(imageWidth, Math.max(80, maxImageHeight * 16 / 9));
         int imageHeight = imageWidth * 9 / 16;
         int imageX = headerX;
-
         ResourceLocation portrait = new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/intel/" + entry.image() + ".png");
         g.fill(imageX - 3, mediaTop - 3, imageX + imageWidth + 3, mediaTop + imageHeight + 3, paperDark);
         g.blit(portrait, imageX, mediaTop, imageWidth, imageHeight, 0, 0, 640, 360, 640, 360);
