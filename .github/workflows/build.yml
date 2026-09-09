@@ -35,9 +35,12 @@ jobs:
       - name: Prepare full SIEGE soundtrack
         shell: bash
         run: |
-          if ! command -v ffmpeg >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y ffmpeg
+          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
+            # Hosted runners occasionally expose a transient/broken Chrome apt index.
+            # It is unrelated to this build, so disable only that source before installing ffmpeg.
+            sudo find /etc/apt/sources.list.d -maxdepth 1 -type f -name '*.list' -exec sed -i '/dl\.google\.com\/linux\/chrome/d' {} + || true
+            sudo apt-get update -o Acquire::Retries=3
+            sudo apt-get install -y --no-install-recommends ffmpeg
           fi
           bash scripts/prepare-music.sh
       - name: Compile and verify
