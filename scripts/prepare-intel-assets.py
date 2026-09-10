@@ -241,7 +241,7 @@ def boss_dossier_frame(name, code, display_name, frame_index, source, destinatio
     draw.text((20, 13), f"{code} / {display_name}", font=font(FONT_SERIF_B, 24), fill=(39, 32, 27, 245))
     draw.text((24, 76), "FIELD INTEL: BOSS", font=font(FONT_MONO_B, 8), fill=(231, 219, 194, 205))
     draw.text((24, 89), "SOURCE: ARCHIVAL VIDEO", font=font(FONT_MONO, 8), fill=(231, 219, 194, 185))
-    draw.text((24, 102), f"FRAME: {frame_index + 1:02d}/{BOSS_FRAME_COUNT:02d}", font=font(FONT_MONO_B, 8), fill=(194, 73, 68, 220))
+    draw.text((24, 102), "STATUS: VISUAL EVIDENCE", font=font(FONT_MONO_B, 8), fill=(194, 73, 68, 220))
 
     tag = paper_noise((168, 52), (208, 198, 177), seed_for(name, 60 + frame_index), 5)
     tag_draw = ImageDraw.Draw(tag, "RGBA")

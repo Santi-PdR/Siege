@@ -49,8 +49,12 @@ jobs:
       - name: Verify clean boss frames
         shell: bash
         run: |
-          if grep -nE '"REC "|"STILL "|recordWidth|String record' src/main/java/uy/santipdr/siege/client/IntelScreen.java; then
+          if grep -nE '"REC "|"STILL "|recordWidth|String record' src/main/java/uy/santipdr/siege/client/IntelScreen*.java; then
             echo "Boss frames must not draw REC/STILL counters over their images."
+            exit 1
+          fi
+          if grep -nE 'FRAME:.*frame_index|FRAME:.*BOSS_FRAME_COUNT' scripts/prepare-intel-assets.py; then
+            echo "Generated Boss dossier art must not contain a per-frame counter."
             exit 1
           fi
       - name: Compile and verify
@@ -60,7 +64,7 @@ jobs:
           name: siege-menu-${{ github.sha }}
           path: build/libs/*.jar
           if-no-files-found: error
-      - name: Publish validated jar for Windows installer
+      - name: Publish validated jar for installer
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         run: |

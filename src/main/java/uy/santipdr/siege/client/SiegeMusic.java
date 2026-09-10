@@ -48,10 +48,12 @@ public final class SiegeMusic {
     private static final long MANUAL_FADE_OUT_MS = 1_250L;
     private static final long FADE_IN_MS = 2_200L;
     private static final long ACTIVATION_GRACE_MS = 5_000L;
+    public static final long TRACK_ANNOUNCEMENT_MS = 8_500L;
 
     private static SiegeTrackSound active;
     private static int previous = -1;
     private static long startRequestedAt;
+    private static long announcementStartedAt;
     private static long playbackAnchorAt;
     private static boolean clockAnchored;
     private static float fadeGain;
@@ -174,6 +176,12 @@ public final class SiegeMusic {
         return previous >= 0 && previous < TRACK_NAMES.size() ? TRACK_NAMES.get(previous) : "--";
     }
 
+    public static long trackAnnouncementAgeMs() {
+        if (active == null || announcementStartedAt <= 0L) return -1L;
+        long age = Math.max(0L, System.currentTimeMillis() - announcementStartedAt);
+        return age <= TRACK_ANNOUNCEMENT_MS ? age : -1L;
+    }
+
     public static boolean isActuallyPlaying() {
         return active != null;
     }
@@ -219,6 +227,7 @@ public final class SiegeMusic {
 
         active = new SiegeTrackSound(TRACKS.get(index).get());
         startRequestedAt = System.currentTimeMillis();
+        announcementStartedAt = startRequestedAt;
         playbackAnchorAt = startRequestedAt;
         clockAnchored = false;
         naturalFadeOut = false;
@@ -287,6 +296,7 @@ public final class SiegeMusic {
         fadeState = FadeState.NONE;
         naturalFadeOut = false;
         maintenanceTicks = 0;
+        announcementStartedAt = 0L;
         clockAnchored = false;
     }
 

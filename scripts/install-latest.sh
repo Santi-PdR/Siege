@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+REPO="Santi-PdR/Siege"
 REPO_URL="https://github.com/Santi-PdR/Siege.git"
 BRANCH="main"
 MODS_DIR="/home/Santipdr/.sklauncher/instances/test-1/mods"
@@ -12,7 +13,11 @@ cleanup() {
 trap cleanup EXIT
 
 echo "SIEGE // Descargando build validado desde GitHub..."
-git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$WORK_DIR"
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+    gh repo clone "$REPO" "$WORK_DIR" -- --depth 1 --branch "$BRANCH"
+else
+    git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$WORK_DIR"
+fi
 
 JAR_FILE="$(find "$WORK_DIR/dist" -maxdepth 1 -type f     -name 'siege-menu-*.jar'     ! -name '*-sources.jar'     ! -name '*-javadoc.jar'     -print -quit)"
 

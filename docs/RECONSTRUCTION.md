@@ -6,7 +6,9 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 
 - Forge 1.20.1 client-only menu replacement.
 - Cinematic rotating backgrounds with long crossfades, restrained camera drift, scanlines and contrast overlays.
-- Main commands remain in a compact left-side column so the active background stays visible.
+- Main commands remain in a compact neutral left-side column so the active background stays visible. The main screen has no cyan panel divider and no `MENU COMMAND LINK` footer.
+- The custom wordmark and GUI-scale-3 command plates stay deliberately smaller than the dossier area; the lower-right dossier remains untouched by main-screen chrome changes.
+- Music identification is event-driven: `REC` and the track name appear together briefly whenever a new track begins, rather than remaining as a faint static label.
 - Intel opens a responsive intelligence database with numbered categories: `0 ALL`, `1 UNITS`, `2 ADVANCED`, `3 TANKS`, `4 BOSSES`, `5 ELITES`, `6 SUPER-UNITS`.
 - Every category displays its live record count. The active category owns the current troop sequence.
 - Troops can be changed with dedicated up/down controls, mouse wheel and keyboard arrows. Number keys `0-6` switch categories directly.
@@ -33,7 +35,8 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - Jetpacker and Stalker use their corrected owner-supplied Minecraft captures. Troop models retain Minecraft proportions and equipment.
 - The named folders in the owner's definitive ZIP remain the portrait source for common and advanced records. `assets-source/intel-raw/tanks` preserves the five owner-supplied Tank captures, while `assets-source/intel-raw/bosses` preserves six representative frames per owner-supplied Boss video.
 - Full MP4 files are not packaged into Minecraft. CI deterministically turns the 54 source frames into compact 640x360 dossier PNGs, giving every boss—including Hermes—the same classified motion-record presentation.
-- The main menu shows reduced Intel summaries containing Unit, Advanced, Tank and Boss records when logical space permits. GUI scales 1-2 may show two rotating records simultaneously, scale 3 uses one rotating card, and scale 4 hides the preview to protect readability.
+- Boss motion frames never display `REC`, `STILL` or a changing frame counter. CI scans the restored Intel V3 source and the image generator so this cannot silently regress.
+- The main menu shows reduced Intel summaries containing only Unit and Advanced records when logical space permits. GUI scales 1-2 may show two rotating records simultaneously, scale 3 uses one rotating card, and scale 4 hides the preview to protect readability.
 - Main-menu Intel cards use longer curated summaries and prefer two complete sentences. When the line budget is smaller, the renderer removes complete trailing sentences; it never slices a description in the middle of a phrase, and `INTEL: EXPEDIENTE COMPLETO` remains complete.
 - Singleplayer has no visible button. Staff can open the vanilla world-selection screen with the undocumented Ctrl+S chord.
 

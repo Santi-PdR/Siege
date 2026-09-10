@@ -2,6 +2,17 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
+## SIEGE 0.7.2
+
+- Removed the runtime `REC / STILL` frame badge from the Intel V3 screen that is actually packaged.
+- Boss dossier artwork no longer prints frame numbers; CI now checks the restored V3 source and the artwork generator.
+- Main-menu Intel rotation is restricted to Unit and Advanced records.
+- The title, GUI-scale-3 command column and command plates are smaller and better balanced.
+- The left panel is now neutral black/grey without the cyan divider or blue scanline cast.
+- Removed `MENU COMMAND LINK`; the footer is a smaller `BUILD 0.7.2` label without `SECURE CHANNEL`.
+- `REC` and the current track name now appear together for 8.5 seconds whenever a track actually starts.
+- Fedora's installer prefers the authenticated GitHub CLI, avoiding private-repository clone failures.
+
 ## SIEGE 0.7.1
 
 - The main-screen title is now a dedicated transparent wordmark derived from the supplied visual reference instead of enlarged vanilla lettering.
@@ -51,7 +62,7 @@ Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 - Arrow controls, mouse wheel and keyboard arrows move through troops in the active category. Number keys `0-6` switch categories directly.
 - The wide `CATEGORIES` header no longer shares a full-width rule with its label. `FILES` keeps its separate darker divider because that treatment remains readable.
 - GUI scale 4 has a dedicated compact layout with reduced navigation chrome, condensed metadata and more height for dossier text.
-- The main menu rotates reduced Unit, Advanced, Tank and Boss Intel cards at normal GUI scales and hides them automatically when the logical viewport is too small.
+- The main menu rotates reduced Unit and Advanced Intel cards at normal GUI scales and hides them automatically when the logical viewport is too small.
 - Main-menu Intel cards are taller and use curated two-sentence summaries where space permits. Narrow layouts remove whole sentences instead of cutting a phrase in half.
 - Tank dossiers now include Zapper, Combatant, Agreement, Jagant and Strider with their supplied HP/DEF data and owner-provided renders.
 - Boss dossiers now include Tempest, Fusilier, Achilles, Trident, Prometheus, Daedalus, Hermes, Lelantos and Gaia. Each uses the same six-frame classified-video treatment derived from its owner-supplied footage.

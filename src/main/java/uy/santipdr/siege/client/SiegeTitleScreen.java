@@ -35,11 +35,11 @@ public final class SiegeTitleScreen extends Screen {
         boolean scaleThree = guiScale >= 2.75D && guiScale < 3.75D && !compact;
         int margin = compact ? 9 : Math.max(14, width / 55);
         menuWidth = scaleThree
-                ? Math.min(286, Math.max(246, width / 3))
+                ? Math.min(236, Math.max(214, width / 4))
                 : Math.min(compact ? 184 : 226, Math.max(138, width / (compact ? 2 : 5)));
         menuWidth = Math.min(menuWidth, width - margin * 2);
-        int buttonHeight = compact ? 18 : scaleThree ? 31 : 22;
-        int gap = compact ? 3 : scaleThree ? 9 : 5;
+        int buttonHeight = compact ? 18 : scaleThree ? 25 : 22;
+        int gap = compact ? 3 : scaleThree ? 6 : 5;
         int totalHeight = buttonHeight * 5 + gap * 4;
         menuX = margin;
 
@@ -78,34 +78,19 @@ public final class SiegeTitleScreen extends Screen {
         SiegeBackgrounds.render(graphics, width, height, System.currentTimeMillis());
 
         boolean compact = width < 520 || height < 290;
-        int panelRight = Math.min(width, menuX + menuWidth + (compact ? 18 : 30));
-        graphics.fill(0, 0, panelRight, height, 0xBA090C10);
-        graphics.fill(panelRight - 2, 0, panelRight, height, 0xAA55BFD9);
-        graphics.fill(0, 0, width, 2, 0xAA1F262D);
+        int panelRight = Math.min(width, menuX + menuWidth + (compact ? 12 : 18));
+        graphics.fill(0, 0, panelRight, height, 0x98050709);
+        graphics.fill(panelRight - 1, 0, panelRight, height, 0x704B5055);
+        graphics.fill(0, 0, width, 1, 0x801F2428);
 
-        for (int y = 20; y < height; y += 32) graphics.fill(0, y, panelRight, y + 1, 0x181C9AB0);
+        for (int y = 24; y < height; y += 36) graphics.fill(0, y, panelRight, y + 1, 0x102E3338);
 
         renderTitle(graphics, compact, panelRight);
 
-        if (height >= 215) {
-            int infoY = Math.min(height - 26, menuBottom + 11);
-            if (infoY > menuBottom + 3) {
-                graphics.drawString(font, "// MENU COMMAND LINK", menuX, infoY, 0xFF77818A, false);
-            }
-        }
-
         if (SiegeConfig.mainMenuIntel) renderIntelPreview(graphics, panelRight);
+        renderTrackAnnouncement(graphics, compact);
 
-        if (width >= 430) {
-            graphics.drawString(font, "REC", width - 46, 36, 0xFFFF5555, false);
-            String music = "AUDIO " + SiegeConfig.musicVolume + "% // " + SiegeMusic.currentTrackName();
-            int musicWidth = Math.min(width / 3, 290);
-            graphics.drawString(font, font.plainSubstrByWidth(music, Math.max(80, musicWidth)), width - musicWidth - 10,
-                    height - 14, 0xFF929AA1, false);
-        }
-        if (width >= 610) {
-            graphics.drawString(font, "BUILD 0.7.1 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
-        }
+        if (width >= 610) renderBuildLabel(graphics);
 
         super.render(graphics, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
@@ -115,9 +100,9 @@ public final class SiegeTitleScreen extends Screen {
         // Dedicated transparent wordmark: the supplied reference uses custom narrow
         // lettering, not a stretched Minecraft font. Keeping both lines in one
         // texture also preserves the exact outline and short extrusion at every scale.
-        int maximumWidth = compact ? width - 18 : width - 56;
-        int desiredWidth = compact ? Math.min(350, maximumWidth) : Math.min(560, maximumWidth);
-        int wordmarkWidth = Math.max(210, desiredWidth);
+        int maximumWidth = compact ? width - 24 : width - 72;
+        int desiredWidth = compact ? Math.min(270, maximumWidth) : Math.min(340, maximumWidth);
+        int wordmarkWidth = Math.max(190, desiredWidth);
         int wordmarkHeight = Math.round(wordmarkWidth * (TITLE_TEXTURE_HEIGHT / (float) TITLE_TEXTURE_WIDTH));
         int x = (width - wordmarkWidth) / 2;
         int y = compact ? 16 : 18;
@@ -125,6 +110,41 @@ public final class SiegeTitleScreen extends Screen {
         g.blit(TITLE_WORDMARK, x, y, wordmarkWidth, wordmarkHeight,
                 0.0F, 0.0F, TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT,
                 TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
+    }
+
+    private void renderTrackAnnouncement(GuiGraphics g, boolean compact) {
+        long age = SiegeMusic.trackAnnouncementAgeMs();
+        if (age < 0L) return;
+
+        int alpha = age <= 6_800L ? 255 : Math.max(0, 255 - (int) ((age - 6_800L) * 255L / 1_700L));
+        int boxWidth = compact ? Math.min(170, width - 18) : Math.min(220, Math.max(170, width / 4));
+        int boxHeight = compact ? 29 : 34;
+        int x = width - boxWidth - 9;
+        if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion && age < 360L) {
+            x += Math.round((1.0F - age / 360.0F) * 18.0F);
+        }
+        int y = compact ? 31 : 35;
+        g.fill(x + 2, y + 2, x + boxWidth + 2, y + boxHeight + 2, (Math.min(150, alpha) << 24));
+        g.fill(x, y, x + boxWidth, y + boxHeight, (Math.min(222, alpha) << 24) | 0x00070A0D);
+        g.fill(x, y, x + 2, y + boxHeight, (alpha << 24) | 0x00E54852);
+
+        String rec = "● REC";
+        g.drawString(font, rec, x + 8, y + 6, (alpha << 24) | 0x00FF5555, false);
+        String track = font.plainSubstrByWidth(SiegeMusic.currentTrackName(), boxWidth - 16);
+        g.drawString(font, track, x + 8, y + (compact ? 17 : 20), (alpha << 24) | 0x00F4D36A, false);
+
+        int progress = Math.min(boxWidth - 4, Math.max(0,
+                (int) ((boxWidth - 4L) * age / SiegeMusic.TRACK_ANNOUNCEMENT_MS)));
+        g.fill(x + 2, y + boxHeight - 2, x + 2 + progress, y + boxHeight - 1,
+                (Math.min(190, alpha) << 24) | 0x00E54852);
+    }
+
+    private void renderBuildLabel(GuiGraphics g) {
+        g.pose().pushPose();
+        g.pose().translate(10.0F, height - 9.0F, 0.0F);
+        g.pose().scale(0.68F, 0.68F, 1.0F);
+        g.drawString(font, "BUILD 0.7.2", 0, 0, 0xFF747D84, false);
+        g.pose().popPose();
     }
 
     /**

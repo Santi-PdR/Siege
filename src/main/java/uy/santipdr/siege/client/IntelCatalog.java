@@ -33,8 +33,7 @@ final class IntelCatalog {
     static List<IntelEntry> previewable() {
         List<IntelEntry> result = new ArrayList<>();
         for (IntelEntry entry : FILES) {
-            if (entry.category().equals("UNIT") || entry.category().equals("ADVANCED")
-                    || entry.category().equals("TANK") || entry.category().equals("BOSS")) {
+            if (entry.category().equals("UNIT") || entry.category().equals("ADVANCED")) {
                 result.add(entry);
             }
         }

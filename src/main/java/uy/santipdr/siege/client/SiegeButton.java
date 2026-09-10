@@ -97,9 +97,9 @@ public final class SiegeButton extends Button {
 
     private void renderMainMenuWidget(GuiGraphics g, Font font, int x, int y, int w, int h,
                                       boolean hot, boolean effects) {
-        int body = !active ? 0xC54B4D50 : hot || selected ? 0xE18B8C8E : 0xD6757779;
-        int inner = !active ? 0xAA55575A : hot || selected ? 0xD9929395 : 0xC87B7D7F;
-        int border = hot || selected ? 0xFFE54852 : 0xFF9A9C9E;
+        int body = !active ? 0xC5424548 : hot || selected ? 0xDF74777A : 0xD05B5E61;
+        int inner = !active ? 0xAA4B4E51 : hot || selected ? 0xCF7B7E81 : 0xC7626568;
+        int border = hot || selected ? 0xFFE54852 : 0xFF85898D;
 
         // Compact offset shadow, hard steel border and restrained horizontal grain:
         // this follows the reference's industrial grey plates instead of glassy black cards.
@@ -110,8 +110,8 @@ public final class SiegeButton extends Button {
         g.fill(x + 2, y + 1, x + w - 2, y + 2, border);
         g.fill(x + 2, y + h - 2, x + w - 2, y + h - 1, 0xFF4A4C4F);
 
-        for (int lineY = y + 4; lineY < y + h - 3; lineY += 4) {
-            g.fill(x + 4, lineY, x + w - 4, lineY + 1, hot ? 0x0EFFFFFF : 0x0AFFFFFF);
+        for (int lineY = y + 5; lineY < y + h - 3; lineY += 5) {
+            g.fill(x + 4, lineY, x + w - 4, lineY + 1, hot ? 0x0CFFFFFF : 0x07FFFFFF);
         }
 
         if (hot || selected) {
