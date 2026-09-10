@@ -2,6 +2,13 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
+## SIEGE 0.6.6
+
+- Boss images no longer show the intrusive runtime `REC / STILL` badge.
+- Main-menu Intel cards can now be hidden independently.
+- Scanlines can now be disabled independently from the graphics profile.
+- The new client preferences persist in `config/siege-client.properties`.
+
 ## SIEGE 0.6.5
 
 ### Intel dossiers

@@ -53,7 +53,7 @@ public final class SiegeBackgrounds {
         graphics.fill(0, 0, width, height, 0x3A000000);
         graphics.fill(0, 0, Math.min(width, Math.max(220, width / 4)), height, 0x70000000);
 
-        if (SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE) {
+        if (SiegeConfig.scanlines && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE) {
             int spacing = SiegeConfig.graphics == SiegeConfig.Graphics.CINEMATIC ? 4 : 7;
             for (int y = 0; y < height; y += spacing) {
                 graphics.fill(0, y, width, y + 1, 0x10000000);

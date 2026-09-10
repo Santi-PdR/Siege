@@ -86,7 +86,7 @@ public final class SiegeTitleScreen extends Screen {
             }
         }
 
-        renderIntelPreview(graphics, panelRight);
+        if (SiegeConfig.mainMenuIntel) renderIntelPreview(graphics, panelRight);
 
         if (width >= 430) {
             graphics.drawString(font, "REC", width - 46, 36, 0xFFFF5555, false);

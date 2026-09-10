@@ -581,14 +581,6 @@ public final class IntelScreen extends Screen {
         g.fill(imageX - 3, imageY - 3, imageX + imageWidth + 3, imageY + imageHeight + 3, paperDark);
         g.blit(portrait, imageX, imageY, imageWidth, imageHeight, 0, 0, 640, 360, 640, 360);
         g.fill(imageX, imageY, imageX + imageWidth, imageY + 2, accent);
-        if (entry.category().equals("BOSS") && imageWidth >= 90) {
-            String record = (SiegeConfig.animatedIntel && !SiegeConfig.reducedMotion ? "REC " : "STILL ")
-                    + String.format("%02d/%02d", mediaFrame + 1, BOSS_FRAME_COUNT);
-            int recordWidth = font.width(record) + 6;
-            g.fill(imageX + 3, imageY + 5, imageX + 3 + recordWidth, imageY + 17, 0xB2080A0C);
-            g.drawString(font, record, imageX + 6, imageY + 7, 0xFFFF6B66, false);
-        }
-
         int metaX = imageX + imageWidth + (compactMode ? 8 : 13);
         int metaWidth = Math.max(54, x + availableWidth - pad - metaX);
         int metaY = imageY;
