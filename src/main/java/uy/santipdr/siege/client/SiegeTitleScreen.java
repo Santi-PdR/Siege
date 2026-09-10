@@ -147,8 +147,8 @@ public final class SiegeTitleScreen extends Screen {
         g.drawString(font, text, 0, 1, outline, false);
         g.drawString(font, text, 0, 0, 0xFFE4DFE1, false);
 
-        // A restrained upper highlight gives the face the beveled reference effect.
-        g.drawString(font, text, 0, -0.35F, 0x66FFFFFF, false);
+        // A restrained one-pixel upper highlight gives the face a beveled edge.
+        g.drawString(font, text, 0, -1, 0x44FFFFFF, false);
         g.pose().popPose();
     }
 
