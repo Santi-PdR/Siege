@@ -2,6 +2,11 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
+## SIEGE 0.6.7
+
+- The per-frame boss `REC / STILL` counter is forbidden by the build and cannot be reintroduced accidentally.
+- The dossier keeps its six-frame animation without drawing frame numbers over the image.
+
 ## SIEGE 0.6.6
 
 - Boss images no longer show the intrusive runtime `REC / STILL` badge.
