@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import org.lwjgl.glfw.GLFW;
 
@@ -14,6 +15,9 @@ import java.util.List;
 
 public final class SiegeTitleScreen extends Screen {
     private static final int ACCENT = 0xFF55BFD9;
+    private static final ResourceLocation TITLE_WORDMARK = new ResourceLocation("siege", "textures/gui/title/siege_wordmark.png");
+    private static final int TITLE_TEXTURE_WIDTH = 1360;
+    private static final int TITLE_TEXTURE_HEIGHT = 441;
     private int menuX;
     private int menuWidth;
     private int menuTop;
@@ -31,11 +35,11 @@ public final class SiegeTitleScreen extends Screen {
         boolean scaleThree = guiScale >= 2.75D && guiScale < 3.75D && !compact;
         int margin = compact ? 9 : Math.max(14, width / 55);
         menuWidth = scaleThree
-                ? Math.min(250, Math.max(218, width / 4))
+                ? Math.min(286, Math.max(246, width / 3))
                 : Math.min(compact ? 184 : 226, Math.max(138, width / (compact ? 2 : 5)));
         menuWidth = Math.min(menuWidth, width - margin * 2);
-        int buttonHeight = compact ? 18 : scaleThree ? 27 : 22;
-        int gap = compact ? 3 : scaleThree ? 7 : 5;
+        int buttonHeight = compact ? 18 : scaleThree ? 31 : 22;
+        int gap = compact ? 3 : scaleThree ? 9 : 5;
         int totalHeight = buttonHeight * 5 + gap * 4;
         menuX = margin;
 
@@ -65,7 +69,7 @@ public final class SiegeTitleScreen extends Screen {
         return new SiegeButton(x, y, width, height, Component.translatable(key), button -> {
             SiegeUiSounds.click();
             press.onPress(button);
-        }, ACCENT);
+        }, 0xFFE54852).setMainMenuStyle(true);
     }
 
     @Override
@@ -100,7 +104,7 @@ public final class SiegeTitleScreen extends Screen {
                     height - 14, 0xFF929AA1, false);
         }
         if (width >= 610) {
-            graphics.drawString(font, "BUILD 0.7.0 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
+            graphics.drawString(font, "BUILD 0.7.1 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -108,68 +112,19 @@ public final class SiegeTitleScreen extends Screen {
     }
 
     private void renderTitle(GuiGraphics g, boolean compact, int panelRight) {
-        // The identity belongs to the whole operation screen, not to the command sidebar.
-        // Minecraft's pixel font is deliberately enlarged and layered into a heavy
-        // red-edged, dark-extruded wordmark inspired by the supplied reference.
-        float desiredCraftScale = compact ? 2.05F : 3.35F;
-        float maximumCraftWidth = Math.max(150.0F, width - (compact ? 22.0F : 70.0F));
-        float craftScale = Math.min(desiredCraftScale, maximumCraftWidth / Math.max(1.0F, font.width("ETERNAL CRAFT") * 0.84F));
-        int titleY = compact ? 34 : 29;
+        // Dedicated transparent wordmark: the supplied reference uses custom narrow
+        // lettering, not a stretched Minecraft font. Keeping both lines in one
+        // texture also preserves the exact outline and short extrusion at every scale.
+        int maximumWidth = compact ? width - 18 : width - 56;
+        int desiredWidth = compact ? Math.min(350, maximumWidth) : Math.min(560, maximumWidth);
+        int wordmarkWidth = Math.max(210, desiredWidth);
+        int wordmarkHeight = Math.round(wordmarkWidth * (TITLE_TEXTURE_HEIGHT / (float) TITLE_TEXTURE_WIDTH));
+        int x = (width - wordmarkWidth) / 2;
+        int y = compact ? 16 : 18;
 
-        drawExtrudedTitle(g, "ETERNAL CRAFT", width / 2, titleY, craftScale);
-
-        float siegeScale = Math.max(1.15F, craftScale * 0.52F);
-        int siegeY = titleY + Math.round(11.5F * craftScale);
-        drawCenteredScaled(g, "S I E G E", width / 2, siegeY, siegeScale, 0xFFFF5555, true);
-
-        int ruleHalf = Math.min(compact ? 72 : 128, Math.max(46, font.width("ETERNAL CRAFT") * Math.round(craftScale) / 3));
-        int ruleY = siegeY + Math.round(11.0F * siegeScale);
-        int ruleAlpha = 0x99;
-        if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion) {
-            ruleAlpha = 0x78 + (int) ((Math.sin(System.currentTimeMillis() / 420.0D) + 1.0D) * 0x24);
-        }
-        int ruleColor = (ruleAlpha << 24) | 0x00B5162D;
-        g.fill(width / 2 - ruleHalf, ruleY, width / 2 + ruleHalf, ruleY + 1, ruleColor);
-        g.fill(width / 2 - ruleHalf - 9, ruleY, width / 2 - ruleHalf - 3, ruleY + 1, 0xAA55BFD9);
-        g.fill(width / 2 + ruleHalf + 3, ruleY, width / 2 + ruleHalf + 9, ruleY + 1, 0xAA55BFD9);
-    }
-
-    private void drawExtrudedTitle(GuiGraphics g, String text, int centerX, int y, float scale) {
-        int textWidth = font.width(text);
-        float horizontalScale = scale * 0.84F;
-        float originX = centerX - textWidth * horizontalScale / 2.0F;
-        g.pose().pushPose();
-        g.pose().translate(originX, y, 0.0F);
-        g.pose().scale(horizontalScale, scale, 1.0F);
-
-        // Short, controlled extrusion: depth without the long black spikes.
-        g.drawString(font, text, 2, 2, 0xE0000000, false);
-        g.drawString(font, text, 1, 1, 0xFF4A0B13, false);
-
-        // Fine dark separator and red external keyline.
-        int outline = 0xFFD93A43;
-        g.drawString(font, text, -1, 0, outline, false);
-        g.drawString(font, text, 1, 0, outline, false);
-        g.drawString(font, text, 0, -1, outline, false);
-        g.drawString(font, text, 0, 1, outline, false);
-        g.drawString(font, text, 0, 0, 0xFFE4DFE1, false);
-
-        // A restrained one-pixel upper highlight gives the face a beveled edge.
-        g.drawString(font, text, 0, -1, 0x44FFFFFF, false);
-        g.pose().popPose();
-    }
-
-    private void drawCenteredScaled(GuiGraphics g, String text, int centerX, int y, float scale, int color, boolean shadow) {
-        float originX = centerX - font.width(text) * scale / 2.0F;
-        g.pose().pushPose();
-        g.pose().translate(originX, y, 0.0F);
-        g.pose().scale(scale, scale, 1.0F);
-        if (shadow) {
-            g.drawString(font, text, 2, 2, 0xD8000000, false);
-            g.drawString(font, text, 1, 0, 0xFF781421, false);
-        }
-        g.drawString(font, text, 0, 0, color, false);
-        g.pose().popPose();
+        g.blit(TITLE_WORDMARK, x, y, wordmarkWidth, wordmarkHeight,
+                0.0F, 0.0F, TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT,
+                TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
     }
 
     /**

@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Component;
 public final class SiegeButton extends Button {
     private final int accent;
     private boolean selected;
+    private boolean mainMenuStyle;
     private float hoverAmount;
 
     public SiegeButton(int x, int y, int width, int height, Component message, OnPress onPress, int accent) {
@@ -24,6 +25,11 @@ public final class SiegeButton extends Button {
 
     public SiegeButton setSelected(boolean selected) {
         this.selected = selected;
+        return this;
+    }
+
+    public SiegeButton setMainMenuStyle(boolean mainMenuStyle) {
+        this.mainMenuStyle = mainMenuStyle;
         return this;
     }
 
@@ -39,6 +45,11 @@ public final class SiegeButton extends Button {
         float target = hot ? 1.0F : 0.0F;
         if (effects) hoverAmount += (target - hoverAmount) * Math.min(1.0F, 0.22F + partialTick * 0.08F);
         else hoverAmount = target;
+
+        if (mainMenuStyle) {
+            renderMainMenuWidget(g, font, x, y, w, h, hot, effects);
+            return;
+        }
 
         int body = !active ? 0xB90A0C0F : selected ? 0xE51A2026 : hot ? 0xE5181D22 : 0xD20B0F13;
         int edge = !active ? 0xFF41464C : (selected || hot) ? accent : 0xFF4C555E;
@@ -82,6 +93,45 @@ public final class SiegeButton extends Button {
         String text = fit(font, getMessage().getString(), usable);
         int textColor = !active ? 0xFF6F767D : hot || selected ? 0xFFF5F3EC : 0xFFD8DDE1;
         g.drawString(font, text, x + left, y + Math.max(1, (h - font.lineHeight) / 2), textColor, false);
+    }
+
+    private void renderMainMenuWidget(GuiGraphics g, Font font, int x, int y, int w, int h,
+                                      boolean hot, boolean effects) {
+        int body = !active ? 0xC54B4D50 : hot || selected ? 0xE18B8C8E : 0xD6757779;
+        int inner = !active ? 0xAA55575A : hot || selected ? 0xD9929395 : 0xC87B7D7F;
+        int border = hot || selected ? 0xFFE54852 : 0xFF9A9C9E;
+
+        // Compact offset shadow, hard steel border and restrained horizontal grain:
+        // this follows the reference's industrial grey plates instead of glassy black cards.
+        g.fill(x + 2, y + 3, x + w + 3, y + h + 3, 0x66000000);
+        g.fill(x, y, x + w, y + h, 0xFF303236);
+        g.fill(x + 1, y + 1, x + w - 1, y + h - 1, body);
+        g.fill(x + 3, y + 3, x + w - 3, y + h - 3, inner);
+        g.fill(x + 2, y + 1, x + w - 2, y + 2, border);
+        g.fill(x + 2, y + h - 2, x + w - 2, y + h - 1, 0xFF4A4C4F);
+
+        for (int lineY = y + 4; lineY < y + h - 3; lineY += 4) {
+            g.fill(x + 4, lineY, x + w - 4, lineY + 1, hot ? 0x0EFFFFFF : 0x0AFFFFFF);
+        }
+
+        if (hot || selected) {
+            int cy = y + h / 2;
+            int arrowX = x + Math.max(9, h / 2);
+            g.fill(arrowX, cy - 4, arrowX + 3, cy + 5, accent);
+            g.fill(arrowX + 3, cy - 3, arrowX + 6, cy + 4, accent);
+            g.fill(arrowX + 6, cy - 1, arrowX + 9, cy + 2, accent);
+            g.fill(x + 1, y + 1, x + 3, y + h - 1, accent);
+
+            if (effects && hoverAmount > 0.05F) {
+                int sweep = Math.round((w - 12) * hoverAmount);
+                g.fill(x + 5, y + h - 3, x + 5 + sweep, y + h - 2, 0x88E54852);
+            }
+        }
+
+        String text = fit(font, getMessage().getString(), w - 40);
+        int textX = x + (w - font.width(text)) / 2;
+        int textColor = !active ? 0xFF9B9DA0 : 0xFFF1F0ED;
+        g.drawString(font, text, textX, y + Math.max(1, (h - font.lineHeight) / 2), textColor, true);
     }
 
     private static String fit(Font font, String value, int width) {

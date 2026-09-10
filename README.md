@@ -2,6 +2,13 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
+## SIEGE 0.7.1
+
+- The main-screen title is now a dedicated transparent wordmark derived from the supplied visual reference instead of enlarged vanilla lettering.
+- The command buttons use the reference's medium-grey industrial plates, centered labels and red selection arrow.
+- GUI scale 3 receives wider 286 px command plates with 31 px height and more vertical breathing room.
+- The existing lower-right Intel dossier is intentionally unchanged.
+
 ## SIEGE 0.7.0
 
 - New persistent Tactical Effects toggle in Interface settings.
