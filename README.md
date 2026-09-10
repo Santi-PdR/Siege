@@ -2,6 +2,13 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
+## SIEGE 0.6.9
+
+- The title is narrower and closer to the supplied tactical pixel lettering.
+- The oversized black spikes are replaced by a short clean extrusion, fine red edge and restrained face highlight.
+- GUI scale 3 gets wider, taller command buttons with increased spacing.
+- Buttons now have eased hover response, a clipped light sweep and tactical corner brackets.
+
 ## SIEGE 0.6.8
 
 - The main title is now a large centered tactical wordmark.

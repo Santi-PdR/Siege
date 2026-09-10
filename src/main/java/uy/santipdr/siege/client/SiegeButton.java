@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Component;
 public final class SiegeButton extends Button {
     private final int accent;
     private boolean selected;
+    private float hoverAmount;
 
     public SiegeButton(int x, int y, int width, int height, Component message, OnPress onPress, int accent) {
         super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
@@ -34,6 +35,8 @@ public final class SiegeButton extends Button {
         int w = getWidth();
         int h = getHeight();
         boolean hot = active && isHoveredOrFocused();
+        float target = hot ? 1.0F : 0.0F;
+        hoverAmount += (target - hoverAmount) * Math.min(1.0F, 0.22F + partialTick * 0.08F);
 
         int body = !active ? 0xB90A0C0F : selected ? 0xE51A2026 : hot ? 0xE5181D22 : 0xD20B0F13;
         int edge = !active ? 0xFF41464C : (selected || hot) ? accent : 0xFF4C555E;
@@ -44,8 +47,23 @@ public final class SiegeButton extends Button {
         g.fill(x + 2, y, x + w, y + 1, hot ? edge : 0xFF293038);
         g.fill(x + 2, y + h - 1, x + w, y + h, selected ? edge : 0xFF20262C);
 
-        if (hot) {
-            g.fill(x + 5, y + 3, x + 7, y + h - 3, accent);
+        if (hoverAmount > 0.02F) {
+            int alpha = Math.min(150, Math.max(0, Math.round(hoverAmount * 150.0F)));
+            g.fill(x + 5, y + 3, x + 7, y + h - 3, (alpha << 24) | (accent & 0x00FFFFFF));
+
+            // Thin tactical sweep, clipped to the button instead of washing out the text.
+            int sweepRange = Math.max(1, w + 32);
+            int sweepX = x - 16 + (int) ((System.currentTimeMillis() / 8L) % sweepRange);
+            g.enableScissor(x + 2, y + 1, x + w - 1, y + h - 1);
+            g.fill(sweepX, y + 2, sweepX + 1, y + h - 2, (Math.min(74, alpha) << 24) | 0x00FFFFFF);
+            g.fill(sweepX + 1, y + 2, sweepX + 4, y + h - 2, (Math.min(28, alpha / 2) << 24) | (accent & 0x00FFFFFF));
+            g.disableScissor();
+
+            int bracket = Math.max(4, Math.min(9, h / 3));
+            g.fill(x + w - bracket, y, x + w, y + 1, edge);
+            g.fill(x + w - 1, y, x + w, y + bracket, edge);
+            g.fill(x + w - bracket, y + h - 1, x + w, y + h, edge);
+            g.fill(x + w - 1, y + h - bracket, x + w, y + h, edge);
         }
         if (selected) {
             g.fill(x + w - 12, y + 4, x + w - 5, y + 5, accent);
