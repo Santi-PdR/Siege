@@ -96,7 +96,7 @@ public final class SiegeTitleScreen extends Screen {
                     height - 14, 0xFF929AA1, false);
         }
         if (width >= 610) {
-            graphics.drawString(font, "BUILD 0.6.5 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
+            graphics.drawString(font, "BUILD 0.6.8 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -104,26 +104,59 @@ public final class SiegeTitleScreen extends Screen {
     }
 
     private void renderTitle(GuiGraphics g, boolean compact, int panelRight) {
-        int titleY = compact ? 20 : 29;
-        g.pose().pushPose();
-        g.pose().translate(menuX, titleY, 0.0F);
-        float craftScale = compact ? 1.05F : 1.28F;
-        g.pose().scale(craftScale, craftScale, 1.0F);
-        g.drawString(font, "ETERNAL CRAFT", 0, 0, 0xFFF1EEE7, false);
-        g.pose().popPose();
+        // The identity belongs to the whole operation screen, not to the command sidebar.
+        // Minecraft's pixel font is deliberately enlarged and layered into a heavy
+        // red-edged, dark-extruded wordmark inspired by the supplied reference.
+        float desiredCraftScale = compact ? 2.35F : 4.15F;
+        float maximumCraftWidth = Math.max(150.0F, width - (compact ? 22.0F : 70.0F));
+        float craftScale = Math.min(desiredCraftScale, maximumCraftWidth / Math.max(1, font.width("ETERNAL CRAFT")));
+        int titleY = compact ? 34 : 29;
 
-        g.pose().pushPose();
-        g.pose().translate(menuX, titleY + (compact ? 15 : 20), 0.0F);
-        float siegeScale = compact ? 1.38F : 1.78F;
-        g.pose().scale(siegeScale, siegeScale, 1.0F);
-        g.drawString(font, "S I E G E", 0, 0, 0xFFFF5555, false);
-        g.pose().popPose();
+        drawExtrudedTitle(g, "ETERNAL CRAFT", width / 2, titleY, craftScale);
 
-        int lineY = titleY + (compact ? 34 : 45);
-        g.fill(menuX, lineY, Math.min(panelRight - 10, menuX + menuWidth), lineY + 2, 0xAA55BFD9);
-        if (!compact && height >= 330) {
-            g.drawString(font, label("PROTOCOLO DE GUERRA // 2044", "WAR PROTOCOL // 2044"), menuX, lineY + 7, 0xFF69767E, false);
+        float siegeScale = Math.max(1.15F, craftScale * 0.52F);
+        int siegeY = titleY + Math.round(11.5F * craftScale);
+        drawCenteredScaled(g, "S I E G E", width / 2, siegeY, siegeScale, 0xFFFF5555, true);
+
+        int ruleHalf = Math.min(compact ? 72 : 128, Math.max(46, font.width("ETERNAL CRAFT") * Math.round(craftScale) / 3));
+        int ruleY = siegeY + Math.round(11.0F * siegeScale);
+        g.fill(width / 2 - ruleHalf, ruleY, width / 2 + ruleHalf, ruleY + 1, 0x99B5162D);
+    }
+
+    private void drawExtrudedTitle(GuiGraphics g, String text, int centerX, int y, float scale) {
+        int textWidth = font.width(text);
+        float originX = centerX - textWidth * scale / 2.0F;
+        g.pose().pushPose();
+        g.pose().translate(originX, y, 0.0F);
+        g.pose().scale(scale, scale, 1.0F);
+
+        // Long lower-right extrusion.
+        for (int offset = 5; offset >= 2; offset--) {
+            g.drawString(font, text, offset, offset, 0xD8000000, false);
         }
+        // One-pixel red keyline around the pale face.
+        int outline = 0xFFD03942;
+        g.drawString(font, text, -1, 0, outline, false);
+        g.drawString(font, text, 1, 0, outline, false);
+        g.drawString(font, text, 0, -1, outline, false);
+        g.drawString(font, text, 0, 1, outline, false);
+        g.drawString(font, text, -1, -1, outline, false);
+        g.drawString(font, text, 1, 1, outline, false);
+        g.drawString(font, text, 0, 0, 0xFFE3DEE0, false);
+        g.pose().popPose();
+    }
+
+    private void drawCenteredScaled(GuiGraphics g, String text, int centerX, int y, float scale, int color, boolean shadow) {
+        float originX = centerX - font.width(text) * scale / 2.0F;
+        g.pose().pushPose();
+        g.pose().translate(originX, y, 0.0F);
+        g.pose().scale(scale, scale, 1.0F);
+        if (shadow) {
+            g.drawString(font, text, 2, 2, 0xD8000000, false);
+            g.drawString(font, text, 1, 0, 0xFF781421, false);
+        }
+        g.drawString(font, text, 0, 0, color, false);
+        g.pose().popPose();
     }
 
     /**

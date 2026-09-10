@@ -2,6 +2,13 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
+## SIEGE 0.6.8
+
+- The main title is now a large centered tactical wordmark.
+- `ETERNAL CRAFT` uses a pale pixel face, red keyline and deep black extrusion matching the supplied reference.
+- `S I E G E` sits beneath it with responsive sizing for GUI scales 1-4.
+- The existing lower-right Intel dossier is preserved.
+
 ## SIEGE 0.6.7
 
 - The per-frame boss `REC / STILL` counter is forbidden by the build and cannot be reintroduced accidentally.
