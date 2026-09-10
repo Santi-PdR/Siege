@@ -18,6 +18,7 @@ public final class SiegeConfig {
     public static boolean music = true;
     public static int musicVolume = 75;
     public static boolean uiSounds = true;
+    public static boolean menuEffects = true;
     public static boolean animatedBackgrounds = true;
     public static boolean animatedIntel = true;
     public static boolean mainMenuIntel = true;
@@ -36,6 +37,7 @@ public final class SiegeConfig {
         music = bool(p, "music", true);
         musicVolume = integer(p, "musicVolume", 75, 0, 100);
         uiSounds = bool(p, "uiSounds", true);
+        menuEffects = bool(p, "menuEffects", true);
         animatedBackgrounds = bool(p, "animatedBackgrounds", true);
         animatedIntel = bool(p, "animatedIntel", true);
         mainMenuIntel = bool(p, "mainMenuIntel", true);
@@ -50,6 +52,7 @@ public final class SiegeConfig {
         p.setProperty("music", Boolean.toString(music));
         p.setProperty("musicVolume", Integer.toString(musicVolume));
         p.setProperty("uiSounds", Boolean.toString(uiSounds));
+        p.setProperty("menuEffects", Boolean.toString(menuEffects));
         p.setProperty("animatedBackgrounds", Boolean.toString(animatedBackgrounds));
         p.setProperty("animatedIntel", Boolean.toString(animatedIntel));
         p.setProperty("mainMenuIntel", Boolean.toString(mainMenuIntel));

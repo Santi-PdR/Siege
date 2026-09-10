@@ -2,6 +2,14 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
+## SIEGE 0.7.0
+
+- New persistent Tactical Effects toggle in Interface settings.
+- Hover motion now eases smoothly instead of shifting text abruptly.
+- Buttons gain a progressive accent underline, restrained sweep and clearer keyboard focus brackets.
+- Reduced Motion automatically disables animated sweeps while preserving clear hover/focus feedback.
+- The centered title divider gains a subtle tactical pulse and balanced cyan end markers.
+
 ## SIEGE 0.6.9
 
 - The title is narrower and closer to the supplied tactical pixel lettering.

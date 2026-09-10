@@ -100,7 +100,7 @@ public final class SiegeTitleScreen extends Screen {
                     height - 14, 0xFF929AA1, false);
         }
         if (width >= 610) {
-            graphics.drawString(font, "BUILD 0.6.9 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
+            graphics.drawString(font, "BUILD 0.7.0 // SECURE CHANNEL", 10, height - 14, 0xFF747D84, false);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -124,7 +124,14 @@ public final class SiegeTitleScreen extends Screen {
 
         int ruleHalf = Math.min(compact ? 72 : 128, Math.max(46, font.width("ETERNAL CRAFT") * Math.round(craftScale) / 3));
         int ruleY = siegeY + Math.round(11.0F * siegeScale);
-        g.fill(width / 2 - ruleHalf, ruleY, width / 2 + ruleHalf, ruleY + 1, 0x99B5162D);
+        int ruleAlpha = 0x99;
+        if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion) {
+            ruleAlpha = 0x78 + (int) ((Math.sin(System.currentTimeMillis() / 420.0D) + 1.0D) * 0x24);
+        }
+        int ruleColor = (ruleAlpha << 24) | 0x00B5162D;
+        g.fill(width / 2 - ruleHalf, ruleY, width / 2 + ruleHalf, ruleY + 1, ruleColor);
+        g.fill(width / 2 - ruleHalf - 9, ruleY, width / 2 - ruleHalf - 3, ruleY + 1, 0xAA55BFD9);
+        g.fill(width / 2 + ruleHalf + 3, ruleY, width / 2 + ruleHalf + 9, ruleY + 1, 0xAA55BFD9);
     }
 
     private void drawExtrudedTitle(GuiGraphics g, String text, int centerX, int y, float scale) {

@@ -35,8 +35,10 @@ public final class SiegeButton extends Button {
         int w = getWidth();
         int h = getHeight();
         boolean hot = active && isHoveredOrFocused();
+        boolean effects = SiegeConfig.menuEffects && !SiegeConfig.reducedMotion;
         float target = hot ? 1.0F : 0.0F;
-        hoverAmount += (target - hoverAmount) * Math.min(1.0F, 0.22F + partialTick * 0.08F);
+        if (effects) hoverAmount += (target - hoverAmount) * Math.min(1.0F, 0.22F + partialTick * 0.08F);
+        else hoverAmount = target;
 
         int body = !active ? 0xB90A0C0F : selected ? 0xE51A2026 : hot ? 0xE5181D22 : 0xD20B0F13;
         int edge = !active ? 0xFF41464C : (selected || hot) ? accent : 0xFF4C555E;
@@ -51,13 +53,15 @@ public final class SiegeButton extends Button {
             int alpha = Math.min(150, Math.max(0, Math.round(hoverAmount * 150.0F)));
             g.fill(x + 5, y + 3, x + 7, y + h - 3, (alpha << 24) | (accent & 0x00FFFFFF));
 
-            // Thin tactical sweep, clipped to the button instead of washing out the text.
-            int sweepRange = Math.max(1, w + 32);
-            int sweepX = x - 16 + (int) ((System.currentTimeMillis() / 8L) % sweepRange);
-            g.enableScissor(x + 2, y + 1, x + w - 1, y + h - 1);
-            g.fill(sweepX, y + 2, sweepX + 1, y + h - 2, (Math.min(74, alpha) << 24) | 0x00FFFFFF);
-            g.fill(sweepX + 1, y + 2, sweepX + 4, y + h - 2, (Math.min(28, alpha / 2) << 24) | (accent & 0x00FFFFFF));
-            g.disableScissor();
+            if (effects) {
+                // Thin tactical sweep, clipped to the button instead of washing out the text.
+                int sweepRange = Math.max(1, w + 48);
+                int sweepX = x - 24 + (int) ((System.currentTimeMillis() / 10L) % sweepRange);
+                g.enableScissor(x + 2, y + 1, x + w - 1, y + h - 1);
+                g.fill(sweepX, y + 2, sweepX + 1, y + h - 2, (Math.min(66, alpha) << 24) | 0x00FFFFFF);
+                g.fill(sweepX + 1, y + 2, sweepX + 5, y + h - 2, (Math.min(24, alpha / 2) << 24) | (accent & 0x00FFFFFF));
+                g.disableScissor();
+            }
 
             int bracket = Math.max(4, Math.min(9, h / 3));
             g.fill(x + w - bracket, y, x + w, y + 1, edge);
@@ -70,7 +74,10 @@ public final class SiegeButton extends Button {
             g.fill(x + w - 9, y + 7, x + w - 5, y + 8, accent);
         }
 
-        int left = hot ? 13 : 9;
+        int underlineWidth = Math.round((w - 4) * hoverAmount);
+        if (underlineWidth > 0) g.fill(x + 2, y + h - 2, x + 2 + underlineWidth, y + h - 1, accent);
+
+        int left = 9 + Math.round(4.0F * hoverAmount);
         int usable = Math.max(8, w - left - 9);
         String text = fit(font, getMessage().getString(), usable);
         int textColor = !active ? 0xFF6F767D : hot || selected ? 0xFFF5F3EC : 0xFFD8DDE1;

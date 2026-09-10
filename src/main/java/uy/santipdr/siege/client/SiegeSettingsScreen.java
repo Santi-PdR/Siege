@@ -149,6 +149,10 @@ public final class SiegeSettingsScreen extends Screen {
             case INTERFACE -> {
                 addRenderableWidget(toggle(contentX, y, w, h, "siege.settings.ui_sounds",
                         () -> SiegeConfig.uiSounds = !SiegeConfig.uiSounds, () -> SiegeConfig.uiSounds));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("EFECTOS TÁCTICOS", "TACTICAL EFFECTS"),
+                        () -> SiegeConfig.menuEffects = !SiegeConfig.menuEffects,
+                        () -> SiegeConfig.menuEffects));
                 addRenderableWidget(toggle(contentX, y += h + gap, w, h, "siege.settings.backgrounds",
                         () -> SiegeConfig.animatedBackgrounds = !SiegeConfig.animatedBackgrounds,
                         () -> SiegeConfig.animatedBackgrounds));
@@ -279,7 +283,7 @@ public final class SiegeSettingsScreen extends Screen {
         int infoY;
         if (section == Section.OVERVIEW) infoY = contentY + (compact ? 43 : 51);
         else if (section == Section.AUDIO) infoY = contentY + (compact ? 132 : 159);
-        else if (section == Section.INTERFACE) infoY = contentY + (compact ? 139 : 174);
+        else if (section == Section.INTERFACE) infoY = contentY + (compact ? 164 : 205);
         else infoY = contentY + (compact ? 69 : 82);
 
         int availableBottom = bottom - 12;
@@ -361,8 +365,8 @@ public final class SiegeSettingsScreen extends Screen {
                     "La banda sonora usa su propio volumen, conserva la posición de la pista mientras mueves el slider y cambia de canción con una transición suave.",
                     "The soundtrack uses its own volume, keeps the current track position while the slider moves and changes songs with a smooth transition.");
             case INTERFACE -> label(
-                    "Controla sonidos, fondos, tarjetas Intel del menú principal y reproducción de los expedientes animados.",
-                    "Controls UI sounds, backgrounds, main-menu Intel cards and animated dossier playback.");
+                    "Controla sonidos, efectos tácticos, fondos, tarjetas Intel del menú y expedientes animados.",
+                    "Controls UI sounds, tactical effects, backgrounds, menu Intel cards and animated dossiers.");
             case ACCESSIBILITY -> label(
                     "Movimiento reducido limita desplazamientos y animaciones ambientales del menú sin eliminar su identidad visual.",
                     "Reduced motion limits menu camera movement and ambient animation without removing the visual identity.");
