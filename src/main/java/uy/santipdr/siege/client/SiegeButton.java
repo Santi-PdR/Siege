@@ -97,41 +97,40 @@ public final class SiegeButton extends Button {
 
     private void renderMainMenuWidget(GuiGraphics g, Font font, int x, int y, int w, int h,
                                       boolean hot, boolean effects) {
-        int body = !active ? 0xC5424548 : hot || selected ? 0xDF74777A : 0xD05B5E61;
-        int inner = !active ? 0xAA4B4E51 : hot || selected ? 0xCF7B7E81 : 0xC7626568;
-        int border = hot || selected ? 0xFFE54852 : 0xFF85898D;
+        int face = !active ? 0xFF56585A : hot || selected ? 0xFF858789 : 0xFF696B6D;
+        int inset = !active ? 0xFF606264 : hot || selected ? 0xFF929496 : 0xFF747678;
+        int rim = hot || selected ? 0xFFF0F0EC : 0xFF9A9C9E;
 
-        // Compact offset shadow, hard steel border and restrained horizontal grain:
-        // this follows the reference's industrial grey plates instead of glassy black cards.
-        g.fill(x + 2, y + 3, x + w + 3, y + h + 3, 0x66000000);
-        g.fill(x, y, x + w, y + h, 0xFF303236);
-        g.fill(x + 1, y + 1, x + w - 1, y + h - 1, body);
-        g.fill(x + 3, y + 3, x + w - 3, y + h - 3, inner);
-        g.fill(x + 2, y + 1, x + w - 2, y + 2, border);
-        g.fill(x + 2, y + h - 2, x + w - 2, y + h - 1, 0xFF4A4C4F);
-
-        for (int lineY = y + 5; lineY < y + h - 3; lineY += 5) {
-            g.fill(x + 4, lineY, x + w - 4, lineY + 1, hot ? 0x0CFFFFFF : 0x07FFFFFF);
-        }
+        // Old reference: solid grey plate, deep lower/right shadow and square double rim.
+        g.fill(x + 3, y + 4, x + w + 4, y + h + 4, 0xA0000000);
+        g.fill(x, y, x + w, y + h, 0xFF26282A);
+        g.fill(x + 2, y + 2, x + w - 2, y + h - 2, face);
+        g.fill(x + 4, y + 4, x + w - 4, y + h - 4, inset);
+        g.fill(x + 2, y + 2, x + w - 2, y + 3, rim);
+        g.fill(x + 2, y + h - 3, x + w - 2, y + h - 2, 0xFF4A4C4E);
+        g.fill(x + 2, y + 2, x + 3, y + h - 2, 0xFF8B8D8F);
 
         if (hot || selected) {
             int cy = y + h / 2;
-            int arrowX = x + Math.max(9, h / 2);
-            g.fill(arrowX, cy - 4, arrowX + 3, cy + 5, accent);
-            g.fill(arrowX + 3, cy - 3, arrowX + 6, cy + 4, accent);
-            g.fill(arrowX + 6, cy - 1, arrowX + 9, cy + 2, accent);
-            g.fill(x + 1, y + 1, x + 3, y + h - 1, accent);
-
+            int ax = x + 9;
+            g.fill(ax, cy - 4, ax + 3, cy + 5, accent);
+            g.fill(ax + 3, cy - 3, ax + 6, cy + 4, accent);
+            g.fill(ax + 6, cy - 1, ax + 9, cy + 2, accent);
+            g.fill(x + 2, y + 2, x + 4, y + h - 2, accent);
             if (effects && hoverAmount > 0.05F) {
-                int sweep = Math.round((w - 12) * hoverAmount);
-                g.fill(x + 5, y + h - 3, x + 5 + sweep, y + h - 2, 0x88E54852);
+                int shineX = x + 5 + (int) ((System.currentTimeMillis() / 13L) % Math.max(1, w - 12));
+                g.enableScissor(x + 4, y + 4, x + w - 4, y + h - 4);
+                g.fill(shineX, y + 4, shineX + 2, y + h - 4, 0x20FFFFFF);
+                g.disableScissor();
             }
         }
 
-        String text = fit(font, getMessage().getString(), w - 40);
+        String text = fit(font, getMessage().getString(), w - 42);
         int textX = x + (w - font.width(text)) / 2;
-        int textColor = !active ? 0xFF9B9DA0 : 0xFFF1F0ED;
-        g.drawString(font, text, textX, y + Math.max(1, (h - font.lineHeight) / 2), textColor, true);
+        int textY = y + Math.max(1, (h - font.lineHeight) / 2);
+        int textColor = !active ? 0xFFAAAAA7 : hot || selected ? 0xFFFFFFFF : 0xFFF0F0ED;
+        g.drawString(font, text, textX + 1, textY + 1, 0xB0303030, false);
+        g.drawString(font, text, textX, textY, textColor, false);
     }
 
     private static String fit(Font font, String value, int width) {
