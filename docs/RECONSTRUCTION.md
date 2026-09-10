@@ -78,3 +78,15 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 ## Design rule
 
 Gameplay screens are not replaced. The reconstruction is scoped to menus and its dedicated Intel interface.
+
+
+## Current development and test environment
+
+- Operating system: Fedora Linux with KDE Plasma.
+- Terminal: Konsole.
+- Launcher: SKLauncher.
+- Active test instance: `test-1`.
+- Mod directory: `/home/Santipdr/.sklauncher/instances/test-1/mods`.
+- Official local installer: `scripts/install-latest.sh`.
+- Builds remain GitHub Actions-only; Fedora downloads and installs the validated JAR from `dist`.
+- PowerShell documentation is legacy material for the former Windows installation.

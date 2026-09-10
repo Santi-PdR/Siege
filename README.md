@@ -87,4 +87,16 @@ The full category palette, origin rules and client constraints are documented in
 
 ## Build and deploy
 
-GitHub Actions is the only build environment. Windows only requires Git: `scripts/install-latest.ps1` clones the current `main` and copies the GitHub-validated JAR exclusively to SKLauncher instance `test-1`; it never invokes local Java or Gradle.
+GitHub Actions is the only build environment.
+
+### Current environment: Fedora KDE
+
+The active workstation now uses Fedora with KDE Plasma and Konsole. Run `bash scripts/install-latest.sh` from Konsole. It clones the current `main` and installs only the GitHub-validated JAR into:
+
+`/home/Santipdr/.sklauncher/instances/test-1/mods`
+
+The Fedora installer never invokes local Java or Gradle. It removes older `siege-menu-*.jar` files before copying the validated build.
+
+### Legacy Windows environment
+
+`scripts/install-latest.ps1` remains available only for the previous Windows setup.
