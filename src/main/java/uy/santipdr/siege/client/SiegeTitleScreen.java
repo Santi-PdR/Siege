@@ -7,7 +7,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import org.lwjgl.glfw.GLFW;
 
@@ -15,9 +14,6 @@ import java.util.List;
 
 public final class SiegeTitleScreen extends Screen {
     private static final int ACCENT = 0xFF55BFD9;
-    private static final ResourceLocation TITLE_WORDMARK = new ResourceLocation("siege", "textures/gui/title/siege_wordmark.png");
-    private static final int TITLE_TEXTURE_WIDTH = 1360;
-    private static final int TITLE_TEXTURE_HEIGHT = 441;
     private int menuX;
     private int menuWidth;
     private int menuTop;
@@ -35,11 +31,11 @@ public final class SiegeTitleScreen extends Screen {
         boolean scaleThree = guiScale >= 2.75D && guiScale < 3.75D && !compact;
         int margin = compact ? 9 : Math.max(14, width / 55);
         menuWidth = scaleThree
-                ? Math.min(236, Math.max(214, width / 4))
-                : Math.min(compact ? 184 : 226, Math.max(138, width / (compact ? 2 : 5)));
+                ? Math.min(218, Math.max(198, width / 5))
+                : Math.min(compact ? 176 : 212, Math.max(138, width / (compact ? 2 : 5)));
         menuWidth = Math.min(menuWidth, width - margin * 2);
-        int buttonHeight = compact ? 18 : scaleThree ? 25 : 22;
-        int gap = compact ? 3 : scaleThree ? 6 : 5;
+        int buttonHeight = compact ? 18 : scaleThree ? 23 : 22;
+        int gap = compact ? 3 : scaleThree ? 5 : 5;
         int totalHeight = buttonHeight * 5 + gap * 4;
         menuX = margin;
 
@@ -79,11 +75,10 @@ public final class SiegeTitleScreen extends Screen {
 
         boolean compact = width < 520 || height < 290;
         int panelRight = Math.min(width, menuX + menuWidth + (compact ? 12 : 18));
-        graphics.fill(0, 0, panelRight, height, 0x98050709);
-        graphics.fill(panelRight - 1, 0, panelRight, height, 0x704B5055);
-        graphics.fill(0, 0, width, 1, 0x801F2428);
-
-        for (int y = 24; y < height; y += 36) graphics.fill(0, y, panelRight, y + 1, 0x102E3338);
+        // Neutral photographic shade from the original menu: no blue plate or hard divider.
+        graphics.fill(0, 0, panelRight, height, 0xA0050506);
+        graphics.fill(panelRight - 10, 0, panelRight, height, 0x24000000);
+        graphics.fill(0, 0, width, 1, 0x681B1B1B);
 
         renderTitle(graphics, compact, panelRight);
 
@@ -97,19 +92,45 @@ public final class SiegeTitleScreen extends Screen {
     }
 
     private void renderTitle(GuiGraphics g, boolean compact, int panelRight) {
-        // Dedicated transparent wordmark: the supplied reference uses custom narrow
-        // lettering, not a stretched Minecraft font. Keeping both lines in one
-        // texture also preserves the exact outline and short extrusion at every scale.
-        int maximumWidth = compact ? width - 24 : width - 72;
-        int desiredWidth = compact ? Math.min(270, maximumWidth) : Math.min(340, maximumWidth);
-        int wordmarkWidth = Math.max(190, desiredWidth);
-        int wordmarkHeight = Math.round(wordmarkWidth * (TITLE_TEXTURE_HEIGHT / (float) TITLE_TEXTURE_WIDTH));
-        int x = (width - wordmarkWidth) / 2;
-        int y = compact ? 16 : 18;
+        String main = "ETERNAL CRAFT";
+        String sub = "S I E G E";
+        float scale = compact ? 2.05F : 2.75F;
+        int mainWidth = Math.round(font.width(main) * scale);
+        int x = (width - mainWidth) / 2;
+        int y = compact ? 17 : 21;
 
-        g.blit(TITLE_WORDMARK, x, y, wordmarkWidth, wordmarkHeight,
-                0.0F, 0.0F, TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT,
-                TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
+        g.pose().pushPose();
+        g.pose().translate(x, y, 0.0F);
+        g.pose().scale(scale, scale, 1.0F);
+        g.drawString(font, main, 2, 2, 0xB8000000, false);
+        g.drawString(font, main, 1, 0, 0xFFD53842, false);
+        g.drawString(font, main, 0, 0, 0xFFF0EDEA, false);
+        g.pose().popPose();
+
+        if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion) {
+            long phase = System.currentTimeMillis() / 110L;
+            int sliceWidth = Math.max(16, mainWidth / 7);
+            int sliceX = x + (int) ((phase * 37L) % Math.max(1, mainWidth - sliceWidth));
+            int sliceY = y + 4 + (int) ((phase * 5L) % Math.max(5, Math.round(7 * scale)));
+            g.enableScissor(sliceX, sliceY, sliceX + sliceWidth, sliceY + 2);
+            g.pose().pushPose();
+            g.pose().translate(x + ((phase & 1L) == 0L ? 2 : -2), y, 0.0F);
+            g.pose().scale(scale, scale, 1.0F);
+            g.drawString(font, main, 0, 0, 0xFFE54852, false);
+            g.pose().popPose();
+            g.disableScissor();
+        }
+
+        float subScale = compact ? 1.25F : 1.55F;
+        int subWidth = Math.round(font.width(sub) * subScale);
+        int subX = (width - subWidth) / 2;
+        int subY = y + Math.round(font.lineHeight * scale) + (compact ? 7 : 9);
+        g.pose().pushPose();
+        g.pose().translate(subX, subY, 0.0F);
+        g.pose().scale(subScale, subScale, 1.0F);
+        g.drawString(font, sub, 1, 1, 0xB8000000, false);
+        g.drawString(font, sub, 0, 0, 0xFFFF4C55, false);
+        g.pose().popPose();
     }
 
     private void renderTrackAnnouncement(GuiGraphics g, boolean compact) {
@@ -143,7 +164,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.7.2", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.7.3", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
