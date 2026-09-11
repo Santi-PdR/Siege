@@ -52,6 +52,8 @@ public final class SiegeMusic {
 
     private static SiegeTrackSound active;
     private static int previous = -1;
+    private static int beforePrevious = -1;
+    private static int requestedNext = -1;
     private static long startRequestedAt;
     private static long announcementStartedAt;
     private static long playbackAnchorAt;
@@ -150,6 +152,7 @@ public final class SiegeMusic {
 
     /** Manual skip uses a short deliberate fade; natural transitions reserve the final eight seconds. */
     public static void nextTrack() {
+        requestedNext = -1;
         if (SiegeConfig.selectedTrack >= 0) {
             SiegeConfig.selectedTrack = (SiegeConfig.selectedTrack + 1) % TRACKS.size();
             SiegeConfig.save();
@@ -166,11 +169,37 @@ public final class SiegeMusic {
         beginFadeOut(MANUAL_FADE_OUT_MS, false);
     }
 
+    public static void previousTrack() {
+        int fallback = previous < 0 ? 0 : Math.floorMod(previous - 1, TRACKS.size());
+        requestedNext = beforePrevious >= 0 ? beforePrevious : fallback;
+        enableMusicAndTransition();
+    }
+
+    public static void restartTrack() {
+        if (previous < 0) {
+            ensurePlaying();
+            return;
+        }
+        requestedNext = previous;
+        enableMusicAndTransition();
+    }
+
+    private static void enableMusicAndTransition() {
+        if (!SiegeConfig.music) {
+            SiegeConfig.music = true;
+            SiegeConfig.save();
+        }
+        if (!shouldPlay()) return;
+        if (active == null) startNext(true);
+        else beginFadeOut(MANUAL_FADE_OUT_MS, false);
+    }
+
     public static List<String> trackNames() { return TRACK_NAMES; }
 
     /** -1 resumes shuffle without restarting the currently playing track. */
     public static void selectTrack(int index) {
         if (index < -1 || index >= TRACKS.size()) return;
+        requestedNext = -1;
         SiegeConfig.selectedTrack = index;
         queue.clear();
         if (index >= 0) SiegeConfig.music = true;
@@ -198,7 +227,11 @@ public final class SiegeMusic {
     public static long trackAnnouncementAgeMs() {
         if (active == null || announcementStartedAt <= 0L) return -1L;
         long age = Math.max(0L, System.currentTimeMillis() - announcementStartedAt);
-        return age <= TRACK_ANNOUNCEMENT_MS ? age : -1L;
+        return age <= trackAnnouncementDurationMs() ? age : -1L;
+    }
+
+    public static long trackAnnouncementDurationMs() {
+        return Math.max(3_000L, SiegeConfig.trackNoticeSeconds * 1_000L);
     }
 
     public static boolean isActuallyPlaying() {
@@ -234,12 +267,16 @@ public final class SiegeMusic {
     private static void startNext(boolean fadeIn) {
         if (!shouldPlay()) return;
         int next;
-        if (SiegeConfig.selectedTrack >= 0 && SiegeConfig.selectedTrack < TRACKS.size()) {
+        if (requestedNext >= 0 && requestedNext < TRACKS.size()) {
+            next = requestedNext;
+            requestedNext = -1;
+        } else if (SiegeConfig.selectedTrack >= 0 && SiegeConfig.selectedTrack < TRACKS.size()) {
             next = SiegeConfig.selectedTrack;
         } else {
             if (queue.isEmpty()) refillQueue();
             next = queue.remove(0);
         }
+        if (previous != next) beforePrevious = previous;
         previous = next;
         playIndex(next, fadeIn);
     }
@@ -322,8 +359,8 @@ public final class SiegeMusic {
         maintenanceTicks = 0;
         announcementStartedAt = 0L;
         clockAnchored = false;
+        requestedNext = -1;
     }
 
     private enum FadeState { NONE, IN, OUT }
 }
-

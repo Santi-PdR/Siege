@@ -1,3 +1,54 @@
+## SIEGE 0.8.0
+
+1. Intel hover pause uses an explicit reading state instead of extending the rotation deadline every frame.
+2. Leaving a hovered dossier starts one fixed two-second grace period.
+3. Automatic rotation is forced to advance after that grace period and cannot remain suspended.
+4. Disabling main-menu Intel clears stale hover state.
+5. Dossiers expose `READING`, `FIXED` or a live `AUTO Ns` status.
+6. A subtle progress line shows time until the next automatic dossier.
+7. Hover pausing has its own persistent setting.
+8. Dossier progress can be hidden independently.
+9. Dossier state text can be hidden independently.
+10. `P` toggles dossier auto-rotation from the title screen.
+11. Home/End select the first/last title-screen dossier.
+12. Quit now has an optional confirmation screen.
+13. Quit confirmation can be disabled in Interface settings.
+14. The build label has its own visibility setting.
+15. Background darkness is adjustable without changing the graphics profile.
+16. Left-panel darkness is independently adjustable.
+17. Previous Track is available in Music settings.
+18. Restart Track restarts the current complete stream with the normal short fade.
+19. New-track notice duration is adjustable from 3 to 15 seconds.
+20. Notice fade/progress calculations follow the configured duration.
+21. Shift+M plays the previous track from the title screen.
+22. Ctrl+M toggles menu music without opening settings.
+23. `R` restarts the current track.
+24. `G` opens the background gallery.
+25. Intel has a persistent Favorites category.
+26. `F` adds/removes the current dossier from Favorites.
+27. Middle-click also toggles the current Intel favorite.
+28. Favorite dossiers display a star in the file list.
+29. Favorite dossiers display a star on the classified stamp.
+30. Favorite codes persist safely in `siege-client.properties`.
+31. `Q/E` cycle Intel categories in either direction.
+32. Shift+wheel cycles Intel categories.
+33. Number key 7 opens Favorites directly.
+34. Intel Home/End select the first/last dossier.
+35. Ctrl+Home/Ctrl+End jump to the top/bottom of dossier text.
+36. Backspace returns from Intel like the visible Back control.
+37. Intel remembers the last category during the current game session.
+38. Intel remembers the last selected dossier during the current game session.
+39. Empty Favorites explains how to add a dossier instead of showing a generic empty message.
+40. Detail wheel scrolling moves one line at a time for more precise reading.
+41. Wide Intel layouts show a compact shortcut guide.
+42. Gallery `P` pins the current background.
+43. Gallery `R` resumes automatic background rotation.
+44. Number keys 1-9 select gallery backgrounds directly.
+45. Gallery `X` jumps to a different random scene.
+46. Space toggles gallery clean view.
+47. Left-click exits clean view, middle-click pins and right-click returns.
+48. Gallery header distinguishes Pinned, Preview and Rotation Active states.
+
 ## SIEGE 0.7.9
 
 - Clicking a Unit or Advanced dossier on the main menu opens that exact record in the full Intel database.

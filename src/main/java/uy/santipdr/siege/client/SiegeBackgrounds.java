@@ -75,7 +75,8 @@ public final class SiegeBackgrounds {
             }
         }
 
-        graphics.fill(0, 0, width, height, 0x3A000000);
+        int darkness = Math.max(0, Math.min(255, SiegeConfig.backgroundDarkness * 255 / 100));
+        graphics.fill(0, 0, width, height, darkness << 24);
         graphics.fill(0, 0, Math.min(width, Math.max(220, width / 4)), height, 0x70000000);
 
         if (SiegeConfig.scanlines && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE) {

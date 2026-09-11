@@ -105,6 +105,16 @@ Gameplay screens are not replaced. The reconstruction is scoped to menus and its
 - Keep Fedora KDE/Konsole and the established test-1 path as the installation target. The installer retains previous JARs in a sibling backup folder.
 - Runtime visual verification is not implied by successful compilation or layout arithmetic.
 
+## 0.8.0 interaction and configuration expansion
+
+- The main-menu Intel pause is a small state machine: hover enters reading, pointer exit creates one fixed two-second deadline, and expiry advances exactly once before returning to the normal 8.5-second cycle.
+- The dossier header and progress edge communicate Reading, Fixed and automatic countdown states; each can be configured independently.
+- Music gains previous/restart controls, configurable announcement duration and direct title-screen shortcuts.
+- Intel adds persistent code-based Favorites, session selection memory, category cycling and precise document navigation.
+- Gallery input now covers mouse buttons, wheel, direct number selection, random selection, pinning, rotation resume and clean view.
+- Graphics exposes background and command-panel darkness separately from the Performance/Balanced/Cinematic profile.
+- Interface exposes quit confirmation and build-label visibility without modifying vanilla gameplay screens.
+
 ## 0.7.9 direct Intel handoff
 
 - A main-menu preview is now an actionable dossier: its body opens the matching full Intel record.

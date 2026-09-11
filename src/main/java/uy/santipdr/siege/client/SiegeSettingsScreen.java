@@ -34,6 +34,8 @@ public final class SiegeSettingsScreen extends Screen {
     private boolean compact;
     private final List<AbstractWidget> controls = new ArrayList<>();
     private final List<Integer> controlY = new ArrayList<>();
+    private final List<SiegeButton> musicTrackButtons = new ArrayList<>();
+    private SiegeButton shuffleButton;
     private int scrollOffset, scrollMax, viewportTop, viewportBottom, informationY;
 
 
@@ -52,6 +54,8 @@ public final class SiegeSettingsScreen extends Screen {
         SiegeUiSounds.resetHover();
         controls.clear();
         controlY.clear();
+        musicTrackButtons.clear();
+        shuffleButton = null;
         scrollOffset = 0;
         compact = width < 700 || height < 355;
 
@@ -180,6 +184,17 @@ public final class SiegeSettingsScreen extends Screen {
 
                 y += sliderHeight + gap;
                 addRenderableWidget(new SiegeButton(contentX, y, w, h,
+                        Component.literal(label("PISTA ANTERIOR", "PREVIOUS TRACK")), b -> {
+                    SiegeUiSounds.nextTrack();
+                    SiegeMusic.previousTrack();
+                    refreshMusicSelection();
+                }, GOLD));
+                addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
+                        Component.literal(label("REINICIAR PISTA", "RESTART TRACK")), b -> {
+                    SiegeUiSounds.nextTrack();
+                    SiegeMusic.restartTrack();
+                }, GOLD));
+                addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
                         Component.translatable("siege.menu.next_track"), b -> {
                     SiegeUiSounds.nextTrack();
                     SiegeMusic.nextTrack();
@@ -189,7 +204,13 @@ public final class SiegeSettingsScreen extends Screen {
                         label("AVISO DE NUEVA PISTA", "NEW TRACK NOTICE"),
                         () -> SiegeConfig.trackAnnouncements = !SiegeConfig.trackAnnouncements,
                         () -> SiegeConfig.trackAnnouncements));
-                addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
+                int noticeSliderHeight = compact ? 25 : 31;
+                addRenderableWidget(new SiegeSlider(contentX, y += h + gap, w, noticeSliderHeight,
+                        Component.literal(label("DURACIÓN DEL AVISO", "NOTICE DURATION")),
+                        Math.round((SiegeConfig.trackNoticeSeconds - 3) * 100.0F / 12.0F),
+                        percent -> SiegeConfig.trackNoticeSeconds = 3 + Math.round(percent * 12.0F / 100.0F)));
+                y += noticeSliderHeight - h;
+                shuffleButton = addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
                         Component.literal(label("ALEATORIO SIN REPETIR", "SHUFFLE WITHOUT REPEATS")), b -> {
                     SiegeUiSounds.click();
                     SiegeMusic.selectTrack(-1);
@@ -197,12 +218,13 @@ public final class SiegeSettingsScreen extends Screen {
                 }, GOLD).setSelected(SiegeConfig.selectedTrack < 0));
                 for (int i = 0; i < SiegeMusic.trackNames().size(); i++) {
                     final int index = i;
-                    addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
+                    SiegeButton trackButton = addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
                             Component.literal((i + 1) + ". " + SiegeMusic.trackNames().get(i)), b -> {
                         SiegeUiSounds.nextTrack();
                         SiegeMusic.selectTrack(index);
                         refreshMusicSelection();
                     }, GOLD).setSelected(SiegeConfig.selectedTrack == index));
+                    musicTrackButtons.add(trackButton);
                 }
             }
             case INTERFACE -> {
@@ -235,6 +257,26 @@ public final class SiegeSettingsScreen extends Screen {
                         label("ROTACIÓN AUTOMÁTICA INTEL", "AUTO-ROTATE INTEL"),
                         () -> SiegeConfig.autoRotateIntel = !SiegeConfig.autoRotateIntel,
                         () -> SiegeConfig.autoRotateIntel));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("PAUSAR INTEL AL LEER", "PAUSE INTEL ON HOVER"),
+                        () -> SiegeConfig.pauseIntelOnHover = !SiegeConfig.pauseIntelOnHover,
+                        () -> SiegeConfig.pauseIntelOnHover));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("PROGRESO DE ROTACIÓN", "ROTATION PROGRESS"),
+                        () -> SiegeConfig.showIntelProgress = !SiegeConfig.showIntelProgress,
+                        () -> SiegeConfig.showIntelProgress));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("ESTADO DEL DOSSIER", "DOSSIER STATE"),
+                        () -> SiegeConfig.showIntelState = !SiegeConfig.showIntelState,
+                        () -> SiegeConfig.showIntelState));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("MOSTRAR BUILD", "SHOW BUILD LABEL"),
+                        () -> SiegeConfig.showBuildLabel = !SiegeConfig.showBuildLabel,
+                        () -> SiegeConfig.showBuildLabel));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("CONFIRMAR AL SALIR", "CONFIRM BEFORE QUIT"),
+                        () -> SiegeConfig.confirmQuit = !SiegeConfig.confirmQuit,
+                        () -> SiegeConfig.confirmQuit));
             }
             case ACCESSIBILITY -> {
                 addRenderableWidget(toggle(contentX, y, w, h, "siege.settings.reduced_motion",
@@ -251,6 +293,17 @@ public final class SiegeSettingsScreen extends Screen {
                         label("INTERFERENCIA DEL TÍTULO", "TITLE INTERFERENCE"),
                         () -> SiegeConfig.titleInterference = !SiegeConfig.titleInterference,
                         () -> SiegeConfig.titleInterference));
+                int visualSliderHeight = compact ? 25 : 31;
+                addRenderableWidget(new SiegeSlider(contentX, y += h + gap, w, visualSliderHeight,
+                        Component.literal(label("OSCURIDAD DEL FONDO", "BACKGROUND DARKNESS")),
+                        Math.round(SiegeConfig.backgroundDarkness * 100.0F / 70.0F),
+                        percent -> SiegeConfig.backgroundDarkness = Math.round(percent * 70.0F / 100.0F)));
+                y += visualSliderHeight - h;
+                addRenderableWidget(new SiegeSlider(contentX, y += h + gap, w, visualSliderHeight,
+                        Component.literal(label("OSCURIDAD DEL PANEL", "PANEL DARKNESS")),
+                        Math.round((SiegeConfig.panelDarkness - 20) * 100.0F / 70.0F),
+                        percent -> SiegeConfig.panelDarkness = 20 + Math.round(percent * 70.0F / 100.0F)));
+                y += visualSliderHeight - h;
                 addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
                         Component.literal(label("GALERÍA DE FONDOS", "BACKGROUND GALLERY")), b -> {
                     SiegeUiSounds.click();
@@ -268,11 +321,9 @@ public final class SiegeSettingsScreen extends Screen {
     }
 
     private void refreshMusicSelection() {
-        // The audio section starts with four existing controls, followed by shuffle and tracks.
-        for (int i = 4; i < controls.size(); i++) {
-            if (controls.get(i) instanceof SiegeButton button)
-                button.setSelected(SiegeConfig.selectedTrack == i - 5);
-        }
+        if (shuffleButton != null) shuffleButton.setSelected(SiegeConfig.selectedTrack < 0);
+        for (int i = 0; i < musicTrackButtons.size(); i++)
+            musicTrackButtons.get(i).setSelected(SiegeConfig.selectedTrack == i);
     }
 
     private SiegeButton graphicsButton(int x, int y, int w, int h) {
@@ -577,4 +628,3 @@ public final class SiegeSettingsScreen extends Screen {
         GRAPHICS
     }
 }
-

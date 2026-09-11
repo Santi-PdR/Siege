@@ -4,6 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.OptionsScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.network.chat.Component;
@@ -32,6 +33,9 @@ public final class SiegeTitleScreen extends Screen {
     private int lastRenderedPreview = -1;
     private int previewTransitionDirection = 1;
     private long previewTransitionStarted;
+    private boolean previewHoveredLastFrame;
+    private boolean previewReading;
+    private long previewCycleStartedAt;
 
     public SiegeTitleScreen() {
         super(Component.literal("Eternal Craft: SIEGE"));
@@ -69,7 +73,7 @@ public final class SiegeTitleScreen extends Screen {
         addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.settings",
                 b -> minecraft.setScreen(new SiegeSettingsScreen(this))));
         addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.quit",
-                b -> minecraft.stop()));
+                b -> requestQuit()));
 
         int trackWidth = compact ? 88 : 100;
         addRenderableWidget(new SiegeButton(width - trackWidth - 9, 9, trackWidth, compact ? 18 : 20,
@@ -91,7 +95,8 @@ public final class SiegeTitleScreen extends Screen {
         boolean compact = width < 520 || height < 290;
         int panelRight = Math.min(width, menuX + menuWidth + (compact ? 12 : 18));
         // Neutral photographic shade from the original menu: no blue plate or hard divider.
-        graphics.fill(0, 0, panelRight, height, 0xA0050506);
+        int panelAlpha = Math.max(0, Math.min(255, SiegeConfig.panelDarkness * 255 / 100));
+        graphics.fill(0, 0, panelRight, height, (panelAlpha << 24) | 0x00050506);
         graphics.fill(panelRight - 10, 0, panelRight, height, 0x24000000);
         graphics.fill(0, 0, width, 1, 0x681B1B1B);
 
@@ -101,9 +106,13 @@ public final class SiegeTitleScreen extends Screen {
         primaryPreviewEntry = null;
         secondaryPreviewEntry = null;
         if (SiegeConfig.mainMenuIntel) renderIntelPreview(graphics, panelRight, mouseX, mouseY);
+        else {
+            previewReading = false;
+            previewHoveredLastFrame = false;
+        }
         renderTrackAnnouncement(graphics, compact);
 
-        if (width >= 610) renderBuildLabel(graphics);
+        if (width >= 610 && SiegeConfig.showBuildLabel) renderBuildLabel(graphics);
 
         super.render(graphics, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
@@ -156,7 +165,9 @@ public final class SiegeTitleScreen extends Screen {
         long age = SiegeMusic.trackAnnouncementAgeMs();
         if (age < 0L) return;
 
-        int alpha = age <= 6_800L ? 255 : Math.max(0, 255 - (int) ((age - 6_800L) * 255L / 1_700L));
+        long noticeDuration = SiegeMusic.trackAnnouncementDurationMs();
+        long fadeStart = Math.max(0L, noticeDuration - 1_700L);
+        int alpha = age <= fadeStart ? 255 : Math.max(0, 255 - (int) ((age - fadeStart) * 255L / Math.max(1L, noticeDuration - fadeStart)));
         int boxWidth = compact ? Math.min(170, width - 18) : Math.min(220, Math.max(170, width / 4));
         int boxHeight = compact ? 29 : 34;
         int x = width - boxWidth - 9;
@@ -174,7 +185,7 @@ public final class SiegeTitleScreen extends Screen {
         g.drawString(font, track, x + 8, y + (compact ? 17 : 20), (alpha << 24) | 0x00F4D36A, false);
 
         int progress = Math.min(boxWidth - 4, Math.max(0,
-                (int) ((boxWidth - 4L) * age / SiegeMusic.TRACK_ANNOUNCEMENT_MS)));
+                (int) ((boxWidth - 4L) * age / noticeDuration)));
         g.fill(x + 2, y + boxHeight - 2, x + 2 + progress, y + boxHeight - 1,
                 (Math.min(190, alpha) << 24) | 0x00E54852);
     }
@@ -183,7 +194,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.7.9", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.8.0", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
@@ -265,6 +276,11 @@ public final class SiegeTitleScreen extends Screen {
             String open = label("ABRIR EXPEDIENTE ↗", "OPEN DOSSIER ↗");
             open = font.plainSubstrByWidth(open, Math.max(40, w / 2));
             g.drawString(font, open, x + w - 9 - font.width(open), y + 7, 0xFF7FC7D9, false);
+        } else if (SiegeConfig.showIntelState) {
+            String state = intelStateLabel();
+            state = font.plainSubstrByWidth(state, Math.max(38, w / 3));
+            g.drawString(font, state, x + w - 9 - font.width(state), y + 7,
+                    previewReading ? 0xFFF4D36A : 0xFF71828C, false);
         }
         g.drawString(font, entry.name(), x + 9, y + 29, 0xFFF1EEE8, false);
 
@@ -288,6 +304,10 @@ public final class SiegeTitleScreen extends Screen {
             int half = x + w / 2;
             if (mouseX < half) g.fill(x + 4, footerY - 4, half, y + h - 3, 0x283AAFCB);
             else g.fill(half, footerY - 4, x + w - 4, y + h - 3, 0x283AAFCB);
+        }
+        if (SiegeConfig.showIntelProgress && SiegeConfig.autoRotateIntel) {
+            int progressWidth = Math.round((w - 8) * intelCycleProgress());
+            if (progressWidth > 0) g.fill(x + 4, y + h - 3, x + 4 + progressWidth, y + h - 2, 0xAA55BFD9);
         }
         g.drawString(font, font.plainSubstrByWidth(footer, w - 18), x + 9, footerY, 0xFF7FC7D9, false);
     }
@@ -381,13 +401,26 @@ public final class SiegeTitleScreen extends Screen {
         long now = System.currentTimeMillis();
         if (manualIntelPreview < 0) {
             manualIntelPreview = 0;
+            previewCycleStartedAt = now;
             manualIntelPreviewUntil = now + 8_500L;
         }
-        if (!SiegeConfig.autoRotateIntel) manualIntelPreviewUntil = now + 8_500L;
-        else if (hovered) manualIntelPreviewUntil = Math.max(manualIntelPreviewUntil, now + 2_000L);
-        else if (now >= manualIntelPreviewUntil) {
+        previewReading = SiegeConfig.pauseIntelOnHover && hovered;
+        if (!SiegeConfig.autoRotateIntel) {
+            previewHoveredLastFrame = false;
+            manualIntelPreviewUntil = now + 8_500L;
+        } else if (previewReading) {
+            previewHoveredLastFrame = true;
+        } else {
+            if (previewHoveredLastFrame) {
+                previewHoveredLastFrame = false;
+                previewCycleStartedAt = now;
+                manualIntelPreviewUntil = now + 2_000L;
+            }
+        }
+        if (SiegeConfig.autoRotateIntel && !previewReading && now >= manualIntelPreviewUntil) {
             previewTransitionDirection = 1;
             manualIntelPreview = Math.floorMod(manualIntelPreview + 1, size);
+            previewCycleStartedAt = now;
             manualIntelPreviewUntil = now + 8_500L;
         }
         return Math.floorMod(manualIntelPreview, size);
@@ -398,6 +431,7 @@ public final class SiegeTitleScreen extends Screen {
         if (previewable.isEmpty()) return;
         previewTransitionDirection = direction < 0 ? -1 : 1;
         manualIntelPreview = Math.floorMod(currentIntelPreview(previewable.size(), false) + direction, previewable.size());
+        previewCycleStartedAt = System.currentTimeMillis();
         manualIntelPreviewUntil = System.currentTimeMillis() + 15_000L;
         SiegeUiSounds.click();
     }
@@ -451,6 +485,44 @@ public final class SiegeTitleScreen extends Screen {
         if (entry == null) return;
         SiegeUiSounds.click();
         minecraft.setScreen(new IntelScreenV3(this, entry));
+    }
+
+    private String intelStateLabel() {
+        if (!SiegeConfig.autoRotateIntel) return label("FIJO", "FIXED");
+        if (previewReading) return label("LEYENDO", "READING");
+        long seconds = Math.max(0L, (manualIntelPreviewUntil - System.currentTimeMillis() + 999L) / 1_000L);
+        return "AUTO " + seconds + "s";
+    }
+
+    private float intelCycleProgress() {
+        if (previewReading) return 0.0F;
+        long now = System.currentTimeMillis();
+        long duration = Math.max(1L, manualIntelPreviewUntil - previewCycleStartedAt);
+        return Math.max(0.0F, Math.min(1.0F, (now - previewCycleStartedAt) / (float) duration));
+    }
+
+    private void selectIntelPreview(int index) {
+        List<IntelEntry> previewable = IntelCatalog.previewable();
+        if (previewable.isEmpty()) return;
+        int current = currentIntelPreview(previewable.size(), false);
+        int target = Math.floorMod(index, previewable.size());
+        previewTransitionDirection = target < current ? -1 : 1;
+        manualIntelPreview = target;
+        previewCycleStartedAt = System.currentTimeMillis();
+        manualIntelPreviewUntil = previewCycleStartedAt + 15_000L;
+        SiegeUiSounds.click();
+    }
+
+    private void requestQuit() {
+        if (!SiegeConfig.confirmQuit) {
+            minecraft.stop();
+            return;
+        }
+        minecraft.setScreen(new ConfirmScreen(confirmed -> {
+            if (confirmed) minecraft.stop();
+            else minecraft.setScreen(this);
+        }, Component.literal(label("¿SALIR DE SIEGE?", "LEAVE SIEGE?")),
+                Component.literal(label("La sesión de Minecraft se cerrará.", "Minecraft will close."))));
     }
 
     @Override
@@ -509,11 +581,46 @@ public final class SiegeTitleScreen extends Screen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_M) {
-            changeTrack();
+            if (Screen.hasControlDown()) {
+                SiegeConfig.music = !SiegeConfig.music;
+                if (SiegeConfig.music) SiegeMusic.ensurePlaying(); else SiegeMusic.stop();
+                SiegeConfig.save();
+                SiegeUiSounds.click();
+            } else if (Screen.hasShiftDown()) {
+                SiegeUiSounds.nextTrack();
+                SiegeMusic.previousTrack();
+            } else changeTrack();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_R) {
+            SiegeUiSounds.nextTrack();
+            SiegeMusic.restartTrack();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_G) {
+            SiegeUiSounds.click();
+            minecraft.setScreen(new SiegeSceneScreen(this));
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_I && primaryPreviewEntry != null) {
             openPreviewEntry(primaryPreviewEntry);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_P) {
+            SiegeConfig.autoRotateIntel = !SiegeConfig.autoRotateIntel;
+            previewHoveredLastFrame = false;
+            previewCycleStartedAt = System.currentTimeMillis();
+            manualIntelPreviewUntil = previewCycleStartedAt + 8_500L;
+            SiegeConfig.save();
+            SiegeUiSounds.click();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_HOME && previewX >= 0) {
+            selectIntelPreview(0);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_END && previewX >= 0) {
+            selectIntelPreview(IntelCatalog.previewable().size() - 1);
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_S && Screen.hasControlDown()) {

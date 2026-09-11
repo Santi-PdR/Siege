@@ -25,7 +25,8 @@ final class IntelCatalog {
         if ("ALL".equals(category)) return FILES;
         List<IntelEntry> result = new ArrayList<>();
         for (IntelEntry entry : FILES) {
-            if (entry.category().equals(category)) result.add(entry);
+            if ("FAVORITES".equals(category) ? SiegeConfig.isFavoriteIntel(entry.code())
+                    : entry.category().equals(category)) result.add(entry);
         }
         return List.copyOf(result);
     }

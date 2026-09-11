@@ -44,6 +44,17 @@ jobs:
           grep -q 'requestedCode.equals(files.get(i).code())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'new IntelScreenV3(this, entry)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           grep -q 'GLFW_KEY_I' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
+          grep -q 'previewHoveredLastFrame' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
+          grep -q 'manualIntelPreviewUntil = now + 2_000L' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
+          if grep -q 'hovered.*Math.max(manualIntelPreviewUntil' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java; then
+            echo "Intel hover must not extend the automatic deadline every frame."
+            exit 1
+          fi
+          grep -q '"FAVORITES"' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          grep -q 'toggleFavoriteIntel' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          grep -q 'GLFW_KEY_7' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          grep -q 'trackAnnouncementDurationMs' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
+          grep -q 'backgroundDarkness' src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
       - name: Prepare Intel dossier overlays
         shell: bash
         run: |

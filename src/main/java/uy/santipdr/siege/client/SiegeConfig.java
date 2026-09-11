@@ -11,6 +11,8 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.AtomicMoveNotSupportedException;
 import com.mojang.logging.LogUtils;
 import java.util.Properties;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public final class SiegeConfig {
     public enum Graphics { PERFORMANCE, BALANCED, CINEMATIC;
@@ -34,6 +36,15 @@ public final class SiegeConfig {
     public static boolean reducedMotion = false;
     public static boolean titleInterference = true;
     public static boolean trackAnnouncements = true;
+    public static boolean pauseIntelOnHover = true;
+    public static boolean showIntelProgress = true;
+    public static boolean showIntelState = true;
+    public static boolean showBuildLabel = true;
+    public static boolean confirmQuit = true;
+    public static int backgroundDarkness = 23;
+    public static int panelDarkness = 63;
+    public static int trackNoticeSeconds = 8;
+    private static final Set<String> FAVORITE_INTEL = new LinkedHashSet<>();
     public static Graphics graphics = Graphics.CINEMATIC;
 
     private SiegeConfig() {}
@@ -60,6 +71,19 @@ public final class SiegeConfig {
         reducedMotion = bool(p, "reducedMotion", false);
         titleInterference = bool(p, "titleInterference", true);
         trackAnnouncements = bool(p, "trackAnnouncements", true);
+        pauseIntelOnHover = bool(p, "pauseIntelOnHover", true);
+        showIntelProgress = bool(p, "showIntelProgress", true);
+        showIntelState = bool(p, "showIntelState", true);
+        showBuildLabel = bool(p, "showBuildLabel", true);
+        confirmQuit = bool(p, "confirmQuit", true);
+        backgroundDarkness = integer(p, "backgroundDarkness", 23, 0, 70);
+        panelDarkness = integer(p, "panelDarkness", 63, 20, 90);
+        trackNoticeSeconds = integer(p, "trackNoticeSeconds", 8, 3, 15);
+        FAVORITE_INTEL.clear();
+        for (String code : p.getProperty("favoriteIntel", "").split(",")) {
+            String clean = code.trim();
+            if (!clean.isEmpty()) FAVORITE_INTEL.add(clean);
+        }
         try { graphics = Graphics.valueOf(p.getProperty("graphics", Graphics.CINEMATIC.name())); }
         catch (IllegalArgumentException ignored) { graphics = Graphics.CINEMATIC; }
     }
@@ -82,6 +106,15 @@ public final class SiegeConfig {
         p.setProperty("reducedMotion", Boolean.toString(reducedMotion));
         p.setProperty("titleInterference", Boolean.toString(titleInterference));
         p.setProperty("trackAnnouncements", Boolean.toString(trackAnnouncements));
+        p.setProperty("pauseIntelOnHover", Boolean.toString(pauseIntelOnHover));
+        p.setProperty("showIntelProgress", Boolean.toString(showIntelProgress));
+        p.setProperty("showIntelState", Boolean.toString(showIntelState));
+        p.setProperty("showBuildLabel", Boolean.toString(showBuildLabel));
+        p.setProperty("confirmQuit", Boolean.toString(confirmQuit));
+        p.setProperty("backgroundDarkness", Integer.toString(backgroundDarkness));
+        p.setProperty("panelDarkness", Integer.toString(panelDarkness));
+        p.setProperty("trackNoticeSeconds", Integer.toString(trackNoticeSeconds));
+        p.setProperty("favoriteIntel", String.join(",", FAVORITE_INTEL));
         p.setProperty("graphics", graphics.name());
         Path temporary = null;
         try {
@@ -120,11 +153,35 @@ public final class SiegeConfig {
         reducedMotion = false;
         titleInterference = true;
         trackAnnouncements = true;
+        pauseIntelOnHover = true;
+        showIntelProgress = true;
+        showIntelState = true;
+        showBuildLabel = true;
+        confirmQuit = true;
+        backgroundDarkness = 23;
+        panelDarkness = 63;
+        trackNoticeSeconds = 8;
+        FAVORITE_INTEL.clear();
         graphics = Graphics.CINEMATIC;
         save();
     }
 
     public static int clampVolume(int value) { return Math.max(0, Math.min(100, value)); }
+
+    public static boolean isFavoriteIntel(String code) { return FAVORITE_INTEL.contains(code); }
+
+    public static boolean toggleFavoriteIntel(String code) {
+        boolean favorite;
+        if (FAVORITE_INTEL.contains(code)) {
+            FAVORITE_INTEL.remove(code);
+            favorite = false;
+        } else {
+            FAVORITE_INTEL.add(code);
+            favorite = true;
+        }
+        save();
+        return favorite;
+    }
 
     private static boolean bool(Properties p, String key, boolean fallback) {
         String value = p.getProperty(key);
@@ -138,4 +195,3 @@ public final class SiegeConfig {
         catch (NumberFormatException ignored) { return fallback; }
     }
 }
-

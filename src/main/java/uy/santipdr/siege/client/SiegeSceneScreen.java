@@ -32,12 +32,7 @@ public final class SiegeSceneScreen extends Screen {
         addRenderableWidget(new SiegeButton(left + buttonWidth + gap, y, buttonWidth, 22,
                 text("SIGUIENTE →", "NEXT →"), b -> step(1), 0xFF55BFD9));
         pin = addRenderableWidget(new SiegeButton(left + (buttonWidth + gap) * 2, y, buttonWidth, 22,
-                text("FIJAR FONDO", "PIN BACKGROUND"), b -> {
-            SiegeUiSounds.click();
-            SiegeConfig.selectedScene = index;
-            SiegeConfig.save();
-            refreshPin();
-        }, 0xFFD6A94B));
+                text("FIJAR FONDO", "PIN BACKGROUND"), b -> pinCurrent(), 0xFFD6A94B));
         addRenderableWidget(new SiegeButton(left + (buttonWidth + gap) * 3, y, buttonWidth, 22,
                 text("VOLVER", "BACK"), b -> onClose(), 0xFFD65A4B));
         for (var child : children()) if (child instanceof AbstractWidget widget) {
@@ -66,11 +61,15 @@ public final class SiegeSceneScreen extends Screen {
         if (cleanView) return;
         g.fill(0, 0, width, 45, 0xB0000000);
         g.fill(0, height - 41, width, height, 0xB0000000);
+        String state = SiegeConfig.selectedScene == index ? label("FIJADO", "PINNED")
+                : SiegeConfig.selectedScene < 0 ? label("ROTACIÓN ACTIVA", "ROTATION ACTIVE")
+                : label("VISTA PREVIA", "PREVIEW");
         String heading = (index + 1) + " / " + SiegeBackgrounds.count() + "  ·  "
-                + SiegeBackgrounds.name(index, spanish());
+                + SiegeBackgrounds.name(index, spanish()) + "  //  " + state;
         g.drawCenteredString(font, font.plainSubstrByWidth(heading, width - 20), width / 2, 10, 0xFFF0EEE8);
-        g.drawCenteredString(font, text("F1: vista limpia · ESC: volver · ← → / rueda: cambiar",
-                "F1: clean view · ESC: back · ← → / wheel: browse"), width / 2, 27, 0xFFBCC5CC);
+        Component help = text("F1/ESPACIO: vista limpia · P: fijar · R: rotación · 1-9: elegir",
+                "F1/SPACE: clean view · P: pin · R: rotation · 1-9: select");
+        g.drawCenteredString(font, font.plainSubstrByWidth(help.getString(), width - 18), width / 2, 27, 0xFFBCC5CC);
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
     }
@@ -82,10 +81,24 @@ public final class SiegeSceneScreen extends Screen {
             return true;
         }
         if (key == GLFW.GLFW_KEY_F1) { toggleCleanView(); return true; }
+        if (key == GLFW.GLFW_KEY_SPACE) { toggleCleanView(); return true; }
         if (key == GLFW.GLFW_KEY_LEFT) { step(-1); return true; }
         if (key == GLFW.GLFW_KEY_RIGHT) { step(1); return true; }
         if (key == GLFW.GLFW_KEY_HOME) { select(0); return true; }
         if (key == GLFW.GLFW_KEY_END) { select(SiegeBackgrounds.count() - 1); return true; }
+        if (key == GLFW.GLFW_KEY_P) { pinCurrent(); return true; }
+        if (key == GLFW.GLFW_KEY_R) { resumeRotation(); return true; }
+        if (key == GLFW.GLFW_KEY_X) {
+            int candidate = Math.floorMod((int)(System.nanoTime() >>> 10), SiegeBackgrounds.count());
+            if (candidate == index && SiegeBackgrounds.count() > 1) candidate = (candidate + 1) % SiegeBackgrounds.count();
+            select(candidate);
+            return true;
+        }
+        if (key >= GLFW.GLFW_KEY_1 && key <= GLFW.GLFW_KEY_9) {
+            int scene = key - GLFW.GLFW_KEY_1;
+            if (scene < SiegeBackgrounds.count()) select(scene);
+            return true;
+        }
         return cleanView || super.keyPressed(key, scanCode, modifiers);
     }
 
@@ -104,6 +117,21 @@ public final class SiegeSceneScreen extends Screen {
         refreshPin();
     }
 
+    private void pinCurrent() {
+        SiegeUiSounds.click();
+        SiegeConfig.selectedScene = index;
+        SiegeConfig.save();
+        refreshPin();
+    }
+
+    private void resumeRotation() {
+        SiegeUiSounds.click();
+        SiegeConfig.selectedScene = -1;
+        SiegeConfig.animatedBackgrounds = true;
+        SiegeConfig.save();
+        refreshPin();
+    }
+
     private void toggleCleanView() {
         cleanView = !cleanView;
         setFocused(null);
@@ -113,6 +141,18 @@ public final class SiegeSceneScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double x, double y, int button) {
+        if (cleanView && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            toggleCleanView();
+            return true;
+        }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+            pinCurrent();
+            return true;
+        }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            onClose();
+            return true;
+        }
         return cleanView || super.mouseClicked(x, y, button);
     }
 
@@ -127,6 +167,10 @@ public final class SiegeSceneScreen extends Screen {
 
     private Component text(String es, String en) {
         return Component.literal(spanish() ? es : en);
+    }
+
+    private String label(String es, String en) {
+        return spanish() ? es : en;
     }
 
     private boolean spanish() {
