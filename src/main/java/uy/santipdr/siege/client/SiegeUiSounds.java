@@ -17,12 +17,14 @@ public final class SiegeUiSounds {
 
     public static void updateHover(List<? extends GuiEventListener> children) {
         AbstractWidget next = null;
+        AbstractWidget focused = null;
         for (GuiEventListener child : children) {
-            if (child instanceof AbstractWidget widget && widget.visible && widget.active && widget.isHoveredOrFocused()) {
-                next = widget;
-                break;
+            if (child instanceof AbstractWidget widget && widget.visible && widget.active) {
+                if (widget.isHovered()) { next = widget; break; }
+                if (widget.isFocused()) focused = widget;
             }
         }
+        if (next == null) next = focused;
         if (next != hovered) {
             hovered = next;
             long now = System.currentTimeMillis();

@@ -17,7 +17,7 @@ public final class SiegeSceneScreen extends Screen {
     private int index, previousIndex, page;
     private long changedAt;
     private boolean cleanView;
-    private SiegeButton pin, auto, clean;
+    private SiegeButton pin, auto, clean, previousPage, nextPage;
     private SiegeGalleryLayout layout;
     private final List<Thumbnail> thumbnails = new ArrayList<>();
 
@@ -42,6 +42,10 @@ public final class SiegeSceneScreen extends Screen {
                 text("ROTACIÓN AUTO", "AUTO ROTATION"), b -> resumeRotation(), 0xFFD6A94B));
         clean = addRenderableWidget(new SiegeButton(width - topWidth - 8, 8, topWidth, 20,
                 text("VISTA LIMPIA", "CLEAN VIEW"), b -> toggleCleanView(), 0xFF55BFD9));
+        previousPage = addRenderableWidget(new SiegeButton(width - 60, 36, 24, 20,
+                Component.literal("←"), b -> changePage(-1), 0xFF55BFD9));
+        nextPage = addRenderableWidget(new SiegeButton(width - 32, 36, 24, 20,
+                Component.literal("→"), b -> changePage(1), 0xFF55BFD9));
         for (int slot = 0; slot < layout.capacity(); slot++) {
             Thumbnail tile = new Thumbnail(layout.tile(slot));
             thumbnails.add(addRenderableWidget(tile));
@@ -68,12 +72,16 @@ public final class SiegeSceneScreen extends Screen {
         }
         for (var child : children()) if (child instanceof AbstractWidget widget)
             widget.setTooltip(Tooltip.create(widget.getMessage()));
+        previousPage.active = page > 0;
+        nextPage.active = (page + 1) * layout.capacity() < SiegeBackgrounds.count();
+        previousPage.setTooltip(Tooltip.create(text("Página anterior de miniaturas", "Previous thumbnail page")));
+        nextPage.setTooltip(Tooltip.create(text("Página siguiente de miniaturas", "Next thumbnail page")));
         clean.setTooltip(Tooltip.create(text("Ver sin interfaz. Clic o Escape para volver.", "Hide the interface. Click or Escape to return.")));
     }
 
     private void select(int next) {
         next = Math.floorMod(next, SiegeBackgrounds.count());
-        if (next == index) return;
+        if (next == index) { page = index / layout.capacity(); refresh(); return; }
         previousIndex = index;
         index = next;
         changedAt = System.currentTimeMillis();
@@ -82,6 +90,14 @@ public final class SiegeSceneScreen extends Screen {
         refresh();
     }
     private void step(int direction) { select(index + direction); }
+    private void changePage(int direction) {
+        int lastPage = (SiegeBackgrounds.count() - 1) / layout.capacity();
+        int next = Math.max(0, Math.min(lastPage, page + direction));
+        if (next == page) return;
+        page = next;
+        refresh();
+        SiegeUiSounds.click();
+    }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
@@ -99,10 +115,10 @@ public final class SiegeSceneScreen extends Screen {
         SiegeBackgrounds.renderRegion(g, p.x(), p.y(), p.w(), p.h(), index, progress * progress * (3 - 2 * progress));
         String state = SiegeConfig.selectedScene == index ? label("FIJADO", "PINNED") : label("VISTA PREVIA", "PREVIEW");
         String heading = String.format("%02d / %02d  ·  %s", index + 1, SiegeBackgrounds.count(), SiegeBackgrounds.name(index, spanish()));
-        g.drawString(font, font.plainSubstrByWidth(heading, width - 16), 8, 36, 0xFFF0EEE8, false);
+        g.drawString(font, font.plainSubstrByWidth(heading, width - 82), 8, 36, 0xFFF0EEE8, false);
         String detail = state + "  ·  " + label("GALERÍA", "GALLERY") + " " + (page + 1) + "/"
                 + ((SiegeBackgrounds.count() + layout.capacity() - 1) / layout.capacity());
-        g.drawString(font, detail, 8, 49, 0xFFBCA56D, false);
+        g.drawString(font, font.plainSubstrByWidth(detail, width - 82), 8, 49, 0xFFBCA56D, false);
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
     }
@@ -117,7 +133,11 @@ public final class SiegeSceneScreen extends Screen {
     }
     @Override
     public boolean mouseScrolled(double x, double y, double delta) {
-        if (delta != 0 && !cleanView && (layout.thumbnails().contains(x, y) || layout.preview().contains(x, y))) {
+        if (delta != 0 && !cleanView && layout.thumbnails().contains(x, y)) {
+            changePage(delta > 0 ? -1 : 1);
+            return true;
+        }
+        if (delta != 0 && !cleanView && layout.preview().contains(x, y)) {
             step(delta > 0 ? -1 : 1);
             return true;
         }

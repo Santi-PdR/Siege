@@ -1,3 +1,17 @@
+## SIEGE 0.9.1 — Inspección y navegación
+
+- El zoom del visor conserva el punto bajo el cursor, salvo cuando los límites de la imagen requieren centrarlo.
+- Minimap interactivo al ampliar en pantallas de al menos 500×300 píxeles lógicos: muestra el área visible y permite moverla con clic/arrastre.
+- El arrastre debe comenzar dentro de la imagen o del minimapa; soltar fuera finaliza correctamente la interacción.
+- Zoom entre 1× y 4×, sin sonidos repetidos al alcanzar un límite. El porcentaje tiene espacio propio y Ajustar centra el arte completo.
+- La galería tiene botones para recorrer páginas de miniaturas sin cambiar la imagen seleccionada. La rueda sobre miniaturas pasa páginas; sobre la vista previa cambia la imagen.
+- Los controles de página se desactivan en los extremos; el nombre del fondo tiene espacio reservado junto a ellos.
+- Sonido de hover corregido: el widget bajo el mouse tiene prioridad sobre el foco del teclado.
+- Flechas, +, − y otros botones pequeños conservan su símbolo centrado durante hover; los textos demasiado estrechos no dibujan puntos fuera del botón.
+- CI prueba la cámara real del visor: punto de zoom, minimapa, límites, redimensionado y Ajustar, además de las pruebas de escala de 0.9.0.
+
+Compilación y pruebas automáticas no equivalen a verificación visual dentro de Minecraft; esa comprobación continúa pendiente.
+
 ## SIEGE 0.9.0 — Galería visual y lectura Intel
 
 La galería pasa a tener miniaturas seleccionables y una vista previa grande. Intel añade búsqueda, lectura completa y un visor de imágenes. Los controles son visibles; no se agregan atajos.

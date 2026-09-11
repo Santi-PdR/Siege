@@ -85,7 +85,7 @@ public final class SiegeButton extends Button {
             g.fill(x + w - bracket, y + h - 1, x + w, y + h, edge);
             g.fill(x + w - 1, y + h - bracket, x + w, y + h, edge);
         }
-        if (selected) {
+        if (selected && w > 40) {
             g.fill(x + w - 12, y + 4, x + w - 5, y + 5, accent);
             g.fill(x + w - 9, y + 7, x + w - 5, y + 8, accent);
         }
@@ -94,8 +94,9 @@ public final class SiegeButton extends Button {
         if (underlineWidth > 0) g.fill(x + 2, y + h - 2, x + 2 + underlineWidth, y + h - 1, accent);
 
         int left = 9 + Math.round(4.0F * hoverAmount);
-        int usable = Math.max(1, w - left - (selected ? 17 : 9));
+        int usable = Math.max(1, w <= 40 ? w - 8 : w - left - (selected ? 17 : 9));
         String text = fit(font, getMessage().getString(), usable);
+        if (w <= 40) left = (w - font.width(text)) / 2;
         int textColor = !active ? 0xFF6F767D : hot || selected ? 0xFFF5F3EC : 0xFFD8DDE1;
         g.drawString(font, text, x + left, y + Math.max(1, (h - font.lineHeight) / 2), textColor, false);
     }
@@ -149,6 +150,7 @@ public final class SiegeButton extends Button {
     private static String fit(Font font, String value, int width) {
         if (font.width(value) <= width) return value;
         String ellipsis = "...";
+        if (width < font.width(ellipsis)) return font.plainSubstrByWidth(value, Math.max(0, width));
         int target = Math.max(0, width - font.width(ellipsis));
         String clipped = font.plainSubstrByWidth(value, target);
         return clipped + ellipsis;

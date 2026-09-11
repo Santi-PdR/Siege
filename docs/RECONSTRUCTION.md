@@ -161,3 +161,10 @@ Gameplay screens are not replaced. The reconstruction is scoped to menus and its
 - Keep original approved title font, gray main buttons, dossier art and main-menu UNIT/ADVANCED restriction. Keep hover-pause/release logic unchanged.
 - The 0.9.0 visible controls replace stale F/F1 help. Do not add letter/number shortcuts. Native Tab, text editing and Escape are ordinary UI navigation.
 - Existing Fedora KDE + Konsole installer and test-1 path remain authoritative.
+
+
+## 0.9.1 inspector camera
+
+SiegeImageViewport owns pointer-anchored zoom, resize, normalized visible bounds and edge-clamped panning. IntelPortraitScreen handles image/minimap drag ownership explicitly; no keyboard shortcuts are added. Gallery page browsing must not write selectedScene or change its preview index. Tiny shared buttons center their glyph and keep it inside the button. Hover sounds prioritize actual mouse hover before keyboard focus.
+
+CI compiles/tests the production camera alongside the existing responsive geometry. In-game visual QA remains required; do not claim it was run from geometry tests alone.

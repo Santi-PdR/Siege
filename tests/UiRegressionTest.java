@@ -2,6 +2,7 @@ import uy.santipdr.siege.client.SiegeGalleryLayout;
 import uy.santipdr.siege.client.SiegeGalleryLayout.Rect;
 import uy.santipdr.siege.client.SiegeIntelLayout;
 import uy.santipdr.siege.client.IntelSearch;
+import uy.santipdr.siege.client.SiegeImageViewport;
 
 /** Tests production geometry, including Minecraft's minimum logical viewport and odd sizes. */
 public class UiRegressionTest {
@@ -51,6 +52,33 @@ public class UiRegressionTest {
         check(IntelSearch.matches("", "Patriot"), "Empty search");
         check(!IntelSearch.matches(".*", "Patriot"), "Query must be literal");
         check(!IntelSearch.matches("sniper", "Patriot"), "Unrelated search");
+        SiegeImageViewport camera = new SiegeImageViewport();
+        camera.resize(640, 360);
+        double beforeU = (400 - camera.x()) / camera.imageWidth();
+        double beforeV = (200 - camera.y()) / camera.imageHeight();
+        camera.zoomAt(2, 400, 200);
+        check(Math.abs(beforeU - (400 - camera.x()) / camera.imageWidth()) < 1e-9, "Zoom lost pointer X");
+        check(Math.abs(beforeV - (200 - camera.y()) / camera.imageHeight()) < 1e-9, "Zoom lost pointer Y");
+        camera.centerOn(1, 1);
+        check(Math.abs(camera.visibleRight() - 1) < 1e-9, "Minimap right edge");
+        check(Math.abs(camera.visibleBottom() - 1) < 1e-9, "Minimap bottom edge");
+        camera.drag(1_000_000, 1_000_000);
+        check(Math.abs(camera.visibleLeft()) < 1e-9 && Math.abs(camera.visibleTop()) < 1e-9, "Pan bounds");
+        camera.zoomAt(99, 320, 180);
+        check(camera.zoom() == 4, "Maximum zoom");
+        check(!camera.zoomAt(99, 320, 180), "Zoom at limit should not trigger audio");
+        for (int[] size : new int[][] {{304,165}, {464,195}, {624,285}, {1280,720}, {300,900}}) {
+            camera.resize(size[0], size[1]);
+            for (int direction : new int[] {-1, 1}) {
+                camera.drag(direction * 1_000_000, direction * 1_000_000);
+                check(camera.visibleLeft() >= 0 && camera.visibleRight() <= 1 && camera.visibleLeft() < camera.visibleRight(), "Visible X bounds after resize");
+                check(camera.visibleTop() >= 0 && camera.visibleBottom() <= 1 && camera.visibleTop() < camera.visibleBottom(), "Visible Y bounds after resize");
+            }
+        }
+        camera.reset();
+        check(camera.zoom() == 1 && camera.visibleLeft() == 0 && camera.visibleRight() == 1
+                && camera.visibleTop() == 0 && camera.visibleBottom() == 1, "Fit must show full artwork");
+        System.out.println("Pointer zoom, minimap, pan limits and resize passed");
         System.out.println(cases + " viewport layouts and search regressions passed");
     }
 }
