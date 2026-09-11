@@ -27,6 +27,11 @@ public final class SiegeTitleScreen extends Screen {
     private int previewCardHeight;
     private int previewGap;
     private boolean previewDual;
+    private IntelEntry primaryPreviewEntry;
+    private IntelEntry secondaryPreviewEntry;
+    private int lastRenderedPreview = -1;
+    private int previewTransitionDirection = 1;
+    private long previewTransitionStarted;
 
     public SiegeTitleScreen() {
         super(Component.literal("Eternal Craft: SIEGE"));
@@ -93,6 +98,8 @@ public final class SiegeTitleScreen extends Screen {
         renderTitle(graphics, compact, panelRight);
 
         previewX = -1;
+        primaryPreviewEntry = null;
+        secondaryPreviewEntry = null;
         if (SiegeConfig.mainMenuIntel) renderIntelPreview(graphics, panelRight, mouseX, mouseY);
         renderTrackAnnouncement(graphics, compact);
 
@@ -176,7 +183,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.7.8", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.7.9", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
@@ -208,21 +215,28 @@ public final class SiegeTitleScreen extends Screen {
             int y = Math.max(50, Math.min(height - totalHeight - 28, (height - totalHeight) / 2));
             setPreviewBounds(x, y, cardWidth, totalHeight, cardHeight, 8, true);
             int currentPreview = currentIntelPreview(previewable.size(), isInsidePreview(mouseX, mouseY));
+            int slide = previewSlide(currentPreview);
             int first = currentPreview;
             IntelEntry firstEntry = previewable.get(first);
             IntelEntry secondEntry = previewable.get((first + 1) % previewable.size());
-            renderIntelCard(g, firstEntry, x, y, cardWidth, cardHeight, mouseX, mouseY);
-            renderIntelCard(g, secondEntry, x, y + cardHeight + 8, cardWidth, cardHeight, mouseX, mouseY);
+            primaryPreviewEntry = firstEntry;
+            secondaryPreviewEntry = secondEntry;
+            renderIntelCard(g, firstEntry, first, previewable.size(), x + slide, y, cardWidth, cardHeight, mouseX, mouseY);
+            renderIntelCard(g, secondEntry, (first + 1) % previewable.size(), previewable.size(),
+                    x + slide, y + cardHeight + 8, cardWidth, cardHeight, mouseX, mouseY);
         } else {
             int y = Math.max(52, height - cardHeight - 31);
             setPreviewBounds(x, y, cardWidth, cardHeight, cardHeight, 0, false);
             int currentPreview = currentIntelPreview(previewable.size(), isInsidePreview(mouseX, mouseY));
             IntelEntry entry = previewable.get(currentPreview);
-            renderIntelCard(g, entry, x, y, cardWidth, cardHeight, mouseX, mouseY);
+            primaryPreviewEntry = entry;
+            renderIntelCard(g, entry, currentPreview, previewable.size(), x + previewSlide(currentPreview), y,
+                    cardWidth, cardHeight, mouseX, mouseY);
         }
     }
 
-    private void renderIntelCard(GuiGraphics g, IntelEntry entry, int x, int y, int w, int h,
+    private void renderIntelCard(GuiGraphics g, IntelEntry entry, int entryIndex, int entryCount,
+                                 int x, int y, int w, int h,
                                  int mouseX, int mouseY) {
         int accent = switch (entry.category()) {
             case "ADVANCED" -> 0xFF2F80FF;
@@ -243,8 +257,15 @@ public final class SiegeTitleScreen extends Screen {
         g.fill(x, y, x + 2, y + h, accent);
         g.fill(x + 8, y + 23, x + w - 8, y + 24, 0xFF27343C);
 
-        String header = type + " // " + entry.code();
-        g.drawString(font, font.plainSubstrByWidth(header, w - 18), x + 9, y + 7, 0xFF9EA9B0, false);
+        boolean cardHot = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+        String header = type + " " + String.format("%02d/%02d", entryIndex + 1, entryCount) + " // " + entry.code();
+        int headerWidth = cardHot && mouseY < y + h - 18 ? Math.max(52, w / 2 - 12) : w - 18;
+        g.drawString(font, font.plainSubstrByWidth(header, headerWidth), x + 9, y + 7, 0xFF9EA9B0, false);
+        if (cardHot && mouseY < y + h - 18) {
+            String open = label("ABRIR EXPEDIENTE ↗", "OPEN DOSSIER ↗");
+            open = font.plainSubstrByWidth(open, Math.max(40, w / 2));
+            g.drawString(font, open, x + w - 9 - font.width(open), y + 7, 0xFF7FC7D9, false);
+        }
         g.drawString(font, entry.name(), x + 9, y + 29, 0xFFF1EEE8, false);
 
         String threat = entry.threat() > 0 ? entry.threat() + "/5" : label("SIN DATOS", "NO DATA");
@@ -365,6 +386,7 @@ public final class SiegeTitleScreen extends Screen {
         if (!SiegeConfig.autoRotateIntel) manualIntelPreviewUntil = now + 8_500L;
         else if (hovered) manualIntelPreviewUntil = Math.max(manualIntelPreviewUntil, now + 2_000L);
         else if (now >= manualIntelPreviewUntil) {
+            previewTransitionDirection = 1;
             manualIntelPreview = Math.floorMod(manualIntelPreview + 1, size);
             manualIntelPreviewUntil = now + 8_500L;
         }
@@ -374,6 +396,7 @@ public final class SiegeTitleScreen extends Screen {
     private void stepIntelPreview(int direction) {
         List<IntelEntry> previewable = IntelCatalog.previewable();
         if (previewable.isEmpty()) return;
+        previewTransitionDirection = direction < 0 ? -1 : 1;
         manualIntelPreview = Math.floorMod(currentIntelPreview(previewable.size(), false) + direction, previewable.size());
         manualIntelPreviewUntil = System.currentTimeMillis() + 15_000L;
         SiegeUiSounds.click();
@@ -404,12 +427,45 @@ public final class SiegeTitleScreen extends Screen {
         return secondY >= previewCardHeight - 18 && secondY < previewCardHeight;
     }
 
+    private int previewSlide(int index) {
+        if (lastRenderedPreview != index) {
+            if (lastRenderedPreview >= 0) previewTransitionStarted = System.currentTimeMillis();
+            lastRenderedPreview = index;
+        }
+        if (SiegeConfig.reducedMotion || !SiegeConfig.menuEffects || previewTransitionStarted <= 0L) return 0;
+        float progress = Math.min(1.0F, (System.currentTimeMillis() - previewTransitionStarted) / 220.0F);
+        float eased = 1.0F - (1.0F - progress) * (1.0F - progress);
+        return Math.round(previewTransitionDirection * (1.0F - eased) * 12.0F);
+    }
+
+    private IntelEntry previewEntryAt(double mouseY) {
+        if (!isInsidePreview(previewX + 1, mouseY)) return null;
+        if (!previewDual) return primaryPreviewEntry;
+        double localY = mouseY - previewY;
+        if (localY < previewCardHeight) return primaryPreviewEntry;
+        if (localY >= previewCardHeight + previewGap) return secondaryPreviewEntry;
+        return null;
+    }
+
+    private void openPreviewEntry(IntelEntry entry) {
+        if (entry == null) return;
+        SiegeUiSounds.click();
+        minecraft.setScreen(new IntelScreenV3(this, entry));
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && isInsidePreview(mouseX, mouseY)
                 && isInsidePreviewFooter(mouseY)) {
             stepIntelPreview(mouseX < previewX + previewW / 2.0D ? -1 : 1);
             return true;
+        }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && isInsidePreview(mouseX, mouseY)) {
+            IntelEntry entry = previewEntryAt(mouseY);
+            if (entry != null) {
+                openPreviewEntry(entry);
+                return true;
+            }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -454,6 +510,10 @@ public final class SiegeTitleScreen extends Screen {
         }
         if (keyCode == GLFW.GLFW_KEY_M) {
             changeTrack();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_I && primaryPreviewEntry != null) {
+            openPreviewEntry(primaryPreviewEntry);
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_S && Screen.hasControlDown()) {

@@ -1,3 +1,14 @@
+## SIEGE 0.7.9
+
+- Clicking a Unit or Advanced dossier on the main menu opens that exact record in the full Intel database.
+- Dual-card layouts resolve each card independently; clicking the second preview never opens the first.
+- Hovering a dossier body reveals a restrained `OPEN DOSSIER` action without adding another permanent button.
+- The `I` key opens the primary dossier currently shown on the title screen.
+- Main-menu cards now expose their position within the Unit/Advanced feed, such as `UNIT 04/16`.
+- Dossier changes use a short directional slide that follows previous/next input and is disabled by Reduced Motion.
+- The packaged Intel V3 source accepts an exact requested category and code while preserving normal navigation afterward.
+- CI validates the direct-open constructor and the main-menu interaction path before Forge compilation.
+
 ## SIEGE 0.7.8
 
 - Main-menu Intel pauses while the cursor is over a dossier and waits two seconds after leaving before rotation resumes.

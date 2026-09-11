@@ -105,6 +105,15 @@ Gameplay screens are not replaced. The reconstruction is scoped to menus and its
 - Keep Fedora KDE/Konsole and the established test-1 path as the installation target. The installer retains previous JARs in a sibling backup folder.
 - Runtime visual verification is not implied by successful compilation or layout arithmetic.
 
+## 0.7.9 direct Intel handoff
+
+- A main-menu preview is now an actionable dossier: its body opens the matching full Intel record.
+- The handoff passes the record category and stable dossier code, so duplicate display names cannot open the wrong file.
+- Each card in the dual preview resolves independently, while `I` opens the primary visible record.
+- Position counters make the Unit/Advanced feed legible without adding another panel.
+- A 220 ms directional slide acknowledges manual and automatic changes. Reduced Motion and disabled tactical effects remove it.
+- The generated Intel V3 source remains authoritative and its compressed build input must include the targeted-entry constructor.
+
 ## 0.7.8 Intel reading behavior and gallery navigation
 
 - Hovering a main-menu dossier suspends automatic rotation and leaves a short reading grace period after the pointer exits.
