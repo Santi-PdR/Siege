@@ -13,6 +13,7 @@ public final class SiegeSlider extends AbstractSliderButton {
     private final Component label;
     private final IntConsumer consumer;
     private int lastPercent;
+    private java.util.function.IntFunction<String> valueText;
 
     public SiegeSlider(int x, int y, int width, int height, Component label, int initialPercent, IntConsumer consumer) {
         super(x, y, width, height, Component.empty(), clamp(initialPercent) / 100.0D);
@@ -29,7 +30,13 @@ public final class SiegeSlider extends AbstractSliderButton {
             setMessage(Component.literal(percent + "%"));
             return;
         }
-        setMessage(label.copy().append(": " + percent + "%"));
+        setMessage(label.copy().append(": " + (valueText == null ? percent + "%" : valueText.apply(percent))));
+    }
+
+    public SiegeSlider withValueText(java.util.function.IntFunction<String> formatter) {
+        valueText = formatter;
+        updateMessage();
+        return this;
     }
 
     @Override
@@ -71,9 +78,13 @@ public final class SiegeSlider extends AbstractSliderButton {
         g.fill(knobX, trackY - 3, knobX + 5, trackY + 5, 0xFFE8EEF1);
         g.fill(knobX + 1, trackY - 2, knobX + 4, trackY + 4, accent);
 
-        int textWidth = Math.max(20, getWidth() - 18);
-        Component clipped = Component.literal(Minecraft.getInstance().font.plainSubstrByWidth(getMessage().getString(), textWidth));
-        g.drawString(Minecraft.getInstance().font, clipped, left + 9, top + 5, 0xFFE6ECEF, false);
+        var font = Minecraft.getInstance().font;
+        String amount = valueText == null ? lastPercent + "%" : valueText.apply(lastPercent);
+        int amountWidth = font.width(amount);
+        int textWidth = Math.max(1, getWidth() - amountWidth - 26);
+        String clipped = font.plainSubstrByWidth(label.getString(), textWidth);
+        g.drawString(font, clipped, left + 9, top + 4, 0xFFE6ECEF, false);
+        g.drawString(font, amount, right - amountWidth - 9, top + 4, accent, false);
     }
 
     @Override

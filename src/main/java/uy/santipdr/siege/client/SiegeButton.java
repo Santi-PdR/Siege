@@ -94,7 +94,7 @@ public final class SiegeButton extends Button {
         if (underlineWidth > 0) g.fill(x + 2, y + h - 2, x + 2 + underlineWidth, y + h - 1, accent);
 
         int left = 9 + Math.round(4.0F * hoverAmount);
-        int usable = Math.max(8, w - left - 9);
+        int usable = Math.max(1, w - left - (selected ? 17 : 9));
         String text = fit(font, getMessage().getString(), usable);
         int textColor = !active ? 0xFF6F767D : hot || selected ? 0xFFF5F3EC : 0xFFD8DDE1;
         g.drawString(font, text, x + left, y + Math.max(1, (h - font.lineHeight) / 2), textColor, false);

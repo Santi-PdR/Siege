@@ -1,3 +1,29 @@
+## SIEGE 0.9.0 — Galería visual y lectura Intel
+
+La galería pasa a tener miniaturas seleccionables y una vista previa grande. Intel añade búsqueda, lectura completa y un visor de imágenes. Los controles son visibles; no se agregan atajos.
+
+- **Galería:** miniaturas nativas, selección directa, paginación automática, marca del fondo fijado, transición de 260 ms y vista limpia que se cierra con clic o Escape. La selección no cambia el fondo guardado hasta pulsar Fijar.
+- **Intel:** búsqueda literal por nombre, código, origen, armamento y texto; ignora tildes/mayúsculas y admite varias palabras. Botón para limpiar, estados vacíos y búsqueda compatible con Favoritos.
+- **Lectura:** área de texto delimitada, metadatos dentro del scroll, progreso y barra arrastrable. El modo Lectura dedica el espacio al texto; Ampliar abre el arte original con zoom 1–4×, arrastre limitado y Ajustar.
+- **Portada:** acceso visible a Fondos, título ajustado al ancho, interferencia breve, aviso musical separado de los botones y dossiers. La doble tarjeta requiere altura suficiente.
+- **Configuración:** pestañas compactas con más espacio útil, controles de pista en una fila, barra arrastrable, scroll conservado al volver y valores correctos en segundos/porcentaje.
+- **Correcciones:** Favoritos se actualiza al pasar de expediente; contador separado del botón; la rueda fuera del texto no cambia archivos por accidente; eliminadas ayudas antiguas de F/F1 y números de atajos.
+- **Fuente Intel:** `src/main/java/uy/santipdr/siege/client/IntelScreenV3.java` es ahora la fuente canónica legible. CI ya no restaura una copia comprimida que pueda deshacer los cambios.
+
+### Verificación 0.9.0
+
+CI ejecuta `tests/UiRegressionTest.java` sobre la geometría usada por las pantallas: barrido de tamaños lógicos desde 320×240, resoluciones 720p/768p/1080p/1440p/ultrawide y escalas solicitadas 1–4, además de búsqueda con tildes, múltiples palabras y caracteres literales. Después ejecuta las protecciones de navegación/recursos y compila Forge.
+
+Estas pruebas verifican geometría y lógica; no sustituyen una comprobación visual dentro de Minecraft con sus fuentes y paquetes de recursos. La lista de comprobación está en `docs/QA-0.9.0.md`.
+
+Instalación actual: Fedora KDE, Konsole, SKLauncher `test-1`, `/home/Santipdr/.sklauncher/instances/test-1/mods`. Cerrar Minecraft y ejecutar:
+
+```bash
+gh api repos/Santi-PdR/Siege/contents/scripts/install-latest.sh --jq .content | base64 -d | bash
+```
+
+Las secciones siguientes conservan el historial de versiones; los comportamientos actuales se describen arriba.
+
 ## SIEGE 0.8.1
 
 - Removed the unrequested title-screen music, gallery, Intel and rotation keyboard shortcuts.

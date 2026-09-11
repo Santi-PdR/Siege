@@ -78,6 +78,11 @@ public final class SiegeTitleScreen extends Screen {
         int trackWidth = compact ? 88 : 100;
         addRenderableWidget(new SiegeButton(width - trackWidth - 9, 9, trackWidth, compact ? 18 : 20,
                 Component.literal(label("> MÚSICA", "> MUSIC")), b -> changeTrack(), 0xFFD64B4B));
+        addRenderableWidget(new SiegeButton(width - trackWidth - 9, compact ? 31 : 33, trackWidth, 18,
+                Component.literal(label("FONDOS", "BACKGROUNDS")), b -> {
+                    SiegeUiSounds.click();
+                    minecraft.setScreen(new SiegeSceneScreen(this));
+                }, 0xFFD6A94B));
     }
 
     private SiegeButton command(int x, int y, int width, int height, String key, Button.OnPress press) {
@@ -121,9 +126,11 @@ public final class SiegeTitleScreen extends Screen {
     private void renderTitle(GuiGraphics g, boolean compact, int panelRight) {
         String main = "ETERNAL CRAFT";
         String sub = "S I E G E";
-        float scale = compact ? 2.05F : 2.75F;
+        int headerWidth = compact ? width - 112 : width - 230;
+        int center = compact ? headerWidth / 2 : width / 2;
+        float scale = Math.min(compact ? 2.05F : 2.75F, (headerWidth - 12F) / font.width(main));
         int mainWidth = Math.round(font.width(main) * scale);
-        int x = (width - mainWidth) / 2;
+        int x = center - mainWidth / 2;
         int y = compact ? 17 : 21;
 
         g.pose().pushPose();
@@ -134,7 +141,8 @@ public final class SiegeTitleScreen extends Screen {
         g.drawString(font, main, 0, 0, 0xFFF0EDEA, false);
         g.pose().popPose();
 
-        if (SiegeConfig.titleInterference && SiegeConfig.menuEffects && !SiegeConfig.reducedMotion) {
+        if (SiegeConfig.titleInterference && SiegeConfig.menuEffects && !SiegeConfig.reducedMotion
+                && (System.currentTimeMillis() / 110L) % 43 < 3) {
             long phase = System.currentTimeMillis() / 110L;
             int sliceWidth = Math.max(16, mainWidth / 7);
             int sliceX = x + (int) ((phase * 37L) % Math.max(1, mainWidth - sliceWidth));
@@ -150,7 +158,7 @@ public final class SiegeTitleScreen extends Screen {
 
         float subScale = compact ? 1.25F : 1.55F;
         int subWidth = Math.round(font.width(sub) * subScale);
-        int subX = (width - subWidth) / 2;
+        int subX = center - subWidth / 2;
         int subY = y + Math.round(font.lineHeight * scale) + (compact ? 7 : 9);
         g.pose().pushPose();
         g.pose().translate(subX, subY, 0.0F);
@@ -168,13 +176,13 @@ public final class SiegeTitleScreen extends Screen {
         long noticeDuration = SiegeMusic.trackAnnouncementDurationMs();
         long fadeStart = Math.max(0L, noticeDuration - 1_700L);
         int alpha = age <= fadeStart ? 255 : Math.max(0, 255 - (int) ((age - fadeStart) * 255L / Math.max(1L, noticeDuration - fadeStart)));
-        int boxWidth = compact ? Math.min(170, width - 18) : Math.min(220, Math.max(170, width / 4));
+        int boxWidth = Math.min(compact ? 170 : 220, width - menuX - menuWidth - 38);
         int boxHeight = compact ? 29 : 34;
         int x = width - boxWidth - 9;
         if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion && age < 360L) {
             x += Math.round((1.0F - age / 360.0F) * 18.0F);
         }
-        int y = compact ? 31 : 35;
+        int y = compact ? 55 : 57;
         g.fill(x + 2, y + 2, x + boxWidth + 2, y + boxHeight + 2, (Math.min(150, alpha) << 24));
         g.fill(x, y, x + boxWidth, y + boxHeight, (Math.min(222, alpha) << 24) | 0x00070A0D);
         g.fill(x, y, x + 2, y + boxHeight, (alpha << 24) | 0x00E54852);
@@ -194,7 +202,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.8.1", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.9.0", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
@@ -211,7 +219,7 @@ public final class SiegeTitleScreen extends Screen {
         List<IntelEntry> previewable = IntelCatalog.previewable();
         if (previewable.isEmpty()) return;
 
-        boolean dual = guiScale < 2.75D && width >= 650 && height >= 350 && previewable.size() > 1;
+        boolean dual = guiScale < 2.75D && width >= 650 && height >= 390 && previewable.size() > 1;
         int cardWidth = dual ? Math.min(310, Math.max(240, width / 4)) : Math.min(300, Math.max(220, width / 3));
         int cardHeight = dual ? 112 : 122;
         int x = width - cardWidth - 14;
@@ -223,7 +231,7 @@ public final class SiegeTitleScreen extends Screen {
 
         if (dual) {
             int totalHeight = cardHeight * 2 + 8;
-            int y = Math.max(50, Math.min(height - totalHeight - 28, (height - totalHeight) / 2));
+            int y = Math.max(100, Math.min(height - totalHeight - 28, (height - totalHeight) / 2));
             setPreviewBounds(x, y, cardWidth, totalHeight, cardHeight, 8, true);
             int currentPreview = currentIntelPreview(previewable.size(), isInsidePreview(mouseX, mouseY));
             int slide = previewSlide(currentPreview);
@@ -236,7 +244,7 @@ public final class SiegeTitleScreen extends Screen {
             renderIntelCard(g, secondEntry, (first + 1) % previewable.size(), previewable.size(),
                     x + slide, y + cardHeight + 8, cardWidth, cardHeight, mouseX, mouseY);
         } else {
-            int y = Math.max(52, height - cardHeight - 31);
+            int y = Math.max(100, height - cardHeight - 31);
             setPreviewBounds(x, y, cardWidth, cardHeight, cardHeight, 0, false);
             int currentPreview = currentIntelPreview(previewable.size(), isInsidePreview(mouseX, mouseY));
             IntelEntry entry = previewable.get(currentPreview);

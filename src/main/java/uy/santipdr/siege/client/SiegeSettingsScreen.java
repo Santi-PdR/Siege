@@ -36,6 +36,7 @@ public final class SiegeSettingsScreen extends Screen {
     private final List<Integer> controlY = new ArrayList<>();
     private final List<SiegeButton> musicTrackButtons = new ArrayList<>();
     private SiegeButton shuffleButton;
+    private boolean draggingScrollbar;
     private int scrollOffset, scrollMax, viewportTop, viewportBottom, informationY;
 
 
@@ -56,14 +57,15 @@ public final class SiegeSettingsScreen extends Screen {
         controlY.clear();
         musicTrackButtons.clear();
         shuffleButton = null;
-        scrollOffset = 0;
+        int previousScroll = scrollOffset;
+        draggingScrollbar = false;
         compact = width < 700 || height < 355;
 
         int margin = compact ? 7 : 14;
         panelWidth = Math.max(230, Math.min(compact ? 520 : 760, width - margin * 2));
         panelX = (width - panelWidth) / 2;
         panelY = compact ? 42 : 54;
-        panelBottom = Math.min(height - (height >= 250 ? 28 : 8), panelY + (compact ? 250 : 292));
+        panelBottom = height - (height >= 300 ? 28 : 8);
 
         addRenderableWidget(new SiegeButton(8, 7, Math.min(82, Math.max(62, width / 6)), 19,
                 Component.translatable("siege.common.back"), b -> onClose(), WARNING));
@@ -71,7 +73,7 @@ public final class SiegeSettingsScreen extends Screen {
         if (compact) initCompactNavigation();
         else initWideNavigation();
 
-        viewportTop = contentY + (compact ? 43 : 51);
+        viewportTop = contentY + (compact ? 25 : 51);
         viewportBottom = panelBottom - 7;
         int firstControl = children().size();
         initSectionControls();
@@ -86,6 +88,7 @@ public final class SiegeSettingsScreen extends Screen {
         }
         informationY = lastBottom + 12;
         scrollMax = Math.max(0, informationY + (section == Section.OVERVIEW ? 94 : 44) - viewportBottom);
+        scrollOffset = previousScroll;
         positionControls();
     }
 
@@ -113,7 +116,7 @@ public final class SiegeSettingsScreen extends Screen {
         navX = panelX + pad;
         navY = panelY + 29;
         int gap = 3;
-        int columns = panelWidth >= 355 ? 3 : 2;
+        int columns = 3;
         navWidth = Math.max(68, (panelWidth - pad * 2 - gap * (columns - 1)) / columns);
         int h = 18;
 
@@ -146,7 +149,7 @@ public final class SiegeSettingsScreen extends Screen {
     }
 
     private void initSectionControls() {
-        int y = contentY + (compact ? 43 : 51);
+        int y = contentY + (compact ? 25 : 51);
         int h = compact ? 19 : 24;
         int gap = compact ? 4 : 7;
         int w = contentWidth - 8;
@@ -183,19 +186,20 @@ public final class SiegeSettingsScreen extends Screen {
                         }));
 
                 y += sliderHeight + gap;
-                addRenderableWidget(new SiegeButton(contentX, y, w, h,
-                        Component.literal(label("PISTA ANTERIOR", "PREVIOUS TRACK")), b -> {
+                int transportWidth = (w - 8) / 3;
+                addRenderableWidget(new SiegeButton(contentX, y, transportWidth, h,
+                        Component.literal(label("ANTERIOR", "PREVIOUS")), b -> {
                     SiegeUiSounds.nextTrack();
                     SiegeMusic.previousTrack();
                     refreshMusicSelection();
                 }, GOLD));
-                addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
-                        Component.literal(label("REINICIAR PISTA", "RESTART TRACK")), b -> {
+                addRenderableWidget(new SiegeButton(contentX + transportWidth + 4, y, transportWidth, h,
+                        Component.literal(label("REINICIAR", "RESTART")), b -> {
                     SiegeUiSounds.nextTrack();
                     SiegeMusic.restartTrack();
                 }, GOLD));
-                addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
-                        Component.translatable("siege.menu.next_track"), b -> {
+                addRenderableWidget(new SiegeButton(contentX + (transportWidth + 4) * 2, y, transportWidth, h,
+                        Component.literal(label("SIGUIENTE", "NEXT")), b -> {
                     SiegeUiSounds.nextTrack();
                     SiegeMusic.nextTrack();
                     refreshMusicSelection();
@@ -208,7 +212,8 @@ public final class SiegeSettingsScreen extends Screen {
                 addRenderableWidget(new SiegeSlider(contentX, y += h + gap, w, noticeSliderHeight,
                         Component.literal(label("DURACIÓN DEL AVISO", "NOTICE DURATION")),
                         Math.round((SiegeConfig.trackNoticeSeconds - 3) * 100.0F / 12.0F),
-                        percent -> SiegeConfig.trackNoticeSeconds = 3 + Math.round(percent * 12.0F / 100.0F)));
+                        percent -> SiegeConfig.trackNoticeSeconds = 3 + Math.round(percent * 12.0F / 100.0F))
+                        .withValueText(percent -> (3 + Math.round(percent * 12.0F / 100.0F)) + " s"));
                 y += noticeSliderHeight - h;
                 shuffleButton = addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
                         Component.literal(label("ALEATORIO SIN REPETIR", "SHUFFLE WITHOUT REPEATS")), b -> {
@@ -297,12 +302,14 @@ public final class SiegeSettingsScreen extends Screen {
                 addRenderableWidget(new SiegeSlider(contentX, y += h + gap, w, visualSliderHeight,
                         Component.literal(label("OSCURIDAD DEL FONDO", "BACKGROUND DARKNESS")),
                         Math.round(SiegeConfig.backgroundDarkness * 100.0F / 70.0F),
-                        percent -> SiegeConfig.backgroundDarkness = Math.round(percent * 70.0F / 100.0F)));
+                        percent -> SiegeConfig.backgroundDarkness = Math.round(percent * 70.0F / 100.0F))
+                        .withValueText(percent -> Math.round(percent * 70.0F / 100.0F) + "%"));
                 y += visualSliderHeight - h;
                 addRenderableWidget(new SiegeSlider(contentX, y += h + gap, w, visualSliderHeight,
                         Component.literal(label("OSCURIDAD DEL PANEL", "PANEL DARKNESS")),
                         Math.round((SiegeConfig.panelDarkness - 20) * 100.0F / 70.0F),
-                        percent -> SiegeConfig.panelDarkness = 20 + Math.round(percent * 70.0F / 100.0F)));
+                        percent -> SiegeConfig.panelDarkness = 20 + Math.round(percent * 70.0F / 100.0F))
+                        .withValueText(percent -> (20 + Math.round(percent * 70.0F / 100.0F)) + "%"));
                 y += visualSliderHeight - h;
                 addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
                         Component.literal(label("GALERÍA DE FONDOS", "BACKGROUND GALLERY")), b -> {
@@ -379,7 +386,7 @@ public final class SiegeSettingsScreen extends Screen {
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, 0xAA070A0D);
 
-        int bottom = Math.max(panelY + 90, panelBottom);
+        int bottom = panelBottom;
         g.fill(panelX - 5, panelY - 7, panelX + panelWidth + 5, bottom, 0xF20B1015);
         g.fill(panelX - 5, panelY - 7, panelX + panelWidth + 5, panelY - 4, ACCENT);
         g.fill(panelX - 5, bottom - 1, panelX + panelWidth + 5, bottom, 0xFF29353D);
@@ -405,7 +412,7 @@ public final class SiegeSettingsScreen extends Screen {
             g.fill(contentX + contentWidth - 4, top, contentX + contentWidth - 2, top + thumb, ACCENT);
         }
 
-        if (height >= 250) {
+        if (height >= 300) {
             String rule = label(
                     "Los cambios son del cliente. La música SIEGE nunca se reproduce dentro del gameplay.",
                     "These are client settings. SIEGE music never plays during gameplay.");
@@ -420,6 +427,11 @@ public final class SiegeSettingsScreen extends Screen {
     private void renderSectionHeader(GuiGraphics g) {
         int titleY = contentY + 2;
         int accent = section == Section.AUDIO ? GOLD : ACCENT;
+        if (compact) {
+            g.drawString(font, font.plainSubstrByWidth(sectionTitle(section), contentWidth), contentX, titleY, accent, false);
+            g.fill(contentX, titleY + 15, contentX + contentWidth, titleY + 16, 0xFF27343C);
+            return;
+        }
         String kicker = "// " + sectionKicker(section);
         g.drawString(font, kicker, contentX, titleY, accent, false);
 
@@ -428,7 +440,7 @@ public final class SiegeSettingsScreen extends Screen {
         g.pose().translate(contentX, titleY + 13, 0.0F);
         float scale = compact ? 1.08F : 1.22F;
         g.pose().scale(scale, scale, 1.0F);
-        g.drawString(font, title, 0, 0, 0xFFF0EEE8, false);
+        g.drawString(font, font.plainSubstrByWidth(title, (int)(contentWidth / scale)), 0, 0, 0xFFF0EEE8, false);
         g.pose().popPose();
 
         int lineY = titleY + (compact ? 29 : 33);
@@ -459,8 +471,8 @@ public final class SiegeSettingsScreen extends Screen {
         }
 
         if (section == Section.AUDIO) {
-            String playback = label("ESTADO", "STATE") + "  "
-                    + (SiegeMusic.isActuallyPlaying() ? label("REPRODUCIENDO", "PLAYING") : label("CARGANDO / EN ESPERA", "LOADING / WAITING"));
+            String playback = !SiegeConfig.music ? label("MÚSICA DESACTIVADA", "MUSIC OFF")
+                    : SiegeMusic.isActuallyPlaying() ? label("REPRODUCIENDO", "PLAYING") : label("CARGANDO / EN ESPERA", "LOADING / WAITING");
             String track = label("PISTA", "TRACK") + "  " + SiegeMusic.currentTrackName()
                     + "  //  " + (SiegeConfig.selectedTrack >= 0 ? label("REPETIR PISTA", "REPEAT TRACK") : label("ALEATORIO", "SHUFFLE"));
             g.drawString(font, font.plainSubstrByWidth(playback, contentWidth), contentX, infoY, 0xFF9FCAD5, false);
@@ -494,11 +506,34 @@ public final class SiegeSettingsScreen extends Screen {
     @Override
     public boolean mouseScrolled(double x, double y, double delta) {
         if (delta != 0 && x >= contentX && x < contentX + contentWidth && y >= viewportTop && y < viewportBottom) {
-            scrollOffset -= (int)Math.signum(delta) * (compact ? 23 : 31);
+            scrollOffset -= (int)Math.round(delta * (compact ? 23 : 31));
             positionControls();
             return true;
         }
         return super.mouseScrolled(x, y, delta);
+    }
+
+    @Override
+    public boolean mouseClicked(double x, double y, int button) {
+        if (button == 0 && scrollMax > 0 && x >= contentX + contentWidth - 7 && x < contentX + contentWidth
+                && y >= viewportTop && y < viewportBottom) {
+            draggingScrollbar = true;
+            dragScroll(y);
+            return true;
+        }
+        return super.mouseClicked(x, y, button);
+    }
+
+    private void dragScroll(double y) {
+        double fraction = (y - viewportTop) / Math.max(1, viewportBottom - viewportTop - 1);
+        scrollOffset = (int)Math.round(Math.max(0, Math.min(1, fraction)) * scrollMax);
+        positionControls();
+    }
+
+    @Override
+    public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
+        if (button == 0 && draggingScrollbar) { dragScroll(y); return true; }
+        return super.mouseDragged(x, y, button, dx, dy);
     }
 
     @Override
@@ -520,16 +555,12 @@ public final class SiegeSettingsScreen extends Screen {
             setFocused(next);
             return true;
         }
-        if (key == GLFW.GLFW_KEY_PAGE_DOWN || key == GLFW.GLFW_KEY_PAGE_UP) {
-            scrollOffset += (key == GLFW.GLFW_KEY_PAGE_DOWN ? 1 : -1) * Math.max(23, viewportBottom - viewportTop - 23);
-            positionControls();
-            return true;
-        }
         return super.keyPressed(key, scanCode, modifiers);
     }
 
     @Override
     public boolean mouseReleased(double x, double y, int button) {
+        if (button == 0) draggingScrollbar = false;
         boolean handled = super.mouseReleased(x, y, button);
         SiegeConfig.save();
         return handled;
@@ -593,8 +624,8 @@ public final class SiegeSettingsScreen extends Screen {
                     "Movimiento reducido limita desplazamientos y animaciones ambientales del menú sin eliminar su identidad visual.",
                     "Reduced motion limits menu camera movement and ambient animation without removing the visual identity.");
             case GRAPHICS -> label(
-                    "Abre la galería para recorrer fondos, fijar uno o verlo sin controles. F1 también abre la galería desde la portada.",
-                    "Browse the gallery to pin a background or hide its controls. F1 also opens the gallery from the title screen.");
+                    "Abre la galería para elegir entre miniaturas, ampliar la vista previa y fijar un fondo.",
+                    "Open the gallery to select thumbnails, expand the preview and pin a background.");
         };
     }
 

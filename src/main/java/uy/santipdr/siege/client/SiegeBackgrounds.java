@@ -44,6 +44,17 @@ public final class SiegeBackgrounds {
         drawScene(graphics, SCENES.get(safeIndex), width, height, 1.0F, safeIndex, 0.5F, false);
     }
 
+    /** Clipped cover rendering shared by the gallery preview and native thumbnail widgets. */
+    public static void renderRegion(GuiGraphics g, int x, int y, int w, int h, int index, float alpha) {
+        if (w <= 0 || h <= 0) return;
+        g.enableScissor(x, y, x + w, y + h);
+        g.pose().pushPose();
+        g.pose().translate(x, y, 0);
+        drawScene(g, SCENES.get(Math.floorMod(index, SCENES.size())), w, h, alpha, index, 0.5F, false);
+        g.pose().popPose();
+        g.disableScissor();
+    }
+
     private static ResourceLocation scene(String id) {
         return new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/backgrounds/" + id + ".png");
     }

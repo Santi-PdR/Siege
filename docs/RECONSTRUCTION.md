@@ -150,3 +150,14 @@ Gameplay screens are not replaced. The reconstruction is scoped to menus and its
 - selectedTrack=-1 uses the existing shuffled queue. 0..3 repeats a chosen track after its complete duration/fade. Next Track advances that pinned track; choosing shuffle retains current playback and resets the upcoming queue.
 - Settings reset restores both selections to -1. Invalid saved values are bounded on load.
 - Verify live audio transitions, gallery keyboard navigation, narrow-screen labels and resource-pack font sizing in Minecraft before claiming visual QA.
+
+
+## 0.9.0 canonical source and responsive reading
+
+- Edit the committed, readable IntelScreenV3.java. The old assets-source/generated/IntelScreenV3.java.gz has been removed and CI no longer restores it.
+- Gallery geometry is in SiegeGalleryLayout; Intel navigation geometry is in SiegeIntelLayout. Both use Minecraft logical pixels, and tests compile these exact production classes.
+- IntelSearch treats the query as literal accent-insensitive tokens. Do not intercept dossier arrow keys when its EditBox has focus.
+- IntelPortraitScreen provides a stable original-art inspection view, bounded zoom/drag and visible fit/back controls. It shares the existing soundtrack lifecycle; never touch world gameplay.
+- Keep original approved title font, gray main buttons, dossier art and main-menu UNIT/ADVANCED restriction. Keep hover-pause/release logic unchanged.
+- The 0.9.0 visible controls replace stale F/F1 help. Do not add letter/number shortcuts. Native Tab, text editing and Escape are ordinary UI navigation.
+- Existing Fedora KDE + Konsole installer and test-1 path remain authoritative.

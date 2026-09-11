@@ -23,10 +23,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.8'
-      - name: Restore generated Intel source
+      - name: Verify responsive layouts and Intel search
         shell: bash
         run: |
-          gzip -dc assets-source/generated/IntelScreenV3.java.gz > src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          mkdir -p build/layout-tests
+          javac -d build/layout-tests src/main/java/uy/santipdr/siege/client/SiegeGalleryLayout.java src/main/java/uy/santipdr/siege/client/SiegeIntelLayout.java src/main/java/uy/santipdr/siege/client/IntelSearch.java tests/UiRegressionTest.java
+          java -cp build/layout-tests UiRegressionTest
       - name: Verify dossier navigation
         shell: bash
         run: |
