@@ -17,6 +17,7 @@ public final class SiegeButton extends Button {
     private boolean selected;
     private boolean mainMenuStyle;
     private float hoverAmount;
+    private long pressedUntil;
 
     public SiegeButton(int x, int y, int width, int height, Component message, OnPress onPress, int accent) {
         super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
@@ -97,9 +98,10 @@ public final class SiegeButton extends Button {
 
     private void renderMainMenuWidget(GuiGraphics g, Font font, int x, int y, int w, int h,
                                       boolean hot, boolean effects) {
-        int face = !active ? 0xFF56585A : hot || selected ? 0xFF858789 : 0xFF696B6D;
-        int inset = !active ? 0xFF606264 : hot || selected ? 0xFF929496 : 0xFF747678;
-        int rim = hot || selected ? 0xFFF0F0EC : 0xFF9A9C9E;
+        boolean pressed = System.currentTimeMillis() < pressedUntil;
+        int face = !active ? 0xFF56585A : pressed ? 0xFF555759 : hot || selected ? 0xFF858789 : 0xFF696B6D;
+        int inset = !active ? 0xFF606264 : pressed ? 0xFF626466 : hot || selected ? 0xFF929496 : 0xFF747678;
+        int rim = pressed ? accent : hot || selected ? 0xFFF0F0EC : 0xFF9A9C9E;
 
         // Old reference: solid grey plate, deep lower/right shadow and square double rim.
         g.fill(x + 3, y + 4, x + w + 4, y + h + 4, 0xA0000000);
@@ -129,8 +131,15 @@ public final class SiegeButton extends Button {
         int textX = x + (w - font.width(text)) / 2;
         int textY = y + Math.max(1, (h - font.lineHeight) / 2);
         int textColor = !active ? 0xFFAAAAA7 : hot || selected ? 0xFFFFFFFF : 0xFFF0F0ED;
-        g.drawString(font, text, textX + 1, textY + 1, 0xB0303030, false);
-        g.drawString(font, text, textX, textY, textColor, false);
+        int pressOffset = pressed ? 1 : 0;
+        g.drawString(font, text, textX + 1 + pressOffset, textY + 1 + pressOffset, 0xB0303030, false);
+        g.drawString(font, text, textX + pressOffset, textY + pressOffset, textColor, false);
+    }
+
+    @Override
+    public void onClick(double mouseX, double mouseY) {
+        pressedUntil = System.currentTimeMillis() + 120L;
+        super.onClick(mouseX, mouseY);
     }
 
     private static String fit(Font font, String value, int width) {
