@@ -18,7 +18,12 @@ public final class SiegeTitleScreen extends Screen {
     private int menuWidth;
     private int menuTop;
     private int menuBottom;
-    private int intelPreviewOffset;
+    private int manualIntelPreview = -1;
+    private long manualIntelPreviewUntil;
+    private int previewX = -1;
+    private int previewY = -1;
+    private int previewW;
+    private int previewH;
 
     public SiegeTitleScreen() {
         super(Component.literal("Eternal Craft: SIEGE"));
@@ -194,19 +199,21 @@ public final class SiegeTitleScreen extends Screen {
         }
         if (cardWidth < 196) return;
 
-        long epoch = System.currentTimeMillis() / 8_500L;
+        int currentPreview = currentIntelPreview(previewable.size());
         if (dual) {
             int totalHeight = cardHeight * 2 + 8;
             int y = Math.max(50, Math.min(height - totalHeight - 28, (height - totalHeight) / 2));
-            int first = Math.floorMod((int) (epoch % previewable.size()) + intelPreviewOffset, previewable.size());
+            int first = currentPreview;
             IntelEntry firstEntry = previewable.get(first);
             IntelEntry secondEntry = previewable.get((first + 1) % previewable.size());
             renderIntelCard(g, firstEntry, x, y, cardWidth, cardHeight);
             renderIntelCard(g, secondEntry, x, y + cardHeight + 8, cardWidth, cardHeight);
+            setPreviewBounds(x, y, cardWidth, totalHeight);
         } else {
-            IntelEntry entry = previewable.get(Math.floorMod((int) (epoch % previewable.size()) + intelPreviewOffset, previewable.size()));
+            IntelEntry entry = previewable.get(currentPreview);
             int y = Math.max(52, height - cardHeight - 31);
             renderIntelCard(g, entry, x, y, cardWidth, cardHeight);
+            setPreviewBounds(x, y, cardWidth, cardHeight);
         }
     }
 
@@ -336,11 +343,38 @@ public final class SiegeTitleScreen extends Screen {
         SiegeMusic.nextTrack();
     }
 
+    private int currentIntelPreview(int size) {
+        long now = System.currentTimeMillis();
+        if (manualIntelPreview >= 0 && now < manualIntelPreviewUntil) {
+            return Math.floorMod(manualIntelPreview, size);
+        }
+        manualIntelPreview = -1;
+        return Math.floorMod((int) (now / 8_500L % size), size);
+    }
+
     private void stepIntelPreview(int direction) {
         List<IntelEntry> previewable = IntelCatalog.previewable();
         if (previewable.isEmpty()) return;
-        intelPreviewOffset = Math.floorMod(intelPreviewOffset + direction, previewable.size());
+        manualIntelPreview = Math.floorMod(currentIntelPreview(previewable.size()) + direction, previewable.size());
+        manualIntelPreviewUntil = System.currentTimeMillis() + 15_000L;
         SiegeUiSounds.click();
+    }
+
+    private void setPreviewBounds(int x, int y, int w, int h) {
+        previewX = x;
+        previewY = y;
+        previewW = w;
+        previewH = h;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (delta != 0.0D && previewX >= 0 && mouseX >= previewX && mouseX < previewX + previewW
+                && mouseY >= previewY && mouseY < previewY + previewH) {
+            stepIntelPreview(delta > 0.0D ? -1 : 1);
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     private boolean spanish() {
