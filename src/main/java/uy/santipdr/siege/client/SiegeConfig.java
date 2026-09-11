@@ -24,6 +24,8 @@ public final class SiegeConfig {
     public static boolean mainMenuIntel = true;
     public static boolean scanlines = true;
     public static boolean reducedMotion = false;
+    public static boolean titleInterference = true;
+    public static boolean trackAnnouncements = true;
     public static Graphics graphics = Graphics.CINEMATIC;
 
     private SiegeConfig() {}
@@ -43,6 +45,8 @@ public final class SiegeConfig {
         mainMenuIntel = bool(p, "mainMenuIntel", true);
         scanlines = bool(p, "scanlines", true);
         reducedMotion = bool(p, "reducedMotion", false);
+        titleInterference = bool(p, "titleInterference", true);
+        trackAnnouncements = bool(p, "trackAnnouncements", true);
         try { graphics = Graphics.valueOf(p.getProperty("graphics", Graphics.CINEMATIC.name())); }
         catch (IllegalArgumentException ignored) { graphics = Graphics.CINEMATIC; }
     }
@@ -58,11 +62,29 @@ public final class SiegeConfig {
         p.setProperty("mainMenuIntel", Boolean.toString(mainMenuIntel));
         p.setProperty("scanlines", Boolean.toString(scanlines));
         p.setProperty("reducedMotion", Boolean.toString(reducedMotion));
+        p.setProperty("titleInterference", Boolean.toString(titleInterference));
+        p.setProperty("trackAnnouncements", Boolean.toString(trackAnnouncements));
         p.setProperty("graphics", graphics.name());
         try {
             Files.createDirectories(FILE.getParent());
             try (OutputStream out = Files.newOutputStream(FILE)) { p.store(out, "Eternal Craft: SIEGE client settings"); }
         } catch (IOException ignored) { }
+    }
+
+    public static void resetDefaults() {
+        music = true;
+        musicVolume = 75;
+        uiSounds = true;
+        menuEffects = true;
+        animatedBackgrounds = true;
+        animatedIntel = true;
+        mainMenuIntel = true;
+        scanlines = true;
+        reducedMotion = false;
+        titleInterference = true;
+        trackAnnouncements = true;
+        graphics = Graphics.CINEMATIC;
+        save();
     }
 
     public static int clampVolume(int value) { return Math.max(0, Math.min(100, value)); }
