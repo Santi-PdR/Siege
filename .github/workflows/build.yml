@@ -27,6 +27,42 @@ jobs:
         shell: bash
         run: |
           gzip -dc assets-source/generated/IntelScreenV3.java.gz > src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+      - name: Enforce circular dossier navigation
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("src/main/java/uy/santipdr/siege/client/IntelScreenV3.java")
+          source = path.read_text(encoding="utf-8")
+
+          navigation = next((
+              name for name in ("stepEntry", "stepFile")
+              if re.search(r"\b" + name + r"\s*\(\s*int\s+", source)
+          ), None)
+          if navigation is None:
+              raise SystemExit("IntelScreenV3 has no supported dossier navigation method")
+
+          signature = "public boolean keyPressed(int keyCode, int scanCode, int modifiers) {"
+          if signature not in source:
+              raise SystemExit("IntelScreenV3 keyPressed signature was not found")
+
+          marker = "// SIEGE_CIRCULAR_ARROW_NAVIGATION"
+          if marker not in source:
+              controls = f"""{{signature}}
+                  {marker}
+                  if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT) {{
+                      {navigation}(-1);
+                      return true;
+                  }}
+                  if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT) {{
+                      {navigation}(1);
+                      return true;
+                  }}"""
+              source = source.replace(signature, controls, 1)
+              path.write_text(source, encoding="utf-8")
+          PY
       - name: Prepare Intel dossier overlays
         shell: bash
         run: |
