@@ -18,6 +18,7 @@ public final class SiegeTitleScreen extends Screen {
     private int menuWidth;
     private int menuTop;
     private int menuBottom;
+    private int intelPreviewOffset;
 
     public SiegeTitleScreen() {
         super(Component.literal("Eternal Craft: SIEGE"));
@@ -166,7 +167,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.7.4", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.7.5", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
@@ -197,13 +198,13 @@ public final class SiegeTitleScreen extends Screen {
         if (dual) {
             int totalHeight = cardHeight * 2 + 8;
             int y = Math.max(50, Math.min(height - totalHeight - 28, (height - totalHeight) / 2));
-            int first = (int) (epoch % previewable.size());
+            int first = Math.floorMod((int) (epoch % previewable.size()) + intelPreviewOffset, previewable.size());
             IntelEntry firstEntry = previewable.get(first);
             IntelEntry secondEntry = previewable.get((first + 1) % previewable.size());
             renderIntelCard(g, firstEntry, x, y, cardWidth, cardHeight);
             renderIntelCard(g, secondEntry, x, y + cardHeight + 8, cardWidth, cardHeight);
         } else {
-            IntelEntry entry = previewable.get((int) (epoch % previewable.size()));
+            IntelEntry entry = previewable.get(Math.floorMod((int) (epoch % previewable.size()) + intelPreviewOffset, previewable.size()));
             int y = Math.max(52, height - cardHeight - 31);
             renderIntelCard(g, entry, x, y, cardWidth, cardHeight);
         }
@@ -247,8 +248,8 @@ public final class SiegeTitleScreen extends Screen {
             g.drawString(font, summaryLines.get(line), x + 9, textY + line * 10, 0xFFBCC4C9, false);
         }
 
-        String footer = label("> INTEL: EXPEDIENTE COMPLETO", "> INTEL: OPEN FULL FILE");
-        g.drawString(font, footer, x + 9, footerY, 0xFF7FC7D9, false);
+        String footer = label("← ANTERIOR  ·  SIGUIENTE →", "← PREVIOUS  ·  NEXT →");
+        g.drawString(font, font.plainSubstrByWidth(footer, w - 18), x + 9, footerY, 0xFF7FC7D9, false);
     }
 
     private String previewSummary(IntelEntry entry) {
@@ -335,6 +336,13 @@ public final class SiegeTitleScreen extends Screen {
         SiegeMusic.nextTrack();
     }
 
+    private void stepIntelPreview(int direction) {
+        List<IntelEntry> previewable = IntelCatalog.previewable();
+        if (previewable.isEmpty()) return;
+        intelPreviewOffset = Math.floorMod(intelPreviewOffset + direction, previewable.size());
+        SiegeUiSounds.click();
+    }
+
     private boolean spanish() {
         return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_");
     }
@@ -350,6 +358,14 @@ public final class SiegeTitleScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_LEFT) {
+            stepIntelPreview(-1);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+            stepIntelPreview(1);
+            return true;
+        }
         if (keyCode == GLFW.GLFW_KEY_M) {
             changeTrack();
             return true;
