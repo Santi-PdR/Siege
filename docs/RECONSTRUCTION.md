@@ -105,6 +105,14 @@ Gameplay screens are not replaced. The reconstruction is scoped to menus and its
 - Keep Fedora KDE/Konsole and the established test-1 path as the installation target. The installer retains previous JARs in a sibling backup folder.
 - Runtime visual verification is not implied by successful compilation or layout arithmetic.
 
+## 0.7.8 Intel reading behavior and gallery navigation
+
+- Hovering a main-menu dossier suspends automatic rotation and leaves a short reading grace period after the pointer exits.
+- In the dual-card layout, both visible footers are real click targets and retain circular previous/next navigation.
+- Footer hover feedback is limited to the selected half and does not alter the approved dossier composition.
+- The background gallery accepts the wheel, Home/End and arrow keys even in clean view.
+- Gallery scene labels are curated for Spanish and English instead of being generated from asset paths.
+
 ## 0.7.7 gallery and soundtrack selection
 
 - selectedScene=-1 retains automatic background behavior; 0..8 pins one of the existing supplied scenes. Selecting a gallery preview alone never persists it.

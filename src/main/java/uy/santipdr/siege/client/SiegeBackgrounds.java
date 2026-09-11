@@ -22,8 +22,21 @@ public final class SiegeBackgrounds {
     public static int count() { return SCENES.size(); }
 
     public static String name(int index) {
-        return SCENES.get(Math.floorMod(index, SCENES.size())).getPath()
-                .replace("textures/gui/backgrounds/", "").replace(".png", "").replace('_', ' ');
+        return name(index, false);
+    }
+
+    public static String name(int index, boolean spanish) {
+        return switch (Math.floorMod(index, SCENES.size())) {
+            case 0 -> spanish ? "Asalto de Dummies" : "Dummies Assault";
+            case 1 -> spanish ? "Aniversario" : "Anniversary";
+            case 2 -> spanish ? "Frente 19" : "Frontline 19";
+            case 3 -> spanish ? "Cíborg" : "Cyborg";
+            case 4 -> spanish ? "Última resistencia" : "Last Stand";
+            case 5 -> spanish ? "Asedio Vought" : "Vought Siege";
+            case 6 -> spanish ? "Órbita terrestre" : "Earth Orbit";
+            case 7 -> spanish ? "Combate en el cañón" : "Canyon Engagement";
+            default -> spanish ? "Batalla nocturna" : "Night Battle";
+        };
     }
 
     public static void renderPreview(GuiGraphics graphics, int width, int height, int index) {
@@ -105,4 +118,3 @@ public final class SiegeBackgrounds {
         return x * x * x * (x * (x * 6.0F - 15.0F) + 10.0F);
     }
 }
-

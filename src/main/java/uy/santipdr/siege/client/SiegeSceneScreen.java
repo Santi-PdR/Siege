@@ -66,9 +66,11 @@ public final class SiegeSceneScreen extends Screen {
         if (cleanView) return;
         g.fill(0, 0, width, 45, 0xB0000000);
         g.fill(0, height - 41, width, height, 0xB0000000);
-        String heading = (index + 1) + " / " + SiegeBackgrounds.count() + "  ·  " + SiegeBackgrounds.name(index);
+        String heading = (index + 1) + " / " + SiegeBackgrounds.count() + "  ·  "
+                + SiegeBackgrounds.name(index, spanish());
         g.drawCenteredString(font, font.plainSubstrByWidth(heading, width - 20), width / 2, 10, 0xFFF0EEE8);
-        g.drawCenteredString(font, text("F1: vista limpia · ESC: volver · ← →: cambiar", "F1: clean view · ESC: back · ← →: browse"), width / 2, 27, 0xFFBCC5CC);
+        g.drawCenteredString(font, text("F1: vista limpia · ESC: volver · ← → / rueda: cambiar",
+                "F1: clean view · ESC: back · ← → / wheel: browse"), width / 2, 27, 0xFFBCC5CC);
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
     }
@@ -82,7 +84,24 @@ public final class SiegeSceneScreen extends Screen {
         if (key == GLFW.GLFW_KEY_F1) { toggleCleanView(); return true; }
         if (key == GLFW.GLFW_KEY_LEFT) { step(-1); return true; }
         if (key == GLFW.GLFW_KEY_RIGHT) { step(1); return true; }
+        if (key == GLFW.GLFW_KEY_HOME) { select(0); return true; }
+        if (key == GLFW.GLFW_KEY_END) { select(SiegeBackgrounds.count() - 1); return true; }
         return cleanView || super.keyPressed(key, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (delta != 0.0D) {
+            step(delta > 0.0D ? -1 : 1);
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
+    }
+
+    private void select(int scene) {
+        index = Math.floorMod(scene, SiegeBackgrounds.count());
+        SiegeUiSounds.click();
+        refreshPin();
     }
 
     private void toggleCleanView() {
@@ -107,6 +126,10 @@ public final class SiegeSceneScreen extends Screen {
     public boolean isPauseScreen() { return false; }
 
     private Component text(String es, String en) {
-        return Component.literal(minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_") ? es : en);
+        return Component.literal(spanish() ? es : en);
+    }
+
+    private boolean spanish() {
+        return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_");
     }
 }

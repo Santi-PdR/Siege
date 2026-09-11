@@ -1,3 +1,13 @@
+## SIEGE 0.7.8
+
+- Main-menu Intel pauses while the cursor is over a dossier and waits two seconds after leaving before rotation resumes.
+- Both dossier footers work in the two-card layout; the first card no longer shows a dead navigation control.
+- Hovering either half of a dossier footer now gives restrained directional feedback without changing the approved card design.
+- Background Gallery supports the mouse wheel plus Home/End navigation, including clean view.
+- Background names are curated and localized in Spanish and English instead of exposing lowercase resource IDs.
+- Main-menu Intel interaction geometry is covered by CI checks for single- and dual-card layouts.
+- Validation: Forge compilation in GitHub Actions; in-game visual/audio review remains required.
+
 ## SIEGE 0.7.7
 
 - New Background Gallery in Graphics settings; F1 opens it directly from the main menu.
@@ -169,4 +179,3 @@ The Fedora installer never invokes local Java or Gradle. It verifies a staged co
 ### Legacy Windows environment
 
 `scripts/install-latest.ps1` remains available only for the previous Windows setup.
-

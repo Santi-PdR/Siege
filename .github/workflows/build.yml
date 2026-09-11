@@ -35,6 +35,11 @@ jobs:
           grep -q 'Math.floorMod(selected + direction, files.size())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'Component.literal("←")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'Component.literal("→")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          grep -q 'isInsidePreviewFooter' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
+          grep -q 'previewDual' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
+          grep -q 'mouseScrolled' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
+          grep -q 'GLFW_KEY_HOME' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
+          grep -q 'GLFW_KEY_END' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
       - name: Prepare Intel dossier overlays
         shell: bash
         run: |

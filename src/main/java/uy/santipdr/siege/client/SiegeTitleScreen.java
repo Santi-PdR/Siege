@@ -24,6 +24,9 @@ public final class SiegeTitleScreen extends Screen {
     private int previewY = -1;
     private int previewW;
     private int previewH;
+    private int previewCardHeight;
+    private int previewGap;
+    private boolean previewDual;
 
     public SiegeTitleScreen() {
         super(Component.literal("Eternal Craft: SIEGE"));
@@ -90,7 +93,7 @@ public final class SiegeTitleScreen extends Screen {
         renderTitle(graphics, compact, panelRight);
 
         previewX = -1;
-        if (SiegeConfig.mainMenuIntel) renderIntelPreview(graphics, panelRight);
+        if (SiegeConfig.mainMenuIntel) renderIntelPreview(graphics, panelRight, mouseX, mouseY);
         renderTrackAnnouncement(graphics, compact);
 
         if (width >= 610) renderBuildLabel(graphics);
@@ -173,7 +176,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.7.7", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.7.8", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
@@ -182,7 +185,7 @@ public final class SiegeTitleScreen extends Screen {
      * card at the same time; scale 3 gets a single alternating card; GUI scale 4
      * deliberately hides the feed so the command menu keeps enough room.
      */
-    private void renderIntelPreview(GuiGraphics g, int leftPanelRight) {
+    private void renderIntelPreview(GuiGraphics g, int leftPanelRight, int mouseX, int mouseY) {
         if (minecraft == null) return;
         double guiScale = minecraft.getWindow().getGuiScale();
         if (guiScale >= 3.75D || width < 460 || height < 248) return;
@@ -200,25 +203,27 @@ public final class SiegeTitleScreen extends Screen {
         }
         if (cardWidth < 196) return;
 
-        int currentPreview = currentIntelPreview(previewable.size());
         if (dual) {
             int totalHeight = cardHeight * 2 + 8;
             int y = Math.max(50, Math.min(height - totalHeight - 28, (height - totalHeight) / 2));
+            setPreviewBounds(x, y, cardWidth, totalHeight, cardHeight, 8, true);
+            int currentPreview = currentIntelPreview(previewable.size(), isInsidePreview(mouseX, mouseY));
             int first = currentPreview;
             IntelEntry firstEntry = previewable.get(first);
             IntelEntry secondEntry = previewable.get((first + 1) % previewable.size());
-            renderIntelCard(g, firstEntry, x, y, cardWidth, cardHeight);
-            renderIntelCard(g, secondEntry, x, y + cardHeight + 8, cardWidth, cardHeight);
-            setPreviewBounds(x, y, cardWidth, totalHeight);
+            renderIntelCard(g, firstEntry, x, y, cardWidth, cardHeight, mouseX, mouseY);
+            renderIntelCard(g, secondEntry, x, y + cardHeight + 8, cardWidth, cardHeight, mouseX, mouseY);
         } else {
-            IntelEntry entry = previewable.get(currentPreview);
             int y = Math.max(52, height - cardHeight - 31);
-            renderIntelCard(g, entry, x, y, cardWidth, cardHeight);
-            setPreviewBounds(x, y, cardWidth, cardHeight);
+            setPreviewBounds(x, y, cardWidth, cardHeight, cardHeight, 0, false);
+            int currentPreview = currentIntelPreview(previewable.size(), isInsidePreview(mouseX, mouseY));
+            IntelEntry entry = previewable.get(currentPreview);
+            renderIntelCard(g, entry, x, y, cardWidth, cardHeight, mouseX, mouseY);
         }
     }
 
-    private void renderIntelCard(GuiGraphics g, IntelEntry entry, int x, int y, int w, int h) {
+    private void renderIntelCard(GuiGraphics g, IntelEntry entry, int x, int y, int w, int h,
+                                 int mouseX, int mouseY) {
         int accent = switch (entry.category()) {
             case "ADVANCED" -> 0xFF2F80FF;
             case "TANK" -> 0xFFD98A2B;
@@ -257,6 +262,12 @@ public final class SiegeTitleScreen extends Screen {
         }
 
         String footer = label("← ANTERIOR  ·  SIGUIENTE →", "← PREVIOUS  ·  NEXT →");
+        boolean footerHot = mouseX >= x && mouseX < x + w && mouseY >= footerY - 3 && mouseY < y + h;
+        if (footerHot) {
+            int half = x + w / 2;
+            if (mouseX < half) g.fill(x + 4, footerY - 4, half, y + h - 3, 0x283AAFCB);
+            else g.fill(half, footerY - 4, x + w - 4, y + h - 3, 0x283AAFCB);
+        }
         g.drawString(font, font.plainSubstrByWidth(footer, w - 18), x + 9, footerY, 0xFF7FC7D9, false);
     }
 
@@ -344,7 +355,7 @@ public final class SiegeTitleScreen extends Screen {
         SiegeMusic.nextTrack();
     }
 
-    private int currentIntelPreview(int size) {
+    private int currentIntelPreview(int size, boolean hovered) {
         if (size <= 0) return 0;
         long now = System.currentTimeMillis();
         if (manualIntelPreview < 0) {
@@ -352,6 +363,7 @@ public final class SiegeTitleScreen extends Screen {
             manualIntelPreviewUntil = now + 8_500L;
         }
         if (!SiegeConfig.autoRotateIntel) manualIntelPreviewUntil = now + 8_500L;
+        else if (hovered) manualIntelPreviewUntil = Math.max(manualIntelPreviewUntil, now + 2_000L);
         else if (now >= manualIntelPreviewUntil) {
             manualIntelPreview = Math.floorMod(manualIntelPreview + 1, size);
             manualIntelPreviewUntil = now + 8_500L;
@@ -362,23 +374,40 @@ public final class SiegeTitleScreen extends Screen {
     private void stepIntelPreview(int direction) {
         List<IntelEntry> previewable = IntelCatalog.previewable();
         if (previewable.isEmpty()) return;
-        manualIntelPreview = Math.floorMod(currentIntelPreview(previewable.size()) + direction, previewable.size());
+        manualIntelPreview = Math.floorMod(currentIntelPreview(previewable.size(), false) + direction, previewable.size());
         manualIntelPreviewUntil = System.currentTimeMillis() + 15_000L;
         SiegeUiSounds.click();
     }
 
-    private void setPreviewBounds(int x, int y, int w, int h) {
+    private void setPreviewBounds(int x, int y, int w, int h, int cardHeight, int gap, boolean dual) {
         previewX = x;
         previewY = y;
         previewW = w;
         previewH = h;
+        previewCardHeight = cardHeight;
+        previewGap = gap;
+        previewDual = dual;
+    }
+
+    private boolean isInsidePreview(double mouseX, double mouseY) {
+        return previewX >= 0 && mouseX >= previewX && mouseX < previewX + previewW
+                && mouseY >= previewY && mouseY < previewY + previewH;
+    }
+
+    private boolean isInsidePreviewFooter(double mouseY) {
+        if (previewX < 0) return false;
+        double localY = mouseY - previewY;
+        if (localY < 0 || localY >= previewH) return false;
+        if (!previewDual) return localY >= previewCardHeight - 18;
+        if (localY < previewCardHeight) return localY >= previewCardHeight - 18;
+        double secondY = localY - previewCardHeight - previewGap;
+        return secondY >= previewCardHeight - 18 && secondY < previewCardHeight;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && previewX >= 0
-                && mouseX >= previewX && mouseX < previewX + previewW
-                && mouseY >= previewY + previewH - 18 && mouseY < previewY + previewH) {
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && isInsidePreview(mouseX, mouseY)
+                && isInsidePreviewFooter(mouseY)) {
             stepIntelPreview(mouseX < previewX + previewW / 2.0D ? -1 : 1);
             return true;
         }
@@ -434,4 +463,3 @@ public final class SiegeTitleScreen extends Screen {
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }
-
