@@ -45,8 +45,9 @@ public final class SiegeTitleScreen extends Screen {
         menuBottom = menuTop + totalHeight;
 
         int y = menuTop;
-        addRenderableWidget(command(menuX, y, menuWidth, buttonHeight, "siege.menu.deployment",
+        SiegeButton deployment = addRenderableWidget(command(menuX, y, menuWidth, buttonHeight, "siege.menu.deployment",
                 b -> minecraft.setScreen(new JoinMultiplayerScreen(this))));
+        setInitialFocus(deployment);
         addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.intel",
                 b -> minecraft.setScreen(new IntelScreenV3(this))));
         addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.armory",
@@ -107,7 +108,7 @@ public final class SiegeTitleScreen extends Screen {
         g.drawString(font, main, 0, 0, 0xFFF0EDEA, false);
         g.pose().popPose();
 
-        if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion) {
+        if (SiegeConfig.titleInterference && SiegeConfig.menuEffects && !SiegeConfig.reducedMotion) {
             long phase = System.currentTimeMillis() / 110L;
             int sliceWidth = Math.max(16, mainWidth / 7);
             int sliceX = x + (int) ((phase * 37L) % Math.max(1, mainWidth - sliceWidth));
@@ -134,6 +135,7 @@ public final class SiegeTitleScreen extends Screen {
     }
 
     private void renderTrackAnnouncement(GuiGraphics g, boolean compact) {
+        if (!SiegeConfig.trackAnnouncements) return;
         long age = SiegeMusic.trackAnnouncementAgeMs();
         if (age < 0L) return;
 
@@ -164,7 +166,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.7.3", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.7.4", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
