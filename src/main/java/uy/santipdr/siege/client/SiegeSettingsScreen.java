@@ -122,7 +122,14 @@ public final class SiegeSettingsScreen extends Screen {
 
         switch (section) {
             case OVERVIEW -> {
-                // Overview is deliberately informational. Navigation buttons are the actions.
+                addRenderableWidget(new SiegeButton(contentX, y, w, h,
+                        Component.literal(label("RESTAURAR AJUSTES DE SIEGE", "RESET SIEGE SETTINGS")), b -> {
+                    SiegeUiSounds.click();
+                    SiegeMusic.stop();
+                    SiegeConfig.resetDefaults();
+                    SiegeMusic.ensurePlaying();
+                    minecraft.setScreen(new SiegeSettingsScreen(parent, Section.OVERVIEW));
+                }, WARNING));
             }
             case AUDIO -> {
                 addRenderableWidget(toggle(contentX, y, w, h, "siege.settings.music", () -> {
@@ -145,6 +152,10 @@ public final class SiegeSettingsScreen extends Screen {
                     SiegeUiSounds.nextTrack();
                     SiegeMusic.nextTrack();
                 }, GOLD));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("AVISO DE NUEVA PISTA", "NEW TRACK NOTICE"),
+                        () -> SiegeConfig.trackAnnouncements = !SiegeConfig.trackAnnouncements,
+                        () -> SiegeConfig.trackAnnouncements));
             }
             case INTERFACE -> {
                 addRenderableWidget(toggle(contentX, y, w, h, "siege.settings.ui_sounds",
@@ -176,6 +187,10 @@ public final class SiegeSettingsScreen extends Screen {
                         label("LÍNEAS DE ESCANEO", "SCANLINES"),
                         () -> SiegeConfig.scanlines = !SiegeConfig.scanlines,
                         () -> SiegeConfig.scanlines));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("INTERFERENCIA DEL TÍTULO", "TITLE INTERFERENCE"),
+                        () -> SiegeConfig.titleInterference = !SiegeConfig.titleInterference,
+                        () -> SiegeConfig.titleInterference));
             }
         }
     }
@@ -282,7 +297,7 @@ public final class SiegeSettingsScreen extends Screen {
     private void renderSectionInformation(GuiGraphics g, int bottom) {
         int infoY;
         if (section == Section.OVERVIEW) infoY = contentY + (compact ? 43 : 51);
-        else if (section == Section.AUDIO) infoY = contentY + (compact ? 132 : 159);
+        else if (section == Section.AUDIO) infoY = contentY + (compact ? 156 : 190);
         else if (section == Section.INTERFACE) infoY = contentY + (compact ? 164 : 205);
         else infoY = contentY + (compact ? 69 : 82);
 
@@ -371,8 +386,8 @@ public final class SiegeSettingsScreen extends Screen {
                     "Movimiento reducido limita desplazamientos y animaciones ambientales del menú sin eliminar su identidad visual.",
                     "Reduced motion limits menu camera movement and ambient animation without removing the visual identity.");
             case GRAPHICS -> label(
-                    "Cambia el perfil visual y permite desactivar por separado las líneas de escaneo.",
-                    "Changes the visual profile and lets scanlines be disabled independently.");
+                    "Cambia el perfil visual y permite controlar por separado las líneas de escaneo y la interferencia del título.",
+                    "Changes the visual profile and separately controls scanlines and title interference.");
         };
     }
 
