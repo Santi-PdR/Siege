@@ -1,3 +1,17 @@
+## SIEGE 0.9.2 — Índice de expedientes
+
+Intel tiene un botón visible **Índice** en escalas amplias y compactas. Abre una lista de los resultados actuales de la categoría, con:
+
+- Selección directa de expedientes mediante su código estable.
+- Búsqueda por nombre, código, origen y armamento, sin distinguir tildes/mayúsculas.
+- Orden por código, nombre o amenaza descendente.
+- Filas con nombre, amenaza, vida, armamento y estrella de favorito.
+- Marca del expediente que estaba abierto y página inicial situada sobre él.
+- Paginación con botones y rueda sobre la lista, extremos desactivados y estado sin resultados.
+- Vuelta al expediente elegido conservando categoría, filtro y modo de lectura de Intel; Volver/Escape cancela sin cambiar la selección.
+
+No añade atajos. CI comprueba orden, identidad, búsqueda, páginas vacías y espacio entre índice/favoritos/flechas en escalas compactas. La revisión visual en Minecraft sigue pendiente.
+
 ## SIEGE 0.9.1 — Inspección y navegación
 
 - El zoom del visor conserva el punto bajo el cursor, salvo cuando los límites de la imagen requieren centrarlo.

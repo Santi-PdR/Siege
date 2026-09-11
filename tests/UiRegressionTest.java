@@ -2,6 +2,9 @@ import uy.santipdr.siege.client.SiegeGalleryLayout;
 import uy.santipdr.siege.client.SiegeGalleryLayout.Rect;
 import uy.santipdr.siege.client.SiegeIntelLayout;
 import uy.santipdr.siege.client.IntelSearch;
+import uy.santipdr.siege.client.IntelIndexModel;
+import uy.santipdr.siege.client.IntelEntry;
+import java.util.List;
 import uy.santipdr.siege.client.SiegeImageViewport;
 
 /** Tests production geometry, including Minecraft's minimum logical viewport and odd sizes. */
@@ -36,6 +39,15 @@ public class UiRegressionTest {
             check(intel.contentTop() + 34 + 55 < h - 24, "Intel reading area lost at " + w + "x" + h);
             if (intel.wide()) check(intel.listTop() + 44 <= intel.listBottom(), "Wide list cannot fit one entry");
             else check(intel.listTop() - 24 >= intel.categoryTop() + ((7 + intel.columns() - 1) / intel.columns()) * (intel.categoryHeight() + 2), "Search overlaps categories");
+            int indexRows = IntelIndexModel.rowsPerPage(h);
+            check(68 + (indexRows - 1) * 34 + 30 <= h - 38, "Index rows overlap footer");
+            check(indexRows >= 3, "Index cannot show enough rows");
+            if (!intel.wide()) {
+                int arrowW = Math.min(40, Math.max(28, w / 11));
+                int buttonW = Math.min(104, (w - arrowW * 2 - 28) / 2);
+                int centerX = (w - buttonW * 2 - 4) / 2;
+                check(centerX >= 6 + arrowW + 4 && centerX + buttonW * 2 + 4 <= w - arrowW - 10, "Compact index/favorite overlap");
+            }
             cases++;
         }
         int[][] resolutions = {{1280,720},{1366,768},{1920,1080},{2560,1440},{3440,1440}};
@@ -78,6 +90,18 @@ public class UiRegressionTest {
         camera.reset();
         check(camera.zoom() == 1 && camera.visibleLeft() == 0 && camera.visibleRight() == 1
                 && camera.visibleTop() == 0 && camera.visibleBottom() == 1, "Fit must show full artwork");
+        var info = new IntelEntry.IntelText("Nusia", "Cañón", "N/D", "Active", "", "");
+        var a = new IntelEntry("U02", "Alpha", "UNIT", 5, "100", "N/D", "a", info, info);
+        var b = new IntelEntry("U01", "Zulu", "UNIT", 2, "100", "N/D", "b", info, info);
+        var index = new IntelIndexModel(List.of(b, a));
+        check(index.results("", IntelIndexModel.Order.CODE, true).get(0).code().equals("U01"), "Index code order");
+        check(index.results("", IntelIndexModel.Order.NAME, true).get(0).code().equals("U02"), "Index name order must preserve identity");
+        check(index.results("", IntelIndexModel.Order.THREAT, true).get(0).code().equals("U02"), "Index threat descending");
+        check(index.results("canon alpha", IntelIndexModel.Order.CODE, true).size() == 1, "Index accent search");
+        check(index.results("missing", IntelIndexModel.Order.NAME, true).isEmpty(), "Index empty search");
+        check(IntelIndexModel.lastPage(8, 4) == 1 && IntelIndexModel.lastPage(9, 4) == 2, "Index partial page");
+        check(IntelIndexModel.clampPage(8, 0, 4) == 0, "Index empty page recovery");
+        System.out.println("Index sorting, identity, search and pagination passed");
         System.out.println("Pointer zoom, minimap, pan limits and resize passed");
         System.out.println(cases + " viewport layouts and search regressions passed");
     }

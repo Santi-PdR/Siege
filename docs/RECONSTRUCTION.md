@@ -168,3 +168,8 @@ Gameplay screens are not replaced. The reconstruction is scoped to menus and its
 SiegeImageViewport owns pointer-anchored zoom, resize, normalized visible bounds and edge-clamped panning. IntelPortraitScreen handles image/minimap drag ownership explicitly; no keyboard shortcuts are added. Gallery page browsing must not write selectedScene or change its preview index. Tiny shared buttons center their glyph and keep it inside the button. Hover sounds prioritize actual mouse hover before keyboard focus.
 
 CI compiles/tests the production camera alongside the existing responsive geometry. In-game visual QA remains required; do not claim it was run from geometry tests alone.
+
+
+## 0.9.2 dossier index
+
+IntelIndexScreen opens a snapshot of the current filtered category, never the entire catalog. Rows select by stable code and return to the existing IntelScreenV3 instance. The index has its own temporary search and order, leaving the parent query/reading mode intact. IntelIndexModel owns sorting/filtering/page bounds and is tested in CI. The compact navigation row splits its middle space between Index and Favorite; wide navigation pairs Previous with Index. Keep native text input/Tab/Escape without adding letter shortcuts.

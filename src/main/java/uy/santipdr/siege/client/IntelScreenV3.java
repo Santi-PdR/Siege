@@ -251,8 +251,10 @@ public final class IntelScreenV3 extends Screen {
             navigationButtons.add(next);
             addRenderableWidget(previous);
             addRenderableWidget(next);
-            int favoriteWidth = Math.min(104, Math.max(72, width - arrowWidth * 2 - 24));
-            favoriteButton = new SiegeButton((width - favoriteWidth) / 2, listTop, favoriteWidth, navHeight,
+            int favoriteWidth = Math.min(104, (width - arrowWidth * 2 - 28) / 2);
+            int centerX = (width - favoriteWidth * 2 - 4) / 2;
+            addIndexButton(centerX, listTop, favoriteWidth, navHeight);
+            favoriteButton = new SiegeButton(centerX + favoriteWidth + 4, listTop, favoriteWidth, navHeight,
                     favoriteButtonLabel(files.get(selected)), b -> toggleFavorite(), 0xFFF0D46A);
             favoriteButton.setSelected(SiegeConfig.isFavoriteIntel(files.get(selected).code()));
             navigationButtons.add(favoriteButton);
@@ -261,8 +263,9 @@ public final class IntelScreenV3 extends Screen {
         }
 
         int arrowWidth = sidebarWidth - 20;
-        SiegeButton previous = new SiegeButton(10, listTop, arrowWidth, 18,
-                Component.literal("←  " + label("ANTERIOR", "PREVIOUS")),
+        addIndexButton(52, listTop, arrowWidth - 42, 18);
+        SiegeButton previous = new SiegeButton(10, listTop, 38, 18,
+                Component.literal("←"),
                 b -> stepEntry(-1), categoryAccent(category));
         SiegeButton next = new SiegeButton(10, height - 29, arrowWidth, 18,
                 Component.literal("→  " + label("SIGUIENTE", "NEXT")),
@@ -292,6 +295,24 @@ public final class IntelScreenV3 extends Screen {
             addRenderableWidget(button);
             y += 22;
         }
+    }
+
+    private void addIndexButton(int x, int y, int w, int h) {
+        SiegeButton button = new SiegeButton(x, y, w, h, Component.literal(label("ÍNDICE", "INDEX")), b -> {
+            List<IntelEntry> files = filtered();
+            if (files.isEmpty()) return;
+            SiegeUiSounds.click();
+            minecraft.setScreen(new IntelIndexScreen(this, files, categoryLabel(category), files.get(selected).code(), code -> {
+                List<IntelEntry> current = filtered();
+                for (int i = 0; i < current.size(); i++) if (current.get(i).code().equals(code)) {
+                    selectEntry(i);
+                    break;
+                }
+            }));
+        }, 0xFF55BFD9);
+        button.setTooltip(Tooltip.create(Component.literal(label("Ver y ordenar los expedientes de esta selección", "Browse and sort dossiers in this selection"))));
+        navigationButtons.add(button);
+        addRenderableWidget(button);
     }
 
     private void selectEntry(int index) {
