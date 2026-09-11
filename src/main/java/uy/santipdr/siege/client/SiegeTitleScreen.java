@@ -368,6 +368,17 @@ public final class SiegeTitleScreen extends Screen {
     }
 
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && previewX >= 0
+                && mouseX >= previewX && mouseX < previewX + previewW
+                && mouseY >= previewY + previewH - 18 && mouseY < previewY + previewH) {
+            stepIntelPreview(mouseX < previewX + previewW / 2.0D ? -1 : 1);
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (delta != 0.0D && previewX >= 0 && mouseX >= previewX && mouseX < previewX + previewW
                 && mouseY >= previewY && mouseY < previewY + previewH) {
