@@ -2,6 +2,22 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
+## SIEGE 0.7.4
+
+- Title interference can now be disabled independently without removing button effects.
+- New-track `REC` announcements have their own persistent toggle.
+- The settings overview can safely restore only SIEGE client preferences.
+- Main-menu keyboard navigation starts on Deployment instead of having no initial focus.
+- Reference-style command plates now provide a short physical press response.
+- Settings layout and help text were updated for the new controls.
+
+## SIEGE 0.7.3
+
+- The generated wordmark was removed; the centered title now uses Minecraft's own font.
+- The title recreates the old interference effect with short animated slices instead of a malformed permanent shadow.
+- Main-menu command plates return to the older solid-grey, double-rimmed style with a compact lower/right shadow.
+- GUI scale 3 command sizing is rebalanced and the left shade remains neutral rather than blue.
+
 ## SIEGE 0.7.2
 
 - Removed the runtime `REC / STILL` frame badge from the Intel V3 screen that is actually packaged.
