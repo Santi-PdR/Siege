@@ -33,15 +33,15 @@ jobs:
           grep -q 'GLFW_KEY_LEFT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'GLFW_KEY_RIGHT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'Math.floorMod(selected + direction, files.size())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'Component.literal("←")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'Component.literal("→")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          grep -q 'Component.literal("â")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          grep -q 'Component.literal("â")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'isInsidePreviewFooter' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           grep -q 'previewDual' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           grep -q 'mouseScrolled' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
           grep -q 'GLFW_KEY_HOME' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
           grep -q 'GLFW_KEY_END' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
           grep -q 'IntelScreenV3(Screen parent, IntelEntry requestedEntry)' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'requestedCode.equals(files.get(i).code())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          grep -q 'targetCode.equals(files.get(i).code())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'new IntelScreenV3(this, entry)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           grep -q 'GLFW_KEY_I' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           grep -q 'previewHoveredLastFrame' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
