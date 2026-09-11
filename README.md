@@ -1,3 +1,14 @@
+## SIEGE 0.8.1
+
+- Removed the unrequested title-screen music, gallery, Intel and rotation keyboard shortcuts.
+- Removed the unrequested gallery keyboard/mouse chords and Intel category/favorite shortcuts.
+- The only special keyboard inputs retained are requested dossier `Left/Right` navigation and the established hidden staff `Ctrl+S` Singleplayer access.
+- Gallery actions now use visible Previous, Next, Pin, Auto Rotation, Clean View and Back controls.
+- Intel Favorites now use a visible Save/Saved button in both compact and wide layouts.
+- The main-menu dossier hover fix remains explicit: hovering pauses it, leaving starts one two-second grace period, and expiry advances exactly once.
+- A one-time 0.8.1 settings migration clears the persisted stopped state that the removed `P` shortcut could leave behind; the visible setting works normally afterward.
+- CI rejects reintroduction of the removed shortcuts and verifies the visible replacements.
+
 ## SIEGE 0.8.0
 
 1. Intel hover pause uses an explicit reading state instead of extending the rotation deadline every frame.

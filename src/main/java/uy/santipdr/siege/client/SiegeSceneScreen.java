@@ -35,6 +35,11 @@ public final class SiegeSceneScreen extends Screen {
                 text("FIJAR FONDO", "PIN BACKGROUND"), b -> pinCurrent(), 0xFFD6A94B));
         addRenderableWidget(new SiegeButton(left + (buttonWidth + gap) * 3, y, buttonWidth, 22,
                 text("VOLVER", "BACK"), b -> onClose(), 0xFFD65A4B));
+        addRenderableWidget(new SiegeButton(width - Math.min(112, Math.max(84, width / 6)) - 8, 7,
+                Math.min(112, Math.max(84, width / 6)), 20,
+                text("VISTA LIMPIA", "CLEAN VIEW"), b -> toggleCleanView(), 0xFF55BFD9));
+        addRenderableWidget(new SiegeButton(8, 7, Math.min(112, Math.max(84, width / 6)), 20,
+                text("ROTACIÓN AUTO", "AUTO ROTATION"), b -> resumeRotation(), 0xFFD6A94B));
         for (var child : children()) if (child instanceof AbstractWidget widget) {
             widget.setTooltip(Tooltip.create(widget.getMessage()));
             widget.visible = !cleanView;
@@ -67,8 +72,8 @@ public final class SiegeSceneScreen extends Screen {
         String heading = (index + 1) + " / " + SiegeBackgrounds.count() + "  ·  "
                 + SiegeBackgrounds.name(index, spanish()) + "  //  " + state;
         g.drawCenteredString(font, font.plainSubstrByWidth(heading, width - 20), width / 2, 10, 0xFFF0EEE8);
-        Component help = text("F1/ESPACIO: vista limpia · P: fijar · R: rotación · 1-9: elegir",
-                "F1/SPACE: clean view · P: pin · R: rotation · 1-9: select");
+        Component help = text("Usa los botones o la rueda para recorrer los fondos",
+                "Use the buttons or wheel to browse backgrounds");
         g.drawCenteredString(font, font.plainSubstrByWidth(help.getString(), width - 18), width / 2, 27, 0xFFBCC5CC);
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
@@ -78,25 +83,6 @@ public final class SiegeSceneScreen extends Screen {
     public boolean keyPressed(int key, int scanCode, int modifiers) {
         if (key == GLFW.GLFW_KEY_ESCAPE) {
             if (cleanView) toggleCleanView(); else onClose();
-            return true;
-        }
-        if (key == GLFW.GLFW_KEY_F1) { toggleCleanView(); return true; }
-        if (key == GLFW.GLFW_KEY_SPACE) { toggleCleanView(); return true; }
-        if (key == GLFW.GLFW_KEY_LEFT) { step(-1); return true; }
-        if (key == GLFW.GLFW_KEY_RIGHT) { step(1); return true; }
-        if (key == GLFW.GLFW_KEY_HOME) { select(0); return true; }
-        if (key == GLFW.GLFW_KEY_END) { select(SiegeBackgrounds.count() - 1); return true; }
-        if (key == GLFW.GLFW_KEY_P) { pinCurrent(); return true; }
-        if (key == GLFW.GLFW_KEY_R) { resumeRotation(); return true; }
-        if (key == GLFW.GLFW_KEY_X) {
-            int candidate = Math.floorMod((int)(System.nanoTime() >>> 10), SiegeBackgrounds.count());
-            if (candidate == index && SiegeBackgrounds.count() > 1) candidate = (candidate + 1) % SiegeBackgrounds.count();
-            select(candidate);
-            return true;
-        }
-        if (key >= GLFW.GLFW_KEY_1 && key <= GLFW.GLFW_KEY_9) {
-            int scene = key - GLFW.GLFW_KEY_1;
-            if (scene < SiegeBackgrounds.count()) select(scene);
             return true;
         }
         return cleanView || super.keyPressed(key, scanCode, modifiers);
@@ -109,12 +95,6 @@ public final class SiegeSceneScreen extends Screen {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, delta);
-    }
-
-    private void select(int scene) {
-        index = Math.floorMod(scene, SiegeBackgrounds.count());
-        SiegeUiSounds.click();
-        refreshPin();
     }
 
     private void pinCurrent() {
@@ -141,18 +121,6 @@ public final class SiegeSceneScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double x, double y, int button) {
-        if (cleanView && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            toggleCleanView();
-            return true;
-        }
-        if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
-            pinCurrent();
-            return true;
-        }
-        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            onClose();
-            return true;
-        }
         return cleanView || super.mouseClicked(x, y, button);
     }
 

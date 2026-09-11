@@ -15,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public final class SiegeConfig {
+    private static final int SETTINGS_REVISION = 801;
     public enum Graphics { PERFORMANCE, BALANCED, CINEMATIC;
         public Graphics next() { return values()[(ordinal() + 1) % values().length]; }
     }
@@ -59,7 +60,8 @@ public final class SiegeConfig {
         selectedScene = integer(p, "selectedScene", -1, -1, 8);
         uiVolume = integer(p, "uiVolume", 100, 0, 100);
         hoverSounds = bool(p, "hoverSounds", true);
-        autoRotateIntel = bool(p, "autoRotateIntel", true);
+        int loadedRevision = integer(p, "settingsRevision", 0, 0, SETTINGS_REVISION);
+        autoRotateIntel = loadedRevision < SETTINGS_REVISION || bool(p, "autoRotateIntel", true);
         music = bool(p, "music", true);
         musicVolume = integer(p, "musicVolume", 75, 0, 100);
         uiSounds = bool(p, "uiSounds", true);
@@ -86,10 +88,12 @@ public final class SiegeConfig {
         }
         try { graphics = Graphics.valueOf(p.getProperty("graphics", Graphics.CINEMATIC.name())); }
         catch (IllegalArgumentException ignored) { graphics = Graphics.CINEMATIC; }
+        if (loadedRevision < SETTINGS_REVISION) save();
     }
 
     public static void save() {
         Properties p = new Properties();
+        p.setProperty("settingsRevision", Integer.toString(SETTINGS_REVISION));
         p.setProperty("selectedTrack", Integer.toString(selectedTrack));
         p.setProperty("selectedScene", Integer.toString(selectedScene));
         p.setProperty("uiVolume", Integer.toString(uiVolume));

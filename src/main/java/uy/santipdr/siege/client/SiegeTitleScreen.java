@@ -194,7 +194,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.8.0", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.8.1", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
@@ -501,18 +501,6 @@ public final class SiegeTitleScreen extends Screen {
         return Math.max(0.0F, Math.min(1.0F, (now - previewCycleStartedAt) / (float) duration));
     }
 
-    private void selectIntelPreview(int index) {
-        List<IntelEntry> previewable = IntelCatalog.previewable();
-        if (previewable.isEmpty()) return;
-        int current = currentIntelPreview(previewable.size(), false);
-        int target = Math.floorMod(index, previewable.size());
-        previewTransitionDirection = target < current ? -1 : 1;
-        manualIntelPreview = target;
-        previewCycleStartedAt = System.currentTimeMillis();
-        manualIntelPreviewUntil = previewCycleStartedAt + 15_000L;
-        SiegeUiSounds.click();
-    }
-
     private void requestQuit() {
         if (!SiegeConfig.confirmQuit) {
             minecraft.stop();
@@ -567,60 +555,12 @@ public final class SiegeTitleScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_F1) {
-            SiegeUiSounds.click();
-            minecraft.setScreen(new SiegeSceneScreen(this));
-            return true;
-        }
         if (previewX >= 0 && keyCode == GLFW.GLFW_KEY_LEFT) {
             stepIntelPreview(-1);
             return true;
         }
         if (previewX >= 0 && keyCode == GLFW.GLFW_KEY_RIGHT) {
             stepIntelPreview(1);
-            return true;
-        }
-        if (keyCode == GLFW.GLFW_KEY_M) {
-            if (Screen.hasControlDown()) {
-                SiegeConfig.music = !SiegeConfig.music;
-                if (SiegeConfig.music) SiegeMusic.ensurePlaying(); else SiegeMusic.stop();
-                SiegeConfig.save();
-                SiegeUiSounds.click();
-            } else if (Screen.hasShiftDown()) {
-                SiegeUiSounds.nextTrack();
-                SiegeMusic.previousTrack();
-            } else changeTrack();
-            return true;
-        }
-        if (keyCode == GLFW.GLFW_KEY_R) {
-            SiegeUiSounds.nextTrack();
-            SiegeMusic.restartTrack();
-            return true;
-        }
-        if (keyCode == GLFW.GLFW_KEY_G) {
-            SiegeUiSounds.click();
-            minecraft.setScreen(new SiegeSceneScreen(this));
-            return true;
-        }
-        if (keyCode == GLFW.GLFW_KEY_I && primaryPreviewEntry != null) {
-            openPreviewEntry(primaryPreviewEntry);
-            return true;
-        }
-        if (keyCode == GLFW.GLFW_KEY_P) {
-            SiegeConfig.autoRotateIntel = !SiegeConfig.autoRotateIntel;
-            previewHoveredLastFrame = false;
-            previewCycleStartedAt = System.currentTimeMillis();
-            manualIntelPreviewUntil = previewCycleStartedAt + 8_500L;
-            SiegeConfig.save();
-            SiegeUiSounds.click();
-            return true;
-        }
-        if (keyCode == GLFW.GLFW_KEY_HOME && previewX >= 0) {
-            selectIntelPreview(0);
-            return true;
-        }
-        if (keyCode == GLFW.GLFW_KEY_END && previewX >= 0) {
-            selectIntelPreview(IntelCatalog.previewable().size() - 1);
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_S && Screen.hasControlDown()) {

@@ -115,6 +115,16 @@ Gameplay screens are not replaced. The reconstruction is scoped to menus and its
 - Graphics exposes background and command-panel darkness separately from the Performance/Balanced/Cinematic profile.
 - Interface exposes quit confirmation and build-label visibility without modifying vanilla gameplay screens.
 
+## 0.8.1 visible controls and input cleanup
+
+- Unrequested title-screen, Intel and gallery shortcut chords are removed instead of becoming hidden behavior users must memorize.
+- Requested Left/Right dossier navigation and the established hidden staff Ctrl+S world-selection entry remain unchanged.
+- Gallery operations are represented by visible Previous, Next, Pin, Auto Rotation, Clean View and Back buttons.
+- Intel Favorites use a visible Save/Saved control in compact and wide layouts; wheel scrolling remains the normal pointer interaction.
+- Main-menu hover pause is transition-based rather than frame-based: pointer exit creates one two-second deadline and automatic rotation advances once when it expires.
+- Settings revision 801 re-enables Intel rotation once to clear the persistent stopped state formerly created by the removed `P` shortcut; subsequent visible-setting changes remain persistent.
+- CI rejects the removed shortcut keys and validates the visible controls plus the hover state transition.
+
 ## 0.7.9 direct Intel handoff
 
 - A main-menu preview is now an actionable dossier: its body opens the matching full Intel record.

@@ -38,12 +38,11 @@ jobs:
           grep -q 'isInsidePreviewFooter' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           grep -q 'previewDual' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           grep -q 'mouseScrolled' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
-          grep -q 'GLFW_KEY_HOME' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
-          grep -q 'GLFW_KEY_END' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
+          grep -q 'VISTA LIMPIA' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
+          grep -q 'ROTACIÓN AUTO' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
           grep -q 'IntelScreenV3(Screen parent, IntelEntry requestedEntry)' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'targetCode.equals(files.get(i).code())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'new IntelScreenV3(this, entry)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
-          grep -q 'GLFW_KEY_I' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           grep -q 'previewHoveredLastFrame' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           grep -q 'manualIntelPreviewUntil = now + 2_000L' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           if grep -q 'hovered.*Math.max(manualIntelPreviewUntil' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java; then
@@ -52,9 +51,21 @@ jobs:
           fi
           grep -q '"FAVORITES"' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'toggleFavoriteIntel' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'GLFW_KEY_7' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          grep -q 'favoriteButtonLabel' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'trackAnnouncementDurationMs' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
           grep -q 'backgroundDarkness' src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
+          if grep -qE 'GLFW_KEY_(I|P|G|M|R|HOME|END)([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java; then
+            echo "The title screen contains an unrequested keyboard shortcut."
+            exit 1
+          fi
+          if grep -qE 'GLFW_KEY_(SPACE|P|R|X|HOME|END|F1|[1-9])([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java; then
+            echo "The gallery contains an unrequested keyboard shortcut."
+            exit 1
+          fi
+          if grep -qE 'GLFW_KEY_(Q|E|F|HOME|END|PAGE_UP|PAGE_DOWN|UP|DOWN|[0-9])([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
+            echo "Intel contains an unrequested keyboard shortcut."
+            exit 1
+          fi
       - name: Prepare Intel dossier overlays
         shell: bash
         run: |
