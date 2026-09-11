@@ -150,6 +150,10 @@ public final class SiegeMusic {
 
     /** Manual skip uses a short deliberate fade; natural transitions reserve the final eight seconds. */
     public static void nextTrack() {
+        if (SiegeConfig.selectedTrack >= 0) {
+            SiegeConfig.selectedTrack = (SiegeConfig.selectedTrack + 1) % TRACKS.size();
+            SiegeConfig.save();
+        }
         if (!SiegeConfig.music) {
             SiegeConfig.music = true;
             SiegeConfig.save();
@@ -160,6 +164,21 @@ public final class SiegeMusic {
             return;
         }
         beginFadeOut(MANUAL_FADE_OUT_MS, false);
+    }
+
+    public static List<String> trackNames() { return TRACK_NAMES; }
+
+    /** -1 resumes shuffle without restarting the currently playing track. */
+    public static void selectTrack(int index) {
+        if (index < -1 || index >= TRACKS.size()) return;
+        SiegeConfig.selectedTrack = index;
+        queue.clear();
+        if (index >= 0) SiegeConfig.music = true;
+        SiegeConfig.save();
+        if (!shouldPlay()) return;
+        if (active == null) startNext(true);
+        else if (index >= 0 && (previous != index || fadeState == FadeState.OUT))
+            beginFadeOut(MANUAL_FADE_OUT_MS, false);
     }
 
     /** Applies SIEGE's own volume to the active stream without restarting it. */
@@ -214,8 +233,13 @@ public final class SiegeMusic {
 
     private static void startNext(boolean fadeIn) {
         if (!shouldPlay()) return;
-        if (queue.isEmpty()) refillQueue();
-        int next = queue.remove(0);
+        int next;
+        if (SiegeConfig.selectedTrack >= 0 && SiegeConfig.selectedTrack < TRACKS.size()) {
+            next = SiegeConfig.selectedTrack;
+        } else {
+            if (queue.isEmpty()) refillQueue();
+            next = queue.remove(0);
+        }
         previous = next;
         playIndex(next, fadeIn);
     }
@@ -302,3 +326,4 @@ public final class SiegeMusic {
 
     private enum FadeState { NONE, IN, OUT }
 }
+

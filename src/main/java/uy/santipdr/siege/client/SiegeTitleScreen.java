@@ -173,7 +173,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.7.6", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.7.7", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
@@ -410,6 +410,11 @@ public final class SiegeTitleScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_F1) {
+            SiegeUiSounds.click();
+            minecraft.setScreen(new SiegeSceneScreen(this));
+            return true;
+        }
         if (previewX >= 0 && keyCode == GLFW.GLFW_KEY_LEFT) {
             stepIntelPreview(-1);
             return true;

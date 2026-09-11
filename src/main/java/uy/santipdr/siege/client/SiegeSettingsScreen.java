@@ -183,11 +183,27 @@ public final class SiegeSettingsScreen extends Screen {
                         Component.translatable("siege.menu.next_track"), b -> {
                     SiegeUiSounds.nextTrack();
                     SiegeMusic.nextTrack();
+                    refreshMusicSelection();
                 }, GOLD));
                 addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
                         label("AVISO DE NUEVA PISTA", "NEW TRACK NOTICE"),
                         () -> SiegeConfig.trackAnnouncements = !SiegeConfig.trackAnnouncements,
                         () -> SiegeConfig.trackAnnouncements));
+                addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
+                        Component.literal(label("ALEATORIO SIN REPETIR", "SHUFFLE WITHOUT REPEATS")), b -> {
+                    SiegeUiSounds.click();
+                    SiegeMusic.selectTrack(-1);
+                    refreshMusicSelection();
+                }, GOLD).setSelected(SiegeConfig.selectedTrack < 0));
+                for (int i = 0; i < SiegeMusic.trackNames().size(); i++) {
+                    final int index = i;
+                    addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
+                            Component.literal((i + 1) + ". " + SiegeMusic.trackNames().get(i)), b -> {
+                        SiegeUiSounds.nextTrack();
+                        SiegeMusic.selectTrack(index);
+                        refreshMusicSelection();
+                    }, GOLD).setSelected(SiegeConfig.selectedTrack == index));
+                }
             }
             case INTERFACE -> {
                 addRenderableWidget(toggle(contentX, y, w, h, "siege.settings.ui_sounds",
@@ -235,7 +251,27 @@ public final class SiegeSettingsScreen extends Screen {
                         label("INTERFERENCIA DEL TÍTULO", "TITLE INTERFERENCE"),
                         () -> SiegeConfig.titleInterference = !SiegeConfig.titleInterference,
                         () -> SiegeConfig.titleInterference));
+                addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
+                        Component.literal(label("GALERÍA DE FONDOS", "BACKGROUND GALLERY")), b -> {
+                    SiegeUiSounds.click();
+                    minecraft.setScreen(new SiegeSceneScreen(this));
+                }, ACCENT));
+                addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
+                        Component.literal(label("REACTIVAR ROTACIÓN DE FONDOS", "RESUME BACKGROUND ROTATION")), b -> {
+                    SiegeUiSounds.click();
+                    SiegeConfig.selectedScene = -1;
+                    SiegeConfig.animatedBackgrounds = true;
+                    SiegeConfig.save();
+                }, ACCENT));
             }
+        }
+    }
+
+    private void refreshMusicSelection() {
+        // The audio section starts with four existing controls, followed by shuffle and tracks.
+        for (int i = 4; i < controls.size(); i++) {
+            if (controls.get(i) instanceof SiegeButton button)
+                button.setSelected(SiegeConfig.selectedTrack == i - 5);
         }
     }
 
@@ -375,9 +411,17 @@ public final class SiegeSettingsScreen extends Screen {
             String playback = label("ESTADO", "STATE") + "  "
                     + (SiegeMusic.isActuallyPlaying() ? label("REPRODUCIENDO", "PLAYING") : label("CARGANDO / EN ESPERA", "LOADING / WAITING"));
             String track = label("PISTA", "TRACK") + "  " + SiegeMusic.currentTrackName()
-                    + "  //  " + SiegeMusic.transitionLabel(spanish());
+                    + "  //  " + (SiegeConfig.selectedTrack >= 0 ? label("REPETIR PISTA", "REPEAT TRACK") : label("ALEATORIO", "SHUFFLE"));
             g.drawString(font, font.plainSubstrByWidth(playback, contentWidth), contentX, infoY, 0xFF9FCAD5, false);
             if (infoY + 13 < availableBottom) g.drawString(font, font.plainSubstrByWidth(track, contentWidth), contentX, infoY + 13, 0xFFAAB2B7, false);
+            long duration = SiegeMusic.currentDurationMs();
+            long remaining = SiegeMusic.currentRemainingMs();
+            if (SiegeMusic.isActuallyPlaying() && duration > 0) {
+                int barY = infoY + 28;
+                g.fill(contentX, barY, contentX + contentWidth - 8, barY + 3, 0xFF27343C);
+                int played = (int)((contentWidth - 8) * Math.max(0L, duration - remaining) / duration);
+                g.fill(contentX, barY, contentX + played, barY + 3, GOLD);
+            }
             return;
         }
 
@@ -498,8 +542,8 @@ public final class SiegeSettingsScreen extends Screen {
                     "Movimiento reducido limita desplazamientos y animaciones ambientales del menú sin eliminar su identidad visual.",
                     "Reduced motion limits menu camera movement and ambient animation without removing the visual identity.");
             case GRAPHICS -> label(
-                    "Cambia el perfil visual y permite controlar por separado las líneas de escaneo y la interferencia del título.",
-                    "Changes the visual profile and separately controls scanlines and title interference.");
+                    "Abre la galería para recorrer fondos, fijar uno o verlo sin controles. F1 también abre la galería desde la portada.",
+                    "Browse the gallery to pin a background or hide its controls. F1 also opens the gallery from the title screen.");
         };
     }
 

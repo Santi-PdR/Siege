@@ -1,3 +1,16 @@
+## SIEGE 0.7.7
+
+- New Background Gallery in Graphics settings; F1 opens it directly from the main menu.
+- Browse all nine supplied backgrounds with buttons or arrow keys. Pinning persists the selected scene; browsing alone changes no preference.
+- Gallery F1 hides controls for a clean view. Escape restores controls first, then returns to the parent screen. Hidden buttons cannot be activated.
+- Resume Background Rotation returns to the existing automatic sequence.
+- Background rendering preserves 16:9 proportions with centered cover cropping, including narrow and ultrawide windows.
+- Music settings can select any of the four complete tracks for persistent repeat, or resume shuffle without restarting the active track.
+- Next Track in repeat mode advances the pinned selection. Changes preserve the short audio fade.
+- A playback progress bar and repeat/shuffle status appear below music controls.
+- New labels follow the existing Spanish/English locale selection.
+- Validation: Forge compilation in GitHub Actions; geometry checks for gallery controls and cover bounds. In-game rendering/audio still needs runtime review.
+
 ## SIEGE 0.7.6
 
 - Settings scroll within their own panel, with a scrollbar, mouse wheel and Page Up/Page Down. Tab/Shift+Tab brings each control into view.

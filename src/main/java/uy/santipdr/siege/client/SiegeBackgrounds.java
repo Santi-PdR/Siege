@@ -19,16 +19,28 @@ public final class SiegeBackgrounds {
 
     private SiegeBackgrounds() { }
 
+    public static int count() { return SCENES.size(); }
+
+    public static String name(int index) {
+        return SCENES.get(Math.floorMod(index, SCENES.size())).getPath()
+                .replace("textures/gui/backgrounds/", "").replace(".png", "").replace('_', ' ');
+    }
+
+    public static void renderPreview(GuiGraphics graphics, int width, int height, int index) {
+        int safeIndex = Math.floorMod(index, SCENES.size());
+        drawScene(graphics, SCENES.get(safeIndex), width, height, 1.0F, safeIndex, 0.5F, false);
+    }
+
     private static ResourceLocation scene(String id) {
         return new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/backgrounds/" + id + ".png");
     }
 
     public static void render(GuiGraphics graphics, int width, int height, long now) {
-        boolean animated = SiegeConfig.animatedBackgrounds;
+        boolean animated = SiegeConfig.animatedBackgrounds && SiegeConfig.selectedScene < 0;
         long slot = animated ? now / SCENE_MS : 0L;
         long localMs = animated ? now % SCENE_MS : 0L;
         float local = animated ? localMs / (float) SCENE_MS : 0.0F;
-        int current = (int) (slot % SCENES.size());
+        int current = SiegeConfig.selectedScene >= 0 ? Math.floorMod(SiegeConfig.selectedScene, SCENES.size()) : (int) (slot % SCENES.size());
         int next = (current + 1) % SCENES.size();
 
         boolean allowPan = !SiegeConfig.reducedMotion && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE;
@@ -77,10 +89,12 @@ public final class SiegeBackgrounds {
         int panX = allowPan ? Math.round(directionX * travel * overscan * 0.58F) : 0;
         int panY = allowPan ? Math.round(directionY * travel * overscan * 0.24F) : 0;
 
-        int x = -overscan + panX;
-        int y = -overscan + panY;
-        int drawW = w + overscan * 2;
-        int drawH = h + overscan * 2;
+        // Cover the viewport while preserving the source's 16:9 proportions.
+        double scale = Math.max((w + overscan * 2) / 960.0D, (h + overscan * 2) / 540.0D);
+        int drawW = (int)Math.ceil(960 * scale);
+        int drawH = (int)Math.ceil(540 * scale);
+        int x = (w - drawW) / 2 + panX;
+        int y = (h - drawH) / 2 + panY;
         g.blit(texture, x, y, drawW, drawH, 0, 0, 960, 540, 960, 540);
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -91,3 +105,4 @@ public final class SiegeBackgrounds {
         return x * x * x * (x * (x * 6.0F - 15.0F) + 10.0F);
     }
 }
+

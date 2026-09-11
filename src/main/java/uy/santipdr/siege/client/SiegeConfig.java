@@ -18,6 +18,8 @@ public final class SiegeConfig {
     }
 
     private static final Path FILE = FMLPaths.CONFIGDIR.get().resolve("siege-client.properties");
+    public static int selectedTrack = -1;
+    public static int selectedScene = -1;
     public static int uiVolume = 100;
     public static boolean hoverSounds = true;
     public static boolean autoRotateIntel = true;
@@ -42,6 +44,8 @@ public final class SiegeConfig {
             try (InputStream in = Files.newInputStream(FILE)) { p.load(in); }
             catch (IOException | IllegalArgumentException error) { LogUtils.getLogger().warn("Could not load SIEGE settings", error); }
         }
+        selectedTrack = integer(p, "selectedTrack", -1, -1, 3);
+        selectedScene = integer(p, "selectedScene", -1, -1, 8);
         uiVolume = integer(p, "uiVolume", 100, 0, 100);
         hoverSounds = bool(p, "hoverSounds", true);
         autoRotateIntel = bool(p, "autoRotateIntel", true);
@@ -62,6 +66,8 @@ public final class SiegeConfig {
 
     public static void save() {
         Properties p = new Properties();
+        p.setProperty("selectedTrack", Integer.toString(selectedTrack));
+        p.setProperty("selectedScene", Integer.toString(selectedScene));
         p.setProperty("uiVolume", Integer.toString(uiVolume));
         p.setProperty("hoverSounds", Boolean.toString(hoverSounds));
         p.setProperty("autoRotateIntel", Boolean.toString(autoRotateIntel));
@@ -98,6 +104,8 @@ public final class SiegeConfig {
     }
 
     public static void resetDefaults() {
+        selectedTrack = -1;
+        selectedScene = -1;
         uiVolume = 100;
         hoverSounds = true;
         autoRotateIntel = true;

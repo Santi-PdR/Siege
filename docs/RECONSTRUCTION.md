@@ -104,3 +104,12 @@ Gameplay screens are not replaced. The reconstruction is scoped to menus and its
 - Configuration writes stage a complete properties file before replacing the previous one. Reset requires an in-menu confirmation.
 - Keep Fedora KDE/Konsole and the established test-1 path as the installation target. The installer retains previous JARs in a sibling backup folder.
 - Runtime visual verification is not implied by successful compilation or layout arithmetic.
+
+## 0.7.7 gallery and soundtrack selection
+
+- selectedScene=-1 retains automatic background behavior; 0..8 pins one of the existing supplied scenes. Selecting a gallery preview alone never persists it.
+- F1 on the main screen opens the gallery. In the gallery it toggles clean view; Escape always restores controls before returning. No gameplay screen is replaced.
+- Gallery and menu backgrounds use centered cover cropping instead of stretching source art to the window ratio.
+- selectedTrack=-1 uses the existing shuffled queue. 0..3 repeats a chosen track after its complete duration/fade. Next Track advances that pinned track; choosing shuffle retains current playback and resets the upcoming queue.
+- Settings reset restores both selections to -1. Invalid saved values are bounded on load.
+- Verify live audio transitions, gallery keyboard navigation, narrow-screen labels and resource-pack font sizing in Minecraft before claiming visual QA.
