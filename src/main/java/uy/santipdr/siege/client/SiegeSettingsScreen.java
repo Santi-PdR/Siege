@@ -6,6 +6,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
+import java.util.ArrayList;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import org.lwjgl.glfw.GLFW;
 
 /** Responsive, section-based client settings hub for SIEGE. */
 public final class SiegeSettingsScreen extends Screen {
@@ -27,6 +32,10 @@ public final class SiegeSettingsScreen extends Screen {
     private int contentY;
     private int contentWidth;
     private boolean compact;
+    private final List<AbstractWidget> controls = new ArrayList<>();
+    private final List<Integer> controlY = new ArrayList<>();
+    private int scrollOffset, scrollMax, viewportTop, viewportBottom, informationY;
+
 
     public SiegeSettingsScreen(Screen parent) {
         this(parent, Section.OVERVIEW);
@@ -41,6 +50,9 @@ public final class SiegeSettingsScreen extends Screen {
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
+        controls.clear();
+        controlY.clear();
+        scrollOffset = 0;
         compact = width < 700 || height < 355;
 
         int margin = compact ? 7 : 14;
@@ -55,7 +67,22 @@ public final class SiegeSettingsScreen extends Screen {
         if (compact) initCompactNavigation();
         else initWideNavigation();
 
+        viewportTop = contentY + (compact ? 43 : 51);
+        viewportBottom = panelBottom - 7;
+        int firstControl = children().size();
         initSectionControls();
+        int lastBottom = viewportTop;
+        for (int i = firstControl; i < children().size(); i++) {
+            if (children().get(i) instanceof AbstractWidget widget) {
+                controls.add(widget);
+                controlY.add(widget.getY());
+                lastBottom = Math.max(lastBottom, widget.getY() + widget.getHeight());
+                widget.setTooltip(Tooltip.create(widget.getMessage()));
+            }
+        }
+        informationY = lastBottom + 12;
+        scrollMax = Math.max(0, informationY + (section == Section.OVERVIEW ? 94 : 44) - viewportBottom);
+        positionControls();
     }
 
     private void initWideNavigation() {
@@ -118,17 +145,22 @@ public final class SiegeSettingsScreen extends Screen {
         int y = contentY + (compact ? 43 : 51);
         int h = compact ? 19 : 24;
         int gap = compact ? 4 : 7;
-        int w = contentWidth;
+        int w = contentWidth - 8;
 
         switch (section) {
             case OVERVIEW -> {
                 addRenderableWidget(new SiegeButton(contentX, y, w, h,
                         Component.literal(label("RESTAURAR AJUSTES DE SIEGE", "RESET SIEGE SETTINGS")), b -> {
                     SiegeUiSounds.click();
-                    SiegeMusic.stop();
-                    SiegeConfig.resetDefaults();
-                    SiegeMusic.ensurePlaying();
-                    minecraft.setScreen(new SiegeSettingsScreen(parent, Section.OVERVIEW));
+                    minecraft.setScreen(new ConfirmScreen(confirmed -> {
+                        if (confirmed) {
+                            SiegeMusic.stop();
+                            SiegeConfig.resetDefaults();
+                            SiegeMusic.ensurePlaying();
+                        }
+                        minecraft.setScreen(this);
+                    }, Component.literal(label("¿Restaurar SIEGE?", "Reset SIEGE?")),
+                            Component.literal(label("Se restaurarán las preferencias del menú.", "Menu preferences will return to their defaults."))));
                 }, WARNING));
             }
             case AUDIO -> {
@@ -142,8 +174,8 @@ public final class SiegeSettingsScreen extends Screen {
                         Component.literal(label("VOLUMEN DE MÚSICA", "MUSIC VOLUME")), SiegeConfig.musicVolume,
                         percent -> {
                             SiegeMusic.setVolumeLive(percent);
-                            // Persist after meaningful slider movement without restarting the stream.
-                            SiegeConfig.save();
+                            // Save on release/close, not on every drag event.
+
                         }));
 
                 y += sliderHeight + gap;
@@ -160,6 +192,14 @@ public final class SiegeSettingsScreen extends Screen {
             case INTERFACE -> {
                 addRenderableWidget(toggle(contentX, y, w, h, "siege.settings.ui_sounds",
                         () -> SiegeConfig.uiSounds = !SiegeConfig.uiSounds, () -> SiegeConfig.uiSounds));
+                addRenderableWidget(new SiegeSlider(contentX, y += h + gap, w, compact ? 25 : 31,
+                        Component.literal(label("VOLUMEN DE EFECTOS", "UI EFFECTS VOLUME")), SiegeConfig.uiVolume,
+                        percent -> SiegeConfig.uiVolume = percent));
+                y += (compact ? 25 : 31) - h;
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("SONIDO AL SEÑALAR", "HOVER SOUND"),
+                        () -> SiegeConfig.hoverSounds = !SiegeConfig.hoverSounds,
+                        () -> SiegeConfig.hoverSounds));
                 addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
                         label("EFECTOS TÁCTICOS", "TACTICAL EFFECTS"),
                         () -> SiegeConfig.menuEffects = !SiegeConfig.menuEffects,
@@ -175,6 +215,10 @@ public final class SiegeSettingsScreen extends Screen {
                         label("ANIMACIONES DE INTEL", "INTEL ANIMATIONS"),
                         () -> SiegeConfig.animatedIntel = !SiegeConfig.animatedIntel,
                         () -> SiegeConfig.animatedIntel));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("ROTACIÓN AUTOMÁTICA INTEL", "AUTO-ROTATE INTEL"),
+                        () -> SiegeConfig.autoRotateIntel = !SiegeConfig.autoRotateIntel,
+                        () -> SiegeConfig.autoRotateIntel));
             }
             case ACCESSIBILITY -> {
                 addRenderableWidget(toggle(contentX, y, w, h, "siege.settings.reduced_motion",
@@ -210,6 +254,7 @@ public final class SiegeSettingsScreen extends Screen {
             action.run();
             SiegeConfig.save();
             b.setMessage(toggleLabel(key, flag.get()));
+            b.setTooltip(Tooltip.create(b.getMessage()));
             ((SiegeButton)b).setSelected(flag.get());
         }, ACCENT);
         return button.setSelected(flag.get());
@@ -221,6 +266,7 @@ public final class SiegeSettingsScreen extends Screen {
             action.run();
             SiegeConfig.save();
             b.setMessage(literalToggleLabel(text, flag.get()));
+            b.setTooltip(Tooltip.create(b.getMessage()));
             ((SiegeButton)b).setSelected(flag.get());
         }, ACCENT);
         return button.setSelected(flag.get());
@@ -251,7 +297,7 @@ public final class SiegeSettingsScreen extends Screen {
         g.fill(panelX - 5, panelY - 7, panelX + panelWidth + 5, panelY - 4, ACCENT);
         g.fill(panelX - 5, bottom - 1, panelX + panelWidth + 5, bottom, 0xFF29353D);
 
-        g.drawCenteredString(font, label("CONFIGURACIÓN SIEGE", "SIEGE SETTINGS"), width / 2, 11, 0xFFF0EEE8);
+        g.drawCenteredString(font, font.plainSubstrByWidth(label("CONFIGURACIÓN SIEGE", "SIEGE SETTINGS"), Math.max(40, width - 116)), (width + 100) / 2, 11, 0xFFF0EEE8);
         g.drawCenteredString(font, label("CENTRO DE CONTROL // CLIENTE", "CONTROL CENTER // CLIENT"), width / 2,
                 compact ? 27 : 32, 0xFF79868E);
 
@@ -261,7 +307,16 @@ public final class SiegeSettingsScreen extends Screen {
         }
 
         renderSectionHeader(g);
-        renderSectionInformation(g, bottom);
+        g.enableScissor(contentX, viewportTop, contentX + contentWidth, viewportBottom);
+        renderSectionInformation(g, informationY + 110 - scrollOffset);
+        g.disableScissor();
+        if (scrollMax > 0) {
+            int track = viewportBottom - viewportTop;
+            int thumb = Math.max(10, track * track / (track + scrollMax));
+            int top = viewportTop + (track - thumb) * scrollOffset / scrollMax;
+            g.fill(contentX + contentWidth - 4, viewportTop, contentX + contentWidth - 2, viewportBottom, 0xFF27343C);
+            g.fill(contentX + contentWidth - 4, top, contentX + contentWidth - 2, top + thumb, ACCENT);
+        }
 
         if (height >= 250) {
             String rule = label(
@@ -295,11 +350,7 @@ public final class SiegeSettingsScreen extends Screen {
     }
 
     private void renderSectionInformation(GuiGraphics g, int bottom) {
-        int infoY;
-        if (section == Section.OVERVIEW) infoY = contentY + (compact ? 43 : 51);
-        else if (section == Section.AUDIO) infoY = contentY + (compact ? 156 : 190);
-        else if (section == Section.INTERFACE) infoY = contentY + (compact ? 164 : 205);
-        else infoY = contentY + (compact ? 69 : 82);
+        int infoY = informationY - scrollOffset;
 
         int availableBottom = bottom - 12;
         if (infoY >= availableBottom) return;
@@ -332,6 +383,67 @@ public final class SiegeSettingsScreen extends Screen {
 
         renderWrapped(g, sectionDescription(section), contentX, infoY, contentWidth, 0xFF9DA8AE,
                 compact ? 2 : 3, 11);
+    }
+
+    private void positionControls() {
+        scrollOffset = Math.max(0, Math.min(scrollMax, scrollOffset));
+        for (int i = 0; i < controls.size(); i++) {
+            AbstractWidget widget = controls.get(i);
+            widget.setY(controlY.get(i) - scrollOffset);
+            widget.visible = widget.getY() >= viewportTop && widget.getY() + widget.getHeight() <= viewportBottom;
+            if (!widget.visible && getFocused() == widget) setFocused(null);
+        }
+        SiegeUiSounds.resetHover();
+    }
+
+    @Override
+    public boolean mouseScrolled(double x, double y, double delta) {
+        if (delta != 0 && x >= contentX && x < contentX + contentWidth && y >= viewportTop && y < viewportBottom) {
+            scrollOffset -= (int)Math.signum(delta) * (compact ? 23 : 31);
+            positionControls();
+            return true;
+        }
+        return super.mouseScrolled(x, y, delta);
+    }
+
+    @Override
+    public boolean keyPressed(int key, int scanCode, int modifiers) {
+        if (key == GLFW.GLFW_KEY_TAB) {
+            List<AbstractWidget> order = new ArrayList<>();
+            for (var child : children()) if (child instanceof AbstractWidget widget && widget.active) order.add(widget);
+            if (order.isEmpty()) return false;
+            int index = order.indexOf(getFocused());
+            AbstractWidget next = order.get(Math.floorMod(index + (hasShiftDown() ? -1 : 1), order.size()));
+            int control = controls.indexOf(next);
+            if (control >= 0) {
+                int top = controlY.get(control);
+                if (top - scrollOffset < viewportTop) scrollOffset = top - viewportTop;
+                else if (top + next.getHeight() - scrollOffset > viewportBottom)
+                    scrollOffset = top + next.getHeight() - viewportBottom;
+                positionControls();
+            }
+            setFocused(next);
+            return true;
+        }
+        if (key == GLFW.GLFW_KEY_PAGE_DOWN || key == GLFW.GLFW_KEY_PAGE_UP) {
+            scrollOffset += (key == GLFW.GLFW_KEY_PAGE_DOWN ? 1 : -1) * Math.max(23, viewportBottom - viewportTop - 23);
+            positionControls();
+            return true;
+        }
+        return super.keyPressed(key, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean mouseReleased(double x, double y, int button) {
+        boolean handled = super.mouseReleased(x, y, button);
+        SiegeConfig.save();
+        return handled;
+    }
+
+    @Override
+    public void removed() {
+        SiegeConfig.save();
+        super.removed();
     }
 
     private void renderWrapped(GuiGraphics g, String text, int x, int y, int width, int color, int maxLines, int lineHeight) {
@@ -421,3 +533,4 @@ public final class SiegeSettingsScreen extends Screen {
         GRAPHICS
     }
 }
+

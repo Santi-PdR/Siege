@@ -7,11 +7,11 @@ This repository is a clean-room rebuild from screenshots supplied by the project
 - Forge 1.20.1 client-only menu replacement.
 - Cinematic rotating backgrounds with long crossfades, restrained camera drift, scanlines and contrast overlays.
 - Main commands remain in a compact neutral left-side column so the active background stays visible. The main screen has no cyan panel divider and no `MENU COMMAND LINK` footer.
-- The custom wordmark and GUI-scale-3 command plates stay deliberately smaller than the dossier area; the lower-right dossier remains untouched by main-screen chrome changes.
+- The Minecraft-font title and GUI-scale-3 command plates stay deliberately smaller than the dossier area; the lower-right dossier remains untouched by main-screen chrome changes.
 - Music identification is event-driven: `REC` and the track name appear together briefly whenever a new track begins, rather than remaining as a faint static label.
 - Intel opens a responsive intelligence database with numbered categories: `0 ALL`, `1 UNITS`, `2 ADVANCED`, `3 TANKS`, `4 BOSSES`, `5 ELITES`, `6 SUPER-UNITS`.
 - Every category displays its live record count. The active category owns the current troop sequence.
-- Troops can be changed with dedicated up/down controls, mouse wheel and keyboard arrows. Number keys `0-6` switch categories directly.
+- Troops can be changed with dedicated left/right controls, mouse wheel and keyboard arrows. Number keys `0-6` switch categories directly.
 - Wide Intel layouts preserve a left category/file navigator. Compact layouts collapse categories and use dedicated troop navigation controls.
 - The `CATEGORIES` heading must remain visually detached from decorative telemetry rules. `FILES` may retain its darker divider because that treatment remains legible.
 - GUI scales 1-4 must remain usable. Scale 4 has a dedicated compact Intel treatment with short category controls, condensed metadata and more vertical room for dossier text.
@@ -93,3 +93,14 @@ Gameplay screens are not replaced. The reconstruction is scoped to menus and its
 - Official local installer: `scripts/install-latest.sh`.
 - Builds remain GitHub Actions-only; Fedora downloads and installs the validated JAR from `dist`.
 - PowerShell documentation is legacy material for the former Windows installation.
+
+
+## 0.7.6 usability and persistence
+
+- Settings controls have a bounded scroll area; navigation stays fixed. Wheel, Page Up/Down and Tab/Shift+Tab reach every setting, including at 320x240 logical resolution.
+- Information begins below measured controls, never at hard-coded overlapping offsets.
+- Interface exposes independent effects volume, hover/focus audio and automatic preview rotation.
+- Preview rotation resumes from the manually selected record; it never jumps back to a wall-clock index. Hidden preview hitboxes are cleared each render.
+- Configuration writes stage a complete properties file before replacing the previous one. Reset requires an in-menu confirmation.
+- Keep Fedora KDE/Konsole and the established test-1 path as the installation target. The installer retains previous JARs in a sibling backup folder.
+- Runtime visual verification is not implied by successful compilation or layout arithmetic.

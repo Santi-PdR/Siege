@@ -1,3 +1,16 @@
+## SIEGE 0.7.6
+
+- Settings scroll within their own panel, with a scrollbar, mouse wheel and Page Up/Page Down. Tab/Shift+Tab brings each control into view.
+- Help and playback text are placed after the actual controls, fixing Overview/Graphics overlap and high-scale overflow.
+- Reset opens a confirmation; cancelling preserves preferences. Long control labels have full-text tooltips.
+- Independent UI effects volume and hover/focus sound switch; hover easing uses elapsed time instead of frame count.
+- Main-menu Intel auto-rotation can be disabled. Manual navigation still works and automatic rotation resumes sequentially after the 15-second reading pause.
+- Hidden preview cards no longer retain clickable regions after resizing or disabling previews.
+- Settings use staged atomic writes where supported; malformed booleans fall back to defaults and save errors are logged.
+- Music volume updates live but disk persistence happens on release/close instead of each drag event.
+- Fedora installer verifies its staged copy before replacement and keeps previous JARs outside mods for recovery.
+- Validation: GitHub Actions compiles Forge; GUI layout calculations cover 320x240 through 1920x1080. In-game visual/audio review remains required.
+
 # Eternal Craft - SIEGE
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
@@ -138,8 +151,9 @@ The active workstation now uses Fedora with KDE Plasma and Konsole. Run `bash sc
 
 `/home/Santipdr/.sklauncher/instances/test-1/mods`
 
-The Fedora installer never invokes local Java or Gradle. It removes older `siege-menu-*.jar` files before copying the validated build.
+The Fedora installer never invokes local Java or Gradle. It verifies a staged copy, backs up previous `siege-menu-*.jar` files outside `mods`, then replaces the installed build.
 
 ### Legacy Windows environment
 
 `scripts/install-latest.ps1` remains available only for the previous Windows setup.
+

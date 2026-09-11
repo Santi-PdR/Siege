@@ -5,9 +5,11 @@ REPO="Santi-PdR/Siege"
 REPO_URL="https://github.com/Santi-PdR/Siege.git"
 BRANCH="main"
 MODS_DIR="/home/Santipdr/.sklauncher/instances/test-1/mods"
+STAGED_JAR=""
 WORK_DIR="$(mktemp -d -t siege-install-XXXXXX)"
 
 cleanup() {
+    if [[ -n "$STAGED_JAR" ]]; then rm -f -- "$STAGED_JAR"; fi
     rm -rf -- "$WORK_DIR"
 }
 trap cleanup EXIT
@@ -27,15 +29,31 @@ if [[ -z "$JAR_FILE" ]]; then
 fi
 
 mkdir -p -- "$MODS_DIR"
-find "$MODS_DIR" -maxdepth 1 -type f -name 'siege-menu-*.jar' -delete
-install -m 0644 -- "$JAR_FILE" "$MODS_DIR/"
-
-INSTALLED_JAR="$MODS_DIR/$(basename "$JAR_FILE")"
-if [[ ! -s "$INSTALLED_JAR" ]]; then
-    echo "ERROR: la copia instalada no existe o esta vacia." >&2
+# Stage and compare before moving any installed version out of the mods directory.
+STAGED_JAR="$(mktemp "$MODS_DIR/.siege-stage-XXXXXX")"
+install -m 0644 -- "$JAR_FILE" "$STAGED_JAR"
+if [[ ! -s "$STAGED_JAR" ]] || ! cmp -s -- "$JAR_FILE" "$STAGED_JAR"; then
+    echo "ERROR: la copia no coincide. Se conserva la version instalada." >&2
     exit 1
+fi
+BACKUP_DIR="$(mktemp -d "${MODS_DIR%/mods}/siege-backup-XXXXXX")"
+mapfile -d '' OLD_JARS < <(find "$MODS_DIR" -maxdepth 1 -type f -name 'siege-menu-*.jar' -print0)
+for old_jar in "${OLD_JARS[@]}"; do
+    cp -p -- "$old_jar" "$BACKUP_DIR/"
+done
+INSTALLED_JAR="$MODS_DIR/$(basename "$JAR_FILE")"
+mv -f -- "$STAGED_JAR" "$INSTALLED_JAR"
+STAGED_JAR=""
+for old_jar in "${OLD_JARS[@]}"; do
+    if [[ "$old_jar" != "$INSTALLED_JAR" ]]; then rm -- "$old_jar"; fi
+done
+if (( ${#OLD_JARS[@]} > 0 )); then
+    echo "Version anterior guardada en: $BACKUP_DIR"
+else
+    rmdir -- "$BACKUP_DIR"
 fi
 
 echo
 echo "SIEGE instalado correctamente:"
 echo "$INSTALLED_JAR"
+

@@ -18,7 +18,7 @@ public final class SiegeUiSounds {
     public static void updateHover(List<? extends GuiEventListener> children) {
         AbstractWidget next = null;
         for (GuiEventListener child : children) {
-            if (child instanceof AbstractWidget widget && widget.visible && widget.active && widget.isHovered()) {
+            if (child instanceof AbstractWidget widget && widget.visible && widget.active && widget.isHoveredOrFocused()) {
                 next = widget;
                 break;
             }
@@ -26,7 +26,7 @@ public final class SiegeUiSounds {
         if (next != hovered) {
             hovered = next;
             long now = System.currentTimeMillis();
-            if (next != null && now - lastHover > 55L) {
+            if (SiegeConfig.hoverSounds && next != null && now - lastHover > 80L) {
                 play(SiegeMod.UI_HOVER, 1.0f);
                 lastHover = now;
             }
@@ -39,7 +39,8 @@ public final class SiegeUiSounds {
     public static void resetHover() { hovered = null; }
 
     private static void play(RegistryObject<SoundEvent> sound, float pitch) {
-        if (!SiegeConfig.uiSounds) return;
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(sound.get(), pitch));
+        if (!SiegeConfig.uiSounds || SiegeConfig.uiVolume <= 0) return;
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(sound.get(), pitch, SiegeConfig.clampVolume(SiegeConfig.uiVolume) / 100.0F));
     }
 }
+

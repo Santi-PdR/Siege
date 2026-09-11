@@ -5,7 +5,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
-version = '0.7.5'
+version = '0.7.6'
 group = 'uy.santipdr.siege'
 base { archivesName = 'siege-menu' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -21,3 +21,4 @@ tasks.named('processResources', ProcessResources).configure {
     filesMatching(['META-INF/mods.toml']) { expand props + [project: project] }
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+

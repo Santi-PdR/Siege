@@ -7,6 +7,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.AtomicMoveNotSupportedException;
+import com.mojang.logging.LogUtils;
 import java.util.Properties;
 
 public final class SiegeConfig {
@@ -15,6 +18,9 @@ public final class SiegeConfig {
     }
 
     private static final Path FILE = FMLPaths.CONFIGDIR.get().resolve("siege-client.properties");
+    public static int uiVolume = 100;
+    public static boolean hoverSounds = true;
+    public static boolean autoRotateIntel = true;
     public static boolean music = true;
     public static int musicVolume = 75;
     public static boolean uiSounds = true;
@@ -34,8 +40,11 @@ public final class SiegeConfig {
         Properties p = new Properties();
         if (Files.isRegularFile(FILE)) {
             try (InputStream in = Files.newInputStream(FILE)) { p.load(in); }
-            catch (IOException ignored) { }
+            catch (IOException | IllegalArgumentException error) { LogUtils.getLogger().warn("Could not load SIEGE settings", error); }
         }
+        uiVolume = integer(p, "uiVolume", 100, 0, 100);
+        hoverSounds = bool(p, "hoverSounds", true);
+        autoRotateIntel = bool(p, "autoRotateIntel", true);
         music = bool(p, "music", true);
         musicVolume = integer(p, "musicVolume", 75, 0, 100);
         uiSounds = bool(p, "uiSounds", true);
@@ -53,6 +62,9 @@ public final class SiegeConfig {
 
     public static void save() {
         Properties p = new Properties();
+        p.setProperty("uiVolume", Integer.toString(uiVolume));
+        p.setProperty("hoverSounds", Boolean.toString(hoverSounds));
+        p.setProperty("autoRotateIntel", Boolean.toString(autoRotateIntel));
         p.setProperty("music", Boolean.toString(music));
         p.setProperty("musicVolume", Integer.toString(musicVolume));
         p.setProperty("uiSounds", Boolean.toString(uiSounds));
@@ -65,13 +77,30 @@ public final class SiegeConfig {
         p.setProperty("titleInterference", Boolean.toString(titleInterference));
         p.setProperty("trackAnnouncements", Boolean.toString(trackAnnouncements));
         p.setProperty("graphics", graphics.name());
+        Path temporary = null;
         try {
             Files.createDirectories(FILE.getParent());
-            try (OutputStream out = Files.newOutputStream(FILE)) { p.store(out, "Eternal Craft: SIEGE client settings"); }
-        } catch (IOException ignored) { }
+            temporary = Files.createTempFile(FILE.getParent(), "siege-client-", ".tmp");
+            try (OutputStream out = Files.newOutputStream(temporary)) {
+                p.store(out, "Eternal Craft: SIEGE client settings");
+            }
+            try {
+                Files.move(temporary, FILE, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(temporary, FILE, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException error) {
+            LogUtils.getLogger().warn("Could not save SIEGE settings; previous file retained", error);
+        } finally {
+            if (temporary != null) try { Files.deleteIfExists(temporary); }
+            catch (IOException error) { LogUtils.getLogger().debug("Could not remove settings temporary file", error); }
+        }
     }
 
     public static void resetDefaults() {
+        uiVolume = 100;
+        hoverSounds = true;
+        autoRotateIntel = true;
         music = true;
         musicVolume = 75;
         uiSounds = true;
@@ -91,7 +120,9 @@ public final class SiegeConfig {
 
     private static boolean bool(Properties p, String key, boolean fallback) {
         String value = p.getProperty(key);
-        return value == null ? fallback : Boolean.parseBoolean(value);
+        if ("true".equalsIgnoreCase(value)) return true;
+        if ("false".equalsIgnoreCase(value)) return false;
+        return fallback;
     }
 
     private static int integer(Properties p, String key, int fallback, int min, int max) {
@@ -99,3 +130,4 @@ public final class SiegeConfig {
         catch (NumberFormatException ignored) { return fallback; }
     }
 }
+

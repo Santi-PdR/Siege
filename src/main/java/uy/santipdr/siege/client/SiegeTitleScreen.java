@@ -89,6 +89,7 @@ public final class SiegeTitleScreen extends Screen {
 
         renderTitle(graphics, compact, panelRight);
 
+        previewX = -1;
         if (SiegeConfig.mainMenuIntel) renderIntelPreview(graphics, panelRight);
         renderTrackAnnouncement(graphics, compact);
 
@@ -172,7 +173,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.7.5", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.7.6", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
@@ -344,12 +345,18 @@ public final class SiegeTitleScreen extends Screen {
     }
 
     private int currentIntelPreview(int size) {
+        if (size <= 0) return 0;
         long now = System.currentTimeMillis();
-        if (manualIntelPreview >= 0 && now < manualIntelPreviewUntil) {
-            return Math.floorMod(manualIntelPreview, size);
+        if (manualIntelPreview < 0) {
+            manualIntelPreview = 0;
+            manualIntelPreviewUntil = now + 8_500L;
         }
-        manualIntelPreview = -1;
-        return Math.floorMod((int) (now / 8_500L % size), size);
+        if (!SiegeConfig.autoRotateIntel) manualIntelPreviewUntil = now + 8_500L;
+        else if (now >= manualIntelPreviewUntil) {
+            manualIntelPreview = Math.floorMod(manualIntelPreview + 1, size);
+            manualIntelPreviewUntil = now + 8_500L;
+        }
+        return Math.floorMod(manualIntelPreview, size);
     }
 
     private void stepIntelPreview(int direction) {
@@ -403,11 +410,11 @@ public final class SiegeTitleScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_LEFT) {
+        if (previewX >= 0 && keyCode == GLFW.GLFW_KEY_LEFT) {
             stepIntelPreview(-1);
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+        if (previewX >= 0 && keyCode == GLFW.GLFW_KEY_RIGHT) {
             stepIntelPreview(1);
             return true;
         }
@@ -422,3 +429,4 @@ public final class SiegeTitleScreen extends Screen {
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }
+

@@ -18,6 +18,7 @@ public final class SiegeButton extends Button {
     private boolean mainMenuStyle;
     private float hoverAmount;
     private long pressedUntil;
+    private long lastRenderNanos;
 
     public SiegeButton(int x, int y, int width, int height, Component message, OnPress onPress, int accent) {
         super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
@@ -44,7 +45,10 @@ public final class SiegeButton extends Button {
         boolean hot = active && isHoveredOrFocused();
         boolean effects = SiegeConfig.menuEffects && !SiegeConfig.reducedMotion;
         float target = hot ? 1.0F : 0.0F;
-        if (effects) hoverAmount += (target - hoverAmount) * Math.min(1.0F, 0.22F + partialTick * 0.08F);
+        long now = System.nanoTime();
+        float elapsed = lastRenderNanos == 0 ? 1.0F / 60.0F : Math.min(0.1F, (now - lastRenderNanos) / 1_000_000_000.0F);
+        lastRenderNanos = now;
+        if (effects) hoverAmount += (target - hoverAmount) * (1.0F - (float)Math.exp(-16.0F * elapsed));
         else hoverAmount = target;
 
         if (mainMenuStyle) {
@@ -137,9 +141,9 @@ public final class SiegeButton extends Button {
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY) {
+    public void onPress() {
         pressedUntil = System.currentTimeMillis() + 120L;
-        super.onClick(mouseX, mouseY);
+        super.onPress();
     }
 
     private static String fit(Font font, String value, int width) {
@@ -154,3 +158,4 @@ public final class SiegeButton extends Button {
     @Override
     public void playDownSound(SoundManager soundManager) { }
 }
+
