@@ -2,6 +2,15 @@
 
 Forge 1.20.1 client menu for Eternal Craft: SIEGE.
 
+## SIEGE 0.7.5
+
+- Left and Right now move backward and forward through dossiers in the packaged Intel V3 screen.
+- Dossier navigation remains circular at category boundaries.
+- The main-menu Unit/Advanced preview supports Left/Right, mouse wheel and clickable footer arrows.
+- A manually selected preview remains stable for 15 seconds before automatic rotation resumes.
+- The dossier footer now communicates its navigation directly without adding large controls.
+- CI patches and validates the generated Intel V3 source actually packaged into the JAR.
+
 ## SIEGE 0.7.4
 
 - Title interference can now be disabled independently without removing button effects.
