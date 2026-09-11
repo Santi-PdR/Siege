@@ -33,8 +33,8 @@ jobs:
           grep -q 'GLFW_KEY_LEFT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'GLFW_KEY_RIGHT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'Math.floorMod(selected + direction, files.size())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'Component.literal("â")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'Component.literal("â")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          grep -q 'Component.literal("←")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          grep -q 'Component.literal("→")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'isInsidePreviewFooter' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           grep -q 'previewDual' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
           grep -q 'mouseScrolled' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
