@@ -1,3 +1,7 @@
+## 0.10.2 — Composición clásica y fondos completos
+
+Título alineado con la columna izquierda y botones elevados. Intel vuelve a seis categorías: sin Favoritos, Índice, Guardar ni Copiar; conserva búsqueda, lectura, Ampliar y flechas. Fondos se abre desde Configuración. Imágenes completas en portada, galería y miniaturas, sin zoom ni paneo que recorte bordes; transiciones suaves conservadas. Vista completa accesible desde la galería. CI protege la retirada de controles. Pendiente comprobación visual en Minecraft.
+
 ## 0.10.1 — Índice visual
 
 Retratos en las filas de Intel y vista previa de lectura al señalar o enfocar un expediente en ventanas amplias. En tamaños compactos se conserva una única lista. Mensaje sin resultados centrado dentro del área de contenido. La rueda de la lista queda limitada a su propia región. Comprobaciones geométricas ampliadas; pendiente revisión visual dentro de Minecraft.

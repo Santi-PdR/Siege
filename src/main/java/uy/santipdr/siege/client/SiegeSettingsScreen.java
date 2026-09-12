@@ -302,15 +302,6 @@ public final class SiegeSettingsScreen extends Screen {
                         label("ESTADO DEL DOSSIER", "DOSSIER STATE"),
                         () -> SiegeConfig.showIntelState = !SiegeConfig.showIntelState,
                         () -> SiegeConfig.showIntelState));
-                addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
-                        Component.literal(label("VACIAR FAVORITOS", "CLEAR FAVORITES")), b -> {
-                    SiegeUiSounds.click();
-                    minecraft.setScreen(new ConfirmScreen(confirmed -> {
-                        if (confirmed) SiegeConfig.clearFavoriteIntel();
-                        minecraft.setScreen(this);
-                    }, Component.literal(label("¿Vaciar favoritos?", "Clear favorites?")),
-                            Component.literal(label("Los expedientes seguirán disponibles en sus categorías.", "Dossiers remain available in their categories."))));
-                }, WARNING));
             }
             case ACCESSIBILITY -> {
                 addRenderableWidget(toggle(contentX, y, w, h, "siege.settings.reduced_motion",

@@ -17,7 +17,7 @@ import java.util.List;
 public final class IntelScreenV3 extends Screen {
     private static final int BOSS_FRAME_COUNT = 6;
     private static final List<String> CATEGORIES = List.of(
-            "UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT", "FAVORITES"
+            "UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT"
     );
     private static String rememberedCategory = "UNIT";
     private static String rememberedCode;
@@ -28,15 +28,13 @@ public final class IntelScreenV3 extends Screen {
     private final List<SiegeButton> categoryButtons = new ArrayList<>();
     private final List<SiegeButton> entryButtons = new ArrayList<>();
     private final List<SiegeButton> navigationButtons = new ArrayList<>();
-    private SiegeButton favoriteButton;
     private EditBox search;
     private String query = "";
     private SiegeButton clearSearch, readingButton, inspectButton;
     private boolean readingMode = SiegeConfig.intelReadingMode;
     private final java.util.Map<String, Integer> readingPositions = new java.util.HashMap<>();
     private String lastReadingCode;
-    private SiegeButton readStart, readEnd, copyText;
-    private long copiedUntil;
+    private SiegeButton readStart, readEnd;
     private int portraitX, portraitY, portraitW, portraitH;
     private int bodyLeft, bodyRight, bodyBottom;
     private boolean draggingScroll;
@@ -76,7 +74,6 @@ public final class IntelScreenV3 extends Screen {
         categoryButtons.clear();
         entryButtons.clear();
         navigationButtons.clear();
-        favoriteButton = null;
 
         layout = SiegeIntelLayout.of(width, height, CATEGORIES.size());
         wide = layout.wide();
@@ -211,22 +208,9 @@ public final class IntelScreenV3 extends Screen {
         readEnd = addRenderableWidget(new SiegeButton(34, height - 26, 24, 16, Component.literal("↓"), b -> {
             detailScroll = maxDetailScroll; SiegeUiSounds.click();
         }, 0xFF55BFD9));
-        copyText = addRenderableWidget(new SiegeButton(62, height - 26, 66, 16, Component.literal(label("COPIAR", "COPY")), b -> {
-            List<IntelEntry> files = filtered();
-            if (files.isEmpty()) return;
-            IntelEntry e = files.get(selected);
-            IntelEntry.IntelText t = e.text(spanish());
-            minecraft.keyboardHandler.setClipboard(e.code() + " · " + e.name() + "\nHP " + e.hp()
-                    + " · DEF " + e.defense() + " · " + label("AMENAZA ", "THREAT ") + e.threat()
-                    + "\n" + t.origin() + "\n" + t.armament() + "\n" + t.variants() + "\n" + t.status()
-                    + "\n\n" + t.description() + "\n\n" + t.advisory());
-            copiedUntil = System.currentTimeMillis() + 1600;
-            SiegeUiSounds.click();
-        }, 0xFFD6A94B));
         readStart.setTooltip(Tooltip.create(Component.literal(label("Inicio del texto", "Start of text"))));
         readEnd.setTooltip(Tooltip.create(Component.literal(label("Final del texto", "End of text"))));
-        copyText.setTooltip(Tooltip.create(Component.literal(label("Copiar la información al portapapeles", "Copy dossier information to clipboard"))));
-        readStart.visible = readEnd.visible = copyText.visible = false;
+        readStart.visible = readEnd.visible = false;
     }
 
     @Override
@@ -259,7 +243,6 @@ public final class IntelScreenV3 extends Screen {
         for (SiegeButton button : navigationButtons) removeWidget(button);
         entryButtons.clear();
         navigationButtons.clear();
-        favoriteButton = null;
         draggingScroll = false;
         maxDetailScroll = 0;
         List<IntelEntry> files = filtered();
@@ -283,20 +266,11 @@ public final class IntelScreenV3 extends Screen {
             navigationButtons.add(next);
             addRenderableWidget(previous);
             addRenderableWidget(next);
-            int favoriteWidth = Math.min(104, (width - arrowWidth * 2 - 28) / 2);
-            int centerX = (width - favoriteWidth * 2 - 4) / 2;
-            addIndexButton(centerX, listTop, favoriteWidth, navHeight);
-            favoriteButton = new SiegeButton(centerX + favoriteWidth + 4, listTop, favoriteWidth, navHeight,
-                    favoriteButtonLabel(files.get(selected)), b -> toggleFavorite(), 0xFFF0D46A);
-            favoriteButton.setSelected(SiegeConfig.isFavoriteIntel(files.get(selected).code()));
-            navigationButtons.add(favoriteButton);
-            addRenderableWidget(favoriteButton);
             return;
         }
 
         int arrowWidth = sidebarWidth - 20;
-        addIndexButton(52, listTop, arrowWidth - 42, 18);
-        SiegeButton previous = new SiegeButton(10, listTop, 38, 18,
+        SiegeButton previous = new SiegeButton(10, listTop, arrowWidth, 18,
                 Component.literal("←"),
                 b -> stepEntry(-1), categoryAccent(category));
         SiegeButton next = new SiegeButton(10, height - 29, arrowWidth, 18,
@@ -304,13 +278,8 @@ public final class IntelScreenV3 extends Screen {
                 b -> stepEntry(1), categoryAccent(category));
         navigationButtons.add(previous);
         navigationButtons.add(next);
-        favoriteButton = new SiegeButton(10, height - 52, arrowWidth, 18,
-                favoriteButtonLabel(files.get(selected)), b -> toggleFavorite(), 0xFFF0D46A);
-        favoriteButton.setSelected(SiegeConfig.isFavoriteIntel(files.get(selected).code()));
-        navigationButtons.add(favoriteButton);
         addRenderableWidget(previous);
         addRenderableWidget(next);
-        addRenderableWidget(favoriteButton);
 
         int visible = visibleEntries();
         ensureSelectedVisible(visible, files.size());
@@ -319,32 +288,13 @@ public final class IntelScreenV3 extends Screen {
             int index = i;
             IntelEntry entry = files.get(i);
             SiegeButton button = new SiegeButton(10, y, sidebarWidth - 20, 19,
-                    Component.literal((SiegeConfig.isFavoriteIntel(entry.code()) ? "★ " : "")
-                            + entry.code() + "  " + entry.name()),
+                    Component.literal(entry.code() + "  " + entry.name()),
                     b -> selectEntry(index), categoryAccent(entry.category()));
             button.setSelected(i == selected);
             entryButtons.add(button);
             addRenderableWidget(button);
             y += 22;
         }
-    }
-
-    private void addIndexButton(int x, int y, int w, int h) {
-        SiegeButton button = new SiegeButton(x, y, w, h, Component.literal(label("ÍNDICE", "INDEX")), b -> {
-            List<IntelEntry> files = filtered();
-            if (files.isEmpty()) return;
-            SiegeUiSounds.click();
-            minecraft.setScreen(new IntelIndexScreen(this, files, categoryLabel(category), files.get(selected).code(), "FAVORITES".equals(category), code -> {
-                List<IntelEntry> current = filtered();
-                for (int i = 0; i < current.size(); i++) if (current.get(i).code().equals(code)) {
-                    selectEntry(i);
-                    break;
-                }
-            }));
-        }, 0xFF55BFD9);
-        button.setTooltip(Tooltip.create(Component.literal(label("Ver y ordenar los expedientes de esta selección", "Browse and sort dossiers in this selection"))));
-        navigationButtons.add(button);
-        addRenderableWidget(button);
     }
 
     private void selectEntry(int index) {
@@ -368,7 +318,6 @@ public final class IntelScreenV3 extends Screen {
             ensureSelectedVisible(visibleEntries(), files.size());
             rebuildEntryNavigator();
         }
-        refreshFavoriteButton();
         rememberSelection();
     }
 
@@ -385,7 +334,6 @@ public final class IntelScreenV3 extends Screen {
                 entryButtons.get(i).setSelected(listOffset + i == selected);
             }
         }
-        refreshFavoriteButton();
     }
 
     private int visibleEntries() {
@@ -408,36 +356,6 @@ public final class IntelScreenV3 extends Screen {
         rememberedCode = files.isEmpty() ? null : files.get(Math.max(0, Math.min(selected, files.size() - 1))).code();
     }
 
-    private void toggleFavorite() {
-        List<IntelEntry> files = filtered();
-        if (files.isEmpty()) return;
-        IntelEntry entry = files.get(Math.max(0, Math.min(selected, files.size() - 1)));
-        SiegeConfig.toggleFavoriteIntel(entry.code());
-        SiegeUiSounds.click();
-        rebuildEntryNavigator();
-        rememberSelection();
-        refreshCategoryButtons();
-    }
-
-    private void refreshFavoriteButton() {
-        if (favoriteButton == null) return;
-        List<IntelEntry> files = filtered();
-        if (files.isEmpty()) {
-            favoriteButton.active = false;
-            favoriteButton.setSelected(false);
-            favoriteButton.setMessage(Component.literal(label("SIN EXPEDIENTE", "NO DOSSIER")));
-            return;
-        }
-        IntelEntry entry = files.get(Math.max(0, Math.min(selected, files.size() - 1)));
-        favoriteButton.active = true;
-        favoriteButton.setSelected(SiegeConfig.isFavoriteIntel(entry.code()));
-        favoriteButton.setMessage(favoriteButtonLabel(entry));
-    }
-
-    private Component favoriteButtonLabel(IntelEntry entry) {
-        return Component.literal(SiegeConfig.isFavoriteIntel(entry.code())
-                ? label("★ GUARDADO", "★ SAVED") : label("☆ GUARDAR", "☆ SAVE"));
-    }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
@@ -478,7 +396,7 @@ public final class IntelScreenV3 extends Screen {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
         clearSearch.active = !query.isEmpty();
-        readStart.visible = readEnd.visible = copyText.visible = false;
+        readStart.visible = readEnd.visible = false;
         portraitW = 0;
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         int accent = categoryAccent(category);
@@ -491,8 +409,7 @@ public final class IntelScreenV3 extends Screen {
             int centerX = wide ? (sidebarWidth + width) / 2 : width / 2;
             g.drawCenteredString(font, font.plainSubstrByWidth(label("SIN RESULTADOS", "NO RESULTS"), wide ? width - sidebarWidth - 30 : width - 20),
                     centerX, height / 2 - 5, 0xFF8A9298);
-            String empty = !query.isBlank() ? label("Prueba otra búsqueda o pulsa × para borrarla.", "Try another search or use × to clear it.") : "FAVORITES".equals(category)
-                    ? label("Usa GUARDAR en un expediente para añadirlo aquí.", "Use SAVE on a dossier to add it here.")
+            String empty = !query.isBlank() ? label("Prueba otra búsqueda o pulsa × para borrarla.", "Try another search or use × to clear it.")
                     : label("La base de datos todavía no contiene registros.", "The database does not contain records yet.");
             g.drawCenteredString(font, font.plainSubstrByWidth(empty, wide ? width - sidebarWidth - 30 : width - 20),
                     centerX, height / 2 + 10, 0xFF68727A);
@@ -566,7 +483,7 @@ public final class IntelScreenV3 extends Screen {
         g.fill(x, y, x + availableWidth, y + 2, categoryAccent(entry.category()));
         String ref = entry.code() + "  ·  " + (selected + 1) + "/" + filtered().size();
         g.drawString(font, ref, x + pad, y + 6, muted, false);
-        String stamp = SiegeConfig.isFavoriteIntel(entry.code()) ? "★" : "";
+        String stamp = "";
         g.drawString(font, stamp, x + availableWidth - pad - font.width(stamp), y + 6, accent, false);
         g.drawString(font, font.plainSubstrByWidth(entry.name(), inner), x + pad, y + 18, ink, false);
         bodyLeft = x + pad;
@@ -623,10 +540,9 @@ public final class IntelScreenV3 extends Screen {
             g.fill(bodyRight - 4, thumbY, bodyRight, thumbY + thumbH, accent);
         }
         readingPositions.put(entry.code(), detailScroll);
-        readStart.visible = readEnd.visible = copyText.visible = true;
-        readStart.setX(bodyLeft); readEnd.setX(bodyLeft + 28); copyText.setX(bodyLeft + 56);
+        readStart.visible = readEnd.visible = true;
+        readStart.setX(bodyLeft); readEnd.setX(bodyLeft + 28);
         readStart.active = detailScroll > 0; readEnd.active = detailScroll < maxDetailScroll;
-        copyText.setMessage(Component.literal(System.currentTimeMillis() < copiedUntil ? label("COPIADO", "COPIED") : label("COPIAR", "COPY")));
         String progress = (maxDetailScroll == 0 ? 100 : (int)Math.round(100.0 * detailScroll / maxDetailScroll)) + "%";
         g.drawString(font, progress, bodyRight - font.width(progress), bottom - 11, muted, false);
 
@@ -706,7 +622,6 @@ public final class IntelScreenV3 extends Screen {
                 case "BOSS" -> spanish() ? "JEF" : "BOS";
                 case "ELITE" -> "ELT";
                 case "SUPER-UNIT" -> "SUP";
-                case "FAVORITES" -> spanish() ? "FAV" : "FAV";
                 default -> value;
             };
             return shortName;
@@ -720,7 +635,6 @@ public final class IntelScreenV3 extends Screen {
             case "BOSS" -> label("JEFES", "BOSSES");
             case "ELITE" -> label("ÉLITES", "ELITES");
             case "SUPER-UNIT" -> label("SUPERUNIDADES", "SUPER-UNITS");
-            case "FAVORITES" -> label("FAVORITOS", "FAVORITES");
             default -> value;
         };
         return name + "  [" + count + "]";
@@ -735,7 +649,6 @@ public final class IntelScreenV3 extends Screen {
             case "BOSS" -> 0xFFB5162D;
             case "ELITE" -> 0xFF9B59D0;
             case "SUPER-UNIT" -> 0xFFE0B93F;
-            case "FAVORITES" -> 0xFFF0D46A;
             default -> 0xFFB8C0C8;
         };
     }

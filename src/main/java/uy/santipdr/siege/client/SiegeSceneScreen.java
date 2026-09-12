@@ -16,7 +16,8 @@ public final class SiegeSceneScreen extends Screen {
     private final Screen parent;
     private int index, previousIndex, page;
     private long changedAt;
-    private boolean cleanView, containPreview, menuPreview, undoAvailable;
+    private boolean cleanView, menuPreview, undoAvailable;
+    private boolean containPreview = true;
     private int undoScene;
     private boolean undoAnimated;
     private SiegeButton framing, contrast, undo, current;
@@ -51,8 +52,8 @@ public final class SiegeSceneScreen extends Screen {
         nextPage = addRenderableWidget(new SiegeButton(width - 32, 36, 24, 20,
                 Component.literal("→"), b -> changePage(1), 0xFF55BFD9));
         int optionWidth = (width - 28) / 4;
-        framing = addRenderableWidget(new SiegeButton(8, 65, optionWidth, 18, text("ENCUADRE", "FRAMING"), b -> {
-            containPreview = !containPreview; refresh(); SiegeUiSounds.click();
+        framing = addRenderableWidget(new SiegeButton(8, 65, optionWidth, 18, text("VER COMPLETO", "FULL VIEW"), b -> {
+            toggleCleanView();
         }, 0xFF55BFD9));
         contrast = addRenderableWidget(new SiegeButton(12 + optionWidth, 65, optionWidth, 18, text("CONTRASTE", "CONTRAST"), b -> {
             menuPreview = !menuPreview; refresh(); SiegeUiSounds.click();

@@ -58,7 +58,7 @@ public final class SiegeTitleScreen extends Screen {
         menuX = margin;
 
         int desiredTop = compact ? 72 : 112;
-        menuTop = Math.max(desiredTop, (height - totalHeight) / 2 + (compact ? 10 : 20));
+        menuTop = desiredTop;
         menuTop = Math.min(menuTop, Math.max(50, height - totalHeight - 14));
         menuBottom = menuTop + totalHeight;
 
@@ -78,11 +78,7 @@ public final class SiegeTitleScreen extends Screen {
         int trackWidth = compact ? 88 : 100;
         addRenderableWidget(new SiegeButton(width - trackWidth - 9, 9, trackWidth, compact ? 18 : 20,
                 Component.literal(label("> MÚSICA", "> MUSIC")), b -> changeTrack(), 0xFFD64B4B));
-        addRenderableWidget(new SiegeButton(width - trackWidth - 9, compact ? 31 : 33, trackWidth, 18,
-                Component.literal(label("FONDOS", "BACKGROUNDS")), b -> {
-                    SiegeUiSounds.click();
-                    minecraft.setScreen(new SiegeSceneScreen(this));
-                }, 0xFFD6A94B));
+
     }
 
     private SiegeButton command(int x, int y, int width, int height, String key, Button.OnPress press) {
@@ -126,8 +122,8 @@ public final class SiegeTitleScreen extends Screen {
     private void renderTitle(GuiGraphics g, boolean compact, int panelRight) {
         String main = "ETERNAL CRAFT";
         String sub = "S I E G E";
-        int headerWidth = compact ? width - 112 : width - 230;
-        int center = compact ? headerWidth / 2 : width / 2;
+        int headerWidth = menuWidth;
+        int center = menuX + menuWidth / 2;
         float scale = Math.min(compact ? 2.05F : 2.75F, (headerWidth - 12F) / font.width(main));
         int mainWidth = Math.round(font.width(main) * scale);
         int x = center - mainWidth / 2;
@@ -202,7 +198,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.10.1", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.10.2", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 

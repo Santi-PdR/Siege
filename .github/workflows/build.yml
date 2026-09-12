@@ -55,7 +55,10 @@ jobs:
           fi
           grep -q '"FAVORITES"' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'toggleFavoriteIntel' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'favoriteButtonLabel' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
+          if grep -nE 'favoriteButton|addIndexButton|copyText|GUARDAR' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
+            echo "Removed Intel controls must not return"
+            exit 1
+          fi
           grep -q 'trackAnnouncementDurationMs' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
           grep -q 'backgroundDarkness' src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
           if grep -qE 'GLFW_KEY_(I|P|G|M|R|HOME|END)([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java; then

@@ -71,6 +71,7 @@ public final class SiegeBackgrounds {
     }
 
     public static void render(GuiGraphics graphics, int width, int height, long now) {
+        graphics.fill(0, 0, width, height, 0xFF080A0C);
         boolean animated = SiegeConfig.animatedBackgrounds && SiegeConfig.selectedScene < 0;
         long slot = animated ? now / SCENE_MS : 0L;
         long localMs = animated ? now % SCENE_MS : 0L;
@@ -114,23 +115,12 @@ public final class SiegeBackgrounds {
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, Math.max(0.0F, Math.min(1.0F, alpha)));
 
-        int overscan;
-        if (!allowPan) overscan = 0;
-        else if (SiegeConfig.graphics == SiegeConfig.Graphics.CINEMATIC) overscan = 26;
-        else overscan = 16;
-
-        int directionX = ((sceneIndex * 31) & 1) == 0 ? 1 : -1;
-        int directionY = ((sceneIndex * 17) & 2) == 0 ? 1 : -1;
-        float travel = (progress - 0.5F) * 2.0F;
-        int panX = allowPan ? Math.round(directionX * travel * overscan * 0.58F) : 0;
-        int panY = allowPan ? Math.round(directionY * travel * overscan * 0.24F) : 0;
-
-        // Cover the viewport while preserving the source's 16:9 proportions.
-        double scale = Math.max((w + overscan * 2) / 960.0D, (h + overscan * 2) / 540.0D);
-        int drawW = (int)Math.ceil(960 * scale);
-        int drawH = (int)Math.ceil(540 * scale);
-        int x = (w - drawW) / 2 + panX;
-        int y = (h - drawH) / 2 + panY;
+        // Fit the complete image; crossfades provide movement without cropping its edges.
+        double scale = Math.min(w / 960.0D, h / 540.0D);
+        int drawW = Math.max(1, (int)Math.floor(960 * scale));
+        int drawH = Math.max(1, (int)Math.floor(540 * scale));
+        int x = (w - drawW) / 2;
+        int y = (h - drawH) / 2;
         g.blit(texture, x, y, drawW, drawH, 0, 0, 960, 540, 960, 540);
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);

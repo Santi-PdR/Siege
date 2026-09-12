@@ -35,10 +35,10 @@ public class UiRegressionTest {
                 for (int j = i + 1; j < gallery.capacity(); j++) check(!overlaps(tile, gallery.tile(j)), "Tile overlap");
             }
             for (int i = 0; i < 4; i++) { inside(gallery.action(i), w, h); check(gallery.action(i).w() >= 60, "Action too narrow"); }
-            var intel = SiegeIntelLayout.of(w, h, 7);
+            var intel = SiegeIntelLayout.of(w, h, 6);
             check(intel.contentTop() + 34 + 55 < h - 24, "Intel reading area lost at " + w + "x" + h);
             if (intel.wide()) check(intel.listTop() + 44 <= intel.listBottom(), "Wide list cannot fit one entry");
-            else check(intel.listTop() - 24 >= intel.categoryTop() + ((7 + intel.columns() - 1) / intel.columns()) * (intel.categoryHeight() + 2), "Search overlaps categories");
+            else check(intel.listTop() - 24 >= intel.categoryTop() + ((6 + intel.columns() - 1) / intel.columns()) * (intel.categoryHeight() + 2), "Search overlaps categories");
             int previewWidth = IntelIndexModel.previewWidth(w, h);
             int listRight = IntelIndexModel.listRight(w, h);
             check(listRight - 42 >= 270, "Index rows too narrow");
