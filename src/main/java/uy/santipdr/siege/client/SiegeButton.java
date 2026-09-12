@@ -56,7 +56,8 @@ public final class SiegeButton extends Button {
             return;
         }
 
-        int body = !active ? 0xB90A0C0F : selected ? 0xE51A2026 : hot ? 0xE5181D22 : 0xD20B0F13;
+        boolean pressed = active && System.currentTimeMillis() < pressedUntil;
+        int body = !active ? 0xB90A0C0F : pressed ? 0xF0242C33 : selected ? 0xE51A2026 : blend(0xD20B0F13, 0xE5181D22, hoverAmount);
         int edge = !active ? 0xFF41464C : (selected || hot) ? accent : 0xFF4C555E;
 
         g.fill(x + 2, y + 2, x + w + 2, y + h + 2, 0x55000000);
@@ -93,19 +94,23 @@ public final class SiegeButton extends Button {
         int underlineWidth = Math.round((w - 4) * hoverAmount);
         if (underlineWidth > 0) g.fill(x + 2, y + h - 2, x + 2 + underlineWidth, y + h - 1, accent);
 
-        int left = 9 + Math.round(4.0F * hoverAmount);
+        int left = 13;
         int usable = Math.max(1, w <= 40 ? w - 8 : w - left - (selected ? 17 : 9));
         String text = fit(font, getMessage().getString(), usable);
         if (w <= 40) left = (w - font.width(text)) / 2;
         int textColor = !active ? 0xFF6F767D : hot || selected ? 0xFFF5F3EC : 0xFFD8DDE1;
+        if (pressed) {
+            g.fill(x + 2, y + 1, x + w - 1, y + 2, edge);
+            g.fill(x + 2, y + h - 2, x + w - 1, y + h - 1, edge);
+        }
         g.drawString(font, text, x + left, y + Math.max(1, (h - font.lineHeight) / 2), textColor, false);
     }
 
     private void renderMainMenuWidget(GuiGraphics g, Font font, int x, int y, int w, int h,
                                       boolean hot, boolean effects) {
         boolean pressed = System.currentTimeMillis() < pressedUntil;
-        int face = !active ? 0xFF56585A : pressed ? 0xFF555759 : hot || selected ? 0xFF858789 : 0xFF696B6D;
-        int inset = !active ? 0xFF606264 : pressed ? 0xFF626466 : hot || selected ? 0xFF929496 : 0xFF747678;
+        int face = !active ? 0xFF56585A : pressed ? 0xFF555759 : selected ? 0xFF858789 : blend(0xFF696B6D, 0xFF858789, hoverAmount);
+        int inset = !active ? 0xFF606264 : pressed ? 0xFF626466 : selected ? 0xFF929496 : blend(0xFF747678, 0xFF929496, hoverAmount);
         int rim = pressed ? accent : hot || selected ? 0xFFF0F0EC : 0xFF9A9C9E;
 
         // Old reference: solid grey plate, deep lower/right shadow and square double rim.
@@ -132,19 +137,37 @@ public final class SiegeButton extends Button {
             }
         }
 
-        String text = fit(font, getMessage().getString(), w - 42);
-        int textX = x + (w - font.width(text)) / 2;
-        int textY = y + Math.max(1, (h - font.lineHeight) / 2);
+        String label = getMessage().getString();
+        int labelWidth = Math.max(1, w - 42);
+        float labelScale = Math.max(0.85F, Math.min(1.0F, labelWidth / (float)Math.max(1, font.width(label))));
+        String text = fit(font, label, (int)(labelWidth / labelScale));
+        int textX = x + (w - Math.round(font.width(text) * labelScale)) / 2;
+        int textY = y + Math.max(1, (h - Math.round(font.lineHeight * labelScale)) / 2);
         int textColor = !active ? 0xFFAAAAA7 : hot || selected ? 0xFFFFFFFF : 0xFFF0F0ED;
         int pressOffset = pressed ? 1 : 0;
-        g.drawString(font, text, textX + 1 + pressOffset, textY + 1 + pressOffset, 0xB0303030, false);
-        g.drawString(font, text, textX + pressOffset, textY + pressOffset, textColor, false);
+        g.pose().pushPose();
+        g.pose().translate(textX + pressOffset, textY + pressOffset, 0);
+        g.pose().scale(labelScale, labelScale, 1);
+        g.drawString(font, text, 1, 1, 0xB0303030, false);
+        g.drawString(font, text, 0, 0, textColor, false);
+        g.pose().popPose();
     }
 
     @Override
     public void onPress() {
         pressedUntil = System.currentTimeMillis() + 120L;
         super.onPress();
+    }
+
+    private static int blend(int from, int to, float amount) {
+        float t = Math.max(0, Math.min(1, amount));
+        int result = 0;
+        for (int shift = 0; shift <= 24; shift += 8) {
+            int start = (from >>> shift) & 255;
+            int end = (to >>> shift) & 255;
+            result |= Math.round(start + (end - start) * t) << shift;
+        }
+        return result;
     }
 
     private static String fit(Font font, String value, int width) {

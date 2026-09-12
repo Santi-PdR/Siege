@@ -1,3 +1,7 @@
+## 0.10.3 — Respuesta visual de botones
+
+Etiquetas estables durante hover, transiciones suaves de color en botones normales y placas grises, pulsación visible también en configuración y galería. Las etiquetas largas del menú admiten una reducción moderada hasta 85% antes de truncarse, manteniendo reservado el selector. Movimiento reducido conserva respuesta inmediata. Distribución 0.10.2 y controles simplificados conservados. Pendiente revisión visual en Minecraft.
+
 ## 0.10.2 — Composición clásica y fondos completos
 
 Título alineado con la columna izquierda y botones elevados. Intel vuelve a seis categorías: sin Favoritos, Índice, Guardar ni Copiar; conserva búsqueda, lectura, Ampliar y flechas. Fondos se abre desde Configuración. Imágenes completas en portada, galería y miniaturas, sin zoom ni paneo que recorte bordes; transiciones suaves conservadas. Vista completa accesible desde la galería. CI protege la retirada de controles. Pendiente comprobación visual en Minecraft.
