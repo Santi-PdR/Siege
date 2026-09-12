@@ -14,7 +14,7 @@ public final class IntelPortraitScreen extends Screen {
     private final SiegeImageViewport camera = new SiegeImageViewport();
     private final ResourceLocation texture;
     private SiegeButton minus, plus, fitButton;
-    private final int top = 40;
+    private final int top = 64;
     private int bottom;
     private boolean draggingImage, draggingMap;
 
@@ -38,6 +38,20 @@ public final class IntelPortraitScreen extends Screen {
                 text("AJUSTAR", "FIT"), b -> { camera.reset(); refresh(); SiegeUiSounds.click(); }, 0xFFD6A94B));
         addRenderableWidget(new SiegeButton(x + (w + 4) * 3, height - 27, w, 19,
                 text("VOLVER", "BACK"), b -> onClose(), 0xFFD65A4B));
+        int optionW = (width - 28) / 4;
+        addRenderableWidget(new SiegeButton(8, 39, optionW, 18, text("FONDO", "BACKGROUND"), b -> {
+            SiegeConfig.inspectorBackground = (SiegeConfig.inspectorBackground + 1) % 3; SiegeConfig.save(); SiegeUiSounds.click();
+        }, 0xFFD6A94B)).setTooltip(Tooltip.create(text("Alternar fondo negro, gris o papel", "Cycle black, gray or paper background")));
+        addRenderableWidget(new SiegeButton(12 + optionW, 39, optionW, 18, text("MINIMAPA", "MINIMAP"), b -> {
+            SiegeConfig.inspectorMap = !SiegeConfig.inspectorMap; SiegeConfig.save();
+            ((SiegeButton)b).setSelected(SiegeConfig.inspectorMap); SiegeUiSounds.click();
+        }, 0xFF55BFD9).setSelected(SiegeConfig.inspectorMap));
+        addRenderableWidget(new SiegeButton(16 + optionW * 2, 39, optionW, 18, text("ZOOM 2×/4×", "ZOOM 2×/4×"), b -> {
+            changeZoom(camera.zoom() < 1.99 || camera.zoom() >= 3.99 ? 2 : 4, width / 2.0, (top + bottom) / 2.0);
+        }, 0xFF55BFD9));
+        addRenderableWidget(new SiegeButton(20 + optionW * 3, 39, optionW, 18, text("CENTRAR", "CENTER"), b -> {
+            camera.centerOn(0.5, 0.5); SiegeUiSounds.click();
+        }, 0xFF55BFD9)).setTooltip(Tooltip.create(text("Centrar sin cambiar el zoom", "Center without changing zoom")));
         minus.setTooltip(Tooltip.create(text("Alejar la imagen", "Zoom out")));
         plus.setTooltip(Tooltip.create(text("Ampliar la imagen", "Zoom in")));
         fitButton.setTooltip(Tooltip.create(text("Centrar y mostrar el expediente completo", "Center and show the complete artwork")));
@@ -52,7 +66,7 @@ public final class IntelPortraitScreen extends Screen {
         plus.active = camera.zoom() < 3.999;
         fitButton.active = camera.zoom() > 1.001;
     }
-    private boolean hasMap() { return camera.zoom() > 1.001 && width >= 500 && height >= 300; }
+    private boolean hasMap() { return SiegeConfig.inspectorMap && camera.zoom() > 1.001 && width >= 500 && height >= 300; }
     private SiegeGalleryLayout.Rect map() { return new SiegeGalleryLayout.Rect(width - 120, top + 8, 104, 59); }
     private boolean inImage(double x, double y) { return x >= 8 && x < width - 8 && y >= top && y < bottom; }
     private void moveMap(double x, double y) {
@@ -68,6 +82,10 @@ public final class IntelPortraitScreen extends Screen {
         String amount = Math.round(camera.zoom() * 100) + "%";
         g.drawString(font, font.plainSubstrByWidth(hint, width - font.width(amount) - 34), 8, 23, 0xFF9CA7AE, false);
         g.drawString(font, amount, width - font.width(amount) - 8, 23, 0xFFF0CE74, false);
+        int backdrop = switch (SiegeConfig.inspectorBackground) {
+            case 1 -> 0xFF777777; case 2 -> 0xFFE7DFC9; default -> 0xFF08090A;
+        };
+        g.fill(8, top, width - 8, bottom, backdrop);
         g.enableScissor(8, top, width - 8, bottom);
         g.blit(texture, 8 + (int)Math.round(camera.x()), top + (int)Math.round(camera.y()),
                 (int)Math.round(camera.imageWidth()), (int)Math.round(camera.imageHeight()), 0, 0, 640, 360, 640, 360);

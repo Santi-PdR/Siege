@@ -173,3 +173,15 @@ CI compiles/tests the production camera alongside the existing responsive geomet
 ## 0.9.2 dossier index
 
 IntelIndexScreen opens a snapshot of the current filtered category, never the entire catalog. Rows select by stable code and return to the existing IntelScreenV3 instance. The index has its own temporary search and order, leaving the parent query/reading mode intact. IntelIndexModel owns sorting/filtering/page bounds and is tested in CI. The compact navigation row splits its middle space between Index and Favorite; wide navigation pairs Previous with Index. Keep native text input/Tab/Escape without adding letter shortcuts.
+
+
+## 0.10.0 reading, index and preferences
+
+- Preserve SETTINGS_REVISION=801: increasing it would reapply the historical autoRotateIntel migration. New options load defaults independently.
+- Config reset preserves FAVORITE_INTEL; clearFavoriteIntel is only exposed behind its own confirmation.
+- Index filtering combines query, threat, favorite status and reverse sort. Its category snapshot remains the scope; favorite-category snapshots additionally filter against current favorite state.
+- Reading progress is per code for the lifetime of IntelScreenV3. A small footer owns start/end/copy actions. Dark paper and line spacing are preferences, not mutations of dossier artwork.
+- Gallery options occupy a reserved row at y=65, with preview/rail beginning at y=91. Undo remembers both selectedScene and animatedBackgrounds.
+- Inspector options occupy y=39..57; image viewport starts at y=64. The minimap preference does not override minimum viewport dimensions.
+- Six settings sections still use two rows of three tabs in compact mode. The audio header has a fixed 49px reservation before scrollable controls.
+- Regression coverage executes production models plus SiegeConfig with filesystem/logging adapters; adapters live only under tests and are not packaged.

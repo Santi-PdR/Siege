@@ -21,14 +21,14 @@ public record SiegeGalleryLayout(Rect preview, Rect heading, Rect thumbnails, Re
         int columns, rows;
         if (wide) {
             int rail = Math.min(310, width / 3);
-            preview = new Rect(margin, 65, width - rail - margin * 3, height - 106);
-            thumbnails = new Rect(width - rail - margin, 65, rail, height - 106);
+            preview = new Rect(margin, 91, width - rail - margin * 3, height - 132);
+            thumbnails = new Rect(width - rail - margin, 91, rail, height - 132);
             columns = 2;
             rows = Math.min(5, Math.max(2, thumbnails.h() / 74));
         } else {
             int stripHeight = height >= 300 ? 78 : 58;
             thumbnails = new Rect(margin, actions.y() - stripHeight - 8, width - margin * 2, stripHeight);
-            preview = new Rect(margin, 65, width - margin * 2, thumbnails.y() - 73);
+            preview = new Rect(margin, 91, width - margin * 2, thumbnails.y() - 99);
             columns = Math.max(3, Math.min(6, thumbnails.w() / 96));
             rows = 1;
         }

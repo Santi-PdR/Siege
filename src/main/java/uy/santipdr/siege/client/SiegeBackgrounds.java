@@ -19,6 +19,17 @@ public final class SiegeBackgrounds {
 
     private SiegeBackgrounds() { }
 
+    public static int currentIndex(long now) {
+        if (SiegeConfig.selectedScene >= 0) return Math.floorMod(SiegeConfig.selectedScene, SCENES.size());
+        return SiegeConfig.animatedBackgrounds ? (int)Math.floorMod(now / SCENE_MS, SCENES.size()) : 0;
+    }
+    public static void renderContainedRegion(GuiGraphics g, int x, int y, int w, int h, int index, float alpha) {
+        double scale = Math.min(w / 960.0, h / 540.0);
+        int drawW = Math.max(1, (int)Math.floor(960 * scale));
+        int drawH = Math.max(1, (int)Math.floor(540 * scale));
+        renderRegion(g, x + (w - drawW) / 2, y + (h - drawH) / 2, drawW, drawH, index, alpha);
+    }
+
     public static int count() { return SCENES.size(); }
 
     public static String name(int index) {

@@ -32,7 +32,12 @@ public final class IntelScreenV3 extends Screen {
     private EditBox search;
     private String query = "";
     private SiegeButton clearSearch, readingButton, inspectButton;
-    private boolean readingMode;
+    private boolean readingMode = SiegeConfig.intelReadingMode;
+    private final java.util.Map<String, Integer> readingPositions = new java.util.HashMap<>();
+    private String lastReadingCode;
+    private SiegeButton readStart, readEnd, copyText;
+    private long copiedUntil;
+    private int portraitX, portraitY, portraitW, portraitH;
     private int bodyLeft, bodyRight, bodyBottom;
     private boolean draggingScroll;
     private long entryChangedAt;
@@ -79,6 +84,7 @@ public final class IntelScreenV3 extends Screen {
         applyInitialEntry();
         if (wide) initWide(); else initCompact();
         initTools();
+        initReadingActions();
         refreshCategoryButtons();
         rebuildEntryNavigator();
     }
@@ -182,6 +188,7 @@ public final class IntelScreenV3 extends Screen {
         readingButton = addRenderableWidget(new SiegeButton(x + searchW + small + 8, y, modeW, 18,
                 Component.literal(label("LECTURA", "READING")), b -> {
                     readingMode = !readingMode;
+                    SiegeConfig.intelReadingMode = readingMode; SiegeConfig.save();
                     detailScroll = 0;
                     readingButton.setSelected(readingMode);
                     SiegeUiSounds.click();
@@ -195,6 +202,31 @@ public final class IntelScreenV3 extends Screen {
                         minecraft.setScreen(new IntelPortraitScreen(this, files.get(selected)));
                     }
                 }, 0xFF55BFD9));
+    }
+
+    private void initReadingActions() {
+        readStart = addRenderableWidget(new SiegeButton(6, height - 26, 24, 16, Component.literal("↑"), b -> {
+            detailScroll = 0; SiegeUiSounds.click();
+        }, 0xFF55BFD9));
+        readEnd = addRenderableWidget(new SiegeButton(34, height - 26, 24, 16, Component.literal("↓"), b -> {
+            detailScroll = maxDetailScroll; SiegeUiSounds.click();
+        }, 0xFF55BFD9));
+        copyText = addRenderableWidget(new SiegeButton(62, height - 26, 66, 16, Component.literal(label("COPIAR", "COPY")), b -> {
+            List<IntelEntry> files = filtered();
+            if (files.isEmpty()) return;
+            IntelEntry e = files.get(selected);
+            IntelEntry.IntelText t = e.text(spanish());
+            minecraft.keyboardHandler.setClipboard(e.code() + " · " + e.name() + "\nHP " + e.hp()
+                    + " · DEF " + e.defense() + " · " + label("AMENAZA ", "THREAT ") + e.threat()
+                    + "\n" + t.origin() + "\n" + t.armament() + "\n" + t.variants() + "\n" + t.status()
+                    + "\n\n" + t.description() + "\n\n" + t.advisory());
+            copiedUntil = System.currentTimeMillis() + 1600;
+            SiegeUiSounds.click();
+        }, 0xFFD6A94B));
+        readStart.setTooltip(Tooltip.create(Component.literal(label("Inicio del texto", "Start of text"))));
+        readEnd.setTooltip(Tooltip.create(Component.literal(label("Final del texto", "End of text"))));
+        copyText.setTooltip(Tooltip.create(Component.literal(label("Copiar la información al portapapeles", "Copy dossier information to clipboard"))));
+        readStart.visible = readEnd.visible = copyText.visible = false;
     }
 
     @Override
@@ -302,7 +334,7 @@ public final class IntelScreenV3 extends Screen {
             List<IntelEntry> files = filtered();
             if (files.isEmpty()) return;
             SiegeUiSounds.click();
-            minecraft.setScreen(new IntelIndexScreen(this, files, categoryLabel(category), files.get(selected).code(), code -> {
+            minecraft.setScreen(new IntelIndexScreen(this, files, categoryLabel(category), files.get(selected).code(), "FAVORITES".equals(category), code -> {
                 List<IntelEntry> current = filtered();
                 for (int i = 0; i < current.size(); i++) if (current.get(i).code().equals(code)) {
                     selectEntry(i);
@@ -316,6 +348,7 @@ public final class IntelScreenV3 extends Screen {
     }
 
     private void selectEntry(int index) {
+        if (index == selected) { SiegeUiSounds.click(); return; }
         SiegeUiSounds.click();
         selected = index;
         entryChangedAt = System.currentTimeMillis();
@@ -445,6 +478,8 @@ public final class IntelScreenV3 extends Screen {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
         clearSearch.active = !query.isEmpty();
+        readStart.visible = readEnd.visible = copyText.visible = false;
+        portraitW = 0;
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         int accent = categoryAccent(category);
         g.fill(0, 0, width, height, 0xA006090B);
@@ -517,10 +552,12 @@ public final class IntelScreenV3 extends Screen {
     private void renderFile(GuiGraphics g, IntelEntry entry, int x, int y, int availableWidth, boolean compactMode) {
         IntelEntry.IntelText text = entry.text(spanish());
         boolean advanced = entry.category().equals("ADVANCED");
-        int paper = advanced ? 0xFFE0E7EB : 0xFFE7DFC9;
-        int ink = advanced ? 0xFF13232D : 0xFF29261F;
-        int muted = advanced ? 0xFF53646E : 0xFF6B6454;
-        int accent = accentInk(entry.category());
+        boolean dark = SiegeConfig.darkIntelPaper;
+        int paper = dark ? 0xFF20262B : advanced ? 0xFFE0E7EB : 0xFFE7DFC9;
+        int ink = dark ? 0xFFE5E7E2 : advanced ? 0xFF13232D : 0xFF29261F;
+        int muted = dark ? 0xFFADB8BE : advanced ? 0xFF53646E : 0xFF6B6454;
+        int accent = dark ? 0xFF91CFE2 : accentInk(entry.category());
+        int warning = dark ? 0xFFFFA99B : 0xFF8A2E27;
         int bottom = height - 7;
         int pad = compactMode ? 6 : 12;
         int inner = availableWidth - pad * 2;
@@ -535,24 +572,26 @@ public final class IntelScreenV3 extends Screen {
         bodyLeft = x + pad;
         bodyRight = x + availableWidth - pad;
         detailBodyTop = y + 34;
-        bodyBottom = bottom - 17;
+        bodyBottom = bottom - 25;
         // At compact scales, metadata belongs to the scroll area; it cannot push it off-screen.
         if (!readingMode && !compactMode && availableWidth >= 420) {
             int imageW = Math.min(292, inner * 43 / 100);
             int imageH = imageW * 9 / 16;
             int imageY = y + 37;
+            portraitX = bodyLeft; portraitY = imageY; portraitW = imageW; portraitH = imageH;
             g.blit(portraitTexture(entry, bossFrame(entry)), bodyLeft, imageY, imageW, imageH, 0, 0, 640, 360, 640, 360);
             g.drawString(font, label("AMPLIAR: VER IMAGEN", "INSPECT: VIEW IMAGE"), bodyLeft, imageY + imageH + 8, muted, false);
             bodyLeft += imageW + 14;
         } else if (!readingMode && bodyBottom - detailBodyTop >= 140) {
             int imageH = Math.min(80, (bodyBottom - detailBodyTop) / 3);
             int imageW = imageH * 16 / 9;
+            portraitX = bodyLeft; portraitY = detailBodyTop; portraitW = imageW; portraitH = imageH;
             g.blit(portraitTexture(entry, bossFrame(entry)), bodyLeft, detailBodyTop, imageW, imageH, 0, 0, 640, 360, 640, 360);
             detailBodyTop += imageH + 8;
         }
         int bodyWidth = bodyRight - bodyLeft - 8;
         List<DetailLine> lines = new ArrayList<>();
-        appendWrapped(lines, label("AMENAZA", "THREAT") + " " + (entry.threat() > 0 ? stars(entry.threat()) : label("SIN DATOS", "NO DATA")), bodyWidth, 0xFF8A2E27);
+        appendWrapped(lines, label("AMENAZA", "THREAT") + " " + (entry.threat() > 0 ? stars(entry.threat()) : label("SIN DATOS", "NO DATA")), bodyWidth, warning);
         appendWrapped(lines, "HP " + entry.hp() + ("N/D".equals(entry.defense()) ? "" : "  DEF " + entry.defense()), bodyWidth, ink);
         appendWrapped(lines, label("ORIGEN: ", "ORIGIN: ") + text.origin(), bodyWidth, muted);
         appendWrapped(lines, label("ESTADO: ", "STATUS: ") + text.status(), bodyWidth, muted);
@@ -562,14 +601,19 @@ public final class IntelScreenV3 extends Screen {
         appendWrapped(lines, label("PERFIL OPERATIVO", "OPERATIONAL PROFILE"), bodyWidth, accent);
         appendWrapped(lines, text.description(), bodyWidth, ink);
         lines.add(blankLine());
-        appendWrapped(lines, label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), bodyWidth, 0xFF8A2E27);
-        appendWrapped(lines, text.advisory(), bodyWidth, 0xFF8A2E27);
-        int visible = Math.max(1, (bodyBottom - detailBodyTop) / 11);
+        appendWrapped(lines, label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), bodyWidth, warning);
+        appendWrapped(lines, text.advisory(), bodyWidth, warning);
+        int lineHeight = SiegeConfig.comfortableReading ? 14 : 11;
+        int visible = Math.max(1, (bodyBottom - detailBodyTop) / lineHeight);
+        if (!entry.code().equals(lastReadingCode)) {
+            lastReadingCode = entry.code();
+            detailScroll = readingPositions.getOrDefault(entry.code(), 0);
+        }
         maxDetailScroll = Math.max(0, lines.size() - visible);
         detailScroll = Math.max(0, Math.min(detailScroll, maxDetailScroll));
         g.enableScissor(bodyLeft, detailBodyTop, bodyRight - 6, bodyBottom);
         for (int i = detailScroll; i < Math.min(lines.size(), detailScroll + visible); i++)
-            g.drawString(font, lines.get(i).value(), bodyLeft, detailBodyTop + (i - detailScroll) * 11, lines.get(i).color(), false);
+            g.drawString(font, lines.get(i).value(), bodyLeft, detailBodyTop + (i - detailScroll) * lineHeight, lines.get(i).color(), false);
         g.disableScissor();
         if (maxDetailScroll > 0) {
             int trackH = bodyBottom - detailBodyTop;
@@ -578,9 +622,14 @@ public final class IntelScreenV3 extends Screen {
             g.fill(bodyRight - 4, detailBodyTop, bodyRight, bodyBottom, 0x33413B32);
             g.fill(bodyRight - 4, thumbY, bodyRight, thumbY + thumbH, accent);
         }
-        String progress = (Math.min(lines.size(), detailScroll + visible)) + " / " + lines.size();
+        readingPositions.put(entry.code(), detailScroll);
+        readStart.visible = readEnd.visible = copyText.visible = true;
+        readStart.setX(bodyLeft); readEnd.setX(bodyLeft + 28); copyText.setX(bodyLeft + 56);
+        readStart.active = detailScroll > 0; readEnd.active = detailScroll < maxDetailScroll;
+        copyText.setMessage(Component.literal(System.currentTimeMillis() < copiedUntil ? label("COPIADO", "COPIED") : label("COPIAR", "COPY")));
+        String progress = (maxDetailScroll == 0 ? 100 : (int)Math.round(100.0 * detailScroll / maxDetailScroll)) + "%";
         g.drawString(font, progress, bodyRight - font.width(progress), bottom - 11, muted, false);
-        g.drawString(font, font.plainSubstrByWidth(label("RUEDA: LEER", "WHEEL: READ"), Math.max(1, inner - font.width(progress) - 12)), x + pad, bottom - 11, muted, false);
+
         long age = System.currentTimeMillis() - entryChangedAt;
         if (age < 230 && SiegeConfig.menuEffects && !SiegeConfig.reducedMotion) {
             int reveal = Math.round(availableWidth * age / 230F);
@@ -590,6 +639,10 @@ public final class IntelScreenV3 extends Screen {
 
     @Override
     public boolean mouseClicked(double x, double y, int button) {
+        if (button == 0 && portraitW > 0 && x >= portraitX && x < portraitX + portraitW && y >= portraitY && y < portraitY + portraitH) {
+            List<IntelEntry> files = filtered();
+            if (!files.isEmpty()) { SiegeUiSounds.click(); minecraft.setScreen(new IntelPortraitScreen(this, files.get(selected))); return true; }
+        }
         if (button == 0 && maxDetailScroll > 0 && x >= bodyRight - 7 && x < bodyRight + 2 && y >= detailBodyTop && y < bodyBottom) {
             draggingScroll = true;
             scrollTo(y);

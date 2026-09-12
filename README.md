@@ -1,3 +1,17 @@
+## SIEGE 0.10.0 — 36 mejoras
+
+La actualización amplía el índice de Intel con favoritos editables, filtros combinables y orden persistente; mejora la lectura con papel oscuro, espaciado y posición por expediente; añade controles de encuadre y deshacer en la galería; y reorganiza Configuración con Intel, muestras de sonido y un panel musical fijo.
+
+[Lista de las 36 mejoras](docs/CHANGELOG-0.10.0.md).
+
+Los favoritos se conservan al restaurar ajustes. Vaciar favoritos requiere una acción explícita y confirmación. No se añaden atajos. La revisión visual dentro de Minecraft continúa pendiente; CI verifica geometría, modelos, persistencia y compilación Forge.
+
+Instalación en Fedora KDE / Konsole, con Minecraft cerrado:
+
+```bash
+gh api repos/Santi-PdR/Siege/contents/scripts/install-latest.sh --jq .content | base64 -d | bash
+```
+
 ## SIEGE 0.9.2 — Índice de expedientes
 
 Intel tiene un botón visible **Índice** en escalas amplias y compactas. Abre una lista de los resultados actuales de la categoría, con:

@@ -16,7 +16,10 @@ public final class SiegeSceneScreen extends Screen {
     private final Screen parent;
     private int index, previousIndex, page;
     private long changedAt;
-    private boolean cleanView;
+    private boolean cleanView, containPreview, menuPreview, undoAvailable;
+    private int undoScene;
+    private boolean undoAnimated;
+    private SiegeButton framing, contrast, undo, current;
     private SiegeButton pin, auto, clean, previousPage, nextPage;
     private SiegeGalleryLayout layout;
     private final List<Thumbnail> thumbnails = new ArrayList<>();
@@ -24,7 +27,7 @@ public final class SiegeSceneScreen extends Screen {
     public SiegeSceneScreen(Screen parent) {
         super(Component.literal("SIEGE"));
         this.parent = parent;
-        index = Math.floorMod(Math.max(0, SiegeConfig.selectedScene), SiegeBackgrounds.count());
+        index = SiegeBackgrounds.currentIndex(System.currentTimeMillis());
         previousIndex = index;
     }
 
@@ -32,6 +35,7 @@ public final class SiegeSceneScreen extends Screen {
     protected void init() {
         SiegeUiSounds.resetHover();
         thumbnails.clear();
+        int firstVisible = layout == null ? index : page * layout.capacity();
         layout = SiegeGalleryLayout.of(width, height);
         addAction(0, text("← ANTERIOR", "← PREVIOUS"), b -> step(-1), 0xFF55BFD9);
         addAction(1, text("SIGUIENTE →", "NEXT →"), b -> step(1), 0xFF55BFD9);
@@ -46,11 +50,27 @@ public final class SiegeSceneScreen extends Screen {
                 Component.literal("←"), b -> changePage(-1), 0xFF55BFD9));
         nextPage = addRenderableWidget(new SiegeButton(width - 32, 36, 24, 20,
                 Component.literal("→"), b -> changePage(1), 0xFF55BFD9));
+        int optionWidth = (width - 28) / 4;
+        framing = addRenderableWidget(new SiegeButton(8, 65, optionWidth, 18, text("ENCUADRE", "FRAMING"), b -> {
+            containPreview = !containPreview; refresh(); SiegeUiSounds.click();
+        }, 0xFF55BFD9));
+        contrast = addRenderableWidget(new SiegeButton(12 + optionWidth, 65, optionWidth, 18, text("CONTRASTE", "CONTRAST"), b -> {
+            menuPreview = !menuPreview; refresh(); SiegeUiSounds.click();
+        }, 0xFF55BFD9));
+        undo = addRenderableWidget(new SiegeButton(16 + optionWidth * 2, 65, optionWidth, 18, text("DESHACER", "UNDO"), b -> {
+            if (undoAvailable) {
+                SiegeConfig.selectedScene = undoScene; SiegeConfig.animatedBackgrounds = undoAnimated;
+                SiegeConfig.save(); undoAvailable = false; refresh(); SiegeUiSounds.click();
+            }
+        }, 0xFFD6A94B));
+        current = addRenderableWidget(new SiegeButton(20 + optionWidth * 3, 65, optionWidth, 18, text("ACTUAL", "CURRENT"),
+                b -> select(SiegeBackgrounds.currentIndex(System.currentTimeMillis())), 0xFFD6A94B));
+        current.setTooltip(Tooltip.create(text("Ver el fondo que está usando el menú", "Show the background currently used by the menu")));
         for (int slot = 0; slot < layout.capacity(); slot++) {
             Thumbnail tile = new Thumbnail(layout.tile(slot));
             thumbnails.add(addRenderableWidget(tile));
         }
-        page = index / layout.capacity();
+        page = Math.min((SiegeBackgrounds.count() - 1) / layout.capacity(), firstVisible / layout.capacity());
         refresh();
         applyVisibility();
     }
@@ -72,6 +92,12 @@ public final class SiegeSceneScreen extends Screen {
         }
         for (var child : children()) if (child instanceof AbstractWidget widget)
             widget.setTooltip(Tooltip.create(widget.getMessage()));
+        current.setTooltip(Tooltip.create(text("Ver el fondo que está usando el menú", "Show the background currently used by the menu")));
+        framing.setSelected(containPreview);
+        framing.setTooltip(Tooltip.create(text("Mostrar la imagen completa en vez de recortarla", "Show the full image instead of cropping it")));
+        contrast.setSelected(menuPreview);
+        contrast.setTooltip(Tooltip.create(text("Previsualizar la oscuridad de fondo y panel del menú", "Preview the menu background and panel darkness")));
+        undo.active = undoAvailable;
         previousPage.active = page > 0;
         nextPage.active = (page + 1) * layout.capacity() < SiegeBackgrounds.count();
         previousPage.setTooltip(Tooltip.create(text("Página anterior de miniaturas", "Previous thumbnail page")));
@@ -103,7 +129,9 @@ public final class SiegeSceneScreen extends Screen {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
         if (cleanView) {
-            SiegeBackgrounds.renderPreview(g, width, height, index);
+            g.fill(0, 0, width, height, 0xFF0B0D10);
+            renderPreviewImage(g, 0, 0, width, height, index, 1F);
+            renderContrast(g, 0, 0, width, height);
             return;
         }
         g.fill(0, 0, width, height, 0xFF0B0D10);
@@ -111,8 +139,10 @@ public final class SiegeSceneScreen extends Screen {
         g.fill(p.x() - 1, p.y() - 1, p.right() + 1, p.bottom() + 1, 0xFF56616A);
         float progress = Math.min(1F, (System.currentTimeMillis() - changedAt) / 260F);
         if (SiegeConfig.reducedMotion || !SiegeConfig.menuEffects) progress = 1F;
-        SiegeBackgrounds.renderRegion(g, p.x(), p.y(), p.w(), p.h(), previousIndex, 1F);
-        SiegeBackgrounds.renderRegion(g, p.x(), p.y(), p.w(), p.h(), index, progress * progress * (3 - 2 * progress));
+        g.fill(p.x(), p.y(), p.right(), p.bottom(), 0xFF0B0D10);
+        if (progress < 1F) renderPreviewImage(g, p.x(), p.y(), p.w(), p.h(), previousIndex, 1F);
+        renderPreviewImage(g, p.x(), p.y(), p.w(), p.h(), index, progress * progress * (3 - 2 * progress));
+        renderContrast(g, p.x(), p.y(), p.w(), p.h());
         String state = SiegeConfig.selectedScene == index ? label("FIJADO", "PINNED") : label("VISTA PREVIA", "PREVIEW");
         String heading = String.format("%02d / %02d  ·  %s", index + 1, SiegeBackgrounds.count(), SiegeBackgrounds.name(index, spanish()));
         g.drawString(font, font.plainSubstrByWidth(heading, width - 82), 8, 36, 0xFFF0EEE8, false);
@@ -143,14 +173,30 @@ public final class SiegeSceneScreen extends Screen {
         }
         return super.mouseScrolled(x, y, delta);
     }
+    private void renderPreviewImage(GuiGraphics g, int x, int y, int w, int h, int scene, float alpha) {
+        if (containPreview) SiegeBackgrounds.renderContainedRegion(g, x, y, w, h, scene, alpha);
+        else SiegeBackgrounds.renderRegion(g, x, y, w, h, scene, alpha);
+    }
+    private void renderContrast(GuiGraphics g, int x, int y, int w, int h) {
+        if (!menuPreview) return;
+        g.fill(x, y, x + w, y + h, (SiegeConfig.backgroundDarkness * 255 / 100) << 24);
+        g.fill(x, y, x + w / 4, y + h, (SiegeConfig.panelDarkness * 255 / 100) << 24);
+    }
+    private void rememberBackground() {
+        undoScene = SiegeConfig.selectedScene; undoAnimated = SiegeConfig.animatedBackgrounds; undoAvailable = true;
+    }
     private void pinCurrent() {
         SiegeUiSounds.click();
+        if (SiegeConfig.selectedScene == index) return;
+        rememberBackground();
         SiegeConfig.selectedScene = index;
         SiegeConfig.save();
         refresh();
     }
     private void resumeRotation() {
         SiegeUiSounds.click();
+        if (SiegeConfig.selectedScene < 0 && SiegeConfig.animatedBackgrounds) return;
+        rememberBackground();
         SiegeConfig.selectedScene = -1;
         SiegeConfig.animatedBackgrounds = true;
         SiegeConfig.save();

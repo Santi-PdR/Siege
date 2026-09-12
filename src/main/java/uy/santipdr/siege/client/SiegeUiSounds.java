@@ -35,6 +35,13 @@ public final class SiegeUiSounds {
         }
     }
 
+    public static void preview(int sample) {
+        switch (Math.floorMod(sample, 3)) {
+            case 0 -> play(SiegeMod.UI_HOVER, 1.0F);
+            case 1 -> click();
+            default -> nextTrack();
+        }
+    }
     public static void click() { play(SiegeMod.UI_CLICK, 1.0f); }
     public static void back() { play(SiegeMod.UI_BACK, 0.96f); }
     public static void nextTrack() { play(SiegeMod.UI_TRACK, 1.04f); }

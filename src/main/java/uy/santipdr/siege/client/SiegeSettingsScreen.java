@@ -37,6 +37,7 @@ public final class SiegeSettingsScreen extends Screen {
     private final List<SiegeButton> musicTrackButtons = new ArrayList<>();
     private SiegeButton shuffleButton;
     private boolean draggingScrollbar;
+    private int soundSample;
     private int scrollOffset, scrollMax, viewportTop, viewportBottom, informationY;
 
 
@@ -73,7 +74,7 @@ public final class SiegeSettingsScreen extends Screen {
         if (compact) initCompactNavigation();
         else initWideNavigation();
 
-        viewportTop = contentY + (compact ? 25 : 51);
+        viewportTop = contentY + (section == Section.AUDIO ? 49 : compact ? 25 : 51);
         viewportBottom = panelBottom - 7;
         int firstControl = children().size();
         initSectionControls();
@@ -149,7 +150,7 @@ public final class SiegeSettingsScreen extends Screen {
     }
 
     private void initSectionControls() {
-        int y = contentY + (compact ? 25 : 51);
+        int y = viewportTop;
         int h = compact ? 19 : 24;
         int gap = compact ? 4 : 7;
         int w = contentWidth - 8;
@@ -233,6 +234,11 @@ public final class SiegeSettingsScreen extends Screen {
                 }
             }
             case INTERFACE -> {
+                addRenderableWidget(new SiegeButton(contentX, y, w, h,
+                        Component.literal(label("PROBAR SONIDOS", "PREVIEW UI SOUNDS")), b -> {
+                    SiegeUiSounds.preview(soundSample++ % 3);
+                }, GOLD));
+                y += h + gap;
                 addRenderableWidget(toggle(contentX, y, w, h, "siege.settings.ui_sounds",
                         () -> SiegeConfig.uiSounds = !SiegeConfig.uiSounds, () -> SiegeConfig.uiSounds));
                 addRenderableWidget(new SiegeSlider(contentX, y += h + gap, w, compact ? 25 : 31,
@@ -250,6 +256,28 @@ public final class SiegeSettingsScreen extends Screen {
                 addRenderableWidget(toggle(contentX, y += h + gap, w, h, "siege.settings.backgrounds",
                         () -> SiegeConfig.animatedBackgrounds = !SiegeConfig.animatedBackgrounds,
                         () -> SiegeConfig.animatedBackgrounds));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("MOSTRAR BUILD", "SHOW BUILD LABEL"),
+                        () -> SiegeConfig.showBuildLabel = !SiegeConfig.showBuildLabel,
+                        () -> SiegeConfig.showBuildLabel));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("CONFIRMAR AL SALIR", "CONFIRM BEFORE QUIT"),
+                        () -> SiegeConfig.confirmQuit = !SiegeConfig.confirmQuit,
+                        () -> SiegeConfig.confirmQuit));
+            }
+            case INTEL -> {
+                addRenderableWidget(literalToggle(contentX, y, w, h,
+                        label("MODO LECTURA AL ABRIR", "OPEN IN READING MODE"),
+                        () -> SiegeConfig.intelReadingMode = !SiegeConfig.intelReadingMode,
+                        () -> SiegeConfig.intelReadingMode));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("LECTURA ESPACIADA", "COMFORTABLE LINE SPACING"),
+                        () -> SiegeConfig.comfortableReading = !SiegeConfig.comfortableReading,
+                        () -> SiegeConfig.comfortableReading));
+                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
+                        label("PAPEL OSCURO", "DARK PAPER"),
+                        () -> SiegeConfig.darkIntelPaper = !SiegeConfig.darkIntelPaper,
+                        () -> SiegeConfig.darkIntelPaper));
                 addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
                         label("INTEL EN MENÚ PRINCIPAL", "MAIN-MENU INTEL"),
                         () -> SiegeConfig.mainMenuIntel = !SiegeConfig.mainMenuIntel,
@@ -274,19 +302,25 @@ public final class SiegeSettingsScreen extends Screen {
                         label("ESTADO DEL DOSSIER", "DOSSIER STATE"),
                         () -> SiegeConfig.showIntelState = !SiegeConfig.showIntelState,
                         () -> SiegeConfig.showIntelState));
-                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
-                        label("MOSTRAR BUILD", "SHOW BUILD LABEL"),
-                        () -> SiegeConfig.showBuildLabel = !SiegeConfig.showBuildLabel,
-                        () -> SiegeConfig.showBuildLabel));
-                addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
-                        label("CONFIRMAR AL SALIR", "CONFIRM BEFORE QUIT"),
-                        () -> SiegeConfig.confirmQuit = !SiegeConfig.confirmQuit,
-                        () -> SiegeConfig.confirmQuit));
+                addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
+                        Component.literal(label("VACIAR FAVORITOS", "CLEAR FAVORITES")), b -> {
+                    SiegeUiSounds.click();
+                    minecraft.setScreen(new ConfirmScreen(confirmed -> {
+                        if (confirmed) SiegeConfig.clearFavoriteIntel();
+                        minecraft.setScreen(this);
+                    }, Component.literal(label("¿Vaciar favoritos?", "Clear favorites?")),
+                            Component.literal(label("Los expedientes seguirán disponibles en sus categorías.", "Dossiers remain available in their categories."))));
+                }, WARNING));
             }
             case ACCESSIBILITY -> {
                 addRenderableWidget(toggle(contentX, y, w, h, "siege.settings.reduced_motion",
                         () -> SiegeConfig.reducedMotion = !SiegeConfig.reducedMotion,
                         () -> SiegeConfig.reducedMotion));
+                addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
+                        Component.literal(label("APLICAR PERFIL TRANQUILO", "APPLY CALM PRESET")), b -> {
+                    SiegeConfig.applyCalmPreset();
+                    minecraft.setScreen(new SiegeSettingsScreen(parent, Section.ACCESSIBILITY));
+                }, ACCENT));
             }
             case GRAPHICS -> {
                 addRenderableWidget(graphicsButton(contentX, y, w, h));
@@ -424,9 +458,28 @@ public final class SiegeSettingsScreen extends Screen {
         SiegeUiSounds.updateHover(children());
     }
 
+    private static String formatTime(long milliseconds) {
+        long seconds = Math.max(0, milliseconds / 1000);
+        return seconds / 60 + ":" + String.format(java.util.Locale.ROOT, "%02d", seconds % 60);
+    }
+
     private void renderSectionHeader(GuiGraphics g) {
         int titleY = contentY + 2;
         int accent = section == Section.AUDIO ? GOLD : ACCENT;
+        if (section == Section.AUDIO) {
+            g.drawString(font, sectionTitle(section), contentX, titleY, GOLD, false);
+            String track = SiegeConfig.music ? SiegeMusic.currentTrackName() : label("MÚSICA DESACTIVADA", "MUSIC OFF");
+            g.drawString(font, font.plainSubstrByWidth(track, contentWidth), contentX, titleY + 13, 0xFFF0EEE8, false);
+            long total = SiegeMusic.currentDurationMs();
+            long remaining = Math.max(0, Math.min(total, SiegeMusic.currentRemainingMs()));
+            String times = SiegeMusic.isActuallyPlaying() ? formatTime(total - remaining) + " / " + formatTime(total)
+                    + "  ·  −" + formatTime(remaining) : SiegeConfig.music ? label("EN ESPERA", "WAITING") : label("SILENCIADO", "OFF");
+            g.drawString(font, font.plainSubstrByWidth(times, contentWidth), contentX, titleY + 26, 0xFFABBBC5, false);
+            g.fill(contentX, titleY + 39, contentX + contentWidth, titleY + 41, 0xFF29343B);
+            if (SiegeMusic.isActuallyPlaying() && total > 0) g.fill(contentX, titleY + 39,
+                    contentX + (int)(contentWidth * (total - remaining) / total), titleY + 41, GOLD);
+            return;
+        }
         if (compact) {
             g.drawString(font, font.plainSubstrByWidth(sectionTitle(section), contentWidth), contentX, titleY, accent, false);
             g.fill(contentX, titleY + 15, contentX + contentWidth, titleY + 16, 0xFF27343C);
@@ -584,6 +637,7 @@ public final class SiegeSettingsScreen extends Screen {
             case OVERVIEW -> label("RESUMEN", "OVERVIEW");
             case AUDIO -> label("MÚSICA", "MUSIC");
             case INTERFACE -> label("INTERFAZ", "INTERFACE");
+            case INTEL -> "INTEL";
             case ACCESSIBILITY -> label("ACCESIBILIDAD", "ACCESSIBILITY");
             case GRAPHICS -> label("GRÁFICOS", "GRAPHICS");
         };
@@ -594,6 +648,7 @@ public final class SiegeSettingsScreen extends Screen {
             case OVERVIEW -> label("ESTADO DEL SISTEMA", "SYSTEM STATUS");
             case AUDIO -> label("CANAL DE AUDIO", "AUDIO CHANNEL");
             case INTERFACE -> label("COMPORTAMIENTO DEL MENÚ", "MENU BEHAVIOR");
+            case INTEL -> label("EXPEDIENTES", "DOSSIERS");
             case ACCESSIBILITY -> label("CONFORT VISUAL", "VISUAL COMFORT");
             case GRAPHICS -> label("PERFIL DE RENDER", "RENDER PROFILE");
         };
@@ -604,6 +659,7 @@ public final class SiegeSettingsScreen extends Screen {
             case OVERVIEW -> label("CENTRO DE CONTROL", "CONTROL CENTER");
             case AUDIO -> label("MÚSICA DEL MENÚ", "MENU MUSIC");
             case INTERFACE -> label("INTERFAZ SIEGE", "SIEGE INTERFACE");
+            case INTEL -> label("LECTURA E INTEL", "READING AND INTEL");
             case ACCESSIBILITY -> label("ACCESIBILIDAD", "ACCESSIBILITY");
             case GRAPHICS -> label("GRÁFICOS DEL MENÚ", "MENU GRAPHICS");
         };
@@ -611,6 +667,7 @@ public final class SiegeSettingsScreen extends Screen {
 
     private String sectionDescription(Section value) {
         return switch (value) {
+            case INTEL -> label("Configura la lectura, el contraste y los dossiers de portada.", "Configure reading, contrast and main-menu dossiers.");
             case OVERVIEW -> label(
                     "Selecciona una sección para configurar SIEGE. Música controla la banda sonora; Interfaz controla sonidos y fondos; Accesibilidad reduce movimiento; Gráficos cambia el perfil visual del menú.",
                     "Choose a section to configure SIEGE. Music controls the soundtrack; Interface controls UI sounds and backgrounds; Accessibility reduces motion; Graphics changes the menu render profile.");
@@ -655,6 +712,7 @@ public final class SiegeSettingsScreen extends Screen {
         OVERVIEW,
         AUDIO,
         INTERFACE,
+        INTEL,
         ACCESSIBILITY,
         GRAPHICS
     }
