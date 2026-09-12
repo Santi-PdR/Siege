@@ -53,9 +53,7 @@ jobs:
             echo "Intel hover must not extend the automatic deadline every frame."
             exit 1
           fi
-          grep -q '"FAVORITES"' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'toggleFavoriteIntel' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          if grep -nE 'favoriteButton|addIndexButton|copyText|GUARDAR' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
+          if grep -nE 'FAVORITES|toggleFavoriteIntel|favoriteButton|addIndexButton|copyText|GUARDAR' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
             echo "Removed Intel controls must not return"
             exit 1
           fi
