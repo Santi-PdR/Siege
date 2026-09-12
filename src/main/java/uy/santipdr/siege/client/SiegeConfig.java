@@ -24,9 +24,7 @@ public final class SiegeConfig {
     public static boolean intelReadingMode = false;
     public static boolean comfortableReading = false;
     public static boolean darkIntelPaper = false;
-    public static boolean indexReverse = false;
     public static boolean inspectorMap = true;
-    public static int indexOrder = 0;
     public static int inspectorBackground = 0;
     public static int selectedTrack = -1;
     public static int selectedScene = -1;
@@ -52,7 +50,6 @@ public final class SiegeConfig {
     public static int backgroundDarkness = 23;
     public static int panelDarkness = 63;
     public static int trackNoticeSeconds = 8;
-    private static final Set<String> FAVORITE_INTEL = new LinkedHashSet<>();
     public static Graphics graphics = Graphics.CINEMATIC;
 
     private SiegeConfig() {}
@@ -66,9 +63,7 @@ public final class SiegeConfig {
         intelReadingMode = bool(p, "intelReadingMode", false);
         comfortableReading = bool(p, "comfortableReading", false);
         darkIntelPaper = bool(p, "darkIntelPaper", false);
-        indexReverse = bool(p, "indexReverse", false);
         inspectorMap = bool(p, "inspectorMap", true);
-        indexOrder = integer(p, "indexOrder", 0, 0, 2);
         inspectorBackground = integer(p, "inspectorBackground", 0, 0, 2);
         selectedTrack = integer(p, "selectedTrack", -1, -1, 3);
         selectedScene = integer(p, "selectedScene", -1, -1, 8);
@@ -95,11 +90,6 @@ public final class SiegeConfig {
         backgroundDarkness = integer(p, "backgroundDarkness", 23, 0, 70);
         panelDarkness = integer(p, "panelDarkness", 63, 20, 90);
         trackNoticeSeconds = integer(p, "trackNoticeSeconds", 8, 3, 15);
-        FAVORITE_INTEL.clear();
-        for (String code : p.getProperty("favoriteIntel", "").split(",")) {
-            String clean = code.trim();
-            if (!clean.isEmpty()) FAVORITE_INTEL.add(clean);
-        }
         try { graphics = Graphics.valueOf(p.getProperty("graphics", Graphics.CINEMATIC.name())); }
         catch (IllegalArgumentException ignored) { graphics = Graphics.CINEMATIC; }
         if (loadedRevision < SETTINGS_REVISION) save();
@@ -110,9 +100,7 @@ public final class SiegeConfig {
         p.setProperty("intelReadingMode", Boolean.toString(intelReadingMode));
         p.setProperty("comfortableReading", Boolean.toString(comfortableReading));
         p.setProperty("darkIntelPaper", Boolean.toString(darkIntelPaper));
-        p.setProperty("indexReverse", Boolean.toString(indexReverse));
         p.setProperty("inspectorMap", Boolean.toString(inspectorMap));
-        p.setProperty("indexOrder", Integer.toString(indexOrder));
         p.setProperty("inspectorBackground", Integer.toString(inspectorBackground));
         p.setProperty("settingsRevision", Integer.toString(SETTINGS_REVISION));
         p.setProperty("selectedTrack", Integer.toString(selectedTrack));
@@ -139,7 +127,6 @@ public final class SiegeConfig {
         p.setProperty("backgroundDarkness", Integer.toString(backgroundDarkness));
         p.setProperty("panelDarkness", Integer.toString(panelDarkness));
         p.setProperty("trackNoticeSeconds", Integer.toString(trackNoticeSeconds));
-        p.setProperty("favoriteIntel", String.join(",", FAVORITE_INTEL));
         p.setProperty("graphics", graphics.name());
         Path temporary = null;
         try {
@@ -165,9 +152,7 @@ public final class SiegeConfig {
         intelReadingMode = false;
         comfortableReading = false;
         darkIntelPaper = false;
-        indexReverse = false;
         inspectorMap = true;
-        indexOrder = 0;
         inspectorBackground = 0;
 
         selectedTrack = -1;
@@ -194,12 +179,10 @@ public final class SiegeConfig {
         backgroundDarkness = 23;
         panelDarkness = 63;
         trackNoticeSeconds = 8;
-        // Favorites are user-curated content, not presentation preferences.
         graphics = Graphics.CINEMATIC;
         save();
     }
 
-    public static void clearFavoriteIntel() { FAVORITE_INTEL.clear(); save(); }
     public static void applyCalmPreset() {
         reducedMotion = true;
         titleInterference = false;
@@ -210,21 +193,6 @@ public final class SiegeConfig {
     }
 
     public static int clampVolume(int value) { return Math.max(0, Math.min(100, value)); }
-
-    public static boolean isFavoriteIntel(String code) { return FAVORITE_INTEL.contains(code); }
-
-    public static boolean toggleFavoriteIntel(String code) {
-        boolean favorite;
-        if (FAVORITE_INTEL.contains(code)) {
-            FAVORITE_INTEL.remove(code);
-            favorite = false;
-        } else {
-            FAVORITE_INTEL.add(code);
-            favorite = true;
-        }
-        save();
-        return favorite;
-    }
 
     private static boolean bool(Properties p, String key, boolean fallback) {
         String value = p.getProperty(key);

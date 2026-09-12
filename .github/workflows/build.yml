@@ -8,6 +8,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: siege-build-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -27,10 +31,11 @@ jobs:
         shell: bash
         run: |
           mkdir -p build/layout-tests
-          javac -d build/layout-tests src/main/java/uy/santipdr/siege/client/SiegeGalleryLayout.java src/main/java/uy/santipdr/siege/client/SiegeIntelLayout.java src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/SiegeImageViewport.java src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/IntelIndexModel.java tests/UiRegressionTest.java
+          javac -d build/layout-tests src/main/java/uy/santipdr/siege/client/SiegeGalleryLayout.java src/main/java/uy/santipdr/siege/client/SiegeIntelLayout.java src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/SiegeImageViewport.java src/main/java/uy/santipdr/siege/client/IntelEntry.java tests/UiRegressionTest.java
           java -cp build/layout-tests UiRegressionTest
           javac -d build/config-tests tests/stubs/net/minecraftforge/fml/loading/FMLPaths.java tests/stubs/com/mojang/logging/LogUtils.java src/main/java/uy/santipdr/siege/client/SiegeConfig.java tests/ConfigRegressionTest.java
           java -cp build/config-tests ConfigRegressionTest
+          python3 tests/test_installer.py
       - name: Verify dossier navigation
         shell: bash
         run: |
@@ -47,12 +52,6 @@ jobs:
           grep -q 'IntelScreenV3(Screen parent, IntelEntry requestedEntry)' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'targetCode.equals(files.get(i).code())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'new IntelScreenV3(this, entry)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
-          grep -q 'previewHoveredLastFrame' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
-          grep -q 'manualIntelPreviewUntil = now + 2_000L' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
-          if grep -q 'hovered.*Math.max(manualIntelPreviewUntil' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java; then
-            echo "Intel hover must not extend the automatic deadline every frame."
-            exit 1
-          fi
           if grep -nE 'FAVORITES|toggleFavoriteIntel|favoriteButton|addIndexButton|copyText|GUARDAR' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
             echo "Removed Intel controls must not return"
             exit 1
@@ -71,12 +70,26 @@ jobs:
             echo "Intel contains an unrequested keyboard shortcut."
             exit 1
           fi
+      - uses: actions/cache@v4
+        id: intel-cache
+        with:
+          path: src/main/resources/assets/siege/textures/gui/intel
+          key: intel-v1-${{ runner.os }}-${{ hashFiles('assets-source/intel-raw/**', 'src/main/resources/assets/siege/textures/gui/intel/**', 'scripts/prepare-intel-assets.py') }}
       - name: Prepare Intel dossier overlays
+        if: steps.intel-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow numpy
           python3 scripts/prepare-intel-assets.py
+      - uses: actions/cache@v4
+        id: music-cache
+        with:
+          path: |
+            src/main/resources/assets/siege/sounds/music
+            src/main/resources/assets/siege/music_durations.properties
+          key: music-v1-${{ runner.os }}-${{ hashFiles('assets-source/music-full/**', 'scripts/prepare-music.sh') }}
       - name: Prepare full SIEGE soundtrack
+        if: steps.music-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
@@ -101,8 +114,12 @@ jobs:
             echo "Generated Boss dossier art must not contain a per-frame counter."
             exit 1
           fi
+      - name: Verify audio state and catalog resources
+        run: |
+          javac -d build/runtime-tests src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/SiegeAudioHealth.java src/main/java/uy/santipdr/siege/client/SiegePreviewClock.java tests/RuntimeRegressionTest.java
+          java -cp build/runtime-tests uy.santipdr.siege.client.RuntimeRegressionTest
       - name: Compile and verify
-        run: gradle --no-daemon clean build
+        run: gradle --no-daemon reportBuildTools clean build
       - uses: actions/upload-artifact@v4
         with:
           name: siege-menu-${{ github.sha }}
@@ -119,6 +136,7 @@ jobs:
           cp "$jar_path" dist/
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python3 scripts/write-manifest.py "$jar_path" "${{ github.sha }}"
           git add -f dist/
           if ! git diff --cached --quiet; then
             git commit -m "build: publish validated Siege jar [skip ci]"

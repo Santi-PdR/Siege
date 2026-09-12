@@ -2,9 +2,8 @@
 set -Eeuo pipefail
 
 REPO="Santi-PdR/Siege"
-REPO_URL="https://github.com/Santi-PdR/Siege.git"
 BRANCH="main"
-MODS_DIR="/home/Santipdr/.sklauncher/instances/test-1/mods"
+MODS_DIR="${1:-/home/Santipdr/.sklauncher/instances/test-1/mods}"
 STAGED_JAR=""
 WORK_DIR="$(mktemp -d -t siege-install-XXXXXX)"
 
@@ -15,18 +14,38 @@ cleanup() {
 trap cleanup EXIT
 
 echo "SIEGE // Descargando build validado desde GitHub..."
-if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    gh repo clone "$REPO" "$WORK_DIR" -- --depth 1 --branch "$BRANCH"
-else
-    git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$WORK_DIR"
-fi
-
-JAR_FILE="$(find "$WORK_DIR/dist" -maxdepth 1 -type f     -name 'siege-menu-*.jar'     ! -name '*-sources.jar'     ! -name '*-javadoc.jar'     -print -quit)"
-
-if [[ -z "$JAR_FILE" ]]; then
-    echo "ERROR: no se encontro un JAR validado dentro de dist/." >&2
-    exit 1
-fi
+for dependency in gh python3 sha256sum; do
+    if ! command -v "$dependency" >/dev/null 2>&1; then
+        echo "ERROR: falta $dependency. Instalalo antes de continuar." >&2
+        exit 1
+    fi
+done
+gh auth status >/dev/null
+# Pin metadata and artifact to one immutable repository revision.
+REVISION="$(gh api "repos/$REPO/commits/$BRANCH" --jq .sha)"
+gh api "repos/$REPO/contents/dist/manifest.json?ref=$REVISION" -H 'Accept: application/vnd.github.raw+json' > "$WORK_DIR/manifest.json"
+mapfile -t METADATA < <(python3 - "$WORK_DIR/manifest.json" <<'PYMETA'
+import json, re, sys
+m = json.load(open(sys.argv[1]))
+assert re.fullmatch(r"siege-menu-[0-9]+\.[0-9]+\.[0-9]+\.jar", m["jar"]), "Invalid jar name"
+assert re.fullmatch(r"[0-9a-f]{64}", m["sha256"]), "Invalid SHA256"
+assert re.fullmatch(r"[0-9a-f]{40}", m["commit"]), "Invalid revision"
+print(m["jar"])
+print(m["sha256"])
+print(m["commit"])
+PYMETA
+)
+if (( ${#METADATA[@]} != 3 )); then echo "ERROR: manifiesto inválido." >&2; exit 1; fi
+JAR_FILE="$WORK_DIR/${METADATA[0]}"
+gh api "repos/$REPO/contents/dist/${METADATA[0]}?ref=$REVISION" -H 'Accept: application/vnd.github.raw+json' > "$JAR_FILE"
+printf '%s  %s\n' "${METADATA[1]}" "$JAR_FILE" | sha256sum --check --status
+python3 - "$JAR_FILE" <<'PYCHECK'
+import sys, zipfile
+with zipfile.ZipFile(sys.argv[1]) as archive:
+    assert archive.testzip() is None, "Corrupt JAR"
+    assert "META-INF/mods.toml" in archive.namelist(), "Not a Forge mod"
+PYCHECK
+echo "Build verificado: ${METADATA[2]}"
 
 mkdir -p -- "$MODS_DIR"
 # Stage and compare before moving any installed version out of the mods directory.

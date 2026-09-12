@@ -1,3 +1,7 @@
+## 0.11.0 — Revisión aplicada
+
+Advertencias completas, Intel optimizado, catálogo independiente, audio con recuperación controlada y entrega verificada. [Cambios y límites](docs/CHANGELOG-0.11.0.md) · [Pruebas visuales pendientes](docs/QA-0.11.0.md).
+
 ## 0.10.5 — Ficha táctica y lectura Intel
 
 Bajo la imagen aparece una ficha táctica basada en datos existentes, ajustada a su espacio. Eliminada la etiqueta Ampliar duplicada; permanece el botón superior.

@@ -43,7 +43,7 @@ public final class SiegeMusic {
     private static final long[] TRACK_DURATIONS_MS = loadDurations();
     private static final List<Integer> queue = new ArrayList<>();
 
-    /** Natural crossfade begins exactly eight seconds before the encoded track ends. */
+    /** Natural fade-out begins exactly eight seconds before the encoded track ends. */
     private static final long NATURAL_FADE_OUT_MS = 8_000L;
     private static final long MANUAL_FADE_OUT_MS = 1_250L;
     private static final long FADE_IN_MS = 2_200L;
@@ -51,6 +51,7 @@ public final class SiegeMusic {
     public static final long TRACK_ANNOUNCEMENT_MS = 8_500L;
 
     private static SiegeTrackSound active;
+    private static final SiegeAudioHealth health = new SiegeAudioHealth();
     private static int previous = -1;
     private static int beforePrevious = -1;
     private static int requestedNext = -1;
@@ -82,17 +83,18 @@ public final class SiegeMusic {
         var manager = minecraft.getSoundManager();
         long now = System.currentTimeMillis();
 
-        // Anchor the duration clock only after Minecraft confirms the stream became active.
-        // If the backend never reports activation, fall back after a generous grace period
-        // instead of advancing early because isActive() briefly returned false.
-        if (!clockAnchored) {
-            if (manager.isActive(active)) {
-                playbackAnchorAt = now;
-                clockAnchored = true;
-            } else if (now - startRequestedAt >= ACTIVATION_GRACE_MS) {
-                playbackAnchorAt = startRequestedAt;
-                clockAnchored = true;
-            }
+        boolean backendPlaying = manager.isActive(active);
+        if (!clockAnchored && backendPlaying) {
+            playbackAnchorAt = now; clockAnchored = true; announcementStartedAt = now;
+        }
+        if (health.recover(now, backendPlaying)) {
+            // Replay the same track after sustained loss; preserve queue and bound retries.
+            manager.stop(active);
+            active = new SiegeTrackSound(TRACKS.get(previous).get());
+            startRequestedAt = now; clockAnchored = false; announcementStartedAt = 0;
+            fadeGain = 0; fadeState = FadeState.IN; fadeStartedAt = now; fadeDurationMs = FADE_IN_MS;
+            manager.play(active);
+            return;
         }
 
         maintenanceTicks++;
@@ -235,7 +237,7 @@ public final class SiegeMusic {
     }
 
     public static boolean isActuallyPlaying() {
-        return active != null;
+        return active != null && Minecraft.getInstance().getSoundManager().isActive(active);
     }
 
     public static long currentDurationMs() {
@@ -249,7 +251,7 @@ public final class SiegeMusic {
     }
 
     public static String transitionLabel(boolean spanish) {
-        if (active == null) return spanish ? "ESPERANDO AUDIO" : "WAITING FOR AUDIO";
+        if (!isActuallyPlaying()) return spanish ? "ESPERANDO AUDIO" : "WAITING FOR AUDIO";
         return switch (fadeState) {
             case IN -> spanish ? "ENTRADA SUAVE" : "FADING IN";
             case OUT -> naturalFadeOut
@@ -288,7 +290,8 @@ public final class SiegeMusic {
 
         active = new SiegeTrackSound(TRACKS.get(index).get());
         startRequestedAt = System.currentTimeMillis();
-        announcementStartedAt = startRequestedAt;
+        announcementStartedAt = 0L;
+        health.begin(startRequestedAt);
         playbackAnchorAt = startRequestedAt;
         clockAnchored = false;
         naturalFadeOut = false;

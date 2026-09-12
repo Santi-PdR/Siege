@@ -37,6 +37,7 @@ public final class SiegeSettingsScreen extends Screen {
     private final List<SiegeButton> musicTrackButtons = new ArrayList<>();
     private SiegeButton shuffleButton;
     private boolean draggingScrollbar;
+    private int scrollThumbTop, scrollThumbHeight, scrollGrab;
     private int soundSample;
     private int scrollOffset, scrollMax, viewportTop, viewportBottom, informationY;
 
@@ -84,7 +85,7 @@ public final class SiegeSettingsScreen extends Screen {
                 controls.add(widget);
                 controlY.add(widget.getY());
                 lastBottom = Math.max(lastBottom, widget.getY() + widget.getHeight());
-                widget.setTooltip(Tooltip.create(widget.getMessage()));
+                if (widget.getTooltip() == null) widget.setTooltip(Tooltip.create(widget.getMessage()));
             }
         }
         informationY = lastBottom + 12;
@@ -373,9 +374,10 @@ public final class SiegeSettingsScreen extends Screen {
             action.run();
             SiegeConfig.save();
             b.setMessage(toggleLabel(key, flag.get()));
-            b.setTooltip(Tooltip.create(b.getMessage()));
+            // Keep the descriptive tooltip while the state changes.
             ((SiegeButton)b).setSelected(flag.get());
         }, ACCENT);
+        button.setTooltip(Tooltip.create(Component.literal(settingHelp(key))));
         return button.setSelected(flag.get());
     }
 
@@ -385,10 +387,27 @@ public final class SiegeSettingsScreen extends Screen {
             action.run();
             SiegeConfig.save();
             b.setMessage(literalToggleLabel(text, flag.get()));
-            b.setTooltip(Tooltip.create(b.getMessage()));
+            // Keep the descriptive tooltip while the state changes.
             ((SiegeButton)b).setSelected(flag.get());
         }, ACCENT);
+        button.setTooltip(Tooltip.create(Component.literal(settingHelp(text))));
         return button.setSelected(flag.get());
+    }
+
+    private String settingHelp(String key) {
+        return switch (key) {
+            case "siege.settings.music" -> label("Reproduce la banda sonora sólo fuera de mundos y servidores.", "Play the soundtrack only outside worlds and servers.");
+            case "siege.settings.ui_sounds" -> label("Controla los sonidos de botones y navegación del menú.", "Control menu button and navigation sounds.");
+            case "siege.settings.backgrounds" -> label("Alterna automáticamente los fondos completos del menú.", "Automatically cycle full menu backgrounds.");
+            case "siege.settings.reduced_motion" -> label("Desactiva interferencia y animaciones de movimiento; conserva la respuesta de los controles.", "Disable interference and motion animations while retaining control feedback.");
+            case "PAUSA AL LEER", "PAUSE WHILE READING", "PAUSA AL SEÑALAR", "PAUSE ON HOVER" -> label("Pausa el dossier bajo el cursor y reanuda dos segundos después de salir.", "Pause the dossier under the pointer and resume two seconds after leaving.");
+            case "AVISO DE NUEVA PISTA", "NEW TRACK NOTICE" -> label("Muestra el nombre cuando el motor de audio confirma que comenzó la pista.", "Show the name when the audio engine confirms playback started.");
+            case "PROGRESO DE ROTACIÓN", "ROTATION PROGRESS" -> label("Muestra cuánto falta para el próximo cambio automático de dossier.", "Show progress until the next automatic dossier change.");
+            case "ESTADO DEL DOSSIER", "DOSSIER STATE" -> label("Distingue lectura, rotación automática y expediente fijo.", "Distinguish reading, automatic rotation and a fixed dossier.");
+            case "PAPEL OSCURO", "DARK PAPER" -> label("Usa papel oscuro y texto claro para leer Intel.", "Use dark paper and light text in Intel.");
+            case "LECTURA CÓMODA", "COMFORTABLE READING" -> label("Aumenta la separación entre renglones del expediente.", "Increase the spacing between dossier lines.");
+            default -> label("Cambia esta preferencia de presentación de SIEGE. Se guarda al modificarla.", "Change this SIEGE presentation preference. Changes are saved automatically.");
+        };
     }
 
     private Component graphicsLabel() {
@@ -433,6 +452,7 @@ public final class SiegeSettingsScreen extends Screen {
             int track = viewportBottom - viewportTop;
             int thumb = Math.max(10, track * track / (track + scrollMax));
             int top = viewportTop + (track - thumb) * scrollOffset / scrollMax;
+            scrollThumbTop = top; scrollThumbHeight = thumb;
             g.fill(contentX + contentWidth - 4, viewportTop, contentX + contentWidth - 2, viewportBottom, 0xFF27343C);
             g.fill(contentX + contentWidth - 4, top, contentX + contentWidth - 2, top + thumb, ACCENT);
         }
@@ -514,23 +534,7 @@ public final class SiegeSettingsScreen extends Screen {
             return;
         }
 
-        if (section == Section.AUDIO) {
-            String playback = !SiegeConfig.music ? label("MÚSICA DESACTIVADA", "MUSIC OFF")
-                    : SiegeMusic.isActuallyPlaying() ? label("REPRODUCIENDO", "PLAYING") : label("CARGANDO / EN ESPERA", "LOADING / WAITING");
-            String track = label("PISTA", "TRACK") + "  " + SiegeMusic.currentTrackName()
-                    + "  //  " + (SiegeConfig.selectedTrack >= 0 ? label("REPETIR PISTA", "REPEAT TRACK") : label("ALEATORIO", "SHUFFLE"));
-            g.drawString(font, font.plainSubstrByWidth(playback, contentWidth), contentX, infoY, 0xFF9FCAD5, false);
-            if (infoY + 13 < availableBottom) g.drawString(font, font.plainSubstrByWidth(track, contentWidth), contentX, infoY + 13, 0xFFAAB2B7, false);
-            long duration = SiegeMusic.currentDurationMs();
-            long remaining = SiegeMusic.currentRemainingMs();
-            if (SiegeMusic.isActuallyPlaying() && duration > 0) {
-                int barY = infoY + 28;
-                g.fill(contentX, barY, contentX + contentWidth - 8, barY + 3, 0xFF27343C);
-                int played = (int)((contentWidth - 8) * Math.max(0L, duration - remaining) / duration);
-                g.fill(contentX, barY, contentX + played, barY + 3, GOLD);
-            }
-            return;
-        }
+        if (section == Section.AUDIO) return;
 
         renderWrapped(g, sectionDescription(section), contentX, infoY, contentWidth, 0xFF9DA8AE,
                 compact ? 2 : 3, 11);
@@ -562,6 +566,7 @@ public final class SiegeSettingsScreen extends Screen {
         if (button == 0 && scrollMax > 0 && x >= contentX + contentWidth - 7 && x < contentX + contentWidth
                 && y >= viewportTop && y < viewportBottom) {
             draggingScrollbar = true;
+            scrollGrab = y >= scrollThumbTop && y < scrollThumbTop + scrollThumbHeight ? (int)y - scrollThumbTop : scrollThumbHeight / 2;
             dragScroll(y);
             return true;
         }
@@ -569,7 +574,7 @@ public final class SiegeSettingsScreen extends Screen {
     }
 
     private void dragScroll(double y) {
-        double fraction = (y - viewportTop) / Math.max(1, viewportBottom - viewportTop - 1);
+        double fraction = (y - viewportTop - scrollGrab) / Math.max(1, viewportBottom - viewportTop - scrollThumbHeight);
         scrollOffset = (int)Math.round(Math.max(0, Math.min(1, fraction)) * scrollMax);
         positionControls();
     }

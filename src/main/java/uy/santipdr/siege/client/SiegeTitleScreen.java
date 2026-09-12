@@ -19,7 +19,7 @@ public final class SiegeTitleScreen extends Screen {
     private int menuWidth;
     private int menuTop;
     private int menuBottom;
-    private int manualIntelPreview = -1;
+    private final SiegePreviewClock previewClock = new SiegePreviewClock();
     private long manualIntelPreviewUntil;
     private int previewX = -1;
     private int previewY = -1;
@@ -33,7 +33,6 @@ public final class SiegeTitleScreen extends Screen {
     private int lastRenderedPreview = -1;
     private int previewTransitionDirection = 1;
     private long previewTransitionStarted;
-    private boolean previewHoveredLastFrame;
     private boolean previewReading;
     private long previewCycleStartedAt;
 
@@ -96,9 +95,7 @@ public final class SiegeTitleScreen extends Screen {
         boolean compact = width < 520 || height < 290;
         int panelRight = Math.min(width, menuX + menuWidth + (compact ? 12 : 18));
         // Neutral photographic shade from the original menu: no blue plate or hard divider.
-        int panelAlpha = Math.max(0, Math.min(255, SiegeConfig.panelDarkness * 255 / 100));
-        graphics.fill(0, 0, panelRight, height, (panelAlpha << 24) | 0x00050506);
-        graphics.fill(panelRight - 10, 0, panelRight, height, 0x24000000);
+        SiegeBackgrounds.renderPanel(graphics, 0, 0, panelRight, height);
         graphics.fill(0, 0, width, 1, 0x681B1B1B);
 
         renderTitle(graphics, compact, panelRight);
@@ -109,7 +106,6 @@ public final class SiegeTitleScreen extends Screen {
         if (SiegeConfig.mainMenuIntel) renderIntelPreview(graphics, panelRight, mouseX, mouseY);
         else {
             previewReading = false;
-            previewHoveredLastFrame = false;
         }
         renderTrackAnnouncement(graphics, compact);
 
@@ -198,7 +194,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.10.5", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.11.0", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
@@ -274,7 +270,10 @@ public final class SiegeTitleScreen extends Screen {
 
         boolean cardHot = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
         String header = type + " " + String.format("%02d/%02d", entryIndex + 1, entryCount) + " // " + entry.code();
-        int headerWidth = cardHot && mouseY < y + h - 18 ? Math.max(52, w / 2 - 12) : w - 18;
+        boolean showOpen = cardHot && mouseY < y + h - 18;
+        String rightLabel = showOpen ? label("ABRIR EXPEDIENTE ↗", "OPEN DOSSIER ↗") : SiegeConfig.showIntelState ? intelStateLabel() : "";
+        int reserved = rightLabel.isEmpty() ? 0 : Math.min(font.width(rightLabel), showOpen ? w / 2 : w / 3) + 8;
+        int headerWidth = Math.max(1, w - 18 - reserved);
         g.drawString(font, font.plainSubstrByWidth(header, headerWidth), x + 9, y + 7, 0xFF9EA9B0, false);
         if (cardHot && mouseY < y + h - 18) {
             String open = label("ABRIR EXPEDIENTE ↗", "OPEN DOSSIER ↗");
@@ -286,7 +285,7 @@ public final class SiegeTitleScreen extends Screen {
             g.drawString(font, state, x + w - 9 - font.width(state), y + 7,
                     previewReading ? 0xFFF4D36A : 0xFF71828C, false);
         }
-        g.drawString(font, entry.name(), x + 9, y + 29, 0xFFF1EEE8, false);
+        g.drawString(font, font.plainSubstrByWidth(entry.name(), w - 18), x + 9, y + 29, 0xFFF1EEE8, false);
 
         String threat = entry.threat() > 0 ? entry.threat() + "/5" : label("SIN DATOS", "NO DATA");
         String meta = label("AMENAZA ", "THREAT ") + threat + "  //  HP " + entry.hp();
@@ -403,40 +402,21 @@ public final class SiegeTitleScreen extends Screen {
     private int currentIntelPreview(int size, boolean hovered) {
         if (size <= 0) return 0;
         long now = System.currentTimeMillis();
-        if (manualIntelPreview < 0) {
-            manualIntelPreview = 0;
-            previewCycleStartedAt = now;
-            manualIntelPreviewUntil = now + 8_500L;
-        }
-        previewReading = SiegeConfig.pauseIntelOnHover && hovered;
-        if (!SiegeConfig.autoRotateIntel) {
-            previewHoveredLastFrame = false;
-            manualIntelPreviewUntil = now + 8_500L;
-        } else if (previewReading) {
-            previewHoveredLastFrame = true;
-        } else {
-            if (previewHoveredLastFrame) {
-                previewHoveredLastFrame = false;
-                previewCycleStartedAt = now;
-                manualIntelPreviewUntil = now + 2_000L;
-            }
-        }
-        if (SiegeConfig.autoRotateIntel && !previewReading && now >= manualIntelPreviewUntil) {
-            previewTransitionDirection = 1;
-            manualIntelPreview = Math.floorMod(manualIntelPreview + 1, size);
-            previewCycleStartedAt = now;
-            manualIntelPreviewUntil = now + 8_500L;
-        }
-        return Math.floorMod(manualIntelPreview, size);
+        int result = previewClock.update(size, now, hovered, SiegeConfig.pauseIntelOnHover, SiegeConfig.autoRotateIntel);
+        previewReading = previewClock.reading;
+        previewCycleStartedAt = previewClock.started;
+        manualIntelPreviewUntil = previewClock.deadline;
+        return result;
     }
 
     private void stepIntelPreview(int direction) {
         List<IntelEntry> previewable = IntelCatalog.previewable();
         if (previewable.isEmpty()) return;
         previewTransitionDirection = direction < 0 ? -1 : 1;
-        manualIntelPreview = Math.floorMod(currentIntelPreview(previewable.size(), false) + direction, previewable.size());
-        previewCycleStartedAt = System.currentTimeMillis();
-        manualIntelPreviewUntil = System.currentTimeMillis() + 15_000L;
+        currentIntelPreview(previewable.size(), false);
+        previewClock.step(previewable.size(), System.currentTimeMillis(), direction);
+        previewCycleStartedAt = previewClock.started;
+        manualIntelPreviewUntil = previewClock.deadline;
         SiegeUiSounds.click();
     }
 

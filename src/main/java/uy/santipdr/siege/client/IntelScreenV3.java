@@ -41,6 +41,11 @@ public final class IntelScreenV3 extends Screen {
     private boolean cachedSpanish;
     private int thumbTop, thumbHeight, scrollGrab;
     private int pointerX, pointerY;
+    private String bodyCacheKey, summaryCacheKey;
+    private List<DetailLine> bodyCache = List.of();
+    private List<FormattedCharSequence> summaryCache = List.of();
+    private int summaryScroll, summaryMax, summaryX, summaryTop, summaryRight, summaryBottom;
+    private SiegeButton summaryUp, summaryDown;
     private int portraitX, portraitY, portraitW, portraitH;
     private int bodyLeft, bodyRight, bodyBottom;
     private boolean draggingScroll;
@@ -77,6 +82,7 @@ public final class IntelScreenV3 extends Screen {
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
+        bodyCacheKey = summaryCacheKey = null;
         categoryButtons.clear();
         entryButtons.clear();
         navigationButtons.clear();
@@ -215,6 +221,15 @@ public final class IntelScreenV3 extends Screen {
     }
 
     private void initReadingActions() {
+        summaryUp = addRenderableWidget(new SiegeButton(0, 0, 24, 16, Component.literal("↑"), b -> {
+            summaryScroll = Math.max(0, summaryScroll - 1); SiegeUiSounds.click();
+        }, 0xFF55BFD9));
+        summaryDown = addRenderableWidget(new SiegeButton(0, 0, 24, 16, Component.literal("↓"), b -> {
+            summaryScroll = Math.min(summaryMax, summaryScroll + 1); SiegeUiSounds.click();
+        }, 0xFF55BFD9));
+        summaryUp.setTooltip(Tooltip.create(Component.literal(label("Subir ficha táctica", "Scroll tactical brief up"))));
+        summaryDown.setTooltip(Tooltip.create(Component.literal(label("Bajar ficha táctica", "Scroll tactical brief down"))));
+        summaryUp.visible = summaryDown.visible = false;
         readStart = addRenderableWidget(new SiegeButton(6, height - 26, 24, 16, Component.literal("↑"), b -> {
             detailScroll = 0; SiegeUiSounds.click();
         }, 0xFF55BFD9));
@@ -387,6 +402,9 @@ public final class IntelScreenV3 extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (delta == 0) return false;
         int direction = delta < 0 ? 1 : -1;
+        if (summaryMax > 0 && mouseX >= summaryX && mouseX < summaryRight && mouseY >= summaryTop && mouseY < summaryBottom) {
+            summaryScroll = Math.max(0, Math.min(summaryMax, summaryScroll + direction)); return true;
+        }
 
         if (wide && mouseX >= 10 && mouseX < sidebarWidth - 10 && mouseY >= listTop && mouseY < listBottom) {
             stepEntry(direction);
@@ -425,6 +443,7 @@ public final class IntelScreenV3 extends Screen {
         clearSearch.active = !query.isEmpty();
         readStart.visible = readEnd.visible = false;
         portraitW = 0;
+        summaryMax = 0; summaryUp.visible = summaryDown.visible = false;
         bodyBottom = detailBodyTop = maxDetailScroll = 0;
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         int accent = categoryAccent(category);
@@ -537,6 +556,10 @@ public final class IntelScreenV3 extends Screen {
             g.fill(portraitX, portraitY + portraitH - 1, portraitX + portraitW, portraitY + portraitH, accent);
         }
         int bodyWidth = bodyRight - bodyLeft - 8;
+        String cacheKey = entry.code() + ":" + bodyWidth + ":" + spanish() + ":" + dark + ":" + readingMode;
+        if (!cacheKey.equals(bodyCacheKey)) {
+        DetailLine anchor = bodyCache.isEmpty() ? null : bodyCache.get(Math.min(detailScroll, bodyCache.size() - 1));
+        boolean sameEntry = lastReadingCode != null && lastReadingCode.startsWith(entry.code() + ":");
         List<DetailLine> lines = new ArrayList<>();
         appendWrapped(lines, label("AMENAZA", "THREAT") + " " + (entry.threat() > 0 ? stars(entry.threat()) : label("SIN DATOS", "NO DATA")), bodyWidth, warning);
         appendWrapped(lines, "HP " + entry.hp() + ("N/D".equals(entry.defense()) ? "" : "  DEF " + entry.defense()), bodyWidth, ink);
@@ -550,6 +573,15 @@ public final class IntelScreenV3 extends Screen {
         lines.add(blankLine());
         appendWrapped(lines, label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), bodyWidth, warning);
         appendWrapped(lines, text.advisory(), bodyWidth, warning);
+        if (sameEntry && anchor != null) {
+            for (int i = 0; i < lines.size(); i++) {
+                DetailLine line = lines.get(i);
+                if (line.source().equals(anchor.source()) && line.offset() <= anchor.offset()) detailScroll = i;
+            }
+        }
+        bodyCache = List.copyOf(lines); bodyCacheKey = cacheKey;
+        }
+        List<DetailLine> lines = bodyCache;
         int lineHeight = SiegeConfig.comfortableReading ? 14 : 11;
         int visible = Math.max(1, (bodyBottom - detailBodyTop) / lineHeight);
         String readingKey = entry.code() + ":" + readingMode;
@@ -586,20 +618,29 @@ public final class IntelScreenV3 extends Screen {
     }
 
     private void renderTacticalSummary(GuiGraphics g, IntelEntry entry, int x, int y, int w, int bottom, int ink, int muted, int accent) {
-        if (bottom - y < 36) return;
+        if (bottom - y < 52) return; // Full advisory remains in the main reader at very short heights.
         g.fill(x, y, x + w, y + 1, accent);
-        g.drawString(font, label("FICHA TÁCTICA", "TACTICAL BRIEF"), x, y + 5, accent, false);
-        List<FormattedCharSequence> summary = new ArrayList<>();
-        summary.addAll(font.split(Component.literal(categoryFullName(entry.category()) + " · " + entry.code()), w - 8));
-        summary.addAll(font.split(Component.literal("HP " + entry.hp() + " · DEF " + entry.defense()), w - 8));
-        summary.addAll(font.split(Component.literal(entry.text(spanish()).advisory()), w - 8));
-        int cursor = y + 20;
-        for (int i = 0; i < summary.size() && cursor + 9 <= bottom; i++, cursor += 11) {
-            if (cursor + 20 > bottom && i + 1 < summary.size()) {
-                g.drawString(font, "...", x + 4, cursor, muted, false);
-                break;
-            }
-            g.drawString(font, summary.get(i), x + 4, cursor, i < 2 ? muted : ink, false);
+        g.drawString(font, font.plainSubstrByWidth(label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), w), x, y + 5, accent, false);
+        String key = entry.code() + ":" + w + ":" + spanish();
+        if (!key.equals(summaryCacheKey)) {
+            summaryCache = List.copyOf(font.split(Component.literal(entry.text(spanish()).advisory()), w - 8));
+            summaryScroll = 0; summaryCacheKey = key;
+        }
+        int visible = Math.max(1, (bottom - y - 40) / 11);
+        summaryMax = Math.max(0, summaryCache.size() - visible);
+        summaryScroll = Math.max(0, Math.min(summaryMax, summaryScroll));
+        summaryX = x; summaryTop = y + 20; summaryRight = x + w; summaryBottom = bottom;
+        g.enableScissor(x, summaryTop, x + w, bottom - 20);
+        for (int i = summaryScroll; i < Math.min(summaryCache.size(), summaryScroll + visible); i++)
+            g.drawString(font, summaryCache.get(i), x + 4, summaryTop + (i - summaryScroll) * 11, ink, false);
+        g.disableScissor();
+        summaryUp.visible = summaryDown.visible = summaryMax > 0;
+        summaryUp.setX(x); summaryDown.setX(x + 28);
+        summaryUp.setY(bottom - 17); summaryDown.setY(bottom - 17);
+        summaryUp.active = summaryScroll > 0; summaryDown.active = summaryScroll < summaryMax;
+        if (summaryMax > 0) {
+            String range = (summaryScroll + 1) + "–" + Math.min(summaryCache.size(), summaryScroll + visible) + "/" + summaryCache.size();
+            g.drawString(font, range, x + w - font.width(range), bottom - 12, muted, false);
         }
     }
 
@@ -632,13 +673,17 @@ public final class IntelScreenV3 extends Screen {
     }
 
     private void appendWrapped(List<DetailLine> target, String value, int width, int color) {
+        int offset = 0;
         for (FormattedCharSequence line : font.split(Component.literal(value), Math.max(24, width))) {
-            target.add(new DetailLine(line, color));
+            target.add(new DetailLine(line, color, value, offset));
+            int[] count = {0};
+            line.accept((index, style, codePoint) -> { count[0] += Character.charCount(codePoint); return true; });
+            offset += count[0];
         }
     }
 
     private DetailLine blankLine() {
-        return new DetailLine(FormattedCharSequence.forward(" ", net.minecraft.network.chat.Style.EMPTY), 0x00000000);
+        return new DetailLine(FormattedCharSequence.forward(" ", net.minecraft.network.chat.Style.EMPTY), 0x00000000, "", 0);
     }
 
     private int accentInk(String category) {
@@ -738,5 +783,5 @@ public final class IntelScreenV3 extends Screen {
         return false;
     }
 
-    private record DetailLine(FormattedCharSequence value, int color) { }
+    private record DetailLine(FormattedCharSequence value, int color, String source, int offset) { }
 }

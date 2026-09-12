@@ -17,10 +17,9 @@ public final class SiegeSceneScreen extends Screen {
     private int index, previousIndex, page;
     private long changedAt;
     private boolean cleanView, menuPreview, undoAvailable;
-    private boolean containPreview = true;
     private int undoScene;
     private boolean undoAnimated;
-    private SiegeButton framing, contrast, undo, current;
+    private SiegeButton contrast, undo, current;
     private SiegeButton pin, auto, clean, previousPage, nextPage;
     private SiegeGalleryLayout layout;
     private final List<Thumbnail> thumbnails = new ArrayList<>();
@@ -51,20 +50,17 @@ public final class SiegeSceneScreen extends Screen {
                 Component.literal("←"), b -> changePage(-1), 0xFF55BFD9));
         nextPage = addRenderableWidget(new SiegeButton(width - 32, 36, 24, 20,
                 Component.literal("→"), b -> changePage(1), 0xFF55BFD9));
-        int optionWidth = (width - 28) / 4;
-        framing = addRenderableWidget(new SiegeButton(8, 65, optionWidth, 18, text("VER COMPLETO", "FULL VIEW"), b -> {
-            toggleCleanView();
-        }, 0xFF55BFD9));
-        contrast = addRenderableWidget(new SiegeButton(12 + optionWidth, 65, optionWidth, 18, text("CONTRASTE", "CONTRAST"), b -> {
+        int optionWidth = (width - 24) / 3;
+        contrast = addRenderableWidget(new SiegeButton(8, 65, optionWidth, 18, text("CONTRASTE", "CONTRAST"), b -> {
             menuPreview = !menuPreview; refresh(); SiegeUiSounds.click();
         }, 0xFF55BFD9));
-        undo = addRenderableWidget(new SiegeButton(16 + optionWidth * 2, 65, optionWidth, 18, text("DESHACER", "UNDO"), b -> {
+        undo = addRenderableWidget(new SiegeButton(12 + optionWidth, 65, optionWidth, 18, text("DESHACER", "UNDO"), b -> {
             if (undoAvailable) {
                 SiegeConfig.selectedScene = undoScene; SiegeConfig.animatedBackgrounds = undoAnimated;
                 SiegeConfig.save(); undoAvailable = false; refresh(); SiegeUiSounds.click();
             }
         }, 0xFFD6A94B));
-        current = addRenderableWidget(new SiegeButton(20 + optionWidth * 3, 65, optionWidth, 18, text("ACTUAL", "CURRENT"),
+        current = addRenderableWidget(new SiegeButton(16 + optionWidth * 2, 65, optionWidth, 18, text("ACTUAL", "CURRENT"),
                 b -> select(SiegeBackgrounds.currentIndex(System.currentTimeMillis())), 0xFFD6A94B));
         current.setTooltip(Tooltip.create(text("Ver el fondo que está usando el menú", "Show the background currently used by the menu")));
         for (int slot = 0; slot < layout.capacity(); slot++) {
@@ -94,8 +90,6 @@ public final class SiegeSceneScreen extends Screen {
         for (var child : children()) if (child instanceof AbstractWidget widget)
             widget.setTooltip(Tooltip.create(widget.getMessage()));
         current.setTooltip(Tooltip.create(text("Ver el fondo que está usando el menú", "Show the background currently used by the menu")));
-        framing.setSelected(containPreview);
-        framing.setTooltip(Tooltip.create(text("Mostrar la imagen completa en vez de recortarla", "Show the full image instead of cropping it")));
         contrast.setSelected(menuPreview);
         contrast.setTooltip(Tooltip.create(text("Previsualizar la oscuridad de fondo y panel del menú", "Preview the menu background and panel darkness")));
         undo.active = undoAvailable;
@@ -175,13 +169,12 @@ public final class SiegeSceneScreen extends Screen {
         return super.mouseScrolled(x, y, delta);
     }
     private void renderPreviewImage(GuiGraphics g, int x, int y, int w, int h, int scene, float alpha) {
-        if (containPreview) SiegeBackgrounds.renderContainedRegion(g, x, y, w, h, scene, alpha);
-        else SiegeBackgrounds.renderRegion(g, x, y, w, h, scene, alpha);
+        SiegeBackgrounds.renderRegion(g, x, y, w, h, scene, alpha);
     }
     private void renderContrast(GuiGraphics g, int x, int y, int w, int h) {
         if (!menuPreview) return;
         g.fill(x, y, x + w, y + h, (SiegeConfig.backgroundDarkness * 255 / 100) << 24);
-        g.fill(x, y, x + w / 4, y + h, (SiegeConfig.panelDarkness * 255 / 100) << 24);
+        SiegeBackgrounds.renderPanel(g, x, y, (int)Math.round(w * SiegeBackgrounds.panelFraction(width, height, minecraft.getWindow().getGuiScale())), h);
     }
     private void rememberBackground() {
         undoScene = SiegeConfig.selectedScene; undoAnimated = SiegeConfig.animatedBackgrounds; undoAvailable = true;
@@ -243,6 +236,7 @@ public final class SiegeSceneScreen extends Screen {
             int x = getX(), y = getY(), w = getWidth(), h = getHeight();
             int edge = scene == index ? 0xFFF0CE74 : isHoveredOrFocused() ? 0xFFF4EEE0 : 0xFF39434C;
             g.fill(x, y, x + w, y + h, edge);
+            g.fill(x + 2, y + 2, x + w - 2, y + h - 17, 0xFF0B0D10);
             SiegeBackgrounds.renderRegion(g, x + 2, y + 2, w - 4, h - 17, scene, 1F);
             g.fill(x + 1, y + h - 15, x + w - 1, y + h - 1, 0xFF14191E);
             g.drawString(font, font.plainSubstrByWidth(getMessage().getString(), w - 8), x + 4, y + h - 12, edge, false);

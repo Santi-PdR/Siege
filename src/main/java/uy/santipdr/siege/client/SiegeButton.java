@@ -18,7 +18,8 @@ public final class SiegeButton extends Button {
     private boolean mainMenuStyle;
     private float hoverAmount;
     private long pressedUntil;
-    private long lastRenderNanos;
+    private long lastRenderNanos, hoverStartedAt;
+    private boolean wasHot;
 
     public SiegeButton(int x, int y, int width, int height, Component message, OnPress onPress, int accent) {
         super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
@@ -44,6 +45,8 @@ public final class SiegeButton extends Button {
         int h = getHeight();
         boolean hot = active && isHoveredOrFocused();
         boolean effects = SiegeConfig.menuEffects && !SiegeConfig.reducedMotion;
+        if (hot && !wasHot) hoverStartedAt = System.currentTimeMillis();
+        wasHot = hot;
         float target = hot ? 1.0F : 0.0F;
         long now = System.nanoTime();
         float elapsed = lastRenderNanos == 0 ? 1.0F / 60.0F : Math.min(0.1F, (now - lastRenderNanos) / 1_000_000_000.0F);
@@ -70,10 +73,10 @@ public final class SiegeButton extends Button {
             int alpha = Math.min(150, Math.max(0, Math.round(hoverAmount * 150.0F)));
             g.fill(x + 5, y + 3, x + 7, y + h - 3, (alpha << 24) | (accent & 0x00FFFFFF));
 
-            if (effects) {
+            if (effects && System.currentTimeMillis() - hoverStartedAt < 450) {
                 // Thin tactical sweep, clipped to the button instead of washing out the text.
                 int sweepRange = Math.max(1, w + 48);
-                int sweepX = x - 24 + (int) ((System.currentTimeMillis() / 10L) % sweepRange);
+                int sweepX = x - 24 + (int) ((System.currentTimeMillis() - hoverStartedAt) * sweepRange / 450L);
                 g.enableScissor(x + 2, y + 1, x + w - 1, y + h - 1);
                 g.fill(sweepX, y + 2, sweepX + 1, y + h - 2, (Math.min(66, alpha) << 24) | 0x00FFFFFF);
                 g.fill(sweepX + 1, y + 2, sweepX + 5, y + h - 2, (Math.min(24, alpha / 2) << 24) | (accent & 0x00FFFFFF));
@@ -129,8 +132,8 @@ public final class SiegeButton extends Button {
             g.fill(ax + 3, cy - 3, ax + 6, cy + 4, accent);
             g.fill(ax + 6, cy - 1, ax + 9, cy + 2, accent);
             g.fill(x + 2, y + 2, x + 4, y + h - 2, accent);
-            if (effects && hoverAmount > 0.05F) {
-                int shineX = x + 5 + (int) ((System.currentTimeMillis() / 13L) % Math.max(1, w - 12));
+            if (effects && hoverAmount > 0.05F && System.currentTimeMillis() - hoverStartedAt < 450) {
+                int shineX = x + 5 + (int) ((System.currentTimeMillis() - hoverStartedAt) * Math.max(1, w - 12) / 450L);
                 g.enableScissor(x + 4, y + 4, x + w - 4, y + h - 4);
                 g.fill(shineX, y + 4, shineX + 2, y + h - 4, 0x20FFFFFF);
                 g.disableScissor();

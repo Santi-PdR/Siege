@@ -66,6 +66,20 @@ public final class SiegeBackgrounds {
         g.disableScissor();
     }
 
+    public static double panelFraction(int width, int height, double guiScale) {
+        boolean compact = width < 520 || height < 290;
+        boolean three = guiScale >= 2.75 && guiScale < 3.75 && !compact;
+        int margin = compact ? 9 : Math.max(14, width / 55);
+        int menu = three ? Math.min(218, Math.max(198, width / 5))
+                : Math.min(compact ? 176 : 212, Math.max(138, width / (compact ? 2 : 5)));
+        menu = Math.min(menu, width - margin * 2);
+        return Math.min(width, margin + menu + (compact ? 12 : 18)) / (double)width;
+    }
+    public static void renderPanel(GuiGraphics g, int x, int y, int width, int height) {
+        int alpha = Math.max(0, Math.min(255, SiegeConfig.panelDarkness * 255 / 100));
+        g.fill(x, y, x + width, y + height, (alpha << 24) | 0x00050506);
+    }
+
     private static ResourceLocation scene(String id) {
         return new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/backgrounds/" + id + ".png");
     }
@@ -100,7 +114,6 @@ public final class SiegeBackgrounds {
 
         int darkness = Math.max(0, Math.min(255, SiegeConfig.backgroundDarkness * 255 / 100));
         graphics.fill(0, 0, width, height, darkness << 24);
-        graphics.fill(0, 0, Math.min(width, Math.max(220, width / 4)), height, 0x70000000);
 
         if (SiegeConfig.scanlines && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE) {
             int spacing = SiegeConfig.graphics == SiegeConfig.Graphics.CINEMATIC ? 4 : 7;
