@@ -119,7 +119,7 @@ public final class SiegeTitleScreen extends Screen {
         String main = "ETERNAL CRAFT";
         String sub = "S I E G E";
         int headerWidth = menuWidth;
-        int center = menuX + menuWidth / 2;
+        int center = width / 2;
         float scale = Math.min(compact ? 2.05F : 2.75F, (headerWidth - 12F) / font.width(main));
         int mainWidth = Math.round(font.width(main) * scale);
         int x = center - mainWidth / 2;
