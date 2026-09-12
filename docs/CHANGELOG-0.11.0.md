@@ -17,8 +17,10 @@ Implementación de la revisión de 0.10.5, conservando la distribución aprobada
 
 ## Estado de la revisión
 
-Implementados los cambios de código de los puntos 1–2, 4–5, 8–10, 12–26, 28–29. Puntos 6–7: cobertura automática ampliada; render real pendiente. Punto 11: ancla del párrafo al cambiar anchura; el cambio entre idiomas no garantiza equivalencia exacta de posición. Punto 27: versión de ForgeGradle registrada por CI para fijar la resolución validada. Punto 30: matriz visual preparada en QA-0.11.0.md, pendiente dentro de Minecraft.
+Implementados los cambios de código de los puntos 1–2, 4–5, 8–10, 12–26, 28–29. Puntos 6–7: cobertura automática ampliada; render real pendiente. Punto 11: ancla del párrafo al cambiar anchura; el cambio entre idiomas no garantiza equivalencia exacta de posición. Punto 27: ForgeGradle fijado en 6.0.54, la versión resuelta y compilada por CI. Punto 30: matriz visual preparada en QA-0.11.0.md, pendiente dentro de Minecraft.
 
 Corrección de la revisión anterior, punto 3: los sliders actualmente construidos por Configuración usan 25/31 px, no 19 px. No se cambia su geometría por el supuesto incorrecto; su apariencia con la fuente real queda en QA.
 
 El audio usa salida y entrada secuenciales; no se anuncia como crossfade entre dos pistas simultáneas.
+
+La altura de la imagen reserva espacio para la advertencia en ventanas bajas; prueba geométrica añadida. El primer build pasó 8448 tamaños, pruebas de audio/rotación/catálogo, recursos e instalador.

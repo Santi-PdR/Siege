@@ -535,8 +535,8 @@ public final class IntelScreenV3 extends Screen {
         detailBodyTop = y + 34;
         bodyBottom = bottom - 25;
         // At compact scales, metadata belongs to the scroll area; it cannot push it off-screen.
-        if (!readingMode && !compactMode && availableWidth >= 420) {
-            int imageW = Math.min(292, inner * 43 / 100);
+        if (!readingMode && !compactMode && availableWidth >= 420 && bodyBottom - detailBodyTop >= 150) {
+            int imageW = SiegeIntelLayout.portraitWidth(inner, bodyBottom - detailBodyTop);
             int imageH = imageW * 9 / 16;
             int imageY = y + 37;
             portraitX = bodyRight - imageW; portraitY = imageY; portraitW = imageW; portraitH = imageH;

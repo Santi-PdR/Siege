@@ -35,6 +35,11 @@ public class UiRegressionTest {
             }
             for (int i = 0; i < 4; i++) { inside(gallery.action(i), w, h); check(gallery.action(i).w() >= 60, "Action too narrow"); }
             var intel = SiegeIntelLayout.of(w, h, 6);
+            int readingHeight = h - 32 - intel.contentTop() - 34;
+            if (readingHeight >= 150) {
+                int imageW = SiegeIntelLayout.portraitWidth(w - intel.sidebarWidth() - 54, readingHeight);
+                check(imageW * 9 / 16 + 3 + 8 + 52 <= readingHeight, "Portrait must leave readable tactical brief space");
+            }
             check(intel.wide(), "Dossier must remain on the right at every GUI scale");
             check(w - intel.sidebarWidth() - 30 >= 178, "Dossier too narrow");
             check(intel.categoryTop() + 6 * (intel.categoryHeight() + (intel.ultraCompact() ? 2 : 3)) <= intel.listTop() - 18, "Categories overlap navigator");

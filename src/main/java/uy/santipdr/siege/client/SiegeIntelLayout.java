@@ -4,6 +4,9 @@ package uy.santipdr.siege.client;
 public record SiegeIntelLayout(boolean wide, boolean ultraCompact, int sidebarWidth,
                                int columns, int categoryHeight, int categoryTop,
                                int listTop, int listBottom, int contentTop) {
+    public static int portraitWidth(int inner, int availableHeight) {
+        return Math.max(1, Math.min(Math.min(292, inner * 43 / 100), Math.max(1, availableHeight - 80) * 16 / 9));
+    }
     public static SiegeIntelLayout of(int width, int height, int categories) {
         boolean shortWindow = height < 330;
         int sidebar = Math.min(210, Math.max(112, width / 4));
