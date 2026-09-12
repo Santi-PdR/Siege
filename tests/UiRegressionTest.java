@@ -39,6 +39,13 @@ public class UiRegressionTest {
             check(intel.contentTop() + 34 + 55 < h - 24, "Intel reading area lost at " + w + "x" + h);
             if (intel.wide()) check(intel.listTop() + 44 <= intel.listBottom(), "Wide list cannot fit one entry");
             else check(intel.listTop() - 24 >= intel.categoryTop() + ((7 + intel.columns() - 1) / intel.columns()) * (intel.categoryHeight() + 2), "Search overlaps categories");
+            int previewWidth = IntelIndexModel.previewWidth(w, h);
+            int listRight = IntelIndexModel.listRight(w, h);
+            check(listRight - 42 >= 270, "Index rows too narrow");
+            if (previewWidth > 0) {
+                check(listRight + 8 + previewWidth == w - 8, "Preview outside viewport");
+                check(92 + 8 + (previewWidth - 16) * 9 / 16 + 32 < h - 38, "Preview text lost");
+            }
             int indexRows = IntelIndexModel.rowsPerPage(h);
             check(92 + (indexRows - 1) * 34 + 30 <= h - 38, "Index rows overlap footer");
             check(indexRows >= 3, "Index cannot show enough rows");

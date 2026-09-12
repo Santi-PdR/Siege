@@ -1,3 +1,7 @@
+## 0.10.1 — Índice visual
+
+Retratos en las filas de Intel y vista previa de lectura al señalar o enfocar un expediente en ventanas amplias. En tamaños compactos se conserva una única lista. Mensaje sin resultados centrado dentro del área de contenido. La rueda de la lista queda limitada a su propia región. Comprobaciones geométricas ampliadas; pendiente revisión visual dentro de Minecraft.
+
 ## SIEGE 0.10.0 — 36 mejoras
 
 La actualización amplía el índice de Intel con favoritos editables, filtros combinables y orden persistente; mejora la lectura con papel oscuro, espaciado y posición por expediente; añade controles de encuadre y deshacer en la galería; y reorganiza Configuración con Intel, muestras de sonido y un panel musical fijo.

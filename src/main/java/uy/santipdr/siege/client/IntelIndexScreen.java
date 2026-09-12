@@ -1,6 +1,8 @@
 package uy.santipdr.siege.client;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;
+import uy.santipdr.siege.SiegeMod;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -25,6 +27,8 @@ public final class IntelIndexScreen extends Screen {
     private IntelIndexModel.Order order = IntelIndexModel.Order.values()[SiegeConfig.indexOrder];
     private String query = "";
     private EditBox search;
+    private IntelEntry previewEntry;
+    private int listRight, previewWidth;
     private SiegeButton sort, previous, next, first, last, favorites, threat, direction, reset, clear;
     private int page, capacity, resultCount;
     private boolean initialSelection = true;
@@ -44,6 +48,8 @@ public final class IntelIndexScreen extends Screen {
         int oldTop = page * Math.max(1, capacity);
         rows.clear(); stars.clear();
         capacity = IntelIndexModel.rowsPerPage(height);
+        listRight = IntelIndexModel.listRight(width, height);
+        previewWidth = IntelIndexModel.previewWidth(width, height);
         page = oldTop / capacity;
         addRenderableWidget(new SiegeButton(8, 7, 74, 20, text("VOLVER", "BACK"), b -> onClose(), 0xFFD65A4B));
         search = new EditBox(font, 8, 35, width - 144, 20, text("Buscar en el índice", "Search index"));
@@ -91,6 +97,7 @@ public final class IntelIndexScreen extends Screen {
         rows.clear();
         List<IntelEntry> results = results();
         resultCount = results.size();
+        previewEntry = results.stream().filter(e -> e.code().equals(currentCode)).findFirst().orElse(results.isEmpty() ? null : results.get(0));
         page = IntelIndexModel.clampPage(page, resultCount, capacity);
         first.active = previous.active = page > 0;
         last.active = next.active = page < IntelIndexModel.lastPage(resultCount, capacity);
@@ -112,7 +119,7 @@ public final class IntelIndexScreen extends Screen {
             Row row = new Row(92 + (i - page * capacity) * 34, results.get(i));
             rows.add(addRenderableWidget(row));
             IntelEntry entry = results.get(i);
-            SiegeButton star = new SiegeButton(width - 38, row.getY(), 30, 30,
+            SiegeButton star = new SiegeButton(listRight - 30, row.getY(), 30, 30,
                     Component.literal(SiegeConfig.isFavoriteIntel(entry.code()) ? "★" : "☆"), b -> {
                         SiegeConfig.toggleFavoriteIntel(entry.code()); SiegeUiSounds.click(); refresh();
                     }, 0xFFD6A94B).setSelected(SiegeConfig.isFavoriteIntel(entry.code()));
@@ -142,7 +149,9 @@ public final class IntelIndexScreen extends Screen {
         g.fill(0, 0, width, height, 0xED0B1014);
         g.drawString(font, font.plainSubstrByWidth(label("ÍNDICE · ", "INDEX · ") + categoryName, width - 104), 96, 13, 0xFFE7DFC9, false);
         g.drawString(font, resultCount + " / " + model.size() + label(" expedientes", " dossiers"), 8, 81, 0xFF8FA0A9, false);
-        if (resultCount == 0) g.drawCenteredString(font, label("SIN RESULTADOS", "NO RESULTS"), width / 2, height / 2, 0xFFB8C1C7);
+        if (resultCount == 0) g.drawCenteredString(font, label("SIN RESULTADOS", "NO RESULTS"), (8 + listRight) / 2, 92 + Math.max(0, (height - 130) / 2), 0xFFB8C1C7);
+        for (Row row : rows) if (row.isMouseOver(mouseX, mouseY) || row.isFocused()) previewEntry = row.entry;
+        if (previewWidth > 0 && previewEntry != null) renderPreview(g);
         String count = (resultCount == 0 ? 0 : page + 1) + " / " + (resultCount == 0 ? 0 : IntelIndexModel.lastPage(resultCount, capacity) + 1);
         g.drawCenteredString(font, count, width / 2, height - 22, 0xFFB8C1C7);
         super.render(g, mouseX, mouseY, partialTick);
@@ -150,7 +159,7 @@ public final class IntelIndexScreen extends Screen {
     }
     @Override
     public boolean mouseScrolled(double x, double y, double delta) {
-        if (delta != 0 && x >= 8 && x < width - 8 && y >= 92 && y < height - 38) {
+        if (delta != 0 && x >= 8 && x < listRight && y >= 92 && y < height - 38) {
             step(delta > 0 ? -1 : 1); return true;
         }
         return super.mouseScrolled(x, y, delta);
@@ -163,10 +172,31 @@ public final class IntelIndexScreen extends Screen {
     private String label(String es, String en) { return spanish() ? es : en; }
     private Component text(String es, String en) { return Component.literal(label(es, en)); }
 
+    private ResourceLocation texture(IntelEntry entry) {
+        return new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/intel/" + entry.image() + ".png");
+    }
+    private void renderPreview(GuiGraphics g) {
+        int x = listRight + 8, y = 92, w = previewWidth;
+        g.fill(x, y, x + w, height - 38, 0xFF10191F);
+        int imageW = w - 16, imageH = imageW * 9 / 16;
+        g.blit(texture(previewEntry), x + 8, y + 8, imageW, imageH, 0, 0, 640, 360, 640, 360);
+        int textY = y + imageH + 16;
+        g.enableScissor(x + 8, textY, x + w - 8, height - 44);
+        g.drawString(font, font.plainSubstrByWidth(previewEntry.code() + " · " + previewEntry.name(), imageW), x + 8, textY, 0xFFF0D889, false);
+        textY += 16;
+        String profile = previewEntry.text(spanish()).description();
+        for (var line : font.split(Component.literal(profile), imageW)) {
+            if (textY + 9 > height - 44) break;
+            g.drawString(font, line, x + 8, textY, 0xFFB8C1C7, false);
+            textY += 12;
+        }
+        g.disableScissor();
+    }
+
     private final class Row extends Button {
         private final IntelEntry entry;
         Row(int y, IntelEntry entry) {
-            super(8, y, IntelIndexScreen.this.width - 50, 30, Component.literal(entry.code() + " · " + entry.name()),
+            super(8, y, listRight - 42, 30, Component.literal(entry.code() + " · " + entry.name()),
                     b -> {}, DEFAULT_NARRATION);
             this.entry = entry;
             setTooltip(Tooltip.create(Component.literal(entry.name() + " · " + entry.text(spanish()).armament())));
@@ -182,11 +212,12 @@ public final class IntelIndexScreen extends Screen {
             int accent = selected ? 0xFFD6A94B : isHoveredOrFocused() ? 0xFF78D8E8 : 0xFF53636C;
             g.fill(x, y, x + w, y + 30, isHoveredOrFocused() ? 0xFF1B2931 : 0xFF10191F);
             g.fill(x, y, x + 2, y + 30, accent);
+            g.blit(texture(entry), x + 6, y + 3, 42, 24, 0, 0, 640, 360, 640, 360);
             String name = (SiegeConfig.isFavoriteIntel(entry.code()) ? "★ " : "") + entry.code() + " · " + entry.name();
-            g.drawString(font, font.plainSubstrByWidth(name, w - 18), x + 8, y + 5, selected ? 0xFFF0D889 : 0xFFE5E8E8, false);
+            g.drawString(font, font.plainSubstrByWidth(name, w - 60), x + 54, y + 5, selected ? 0xFFF0D889 : 0xFFE5E8E8, false);
             String detail = label("Amenaza ", "Threat ") + (entry.threat() > 0 ? entry.threat() + "/5" : "—")
                     + " · HP " + entry.hp() + " · " + entry.text(spanish()).armament();
-            g.drawString(font, font.plainSubstrByWidth(detail, w - 18), x + 8, y + 17, 0xFF98ABB5, false);
+            g.drawString(font, font.plainSubstrByWidth(detail, w - 60), x + 54, y + 17, 0xFF98ABB5, false);
         }
     }
 }

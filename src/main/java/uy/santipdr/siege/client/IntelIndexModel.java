@@ -27,6 +27,13 @@ public final class IntelIndexModel {
                 e.code() + " " + e.name() + " " + e.text(spanish).armament() + " " + e.text(spanish).origin() + " " + e.text(spanish).description() + " " + e.text(spanish).advisory()))
                 .sorted(comparator.thenComparing(IntelEntry::code)).toList();
     }
+    public static int previewWidth(int width, int height) {
+        return width >= 760 && height >= 360 ? Math.min(300, width / 3) : 0;
+    }
+    public static int listRight(int width, int height) {
+        int preview = previewWidth(width, height);
+        return width - 8 - (preview > 0 ? preview + 8 : 0);
+    }
     public static int rowsPerPage(int height) { return Math.max(1, (height - 126) / 34); }
     public static int lastPage(int count, int capacity) { return Math.max(0, (count - 1) / Math.max(1, capacity)); }
     public static int clampPage(int page, int count, int capacity) { return Math.max(0, Math.min(lastPage(count, capacity), page)); }
