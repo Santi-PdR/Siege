@@ -570,9 +570,6 @@ public final class IntelScreenV3 extends Screen {
         lines.add(blankLine());
         appendWrapped(lines, label("PERFIL OPERATIVO", "OPERATIONAL PROFILE"), bodyWidth, accent);
         appendWrapped(lines, text.description(), bodyWidth, ink);
-        lines.add(blankLine());
-        appendWrapped(lines, label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), bodyWidth, warning);
-        appendWrapped(lines, text.advisory(), bodyWidth, warning);
         if (sameEntry && anchor != null) {
             for (int i = 0; i < lines.size(); i++) {
                 DetailLine line = lines.get(i);
@@ -618,7 +615,7 @@ public final class IntelScreenV3 extends Screen {
     }
 
     private void renderTacticalSummary(GuiGraphics g, IntelEntry entry, int x, int y, int w, int bottom, int ink, int muted, int accent) {
-        if (bottom - y < 52) return; // Full advisory remains in the main reader at very short heights.
+        if (bottom - y < 52) return;
         g.fill(x, y, x + w, y + 1, accent);
         g.drawString(font, font.plainSubstrByWidth(label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), w), x, y + 5, accent, false);
         String key = entry.code() + ":" + w + ":" + spanish();

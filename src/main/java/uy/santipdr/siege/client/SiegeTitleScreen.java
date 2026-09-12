@@ -194,7 +194,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.11.0", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.11.1", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
