@@ -1,3 +1,21 @@
+## 0.10.4 — Intel lateral restaurado
+
+Corrección principal: dossier a la derecha y categorías/expedientes a la izquierda en todas las escalas admitidas, incluidas 640×360 y 480×270 lógicas.
+
+Diez mejoras adicionales:
+1. Barra de búsqueda y acciones en dos filas cuando falta anchura.
+2. Cabecera ajustada al espacio disponible.
+3. Eliminado contador duplicado que competía con la cabecera.
+4. Ayuda de categorías con nombres traducidos.
+5. Ayuda de expedientes con nombre completo.
+6. Papel común gris neutro, menos amarillento.
+7. Imagen situada a la derecha del texto cuando hay espacio.
+8. Imagen compacta centrada y limitada al ancho del papel.
+9. Flechas de inicio/final de lectura ocultas cuando no hay desplazamiento.
+10. Estado COMPLETO cuando el texto cabe entero.
+
+Pruebas de geometría ampliadas para columna lateral, lectura y herramientas. Pendiente comprobación visual dentro de Minecraft. Sin Favoritos, Índice, Guardar, Copiar ni nuevos atajos.
+
 ## 0.10.3 — Respuesta visual de botones
 
 Etiquetas estables durante hover, transiciones suaves de color en botones normales y placas grises, pulsación visible también en configuración y galería. Las etiquetas largas del menú admiten una reducción moderada hasta 85% antes de truncarse, manteniendo reservado el selector. Movimiento reducido conserva respuesta inmediata. Distribución 0.10.2 y controles simplificados conservados. Pendiente revisión visual en Minecraft.

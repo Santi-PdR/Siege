@@ -109,7 +109,7 @@ public final class IntelScreenV3 extends Screen {
         sidebarWidth = layout.sidebarWidth();
         int margin = 10;
         int buttonHeight = layout.categoryHeight();
-        int gap = 3;
+        int gap = ultraCompact ? 2 : 3;
 
         addRenderableWidget(new SiegeButton(margin, 9, sidebarWidth - margin * 2, 21,
                 Component.literal("< ").append(Component.translatable("siege.intel.return")),
@@ -166,9 +166,10 @@ public final class IntelScreenV3 extends Screen {
         int y = wide ? 50 : listTop - 24;
         int space = wide ? width - sidebarWidth - 30 : width - 12;
         int small = 22;
-        int modeW = Math.min(90, space / 4);
-        int inspectW = Math.min(88, space / 4);
-        int searchW = space - small - modeW - inspectW - 12;
+        boolean twoRows = space < 340;
+        int modeW = twoRows ? (space - 4) / 2 : Math.min(90, space / 4);
+        int inspectW = twoRows ? space - modeW - 4 : Math.min(88, space / 4);
+        int searchW = twoRows ? space - small - 4 : space - small - modeW - inspectW - 12;
         search = new EditBox(font, x, y, searchW, 18, Component.literal(label("Buscar expediente", "Search dossiers")));
         search.setMaxLength(80);
         search.setHint(Component.literal(label("Buscar...", "Search...")));
@@ -182,7 +183,7 @@ public final class IntelScreenV3 extends Screen {
         clearSearch = addRenderableWidget(new SiegeButton(x + searchW + 4, y, small, 18,
                 Component.literal("×"), b -> search.setValue(""), 0xFFD65A4B));
         clearSearch.setTooltip(Tooltip.create(Component.literal(label("Limpiar búsqueda", "Clear search"))));
-        readingButton = addRenderableWidget(new SiegeButton(x + searchW + small + 8, y, modeW, 18,
+        readingButton = addRenderableWidget(new SiegeButton(twoRows ? x : x + searchW + small + 8, twoRows ? y + 22 : y, modeW, 18,
                 Component.literal(label("LECTURA", "READING")), b -> {
                     readingMode = !readingMode;
                     SiegeConfig.intelReadingMode = readingMode; SiegeConfig.save();
@@ -190,8 +191,8 @@ public final class IntelScreenV3 extends Screen {
                     readingButton.setSelected(readingMode);
                     SiegeUiSounds.click();
                 }, 0xFFD6A94B).setSelected(readingMode));
-        readingButton.setTooltip(Tooltip.create(Component.literal(label("Leer todo el texto sin la imagen", "Read the full text without the image"))));
-        inspectButton = addRenderableWidget(new SiegeButton(x + space - inspectW, y, inspectW, 18,
+        readingButton.setTooltip(Tooltip.create(Component.literal(label("Alternar entre texto e imagen del expediente", "Switch between text and dossier image"))));
+        inspectButton = addRenderableWidget(new SiegeButton(x + space - inspectW, twoRows ? y + 22 : y, inspectW, 18,
                 Component.literal(label("AMPLIAR", "INSPECT")), b -> {
                     List<IntelEntry> files = filtered();
                     if (!files.isEmpty()) {
@@ -233,7 +234,7 @@ public final class IntelScreenV3 extends Screen {
             String value = CATEGORIES.get(i);
             SiegeButton button = categoryButtons.get(i);
             button.setMessage(Component.literal(categoryLabel(value)));
-            button.setTooltip(Tooltip.create(Component.literal(value + " · " + IntelCatalog.count(value))));
+            button.setTooltip(Tooltip.create(Component.literal(categoryFullName(value) + " · " + IntelCatalog.count(value))));
             button.setSelected(value.equals(category));
         }
     }
@@ -290,6 +291,7 @@ public final class IntelScreenV3 extends Screen {
             SiegeButton button = new SiegeButton(10, y, sidebarWidth - 20, 19,
                     Component.literal(entry.code() + "  " + entry.name()),
                     b -> selectEntry(index), categoryAccent(entry.category()));
+            button.setTooltip(Tooltip.create(Component.literal(entry.code() + " · " + entry.name())));
             button.setSelected(i == selected);
             entryButtons.add(button);
             addRenderableWidget(button);
@@ -420,8 +422,7 @@ public final class IntelScreenV3 extends Screen {
                 renderFile(g, entry, 6, contentTop, width - 12, true);
             } else {
                 renderFile(g, entry, sidebarWidth + 15, contentTop, width - sidebarWidth - 30, false);
-                String counter = String.format("%02d/%02d", selected + 1, files.size());
-                g.drawString(font, counter, width - 12 - font.width(counter), 17, 0xFF97A0A7, false);
+
             }
         }
 
@@ -440,22 +441,19 @@ public final class IntelScreenV3 extends Screen {
             g.fill(0, y, sidebarWidth, y + 1, 0x1219A5BC);
         }
 
-        int categoryBandTop = 45;
-        int categoryBandBottom = categoryTop - 5;
-        g.fill(0, categoryBandTop, sidebarWidth, categoryBandBottom, 0xFF0B1014);
-        // No full-width underline here: it was visually colliding with the CATEGORIES label.
-        g.fill(10, categoryBandTop + 5, 12, categoryBandBottom - 5, accent);
+        if (!ultraCompact) {
+            g.drawString(font, label("CATEGORÍAS", "CATEGORIES"), 12, 51, 0xFF89959D, false);
+        }
 
-        int filesBandTop = listTop - 28;
+        int filesBandTop = listTop - (ultraCompact ? 18 : 28);
         int filesBandBottom = listTop - 4;
         g.fill(0, filesBandTop, sidebarWidth, filesBandBottom, 0xFF0B1014);
         g.fill(10, filesBandBottom - 2, sidebarWidth - 10, filesBandBottom - 1, 0xFF24323A);
 
-        g.drawCenteredString(font, label("BASE DE DATOS DE INTELIGENCIA", "INTELLIGENCE DATABASE"),
+        String heading = label("INTEL // CLASIFICADO", "INTEL // CLASSIFIED");
+        g.drawCenteredString(font, font.plainSubstrByWidth(heading, width - sidebarWidth - 20),
                 (sidebarWidth + width) / 2, 16, 0xFFF0EEE8);
-        g.drawString(font, "// " + label("CATEGORÍAS", "CATEGORIES"),
-                16, categoryBandTop + 6, 0xFF89959D, false);
-        g.drawString(font, "// " + label("EXPEDIENTES", "FILES") + " [" + filtered().size() + "]",
+        g.drawString(font, label("ARCHIVOS", "FILES") + " [" + filtered().size() + "]",
                 12, filesBandTop + 7, 0xFF89959D, false);
     }
 
@@ -470,7 +468,7 @@ public final class IntelScreenV3 extends Screen {
         IntelEntry.IntelText text = entry.text(spanish());
         boolean advanced = entry.category().equals("ADVANCED");
         boolean dark = SiegeConfig.darkIntelPaper;
-        int paper = dark ? 0xFF20262B : advanced ? 0xFFE0E7EB : 0xFFE7DFC9;
+        int paper = dark ? 0xFF20262B : advanced ? 0xFFE0E7EB : 0xFFDEDCD3;
         int ink = dark ? 0xFFE5E7E2 : advanced ? 0xFF13232D : 0xFF29261F;
         int muted = dark ? 0xFFADB8BE : advanced ? 0xFF53646E : 0xFF6B6454;
         int accent = dark ? 0xFF91CFE2 : accentInk(entry.category());
@@ -483,8 +481,7 @@ public final class IntelScreenV3 extends Screen {
         g.fill(x, y, x + availableWidth, y + 2, categoryAccent(entry.category()));
         String ref = entry.code() + "  ·  " + (selected + 1) + "/" + filtered().size();
         g.drawString(font, ref, x + pad, y + 6, muted, false);
-        String stamp = "";
-        g.drawString(font, stamp, x + availableWidth - pad - font.width(stamp), y + 6, accent, false);
+
         g.drawString(font, font.plainSubstrByWidth(entry.name(), inner), x + pad, y + 18, ink, false);
         bodyLeft = x + pad;
         bodyRight = x + availableWidth - pad;
@@ -495,15 +492,16 @@ public final class IntelScreenV3 extends Screen {
             int imageW = Math.min(292, inner * 43 / 100);
             int imageH = imageW * 9 / 16;
             int imageY = y + 37;
-            portraitX = bodyLeft; portraitY = imageY; portraitW = imageW; portraitH = imageH;
-            g.blit(portraitTexture(entry, bossFrame(entry)), bodyLeft, imageY, imageW, imageH, 0, 0, 640, 360, 640, 360);
-            g.drawString(font, label("AMPLIAR: VER IMAGEN", "INSPECT: VIEW IMAGE"), bodyLeft, imageY + imageH + 8, muted, false);
-            bodyLeft += imageW + 14;
+            portraitX = bodyRight - imageW; portraitY = imageY; portraitW = imageW; portraitH = imageH;
+            g.blit(portraitTexture(entry, bossFrame(entry)), portraitX, imageY, imageW, imageH, 0, 0, 640, 360, 640, 360);
+            g.drawString(font, label("AMPLIAR", "INSPECT"), portraitX, imageY + imageH + 8, muted, false);
+            bodyRight = portraitX - 14;
         } else if (!readingMode && bodyBottom - detailBodyTop >= 140) {
             int imageH = Math.min(80, (bodyBottom - detailBodyTop) / 3);
-            int imageW = imageH * 16 / 9;
-            portraitX = bodyLeft; portraitY = detailBodyTop; portraitW = imageW; portraitH = imageH;
-            g.blit(portraitTexture(entry, bossFrame(entry)), bodyLeft, detailBodyTop, imageW, imageH, 0, 0, 640, 360, 640, 360);
+            int imageW = Math.min(inner, imageH * 16 / 9);
+            imageH = imageW * 9 / 16;
+            portraitX = bodyLeft + (inner - imageW) / 2; portraitY = detailBodyTop; portraitW = imageW; portraitH = imageH;
+            g.blit(portraitTexture(entry, bossFrame(entry)), portraitX, detailBodyTop, imageW, imageH, 0, 0, 640, 360, 640, 360);
             detailBodyTop += imageH + 8;
         }
         int bodyWidth = bodyRight - bodyLeft - 8;
@@ -540,10 +538,10 @@ public final class IntelScreenV3 extends Screen {
             g.fill(bodyRight - 4, thumbY, bodyRight, thumbY + thumbH, accent);
         }
         readingPositions.put(entry.code(), detailScroll);
-        readStart.visible = readEnd.visible = true;
+        readStart.visible = readEnd.visible = maxDetailScroll > 0;
         readStart.setX(bodyLeft); readEnd.setX(bodyLeft + 28);
         readStart.active = detailScroll > 0; readEnd.active = detailScroll < maxDetailScroll;
-        String progress = (maxDetailScroll == 0 ? 100 : (int)Math.round(100.0 * detailScroll / maxDetailScroll)) + "%";
+        String progress = maxDetailScroll == 0 ? label("COMPLETO", "COMPLETE") : (int)Math.round(100.0 * detailScroll / maxDetailScroll) + "%";
         g.drawString(font, progress, bodyRight - font.width(progress), bottom - 11, muted, false);
 
         long age = System.currentTimeMillis() - entryChangedAt;
@@ -611,9 +609,20 @@ public final class IntelScreenV3 extends Screen {
         return new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/intel/" + image + ".png");
     }
 
+    private String categoryFullName(String value) {
+        return switch (value) {
+            case "UNIT" -> label("UNIDADES", "UNITS");
+            case "ADVANCED" -> label("AVANZADOS", "ADVANCED");
+            case "TANK" -> label("TANQUES", "TANKS");
+            case "BOSS" -> label("JEFES", "BOSSES");
+            case "ELITE" -> label("ÉLITES", "ELITES");
+            default -> label("SUPERUNIDADES", "SUPER-UNITS");
+        };
+    }
+
     private String categoryLabel(String value) {
         int count = IntelCatalog.count(value);
-        if (!wide) {
+        if (sidebarWidth < 180) {
             String shortName = switch (value) {
                 case "ALL" -> "ALL";
                 case "UNIT" -> spanish() ? "UNI" : "UNIT";
