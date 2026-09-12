@@ -1,3 +1,31 @@
+## 0.10.5 — Ficha táctica y lectura Intel
+
+Bajo la imagen aparece una ficha táctica basada en datos existentes, ajustada a su espacio. Eliminada la etiqueta Ampliar duplicada; permanece el botón superior.
+
+20 mejoras adicionales:
+1. Selección recordada por categoría durante la sesión.
+2. Búsqueda conserva la selección si sigue coincidiendo.
+3. Búsqueda incluye el estado del archivo.
+4. Búsqueda incluye variantes.
+5. Búsqueda incluye vida y defensa.
+6. Resultados de búsqueda almacenados hasta cambiar consulta, categoría o idioma.
+7. Posición de lectura separada para vista con imagen y vista de texto.
+8. Botón de lectura indica CON IMAGEN para volver.
+9. Ayuda del botón Ampliar explica su función.
+10. Ayuda para expediente anterior.
+11. Ayuda para expediente siguiente.
+12. Flechas desactivadas si hay un solo expediente.
+13. Rueda de navegación limitada al área de archivos.
+14. Arrastre conserva el punto donde se agarró la barra.
+15. Progreso muestra líneas visibles y total.
+16. Seleccionar el mismo expediente no repite sonido.
+17. Límites de scroll limpios cuando no hay resultados.
+18. Animación de jefe reiniciada al cambiar expediente.
+19. Bordes laterales sutiles del papel.
+20. Imagen responde al hover con bordes discretos.
+
+Sin nuevos atajos ni controles retirados. Geometría y compilación en CI; revisión visual dentro de Minecraft pendiente.
+
 ## 0.10.4 — Intel lateral restaurado
 
 Corrección principal: dossier a la derecha y categorías/expedientes a la izquierda en todas las escalas admitidas, incluidas 640×360 y 480×270 lógicas.

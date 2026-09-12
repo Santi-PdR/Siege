@@ -35,6 +35,12 @@ public final class IntelScreenV3 extends Screen {
     private final java.util.Map<String, Integer> readingPositions = new java.util.HashMap<>();
     private String lastReadingCode;
     private SiegeButton readStart, readEnd;
+    private final java.util.Map<String, String> categorySelections = new java.util.HashMap<>();
+    private List<IntelEntry> cachedFiles;
+    private String cachedQuery, cachedCategory;
+    private boolean cachedSpanish;
+    private int thumbTop, thumbHeight, scrollGrab;
+    private int pointerX, pointerY;
     private int portraitX, portraitY, portraitW, portraitH;
     private int bodyLeft, bodyRight, bodyBottom;
     private boolean draggingScroll;
@@ -175,8 +181,12 @@ public final class IntelScreenV3 extends Screen {
         search.setHint(Component.literal(label("Buscar...", "Search...")));
         search.setValue(query);
         search.setResponder(value -> {
+            List<IntelEntry> before = filtered();
+            String keep = before.isEmpty() ? null : before.get(Math.min(selected, before.size() - 1)).code();
             query = value;
             selected = listOffset = detailScroll = 0;
+            List<IntelEntry> after = filtered();
+            for (int i = 0; i < after.size(); i++) if (after.get(i).code().equals(keep)) selected = i;
             rebuildEntryNavigator();
         });
         addRenderableWidget(search);
@@ -184,10 +194,11 @@ public final class IntelScreenV3 extends Screen {
                 Component.literal("×"), b -> search.setValue(""), 0xFFD65A4B));
         clearSearch.setTooltip(Tooltip.create(Component.literal(label("Limpiar búsqueda", "Clear search"))));
         readingButton = addRenderableWidget(new SiegeButton(twoRows ? x : x + searchW + small + 8, twoRows ? y + 22 : y, modeW, 18,
-                Component.literal(label("LECTURA", "READING")), b -> {
+                Component.literal(label(readingMode ? "CON IMAGEN" : "LECTURA", readingMode ? "SHOW IMAGE" : "READING")), b -> {
                     readingMode = !readingMode;
                     SiegeConfig.intelReadingMode = readingMode; SiegeConfig.save();
-                    detailScroll = 0;
+                    lastReadingCode = null;
+                    readingButton.setMessage(Component.literal(label(readingMode ? "CON IMAGEN" : "LECTURA", readingMode ? "SHOW IMAGE" : "READING")));
                     readingButton.setSelected(readingMode);
                     SiegeUiSounds.click();
                 }, 0xFFD6A94B).setSelected(readingMode));
@@ -200,6 +211,7 @@ public final class IntelScreenV3 extends Screen {
                         minecraft.setScreen(new IntelPortraitScreen(this, files.get(selected)));
                     }
                 }, 0xFF55BFD9));
+        inspectButton.setTooltip(Tooltip.create(Component.literal(label("Ver el documento completo con zoom", "View the complete document with zoom"))));
     }
 
     private void initReadingActions() {
@@ -220,8 +232,12 @@ public final class IntelScreenV3 extends Screen {
     private void setCategory(String value) {
         if (category.equals(value)) return;
         SiegeUiSounds.click();
+        rememberSelection();
         category = value;
         selected = 0;
+        List<IntelEntry> nextCategory = filtered();
+        String keep = categorySelections.get(value);
+        for (int i = 0; i < nextCategory.size(); i++) if (nextCategory.get(i).code().equals(keep)) selected = i;
         listOffset = 0;
         detailScroll = 0;
         refreshCategoryButtons();
@@ -277,6 +293,9 @@ public final class IntelScreenV3 extends Screen {
         SiegeButton next = new SiegeButton(10, height - 29, arrowWidth, 18,
                 Component.literal("→  " + label("SIGUIENTE", "NEXT")),
                 b -> stepEntry(1), categoryAccent(category));
+        previous.active = next.active = files.size() > 1;
+        previous.setTooltip(Tooltip.create(Component.literal(label("Expediente anterior", "Previous dossier"))));
+        next.setTooltip(Tooltip.create(Component.literal(label("Expediente siguiente", "Next dossier"))));
         navigationButtons.add(previous);
         navigationButtons.add(next);
         addRenderableWidget(previous);
@@ -300,7 +319,7 @@ public final class IntelScreenV3 extends Screen {
     }
 
     private void selectEntry(int index) {
-        if (index == selected) { SiegeUiSounds.click(); return; }
+        if (index == selected) return;
         SiegeUiSounds.click();
         selected = index;
         entryChangedAt = System.currentTimeMillis();
@@ -343,19 +362,24 @@ public final class IntelScreenV3 extends Screen {
     }
 
     private List<IntelEntry> filtered() {
+        boolean es = spanish();
+        if (cachedFiles != null && query.equals(cachedQuery) && category.equals(cachedCategory) && es == cachedSpanish) return cachedFiles;
+        cachedQuery = query; cachedCategory = category; cachedSpanish = es;
         List<IntelEntry> source = IntelCatalog.filtered(category);
-        if (query.isBlank()) return source;
-        return source.stream().filter(entry -> {
-            IntelEntry.IntelText text = entry.text(spanish());
+        cachedFiles = query.isBlank() ? source : source.stream().filter(entry -> {
+            IntelEntry.IntelText text = entry.text(es);
             return IntelSearch.matches(query, entry.code() + " " + entry.name() + " " + text.origin()
-                    + " " + text.armament() + " " + text.description() + " " + text.advisory());
+                    + " " + text.armament() + " " + text.description() + " " + text.advisory()
+                    + " " + text.status() + " " + text.variants() + " " + entry.hp() + " " + entry.defense());
         }).toList();
+        return cachedFiles;
     }
 
     private void rememberSelection() {
         rememberedCategory = category;
         List<IntelEntry> files = filtered();
         rememberedCode = files.isEmpty() ? null : files.get(Math.max(0, Math.min(selected, files.size() - 1))).code();
+        if (rememberedCode != null) categorySelections.put(category, rememberedCode);
     }
 
 
@@ -364,7 +388,7 @@ public final class IntelScreenV3 extends Screen {
         if (delta == 0) return false;
         int direction = delta < 0 ? 1 : -1;
 
-        if (wide && mouseX < sidebarWidth && mouseY >= listTop) {
+        if (wide && mouseX >= 10 && mouseX < sidebarWidth - 10 && mouseY >= listTop && mouseY < listBottom) {
             stepEntry(direction);
             return true;
         }
@@ -397,9 +421,11 @@ public final class IntelScreenV3 extends Screen {
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
+        pointerX = mouseX; pointerY = mouseY;
         clearSearch.active = !query.isEmpty();
         readStart.visible = readEnd.visible = false;
         portraitW = 0;
+        bodyBottom = detailBodyTop = maxDetailScroll = 0;
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         int accent = categoryAccent(category);
         g.fill(0, 0, width, height, 0xA006090B);
@@ -478,6 +504,8 @@ public final class IntelScreenV3 extends Screen {
         int inner = availableWidth - pad * 2;
         g.fill(x + 3, y + 3, x + availableWidth + 3, bottom + 3, 0x66000000);
         g.fill(x, y, x + availableWidth, bottom, paper);
+        g.fill(x, y + 2, x + 1, bottom, 0x40505050);
+        g.fill(x + availableWidth - 1, y + 2, x + availableWidth, bottom, 0x40505050);
         g.fill(x, y, x + availableWidth, y + 2, categoryAccent(entry.category()));
         String ref = entry.code() + "  ·  " + (selected + 1) + "/" + filtered().size();
         g.drawString(font, ref, x + pad, y + 6, muted, false);
@@ -494,7 +522,7 @@ public final class IntelScreenV3 extends Screen {
             int imageY = y + 37;
             portraitX = bodyRight - imageW; portraitY = imageY; portraitW = imageW; portraitH = imageH;
             g.blit(portraitTexture(entry, bossFrame(entry)), portraitX, imageY, imageW, imageH, 0, 0, 640, 360, 640, 360);
-            g.drawString(font, label("AMPLIAR", "INSPECT"), portraitX, imageY + imageH + 8, muted, false);
+            renderTacticalSummary(g, entry, portraitX, imageY + imageH + 8, imageW, bodyBottom, ink, muted, accent);
             bodyRight = portraitX - 14;
         } else if (!readingMode && bodyBottom - detailBodyTop >= 140) {
             int imageH = Math.min(80, (bodyBottom - detailBodyTop) / 3);
@@ -503,6 +531,10 @@ public final class IntelScreenV3 extends Screen {
             portraitX = bodyLeft + (inner - imageW) / 2; portraitY = detailBodyTop; portraitW = imageW; portraitH = imageH;
             g.blit(portraitTexture(entry, bossFrame(entry)), portraitX, detailBodyTop, imageW, imageH, 0, 0, 640, 360, 640, 360);
             detailBodyTop += imageH + 8;
+        }
+        if (portraitW > 0 && pointerX >= portraitX && pointerX < portraitX + portraitW && pointerY >= portraitY && pointerY < portraitY + portraitH) {
+            g.fill(portraitX, portraitY, portraitX + portraitW, portraitY + 1, accent);
+            g.fill(portraitX, portraitY + portraitH - 1, portraitX + portraitW, portraitY + portraitH, accent);
         }
         int bodyWidth = bodyRight - bodyLeft - 8;
         List<DetailLine> lines = new ArrayList<>();
@@ -520,9 +552,10 @@ public final class IntelScreenV3 extends Screen {
         appendWrapped(lines, text.advisory(), bodyWidth, warning);
         int lineHeight = SiegeConfig.comfortableReading ? 14 : 11;
         int visible = Math.max(1, (bodyBottom - detailBodyTop) / lineHeight);
-        if (!entry.code().equals(lastReadingCode)) {
-            lastReadingCode = entry.code();
-            detailScroll = readingPositions.getOrDefault(entry.code(), 0);
+        String readingKey = entry.code() + ":" + readingMode;
+        if (!readingKey.equals(lastReadingCode)) {
+            lastReadingCode = readingKey;
+            detailScroll = readingPositions.getOrDefault(readingKey, 0);
         }
         maxDetailScroll = Math.max(0, lines.size() - visible);
         detailScroll = Math.max(0, Math.min(detailScroll, maxDetailScroll));
@@ -534,20 +567,39 @@ public final class IntelScreenV3 extends Screen {
             int trackH = bodyBottom - detailBodyTop;
             int thumbH = Math.min(trackH, Math.max(10, trackH * visible / lines.size()));
             int thumbY = detailBodyTop + (trackH - thumbH) * detailScroll / maxDetailScroll;
+            thumbTop = thumbY; thumbHeight = thumbH;
             g.fill(bodyRight - 4, detailBodyTop, bodyRight, bodyBottom, 0x33413B32);
             g.fill(bodyRight - 4, thumbY, bodyRight, thumbY + thumbH, accent);
         }
-        readingPositions.put(entry.code(), detailScroll);
+        readingPositions.put(readingKey, detailScroll);
         readStart.visible = readEnd.visible = maxDetailScroll > 0;
         readStart.setX(bodyLeft); readEnd.setX(bodyLeft + 28);
         readStart.active = detailScroll > 0; readEnd.active = detailScroll < maxDetailScroll;
-        String progress = maxDetailScroll == 0 ? label("COMPLETO", "COMPLETE") : (int)Math.round(100.0 * detailScroll / maxDetailScroll) + "%";
+        String progress = maxDetailScroll == 0 ? label("COMPLETO", "COMPLETE") : (detailScroll + 1) + "–" + Math.min(lines.size(), detailScroll + visible) + " / " + lines.size();
         g.drawString(font, progress, bodyRight - font.width(progress), bottom - 11, muted, false);
 
         long age = System.currentTimeMillis() - entryChangedAt;
         if (age < 230 && SiegeConfig.menuEffects && !SiegeConfig.reducedMotion) {
             int reveal = Math.round(availableWidth * age / 230F);
             g.fill(x, y, x + reveal, y + 2, 0xFFF0D46A);
+        }
+    }
+
+    private void renderTacticalSummary(GuiGraphics g, IntelEntry entry, int x, int y, int w, int bottom, int ink, int muted, int accent) {
+        if (bottom - y < 36) return;
+        g.fill(x, y, x + w, y + 1, accent);
+        g.drawString(font, label("FICHA TÁCTICA", "TACTICAL BRIEF"), x, y + 5, accent, false);
+        List<FormattedCharSequence> summary = new ArrayList<>();
+        summary.addAll(font.split(Component.literal(categoryFullName(entry.category()) + " · " + entry.code()), w - 8));
+        summary.addAll(font.split(Component.literal("HP " + entry.hp() + " · DEF " + entry.defense()), w - 8));
+        summary.addAll(font.split(Component.literal(entry.text(spanish()).advisory()), w - 8));
+        int cursor = y + 20;
+        for (int i = 0; i < summary.size() && cursor + 9 <= bottom; i++, cursor += 11) {
+            if (cursor + 20 > bottom && i + 1 < summary.size()) {
+                g.drawString(font, "...", x + 4, cursor, muted, false);
+                break;
+            }
+            g.drawString(font, summary.get(i), x + 4, cursor, i < 2 ? muted : ink, false);
         }
     }
 
@@ -559,13 +611,14 @@ public final class IntelScreenV3 extends Screen {
         }
         if (button == 0 && maxDetailScroll > 0 && x >= bodyRight - 7 && x < bodyRight + 2 && y >= detailBodyTop && y < bodyBottom) {
             draggingScroll = true;
+            scrollGrab = y >= thumbTop && y < thumbTop + thumbHeight ? (int)y - thumbTop : thumbHeight / 2;
             scrollTo(y);
             return true;
         }
         return super.mouseClicked(x, y, button);
     }
     private void scrollTo(double y) {
-        detailScroll = (int)Math.round(Math.max(0, Math.min(1, (y - detailBodyTop) / Math.max(1, bodyBottom - detailBodyTop - 1))) * maxDetailScroll);
+        detailScroll = (int)Math.round(Math.max(0, Math.min(1, (y - detailBodyTop - scrollGrab) / Math.max(1, bodyBottom - detailBodyTop - thumbHeight))) * maxDetailScroll);
     }
     @Override
     public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
@@ -598,7 +651,7 @@ public final class IntelScreenV3 extends Screen {
 
     private int bossFrame(IntelEntry entry) {
         if (!entry.category().equals("BOSS") || !SiegeConfig.animatedIntel || SiegeConfig.reducedMotion) return 0;
-        return Math.floorMod((int) (System.currentTimeMillis() / 450L), BOSS_FRAME_COUNT);
+        return Math.floorMod((int) (Math.max(0, System.currentTimeMillis() - entryChangedAt) / 450L), BOSS_FRAME_COUNT);
     }
 
     private ResourceLocation portraitTexture(IntelEntry entry, int frame) {
