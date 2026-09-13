@@ -152,6 +152,23 @@ final class IntelData {
                     "No confirmed record", "Information not recovered", "Recovered render", "INCOMPLETE FILE",
                     "A render of a long-legged mechanical structure identified as Strider was recovered. There is no verified information about weapons, mobility, autonomy, origin or combat behaviour.",
                     "Do not approach based on appearance alone. Prioritise remote observation and record any movement pattern or energy emission."),
+            file("ELT-001", "AGARES", "ELITE", 2, "25,000", "agares",
+                    "Sin registro confirmado", "Telequinesis + magnetizadores + sabotaje total", "Agente científico Two Sides", "ÉLITE HOSTIL",
+                    "Jefe Élite con una maestría absoluta sobre la telequinesis y capacidad para sabotear todos los dispositivos existentes, sin importar su calidad. Usa sus poderes para alejar y lanzar a los jugadores que se aproximan. Contra un cyborg puede emplear magnetizadores para causar daño extremo, fallos fatales e incluso una muerte instantánea. También fabrica teletransportadores que permanecen indestructibles mientras Agares siga con vida. Aparece con un traje científico mitad rojo y mitad azul Two Sides, pantalones grises y gafas de realidad aumentada capaces de escanear jugadores en oscuridad absoluta.",
+                    "Reconocimiento Aéreo, Stronghold 5-5: se verificó una unidad Élite Agares. Actuar de inmediato si se aproxima a un dispositivo eléctrico, mantener alejados a los cyborgs y eliminar a Agares antes de intentar destruir sus teletransportadores.",
+                    "No confirmed record", "Telekinesis + magnetisers + total sabotage", "Two Sides scientific agent", "HOSTILE ELITE",
+                    "An Elite boss with absolute mastery of telekinesis and the ability to sabotage every known device regardless of quality. It uses its powers to repel and throw approaching players. Against a cyborg, it can use magnetisers to cause extreme damage, fatal malfunctions and even an instant kill. It also manufactures teleporters that remain indestructible for as long as Agares is alive. It appears in a half-red, half-blue Two Sides scientific suit, grey trousers and augmented-reality glasses capable of scanning players in complete darkness.",
+                    "Aerial Recon, Stronghold 5-5: an Elite Agares unit has been verified. Act immediately if it approaches an electrical device, keep cyborgs away and eliminate Agares before attempting to destroy its teleporters."),
+            file("ELT-002", "GHOST", "ELITE", 1, "25,000", "ghost",
+                    "Sin registro confirmado", "Daga venenosa forjada + dinamita Creeper", "Infiltrante de invisibilidad permanente", "ÉLITE HOSTIL",
+                    "Jefe Élite infiltrante equipado con una daga venenosa forjada y capacidad de invisibilidad sin tiempo de recarga. Intenta sorprender y apuñalar a los jugadores por la espalda; si falla y es descubierto, ataca directamente en lugar de huir. Puede usar dinamitas Creeper para atraer la atención y atacar desde otro lado. Ghost aparece como un agente con traje verde, rostro sombreado y capucha.",
+                    "Reconocimiento Aéreo, Stronghold 5-5: se detectó una unidad Élite Ghost. Mantenerse alerta, permanecer en grupos, cubrir la retaguardia y no abandonar la formación para perseguir una explosión señuelo.",
+                    "No confirmed record", "Forged poison dagger + Creeper dynamite", "Permanent-invisibility infiltrator", "HOSTILE ELITE",
+                    "An infiltrator Elite boss equipped with a forged poison dagger and invisibility with no cooldown. It attempts to surprise and stab players from behind; if the attack fails and it is spotted, it assaults them directly instead of fleeing. It can use Creeper dynamite to draw attention before attacking from another direction. Ghost appears as an agent in a green suit with a shadowed face and hood.",
+                    "Aerial Recon, Stronghold 5-5: an Elite Ghost unit has been detected. Stay alert, remain in groups, cover your rear and do not break formation to pursue a decoy explosion."),
+            file("ELT-003", "AURELIONIS", "ELITE", 0, "1", "aurelionis",
+                    "???", "???", "???", "???", "???", "???",
+                    "???", "???", "???", "???", "???", "???"),
             bossFile("BOS-001", "TEMPEST", 5, "8,000", "tempest",
                     "Sin registro confirmado", "Pistola de rayos + descarga eléctrica + bobinas Tesla", "Eléctrico / semiacuático / sabotaje", "JEFE HOSTIL",
                     "Jefe especializado en controlar multitudes mediante armamento eléctrico y semiacuático. Su pistola de rayos daña a grupos completos y la descarga de corto alcance puede freír instantáneamente a las víctimas cercanas. Dos bobinas Tesla alimentan el sistema. El daño aumenta cuanto menor sea la distancia y Tempest también puede sabotear habilidades.",
@@ -241,4 +258,3 @@ final class IntelData {
     }
 
 }
-

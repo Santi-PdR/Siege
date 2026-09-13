@@ -536,9 +536,11 @@ public final class IntelScreenV3 extends Screen {
         g.fill(x, y, x + availableWidth, y + 2, categoryAccent(entry.category()));
         String ref = entry.code() + "  ·  " + (selected + 1) + "/" + filtered().size();
         g.drawString(font, ref, x + pad, y + 6, muted, false);
-        String classification = categoryFullName(entry.category());
-        classification = font.plainSubstrByWidth(classification, Math.max(24, inner - font.width(ref) - 12));
-        g.drawString(font, classification, x + availableWidth - pad - font.width(classification), y + 6, accent, false);
+        int classificationWidth = inner - font.width(ref) - 12;
+        if (classificationWidth >= 24) {
+            String classification = font.plainSubstrByWidth(categoryFullName(entry.category()), classificationWidth);
+            g.drawString(font, classification, x + availableWidth - pad - font.width(classification), y + 6, accent, false);
+        }
 
         g.drawString(font, font.plainSubstrByWidth(entry.name(), inner), x + pad, y + 18, ink, false);
         bodyLeft = x + pad;

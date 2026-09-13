@@ -33,6 +33,14 @@ public class RuntimeRegressionTest {
         check(!IntelCatalog.files().isEmpty(), "Catalog missing");
         check(IntelCatalog.previewable().stream().allMatch(e -> e.category().equals("UNIT") || e.category().equals("ADVANCED")), "Preview categories");
         check(IntelCatalog.filtered("UNIT") == IntelCatalog.filtered("UNIT"), "Catalog allocation regression");
+        check(IntelCatalog.filtered("ELITE").size() == 3, "Elite catalog must contain exactly three records");
+        check(IntelCatalog.filtered("ELITE").stream().map(IntelEntry::code).distinct().count() == 3, "Duplicate Elite codes");
+        check(IntelCatalog.filtered("ELITE").stream().map(IntelEntry::name).toList().equals(
+                java.util.List.of("AGARES", "GHOST", "AURELIONIS")), "Elite order changed");
+        IntelEntry aurelionis = IntelCatalog.filtered("ELITE").get(2);
+        check(aurelionis.hp().equals("1") && aurelionis.threat() == 0, "Aurelionis unknown data was inferred");
+        check(aurelionis.text(true).description().equals("???") && aurelionis.text(false).advisory().equals("???"),
+                "Aurelionis lore must remain unknown");
         for (IntelEntry e : IntelCatalog.files()) {
             Path image = Path.of("src/main/resources/assets/siege/textures/gui/intel/" + e.image() + ".png");
             check(Files.isRegularFile(image), "Missing image " + image);

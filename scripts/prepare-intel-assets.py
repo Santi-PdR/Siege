@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INTEL = ROOT / "src/main/resources/assets/siege/textures/gui/intel"
 RAW_TANKS = ROOT / "assets-source/intel-raw/tanks"
 RAW_BOSSES = ROOT / "assets-source/intel-raw/bosses"
+RAW_ELITES = ROOT / "assets-source/intel-raw/elites"
 
 CONFIRMED = {
     "sniper", "grenadier", "gunner", "patriot",
@@ -37,11 +38,17 @@ BOSS_SPECS = {
     "lelantos": ("BOS-008", "LELANTOS"),
     "gaia": ("BOS-009", "GAIA"),
 }
+ELITE_SPECS = {
+    "agares": ("ELT-001", "AGARES"),
+    "ghost": ("ELT-002", "GHOST"),
+    "aurelionis": ("ELT-003", "AURELIONIS"),
+}
 BOSS_FRAME_COUNT = 6
 EXPECTED = {
     "infantry", "shielder", "saboteur", "stalker", "natzuka", "sniper", "grenadier", "gunner", "jetpacker", "patriot",
     "specialist", "demoman", "artiller", "cloaker", "apu", "missiler",
     *TANK_SPECS.keys(),
+    *ELITE_SPECS.keys(),
 }
 
 FONT_MONO = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
@@ -311,6 +318,82 @@ def generate_boss_dossiers():
         raise SystemExit("Unexpected Boss frame sources: " + ", ".join(sorted(unexpected)))
 
 
+def elite_dossier(name, code, display_name, source):
+    """Turn one supplied Elite-video still into a classified static dossier."""
+    seed = seed_for(name, 90)
+    rng = random.Random(seed)
+    canvas = paper_noise((640, 360), (198, 190, 174), seed, 7)
+    draw = ImageDraw.Draw(canvas, "RGBA")
+    accent = (121, 55, 151, 240)
+
+    raw = Image.open(source).convert("RGBA")
+    # The logo occupies the upper-left quadrant; frame the subject from the clean
+    # portion of the capture instead of baking promotional text into the dossier.
+    raw = raw.crop((min(470, raw.width // 3), min(120, raw.height // 4), raw.width, raw.height))
+    photo_box = (13, 58, 627, 326)
+    photo_size = (photo_box[2] - photo_box[0], photo_box[3] - photo_box[1])
+    photo = fit_cover(raw, photo_size)
+    photo = ImageEnhance.Color(photo).enhance(.72)
+    photo = ImageEnhance.Contrast(photo).enhance(1.10)
+    photo = Image.alpha_composite(photo, Image.new("RGBA", photo_size, (62, 30, 77, 18)))
+    canvas.alpha_composite(photo, (photo_box[0], photo_box[1]))
+
+    draw.rectangle(photo_box, outline=(62, 43, 70, 210), width=2)
+    for scan_y in range(photo_box[1] + 2, photo_box[3], 6):
+        draw.line((photo_box[0] + 2, scan_y, photo_box[2] - 2, scan_y), fill=(25, 19, 28, 24), width=1)
+    draw.rectangle((3, 3, 636, 356), outline=accent, width=5)
+    draw.line((20, 51, 438, 51), fill=(75, 49, 81, 175), width=2)
+    draw.text((20, 13), f"{code} / {display_name}", font=font(FONT_SERIF_B, 24), fill=(39, 31, 42, 245))
+    draw.text((24, 76), "FIELD INTEL: ELITE", font=font(FONT_MONO_B, 8), fill=(237, 222, 239, 215))
+    draw.text((24, 89), "SOURCE: AERIAL RECON", font=font(FONT_MONO, 8), fill=(237, 222, 239, 190))
+    draw.text((24, 102), "STATUS: UNKNOWN" if name == "aurelionis" else "STATUS: HOSTILE ELITE",
+              font=font(FONT_MONO_B, 8), fill=(228, 175, 238, 225))
+
+    stamp = Image.new("RGBA", (350, 66), (0, 0, 0, 0))
+    stamp_draw = ImageDraw.Draw(stamp, "RGBA")
+    stamp_draw.rectangle((5, 6, 344, 60), outline=(111, 39, 142, 220), width=4)
+    stamp_draw.text((21, 13), "ELITE // CLASSIFIED", font=font(FONT_SERIF_B, 27), fill=(119, 42, 151, 220))
+    stamp = stamp.rotate(7, resample=Image.Resampling.BICUBIC, expand=True)
+    original_alpha = np.array(stamp.getchannel("A"), dtype=np.uint16)
+    wear = np.array(distress_alpha(stamp.size, seed_for(name, 91), .09), dtype=np.uint16)
+    stamp.putalpha(Image.fromarray((original_alpha * wear // 255).astype(np.uint8), "L"))
+    canvas.alpha_composite(stamp, (266, 269))
+
+    draw.rectangle((18, 330, 240, 351), outline=(82, 58, 91, 140), width=1)
+    draw.text((26, 336), "STRONGHOLD 5-5 // ELITE FILE", font=font(FONT_MONO_B, 7), fill=(65, 48, 70, 200))
+    for _ in range(22):
+        x = rng.randrange(8, 632)
+        y = rng.randrange(6, 354)
+        draw.line((x, y, min(633, x + rng.randrange(4, 30)), y), fill=(74, 53, 79, rng.randrange(15, 45)), width=1)
+    canvas.convert("RGB").save(INTEL / f"{name}.png", optimize=True)
+
+
+def generate_elite_dossiers():
+    INTEL.mkdir(parents=True, exist_ok=True)
+    missing = []
+    expected_sources = {f"{name}.jpg" for name in ELITE_SPECS}
+    if RAW_ELITES.exists():
+        unexpected = sorted(
+            str(path.relative_to(ROOT)) for path in RAW_ELITES.iterdir()
+            if path.is_file() and path.name not in expected_sources
+        )
+        if unexpected:
+            raise SystemExit("Unexpected Elite sources: " + ", ".join(unexpected))
+    for name, (code, display_name) in ELITE_SPECS.items():
+        source = RAW_ELITES / f"{name}.jpg"
+        if not source.exists():
+            missing.append(str(source.relative_to(ROOT)))
+            continue
+        elite_dossier(name, code, display_name, source)
+        destination = INTEL / f"{name}.png"
+        with Image.open(destination) as verified:
+            if verified.size != (640, 360) or verified.format != "PNG":
+                raise SystemExit(f"Elite dossier must be a valid 640x360 PNG: {destination.relative_to(ROOT)}")
+        print(f"SIEGE intel: prepared {display_name} Elite dossier")
+    if missing:
+        raise SystemExit("Missing Elite sources: " + ", ".join(missing))
+
+
 def common_patch(base, name, confirmed):
     x, y, w, h = 454, 10, 174, 60
     seed = seed_for(name)
@@ -390,8 +473,10 @@ def secure_patch(base, name):
 
 
 def main():
+    INTEL.mkdir(parents=True, exist_ok=True)
     generate_tank_dossiers()
     generate_boss_dossiers()
+    generate_elite_dossiers()
     files = sorted(INTEL.glob("*.png"))
     names = {path.stem for path in files}
     if names != EXPECTED:

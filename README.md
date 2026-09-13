@@ -1,3 +1,7 @@
+## 0.13.0 — Primeras unidades Élite
+
+La categoría ÉLITES ya contiene expedientes completos para **Agares**, **Ghost** y **Aurelionis**, con retratos clasificados creados a partir del metraje entregado. Agares y Ghost incluyen inteligencia bilingüe; el expediente de Aurelionis conserva `???` y no atribuye capacidades no confirmadas. Esta versión también corrige un posible cruce entre la clasificación y la referencia del dossier, y endurece la validación del catálogo y de sus recursos. [Cambios completos](docs/CHANGELOG-0.13.0.md).
+
 ## 0.12.0 — 50 mejoras nuevas
 
 Pulido amplio de Intel, portada, controles, Configuración, Galería y estabilidad de audio. El dossier continúa a la derecha; la advertencia táctica aparece únicamente bajo la imagen y ahora tiene barra arrastrable propia. [Lista exacta de 50 mejoras](docs/CHANGELOG-0.12.0.md) · [Cambios incorporados después de 0.11.0](docs/NOVEDADES-DESDE-0.11.0.md) · [Validación visual pendiente](docs/QA-0.12.0.md).
