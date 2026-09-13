@@ -90,7 +90,7 @@ public final class SiegeMusic {
         if (health.recover(now, backendPlaying)) {
             // Replay the same track after sustained loss; preserve queue and bound retries.
             manager.stop(active);
-            active = new SiegeTrackSound(TRACKS.get(previous).get());
+            active = new SiegeTrackSound(resolveTrack(previous));
             startRequestedAt = now; clockAnchored = false; announcementStartedAt = 0;
             fadeGain = 0; fadeState = FadeState.IN; fadeStartedAt = now; fadeDurationMs = FADE_IN_MS;
             manager.play(active);
@@ -288,7 +288,7 @@ public final class SiegeMusic {
         var manager = minecraft.getSoundManager();
         if (active != null) manager.stop(active);
 
-        active = new SiegeTrackSound(TRACKS.get(index).get());
+        active = new SiegeTrackSound(resolveTrack(index));
         startRequestedAt = System.currentTimeMillis();
         announcementStartedAt = 0L;
         health.begin(startRequestedAt);
@@ -302,6 +302,12 @@ public final class SiegeMusic {
         fadeDurationMs = fadeIn ? FADE_IN_MS : 1L;
         applyLiveVolume();
         manager.play(active);
+    }
+
+    private static SoundEvent resolveTrack(int index) {
+        RegistryObject<SoundEvent> sound = TRACKS.get(index);
+        if (sound.isPresent()) return sound.get();
+        return SoundEvent.createVariableRangeEvent(sound.getId());
     }
 
     private static void beginFadeOut(long durationMs, boolean natural) {
