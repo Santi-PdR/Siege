@@ -19,6 +19,7 @@ public final class SiegeSceneScreen extends Screen {
     private boolean cleanView, menuPreview, undoAvailable;
     private int undoScene;
     private boolean undoAnimated;
+    private long cleanViewStartedAt;
     private SiegeButton contrast, undo, current;
     private SiegeButton pin, auto, clean, previousPage, nextPage;
     private SiegeGalleryLayout layout;
@@ -63,6 +64,9 @@ public final class SiegeSceneScreen extends Screen {
         current = addRenderableWidget(new SiegeButton(16 + optionWidth * 2, 65, optionWidth, 18, text("ACTUAL", "CURRENT"),
                 b -> select(SiegeBackgrounds.currentIndex(System.currentTimeMillis())), 0xFFD6A94B));
         current.setTooltip(Tooltip.create(text("Ver el fondo que está usando el menú", "Show the background currently used by the menu")));
+        auto.setTooltip(Tooltip.create(text("Volver al cambio automático de fondos completos", "Resume automatic cycling of complete backgrounds")));
+        pin.setTooltip(Tooltip.create(text("Usar esta imagen como fondo fijo", "Use this image as the fixed background")));
+        undo.setTooltip(Tooltip.create(text("Restaurar la selección de fondo anterior", "Restore the previous background selection")));
         for (int slot = 0; slot < layout.capacity(); slot++) {
             Thumbnail tile = new Thumbnail(layout.tile(slot));
             thumbnails.add(addRenderableWidget(tile));
@@ -127,6 +131,14 @@ public final class SiegeSceneScreen extends Screen {
             g.fill(0, 0, width, height, 0xFF0B0D10);
             renderPreviewImage(g, 0, 0, width, height, index, 1F);
             renderContrast(g, 0, 0, width, height);
+            long age = System.currentTimeMillis() - cleanViewStartedAt;
+            if (age < 2_600L) {
+                int alpha = age < 1_800L ? 220 : Math.max(0, 220 - (int)((age - 1_800L) * 220L / 800L));
+                String exit = label("CLIC O ESC PARA VOLVER", "CLICK OR ESC TO RETURN");
+                int boxW = font.width(exit) + 18;
+                g.fill((width - boxW) / 2, height - 28, (width + boxW) / 2, height - 10, (Math.min(180, alpha) << 24) | 0x00070A0D);
+                g.drawCenteredString(font, exit, width / 2, height - 23, (alpha << 24) | 0x00E7EDF0);
+            }
             return;
         }
         g.fill(0, 0, width, height, 0xFF0B0D10);
@@ -198,6 +210,7 @@ public final class SiegeSceneScreen extends Screen {
     }
     private void toggleCleanView() {
         cleanView = !cleanView;
+        if (cleanView) cleanViewStartedAt = System.currentTimeMillis();
         setFocused(null);
         applyVisibility();
         SiegeUiSounds.resetHover();
@@ -242,7 +255,7 @@ public final class SiegeSceneScreen extends Screen {
             g.drawString(font, font.plainSubstrByWidth(getMessage().getString(), w - 8), x + 4, y + h - 12, edge, false);
             if (SiegeConfig.selectedScene == scene) {
                 g.fill(x + 3, y + 3, x + 14, y + 14, 0xDD14191E);
-                g.drawString(font, "★", x + 4, y + 4, 0xFFF0CE74, false);
+                g.drawString(font, "●", x + 5, y + 4, 0xFFF0CE74, false);
             }
         }
     }

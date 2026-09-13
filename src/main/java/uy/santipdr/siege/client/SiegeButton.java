@@ -20,6 +20,7 @@ public final class SiegeButton extends Button {
     private long pressedUntil;
     private long lastRenderNanos, hoverStartedAt;
     private boolean wasHot;
+    private boolean compactCenter;
 
     public SiegeButton(int x, int y, int width, int height, Component message, OnPress onPress, int accent) {
         super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
@@ -36,6 +37,11 @@ public final class SiegeButton extends Button {
         return this;
     }
 
+    public SiegeButton setCompactCenter(boolean compactCenter) {
+        this.compactCenter = compactCenter;
+        return this;
+    }
+
     @Override
     protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         Font font = Minecraft.getInstance().font;
@@ -43,7 +49,9 @@ public final class SiegeButton extends Button {
         int y = getY();
         int w = getWidth();
         int h = getHeight();
-        boolean hot = active && isHoveredOrFocused();
+        boolean pointerHot = active && isHovered();
+        boolean focused = active && isFocused();
+        boolean hot = pointerHot || focused;
         boolean effects = SiegeConfig.menuEffects && !SiegeConfig.reducedMotion;
         if (hot && !wasHot) hoverStartedAt = System.currentTimeMillis();
         wasHot = hot;
@@ -61,7 +69,7 @@ public final class SiegeButton extends Button {
 
         boolean pressed = active && System.currentTimeMillis() < pressedUntil;
         int body = !active ? 0xB90A0C0F : pressed ? 0xF0242C33 : selected ? 0xE51A2026 : blend(0xD20B0F13, 0xE5181D22, hoverAmount);
-        int edge = !active ? 0xFF41464C : (selected || hot) ? accent : 0xFF4C555E;
+        int edge = !active ? 0xFF41464C : selected ? accent : focused ? 0xFFF2D36F : hot ? accent : 0xFF4C555E;
 
         g.fill(x + 2, y + 2, x + w + 2, y + h + 2, 0x55000000);
         g.fill(x, y, x + w, y + h, body);
@@ -93,6 +101,12 @@ public final class SiegeButton extends Button {
             g.fill(x + w - 12, y + 4, x + w - 5, y + 5, accent);
             g.fill(x + w - 9, y + 7, x + w - 5, y + 8, accent);
         }
+        if (focused) {
+            g.fill(x, y, x + w, y + 1, edge);
+            g.fill(x, y + h - 1, x + w, y + h, edge);
+            g.fill(x, y, x + 1, y + h, edge);
+            g.fill(x + w - 1, y, x + w, y + h, edge);
+        }
 
         int underlineWidth = Math.round((w - 4) * hoverAmount);
         if (underlineWidth > 0) g.fill(x + 2, y + h - 2, x + 2 + underlineWidth, y + h - 1, accent);
@@ -100,7 +114,7 @@ public final class SiegeButton extends Button {
         int left = 13;
         int usable = Math.max(1, w <= 40 ? w - 8 : w - left - (selected ? 17 : 9));
         String text = fit(font, getMessage().getString(), usable);
-        if (w <= 40) left = (w - font.width(text)) / 2;
+        if (w <= 40 || compactCenter) left = Math.max(2, (w - font.width(text)) / 2);
         int textColor = !active ? 0xFF6F767D : hot || selected ? 0xFFF5F3EC : 0xFFD8DDE1;
         if (pressed) {
             g.fill(x + 2, y + 1, x + w - 1, y + 2, edge);
@@ -175,7 +189,7 @@ public final class SiegeButton extends Button {
 
     private static String fit(Font font, String value, int width) {
         if (font.width(value) <= width) return value;
-        String ellipsis = "...";
+        String ellipsis = "…";
         if (width < font.width(ellipsis)) return font.plainSubstrByWidth(value, Math.max(0, width));
         int target = Math.max(0, width - font.width(ellipsis));
         String clipped = font.plainSubstrByWidth(value, target);
@@ -186,4 +200,3 @@ public final class SiegeButton extends Button {
     @Override
     public void playDownSound(SoundManager soundManager) { }
 }
-

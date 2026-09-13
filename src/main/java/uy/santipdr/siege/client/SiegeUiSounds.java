@@ -49,11 +49,7 @@ public final class SiegeUiSounds {
 
     private static void play(RegistryObject<SoundEvent> sound, float pitch) {
         if (!SiegeConfig.uiSounds || SiegeConfig.uiVolume <= 0) return;
-
-        // UI audio must never be able to crash the menu. On heavily modded clients
-        // Forge can expose a RegistryObject before its value is available. The sound
-        // manager only needs the event id to resolve sounds.json, so fall back to an
-        // equivalent client-side event instead of blindly calling RegistryObject#get.
+        // A missing Forge registry value must never be able to close the menu.
         SoundEvent event;
         if (sound.isPresent()) {
             event = sound.get();
@@ -62,7 +58,6 @@ public final class SiegeUiSounds {
             if (id == null) return;
             event = SoundEvent.createVariableRangeEvent(id);
         }
-
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(
                 event, pitch, SiegeConfig.clampVolume(SiegeConfig.uiVolume) / 100.0F));
     }

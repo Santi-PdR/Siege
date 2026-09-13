@@ -45,6 +45,8 @@ public final class IntelScreenV3 extends Screen {
     private List<DetailLine> bodyCache = List.of();
     private List<FormattedCharSequence> summaryCache = List.of();
     private int summaryScroll, summaryMax, summaryX, summaryTop, summaryRight, summaryBottom;
+    private int summaryThumbTop, summaryThumbHeight, summaryGrab;
+    private boolean draggingSummary;
     private SiegeButton summaryUp, summaryDown;
     private int portraitX, portraitY, portraitW, portraitH;
     private int bodyLeft, bodyRight, bodyBottom;
@@ -267,6 +269,7 @@ public final class IntelScreenV3 extends Screen {
             button.setMessage(Component.literal(categoryLabel(value)));
             button.setTooltip(Tooltip.create(Component.literal(categoryFullName(value) + " · " + IntelCatalog.count(value))));
             button.setSelected(value.equals(category));
+            button.active = IntelCatalog.count(value) > 0;
         }
     }
 
@@ -276,6 +279,7 @@ public final class IntelScreenV3 extends Screen {
         entryButtons.clear();
         navigationButtons.clear();
         draggingScroll = false;
+        draggingSummary = false;
         maxDetailScroll = 0;
         List<IntelEntry> files = filtered();
         if (inspectButton != null) inspectButton.active = !files.isEmpty();
@@ -298,6 +302,9 @@ public final class IntelScreenV3 extends Screen {
             navigationButtons.add(next);
             addRenderableWidget(previous);
             addRenderableWidget(next);
+            previous.active = next.active = files.size() > 1;
+            previous.setTooltip(Tooltip.create(Component.literal(label("Expediente anterior", "Previous dossier"))));
+            next.setTooltip(Tooltip.create(Component.literal(label("Expediente siguiente", "Next dossier"))));
             return;
         }
 
@@ -403,7 +410,7 @@ public final class IntelScreenV3 extends Screen {
         if (delta == 0) return false;
         int direction = delta < 0 ? 1 : -1;
         if (summaryMax > 0 && mouseX >= summaryX && mouseX < summaryRight && mouseY >= summaryTop && mouseY < summaryBottom) {
-            summaryScroll = Math.max(0, Math.min(summaryMax, summaryScroll + direction)); return true;
+            summaryScroll = Math.max(0, Math.min(summaryMax, summaryScroll + direction * 2)); return true;
         }
 
         if (wide && mouseX >= 10 && mouseX < sidebarWidth - 10 && mouseY >= listTop && mouseY < listBottom) {
@@ -415,7 +422,7 @@ public final class IntelScreenV3 extends Screen {
             return true;
         }
         if (mouseY >= detailBodyTop && mouseY < bodyBottom && mouseX >= bodyLeft && mouseX < bodyRight && maxDetailScroll > 0) {
-            detailScroll = Math.max(0, Math.min(maxDetailScroll, detailScroll + direction));
+            detailScroll = Math.max(0, Math.min(maxDetailScroll, detailScroll + direction * 2));
             return true;
         }
 
@@ -441,6 +448,7 @@ public final class IntelScreenV3 extends Screen {
         SiegeMusic.ensurePlaying();
         pointerX = mouseX; pointerY = mouseY;
         clearSearch.active = !query.isEmpty();
+        clearSearch.visible = !query.isEmpty();
         readStart.visible = readEnd.visible = false;
         portraitW = 0;
         summaryMax = 0; summaryUp.visible = summaryDown.visible = false;
@@ -528,6 +536,9 @@ public final class IntelScreenV3 extends Screen {
         g.fill(x, y, x + availableWidth, y + 2, categoryAccent(entry.category()));
         String ref = entry.code() + "  ·  " + (selected + 1) + "/" + filtered().size();
         g.drawString(font, ref, x + pad, y + 6, muted, false);
+        String classification = categoryFullName(entry.category());
+        classification = font.plainSubstrByWidth(classification, Math.max(24, inner - font.width(ref) - 12));
+        g.drawString(font, classification, x + availableWidth - pad - font.width(classification), y + 6, accent, false);
 
         g.drawString(font, font.plainSubstrByWidth(entry.name(), inner), x + pad, y + 18, ink, false);
         bodyLeft = x + pad;
@@ -552,10 +563,13 @@ public final class IntelScreenV3 extends Screen {
             detailBodyTop += imageH + 8;
         }
         if (portraitW > 0 && pointerX >= portraitX && pointerX < portraitX + portraitW && pointerY >= portraitY && pointerY < portraitY + portraitH) {
+            g.fill(portraitX, portraitY + portraitH - 17, portraitX + portraitW, portraitY + portraitH, 0xB8070A0D);
+            String open = label("AMPLIAR ↗", "INSPECT ↗");
+            g.drawCenteredString(font, open, portraitX + portraitW / 2, portraitY + portraitH - 13, accent);
             g.fill(portraitX, portraitY, portraitX + portraitW, portraitY + 1, accent);
             g.fill(portraitX, portraitY + portraitH - 1, portraitX + portraitW, portraitY + portraitH, accent);
         }
-        int bodyWidth = bodyRight - bodyLeft - 8;
+        int bodyWidth = Math.max(24, bodyRight - bodyLeft - 8);
         String cacheKey = entry.code() + ":" + bodyWidth + ":" + spanish() + ":" + dark + ":" + readingMode;
         if (!cacheKey.equals(bodyCacheKey)) {
         DetailLine anchor = bodyCache.isEmpty() ? null : bodyCache.get(Math.min(detailScroll, bodyCache.size() - 1));
@@ -599,6 +613,10 @@ public final class IntelScreenV3 extends Screen {
             thumbTop = thumbY; thumbHeight = thumbH;
             g.fill(bodyRight - 4, detailBodyTop, bodyRight, bodyBottom, 0x33413B32);
             g.fill(bodyRight - 4, thumbY, bodyRight, thumbY + thumbH, accent);
+            if (bodyRight - bodyLeft >= 90) {
+                String percent = Math.round(detailScroll * 100.0F / maxDetailScroll) + "%";
+                g.drawString(font, percent, bodyRight - font.width(percent), detailBodyTop - 11, muted, false);
+            }
         }
         readingPositions.put(readingKey, detailScroll);
         readStart.visible = readEnd.visible = maxDetailScroll > 0;
@@ -636,6 +654,12 @@ public final class IntelScreenV3 extends Screen {
         summaryUp.setY(bottom - 17); summaryDown.setY(bottom - 17);
         summaryUp.active = summaryScroll > 0; summaryDown.active = summaryScroll < summaryMax;
         if (summaryMax > 0) {
+            int trackBottom = bottom - 20;
+            int trackHeight = Math.max(1, trackBottom - summaryTop);
+            summaryThumbHeight = Math.min(trackHeight, Math.max(8, trackHeight * visible / summaryCache.size()));
+            summaryThumbTop = summaryTop + (trackHeight - summaryThumbHeight) * summaryScroll / summaryMax;
+            g.fill(x + w - 3, summaryTop, x + w, trackBottom, 0x33413B32);
+            g.fill(x + w - 3, summaryThumbTop, x + w, summaryThumbTop + summaryThumbHeight, accent);
             String range = (summaryScroll + 1) + "–" + Math.min(summaryCache.size(), summaryScroll + visible) + "/" + summaryCache.size();
             g.drawString(font, range, x + w - font.width(range), bottom - 12, muted, false);
         }
@@ -646,6 +670,14 @@ public final class IntelScreenV3 extends Screen {
         if (button == 0 && portraitW > 0 && x >= portraitX && x < portraitX + portraitW && y >= portraitY && y < portraitY + portraitH) {
             List<IntelEntry> files = filtered();
             if (!files.isEmpty()) { SiegeUiSounds.click(); minecraft.setScreen(new IntelPortraitScreen(this, files.get(selected))); return true; }
+        }
+        if (button == 0 && summaryMax > 0 && x >= summaryRight - 7 && x < summaryRight + 2
+                && y >= summaryTop && y < summaryBottom - 20) {
+            draggingSummary = true;
+            summaryGrab = y >= summaryThumbTop && y < summaryThumbTop + summaryThumbHeight
+                    ? (int)y - summaryThumbTop : summaryThumbHeight / 2;
+            scrollSummaryTo(y);
+            return true;
         }
         if (button == 0 && maxDetailScroll > 0 && x >= bodyRight - 7 && x < bodyRight + 2 && y >= detailBodyTop && y < bodyBottom) {
             draggingScroll = true;
@@ -658,14 +690,20 @@ public final class IntelScreenV3 extends Screen {
     private void scrollTo(double y) {
         detailScroll = (int)Math.round(Math.max(0, Math.min(1, (y - detailBodyTop - scrollGrab) / Math.max(1, bodyBottom - detailBodyTop - thumbHeight))) * maxDetailScroll);
     }
+    private void scrollSummaryTo(double y) {
+        int trackBottom = summaryBottom - 20;
+        double fraction = (y - summaryTop - summaryGrab) / Math.max(1, trackBottom - summaryTop - summaryThumbHeight);
+        summaryScroll = (int)Math.round(Math.max(0, Math.min(1, fraction)) * summaryMax);
+    }
     @Override
     public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
+        if (draggingSummary && button == 0) { scrollSummaryTo(y); return true; }
         if (draggingScroll && button == 0) { scrollTo(y); return true; }
         return super.mouseDragged(x, y, button, dx, dy);
     }
     @Override
     public boolean mouseReleased(double x, double y, int button) {
-        if (button == 0) draggingScroll = false;
+        if (button == 0) { draggingScroll = false; draggingSummary = false; }
         return super.mouseReleased(x, y, button);
     }
 

@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.function.IntConsumer;
 
@@ -60,7 +61,7 @@ public final class SiegeSlider extends AbstractSliderButton {
         int top = getY();
         int right = left + getWidth();
         int bottom = top + getHeight();
-        int accent = isHoveredOrFocused() ? 0xFF6BD8F2 : 0xFF55BFD9;
+        int accent = !active ? 0xFF59636A : isHoveredOrFocused() ? 0xFF6BD8F2 : 0xFF55BFD9;
 
         g.fill(left, top, right, bottom, 0xED0A0F13);
         g.fill(left, top, right, top + 1, 0xFF2A343C);
@@ -71,6 +72,10 @@ public final class SiegeSlider extends AbstractSliderButton {
         int trackRight = right - 9;
         int trackY = bottom - 6;
         g.fill(trackLeft, trackY, trackRight, trackY + 2, 0xFF28343B);
+        for (int i = 0; i <= 4; i++) {
+            int tick = trackLeft + (trackRight - trackLeft) * i / 4;
+            g.fill(tick, trackY - 1, tick + 1, trackY + 3, 0xFF52616A);
+        }
         int fillRight = trackLeft + (int)Math.round((trackRight - trackLeft) * value);
         g.fill(trackLeft, trackY, fillRight, trackY + 2, accent);
 
@@ -83,6 +88,8 @@ public final class SiegeSlider extends AbstractSliderButton {
         int amountWidth = font.width(amount);
         int textWidth = Math.max(1, getWidth() - amountWidth - 26);
         String clipped = font.plainSubstrByWidth(label.getString(), textWidth);
+        if (!clipped.equals(label.getString()) && textWidth >= font.width("…"))
+            clipped = font.plainSubstrByWidth(label.getString(), textWidth - font.width("…")) + "…";
         g.drawString(font, clipped, left + 9, top + 4, 0xFFE6ECEF, false);
         g.drawString(font, amount, right - amountWidth - 9, top + 4, accent, false);
     }
@@ -94,6 +101,15 @@ public final class SiegeSlider extends AbstractSliderButton {
 
     public int percent() {
         return lastPercent;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        int before = lastPercent;
+        boolean handled = super.keyPressed(keyCode, scanCode, modifiers);
+        if (handled && before != lastPercent && (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT))
+            SiegeUiSounds.click();
+        return handled;
     }
 
     private static int clamp(int value) {

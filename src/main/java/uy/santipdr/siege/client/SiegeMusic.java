@@ -197,6 +197,11 @@ public final class SiegeMusic {
     }
 
     public static List<String> trackNames() { return TRACK_NAMES; }
+    public static int currentTrackNumber() { return previous < 0 ? 0 : previous + 1; }
+    public static float currentProgress() {
+        long total = currentDurationMs();
+        return total <= 0L ? 0.0F : Math.max(0.0F, Math.min(1.0F, (total - currentRemainingMs()) / (float) total));
+    }
 
     /** -1 resumes shuffle without restarting the currently playing track. */
     public static void selectTrack(int index) {

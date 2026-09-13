@@ -1,3 +1,11 @@
+## 0.12.0 — 50 mejoras nuevas
+
+Pulido amplio de Intel, portada, controles, Configuración, Galería y estabilidad de audio. El dossier continúa a la derecha; la advertencia táctica aparece únicamente bajo la imagen y ahora tiene barra arrastrable propia. [Lista exacta de 50 mejoras](docs/CHANGELOG-0.12.0.md) · [Cambios incorporados después de 0.11.0](docs/NOVEDADES-DESDE-0.11.0.md) · [Validación visual pendiente](docs/QA-0.12.0.md).
+
+## 0.11.1 — Advertencia táctica corregida
+
+La advertencia fue retirada del lector izquierdo y permanece completa sólo en la ficha derecha.
+
 ## 0.11.0 — Revisión aplicada
 
 Advertencias completas, Intel optimizado, catálogo independiente, audio con recuperación controlada y entrega verificada. [Cambios y límites](docs/CHANGELOG-0.11.0.md) · [Pruebas visuales pendientes](docs/QA-0.11.0.md).

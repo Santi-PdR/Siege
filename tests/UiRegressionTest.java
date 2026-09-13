@@ -5,6 +5,7 @@ import uy.santipdr.siege.client.IntelSearch;
 import uy.santipdr.siege.client.IntelEntry;
 import java.util.List;
 import uy.santipdr.siege.client.SiegeImageViewport;
+import uy.santipdr.siege.client.SiegeUiLayout;
 
 /** Tests production geometry, including Minecraft's minimum logical viewport and odd sizes. */
 public class UiRegressionTest {
@@ -89,6 +90,22 @@ public class UiRegressionTest {
         camera.reset();
         check(camera.zoom() == 1 && camera.visibleLeft() == 0 && camera.visibleRight() == 1
                 && camera.visibleTop() == 0 && camera.visibleBottom() == 1, "Fit must show full artwork");
+        for (int w = 320; w <= 2560; w += 13) for (int h = 240; h <= 1440; h += 17) {
+            boolean compact = SiegeUiLayout.compactTitle(w, h);
+            int menu = Math.min(compact ? 176 : 212, Math.max(138, w / (compact ? 2 : 5)));
+            int title = SiegeUiLayout.centeredTitleWidth(w, compact, menu);
+            check(title > 0 && title <= w, "Centered title outside viewport");
+            int musicY = SiegeUiLayout.musicButtonY(h, compact);
+            check(musicY >= 4 && musicY + 20 <= h, "Music control outside viewport");
+            int notice = SiegeUiLayout.trackNoticeWidth(w, compact ? 9 : 14, menu, compact);
+            check(notice == 0 || notice >= 96, "Unreadable track notice");
+            check(SiegeUiLayout.settingsColumns(Math.max(230, w - 28)) >= 2, "Settings columns");
+            int viewport = Math.max(1, h - 100);
+            int thumb = SiegeUiLayout.scrollThumb(viewport, viewport + 400);
+            check(thumb >= 10 && thumb <= viewport, "Invalid scrollbar thumb");
+            check(SiegeUiLayout.clampScroll(-20, 100) == 0 && SiegeUiLayout.clampScroll(120, 100) == 100,
+                    "Scroll clamp");
+        }
         System.out.println("Pointer zoom, minimap, pan limits and resize passed");
         System.out.println(cases + " viewport layouts and search regressions passed");
     }

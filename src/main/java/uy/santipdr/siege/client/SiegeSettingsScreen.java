@@ -7,6 +7,7 @@ import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmScreen;
@@ -17,6 +18,8 @@ public final class SiegeSettingsScreen extends Screen {
     private static final int ACCENT = 0xFF55BFD9;
     private static final int WARNING = 0xFFD65A4B;
     private static final int GOLD = 0xFFD6A94B;
+    private static final EnumMap<Section, Integer> SECTION_SCROLL = new EnumMap<>(Section.class);
+    private static Section rememberedSection = Section.OVERVIEW;
 
     private final Screen parent;
     private final Section section;
@@ -43,7 +46,7 @@ public final class SiegeSettingsScreen extends Screen {
 
 
     public SiegeSettingsScreen(Screen parent) {
-        this(parent, Section.OVERVIEW);
+        this(parent, rememberedSection);
     }
 
     private SiegeSettingsScreen(Screen parent, Section section) {
@@ -59,7 +62,7 @@ public final class SiegeSettingsScreen extends Screen {
         controlY.clear();
         musicTrackButtons.clear();
         shuffleButton = null;
-        int previousScroll = scrollOffset;
+        int previousScroll = SECTION_SCROLL.getOrDefault(section, scrollOffset);
         draggingScrollbar = false;
         compact = width < 700 || height < 355;
 
@@ -118,7 +121,7 @@ public final class SiegeSettingsScreen extends Screen {
         navX = panelX + pad;
         navY = panelY + 29;
         int gap = 3;
-        int columns = 3;
+        int columns = SiegeUiLayout.settingsColumns(panelWidth);
         navWidth = Math.max(68, (panelWidth - pad * 2 - gap * (columns - 1)) / columns);
         int h = 18;
 
@@ -147,6 +150,8 @@ public final class SiegeSettingsScreen extends Screen {
         if (value == section) return;
         SiegeUiSounds.click();
         SiegeConfig.save();
+        SECTION_SCROLL.put(section, scrollOffset);
+        rememberedSection = value;
         minecraft.setScreen(new SiegeSettingsScreen(parent, value));
     }
 
@@ -435,7 +440,7 @@ public final class SiegeSettingsScreen extends Screen {
         g.fill(panelX - 5, panelY - 7, panelX + panelWidth + 5, panelY - 4, ACCENT);
         g.fill(panelX - 5, bottom - 1, panelX + panelWidth + 5, bottom, 0xFF29353D);
 
-        g.drawCenteredString(font, font.plainSubstrByWidth(label("CONFIGURACIÓN SIEGE", "SIEGE SETTINGS"), Math.max(40, width - 116)), (width + 100) / 2, 11, 0xFFF0EEE8);
+        g.drawCenteredString(font, font.plainSubstrByWidth(label("CONFIGURACIÓN SIEGE", "SIEGE SETTINGS"), Math.max(40, width - 190)), width / 2, 11, 0xFFF0EEE8);
         g.drawCenteredString(font, label("CENTRO DE CONTROL // CLIENTE", "CONTROL CENTER // CLIENT"), width / 2,
                 compact ? 27 : 32, 0xFF79868E);
 
@@ -450,11 +455,17 @@ public final class SiegeSettingsScreen extends Screen {
         g.disableScissor();
         if (scrollMax > 0) {
             int track = viewportBottom - viewportTop;
-            int thumb = Math.max(10, track * track / (track + scrollMax));
+            int thumb = SiegeUiLayout.scrollThumb(track, track + scrollMax);
             int top = viewportTop + (track - thumb) * scrollOffset / scrollMax;
             scrollThumbTop = top; scrollThumbHeight = thumb;
-            g.fill(contentX + contentWidth - 4, viewportTop, contentX + contentWidth - 2, viewportBottom, 0xFF27343C);
-            g.fill(contentX + contentWidth - 4, top, contentX + contentWidth - 2, top + thumb, ACCENT);
+            boolean overScroll = mouseX >= contentX + contentWidth - 8 && mouseX < contentX + contentWidth
+                    && mouseY >= viewportTop && mouseY < viewportBottom;
+            int barColor = overScroll || draggingScrollbar ? 0xFF7BE2F4 : ACCENT;
+            g.fill(contentX + contentWidth - 5, viewportTop, contentX + contentWidth - 2, viewportBottom, 0xFF27343C);
+            g.fill(contentX + contentWidth - 5, top, contentX + contentWidth - 2, top + thumb, barColor);
+            String scrollState = Math.round(scrollOffset * 100.0F / scrollMax) + "%";
+            if (contentWidth >= 100) g.drawString(font, scrollState, contentX + contentWidth - font.width(scrollState) - 9,
+                    viewportBottom - 10, 0xFF72818A, false);
         }
 
         if (height >= 300) {
@@ -488,7 +499,7 @@ public final class SiegeSettingsScreen extends Screen {
             g.drawString(font, font.plainSubstrByWidth(times, contentWidth), contentX, titleY + 26, 0xFFABBBC5, false);
             g.fill(contentX, titleY + 39, contentX + contentWidth, titleY + 41, 0xFF29343B);
             if (SiegeMusic.isActuallyPlaying() && total > 0) g.fill(contentX, titleY + 39,
-                    contentX + (int)(contentWidth * (total - remaining) / total), titleY + 41, GOLD);
+                    contentX + Math.round(contentWidth * SiegeMusic.currentProgress()), titleY + 41, GOLD);
             return;
         }
         if (compact) {
@@ -541,7 +552,8 @@ public final class SiegeSettingsScreen extends Screen {
     }
 
     private void positionControls() {
-        scrollOffset = Math.max(0, Math.min(scrollMax, scrollOffset));
+        scrollOffset = SiegeUiLayout.clampScroll(scrollOffset, scrollMax);
+        SECTION_SCROLL.put(section, scrollOffset);
         for (int i = 0; i < controls.size(); i++) {
             AbstractWidget widget = controls.get(i);
             widget.setY(controlY.get(i) - scrollOffset);

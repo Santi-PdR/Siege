@@ -35,6 +35,7 @@ public final class SiegeTitleScreen extends Screen {
     private long previewTransitionStarted;
     private boolean previewReading;
     private long previewCycleStartedAt;
+    private SiegeButton musicButton;
 
     public SiegeTitleScreen() {
         super(Component.literal("Eternal Craft: SIEGE"));
@@ -43,7 +44,7 @@ public final class SiegeTitleScreen extends Screen {
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
-        boolean compact = width < 520 || height < 290;
+        boolean compact = SiegeUiLayout.compactTitle(width, height);
         double guiScale = minecraft.getWindow().getGuiScale();
         boolean scaleThree = guiScale >= 2.75D && guiScale < 3.75D && !compact;
         int margin = compact ? 9 : Math.max(14, width / 55);
@@ -75,8 +76,9 @@ public final class SiegeTitleScreen extends Screen {
                 b -> requestQuit()));
 
         int trackWidth = compact ? 88 : 100;
-        addRenderableWidget(new SiegeButton(width - trackWidth - 9, 9, trackWidth, compact ? 18 : 20,
-                Component.literal(label("> MÚSICA", "> MUSIC")), b -> changeTrack(), 0xFFD64B4B));
+        int musicY = SiegeUiLayout.musicButtonY(height, compact);
+        musicButton = addRenderableWidget(new SiegeButton(width - trackWidth - 9, musicY, trackWidth, compact ? 18 : 20,
+                Component.literal(musicButtonLabel()), b -> changeTrack(), 0xFFD64B4B).setCompactCenter(true));
 
     }
 
@@ -92,7 +94,7 @@ public final class SiegeTitleScreen extends Screen {
         SiegeMusic.ensurePlaying();
         SiegeBackgrounds.render(graphics, width, height, System.currentTimeMillis());
 
-        boolean compact = width < 520 || height < 290;
+        boolean compact = SiegeUiLayout.compactTitle(width, height);
         int panelRight = Math.min(width, menuX + menuWidth + (compact ? 12 : 18));
         // Neutral photographic shade from the original menu: no blue plate or hard divider.
         SiegeBackgrounds.renderPanel(graphics, 0, 0, panelRight, height);
@@ -108,6 +110,9 @@ public final class SiegeTitleScreen extends Screen {
             previewReading = false;
         }
         renderTrackAnnouncement(graphics, compact);
+        String musicLabel = musicButtonLabel();
+        if (musicButton != null && !musicButton.getMessage().getString().equals(musicLabel))
+            musicButton.setMessage(Component.literal(musicLabel));
 
         if (width >= 610 && SiegeConfig.showBuildLabel) renderBuildLabel(graphics);
 
@@ -118,7 +123,7 @@ public final class SiegeTitleScreen extends Screen {
     private void renderTitle(GuiGraphics g, boolean compact, int panelRight) {
         String main = "ETERNAL CRAFT";
         String sub = "S I E G E";
-        int headerWidth = menuWidth;
+        int headerWidth = SiegeUiLayout.centeredTitleWidth(width, compact, menuWidth);
         int center = width / 2;
         float scale = Math.min(compact ? 2.05F : 2.75F, (headerWidth - 12F) / font.width(main));
         int mainWidth = Math.round(font.width(main) * scale);
@@ -158,17 +163,24 @@ public final class SiegeTitleScreen extends Screen {
         g.drawString(font, sub, 1, 1, 0xB8000000, false);
         g.drawString(font, sub, 0, 0, 0xFFFF4C55, false);
         g.pose().popPose();
+
+        int dividerY = subY + Math.round(font.lineHeight * subScale) + 5;
+        int dividerHalf = Math.min(110, Math.max(34, mainWidth / 2));
+        g.fill(center - dividerHalf, dividerY, center + dividerHalf, dividerY + 1, 0x8055BFD9);
+        g.fill(center - 12, dividerY, center + 12, dividerY + 2, 0xFFE54852);
     }
 
     private void renderTrackAnnouncement(GuiGraphics g, boolean compact) {
         if (!SiegeConfig.trackAnnouncements) return;
+        if (compact) return;
         long age = SiegeMusic.trackAnnouncementAgeMs();
         if (age < 0L) return;
 
         long noticeDuration = SiegeMusic.trackAnnouncementDurationMs();
         long fadeStart = Math.max(0L, noticeDuration - 1_700L);
         int alpha = age <= fadeStart ? 255 : Math.max(0, 255 - (int) ((age - fadeStart) * 255L / Math.max(1L, noticeDuration - fadeStart)));
-        int boxWidth = Math.min(compact ? 170 : 220, width - menuX - menuWidth - 38);
+        int boxWidth = SiegeUiLayout.trackNoticeWidth(width, menuX, menuWidth, compact);
+        if (boxWidth == 0) return;
         int boxHeight = compact ? 29 : 34;
         int x = width - boxWidth - 9;
         if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion && age < 360L) {
@@ -194,7 +206,7 @@ public final class SiegeTitleScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(10.0F, height - 9.0F, 0.0F);
         g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.11.1", 0, 0, 0xFF747D84, false);
+        g.drawString(font, "BUILD 0.12.0", 0, 0, 0xFF747D84, false);
         g.pose().popPose();
     }
 
@@ -397,6 +409,12 @@ public final class SiegeTitleScreen extends Screen {
     private void changeTrack() {
         SiegeUiSounds.nextTrack();
         SiegeMusic.nextTrack();
+        if (musicButton != null) musicButton.setMessage(Component.literal(musicButtonLabel()));
+    }
+
+    private String musicButtonLabel() {
+        int number = SiegeMusic.currentTrackNumber();
+        return label("> MÚSICA", "> MUSIC") + (number > 0 ? "  " + number + "/" + SiegeMusic.trackNames().size() : "");
     }
 
     private int currentIntelPreview(int size, boolean hovered) {
