@@ -21,6 +21,8 @@ public final class SiegeButton extends Button {
     private long lastRenderNanos, hoverStartedAt;
     private boolean wasHot;
     private boolean compactCenter;
+    private boolean fullHoverFrame;
+    private int textOffsetY;
 
     public SiegeButton(int x, int y, int width, int height, Component message, OnPress onPress, int accent) {
         super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
@@ -39,6 +41,16 @@ public final class SiegeButton extends Button {
 
     public SiegeButton setCompactCenter(boolean compactCenter) {
         this.compactCenter = compactCenter;
+        return this;
+    }
+
+    public SiegeButton setFullHoverFrame(boolean fullHoverFrame) {
+        this.fullHoverFrame = fullHoverFrame;
+        return this;
+    }
+
+    public SiegeButton setTextOffsetY(int textOffsetY) {
+        this.textOffsetY = textOffsetY;
         return this;
     }
 
@@ -69,7 +81,8 @@ public final class SiegeButton extends Button {
 
         boolean pressed = active && System.currentTimeMillis() < pressedUntil;
         int body = !active ? 0xB90A0C0F : pressed ? 0xF0242C33 : selected ? 0xE51A2026 : blend(0xD20B0F13, 0xE5181D22, hoverAmount);
-        int edge = !active ? 0xFF41464C : selected ? accent : focused ? 0xFFF2D36F : hot ? accent : 0xFF4C555E;
+        int edge = !active ? 0xFF41464C : selected || fullHoverFrame && hot ? accent
+                : focused ? 0xFFF2D36F : hot ? accent : 0xFF4C555E;
 
         g.fill(x + 2, y + 2, x + w + 2, y + h + 2, 0x55000000);
         g.fill(x, y, x + w, y + h, body);
@@ -101,7 +114,7 @@ public final class SiegeButton extends Button {
             g.fill(x + w - 12, y + 4, x + w - 5, y + 5, accent);
             g.fill(x + w - 9, y + 7, x + w - 5, y + 8, accent);
         }
-        if (focused) {
+        if (focused || fullHoverFrame && hot) {
             g.fill(x, y, x + w, y + 1, edge);
             g.fill(x, y + h - 1, x + w, y + h, edge);
             g.fill(x, y, x + 1, y + h, edge);
@@ -120,7 +133,8 @@ public final class SiegeButton extends Button {
             g.fill(x + 2, y + 1, x + w - 1, y + 2, edge);
             g.fill(x + 2, y + h - 2, x + w - 1, y + h - 1, edge);
         }
-        g.drawString(font, text, x + left, y + Math.max(1, (h - font.lineHeight) / 2), textColor, false);
+        int textY = y + Math.max(1, (h - font.lineHeight) / 2) + textOffsetY;
+        g.drawString(font, text, x + left, textY, textColor, false);
     }
 
     private void renderMainMenuWidget(GuiGraphics g, Font font, int x, int y, int w, int h,
