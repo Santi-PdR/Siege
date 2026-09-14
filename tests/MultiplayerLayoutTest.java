@@ -9,6 +9,8 @@ public final class MultiplayerLayoutTest {
             check(l.bottom() + 14 < l.firstRow(), "status separate from controls");
             check(l.firstRow() + 24 <= l.secondRow() && l.secondRow() + 24 <= h, "button shadows");
             check(l.listWidth() >= 308, "native entry width");
+            check(l.listCenterX() >= l.x() && l.listCenterX() < l.x() + l.listWidth(), "LAN center in list");
+            if (l.detailWidth() > 0) check(l.listCenterX() != w / 2, "LAN center independent from screen");
             if (l.detailWidth() > 0) {
                 check(l.detailX() >= l.x() + l.listWidth() + 12, "panel separation");
                 check(l.detailX() + l.detailWidth() <= w, "details bounds");
