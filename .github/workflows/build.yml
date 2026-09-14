@@ -33,6 +33,8 @@ jobs:
           mkdir -p build/layout-tests
           javac -d build/layout-tests src/main/java/uy/santipdr/siege/client/SiegeGalleryLayout.java src/main/java/uy/santipdr/siege/client/SiegeIntelLayout.java src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelPresentation.java src/main/java/uy/santipdr/siege/client/SiegeImageViewport.java src/main/java/uy/santipdr/siege/client/SiegeUiLayout.java src/main/java/uy/santipdr/siege/client/IntelEntry.java tests/UiRegressionTest.java
           java -cp build/layout-tests UiRegressionTest
+          javac -d build/layout-tests src/main/java/uy/santipdr/siege/client/SiegeMultiplayerLayout.java tests/MultiplayerLayoutTest.java
+          java -cp build/layout-tests MultiplayerLayoutTest
           javac -d build/config-tests tests/stubs/net/minecraftforge/fml/loading/FMLPaths.java tests/stubs/com/mojang/logging/LogUtils.java src/main/java/uy/santipdr/siege/client/SiegeConfig.java tests/ConfigRegressionTest.java
           java -cp build/config-tests ConfigRegressionTest
           python3 tests/test_installer.py
