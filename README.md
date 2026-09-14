@@ -1,3 +1,7 @@
+## 0.14.0 — Atlas y 50 mejoras nuevas
+
+**Atlas** entra como `SUP-001`, primera Super Unit de la base Intel, con **125.000.000 HP** y un expediente Omega creado desde el video entregado. La actualización mejora búsqueda, navegación, lectura, ficha táctica, visor y validación sin mover el dossier ni recuperar controles descartados. [Lista exacta de 50 cambios](docs/CHANGELOG-0.14.0.md).
+
 ## 0.13.0 — Primeras unidades Élite
 
 La categoría ÉLITES ya contiene expedientes completos para **Agares**, **Ghost** y **Aurelionis**, con retratos clasificados creados a partir del metraje entregado. Agares y Ghost incluyen inteligencia bilingüe; el expediente de Aurelionis conserva `???` y no atribuye capacidades no confirmadas. Esta versión también corrige un posible cruce entre la clasificación y la referencia del dossier, y endurece la validación del catálogo y de sus recursos. [Cambios completos](docs/CHANGELOG-0.13.0.md).
