@@ -2,6 +2,8 @@
 """Polish dossier affiliation blocks while preserving supplied troop pixels."""
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from io import BytesIO
+import base64
 import math
 import random
 import zlib
@@ -12,6 +14,7 @@ INTEL = ROOT / "src/main/resources/assets/siege/textures/gui/intel"
 RAW_TANKS = ROOT / "assets-source/intel-raw/tanks"
 RAW_BOSSES = ROOT / "assets-source/intel-raw/bosses"
 RAW_ELITES = ROOT / "assets-source/intel-raw/elites"
+RAW_SUPER_UNITS = ROOT / "assets-source/intel-raw/super-units"
 
 CONFIRMED = {
     "sniper", "grenadier", "gunner", "patriot",
@@ -43,12 +46,16 @@ ELITE_SPECS = {
     "ghost": ("ELT-002", "GHOST"),
     "aurelionis": ("ELT-003", "AURELIONIS"),
 }
+SUPER_UNIT_SPECS = {
+    "atlas": ("SUP-001", "ATLAS"),
+}
 BOSS_FRAME_COUNT = 6
 EXPECTED = {
     "infantry", "shielder", "saboteur", "stalker", "natzuka", "sniper", "grenadier", "gunner", "jetpacker", "patriot",
     "specialist", "demoman", "artiller", "cloaker", "apu", "missiler",
     *TANK_SPECS.keys(),
     *ELITE_SPECS.keys(),
+    *SUPER_UNIT_SPECS.keys(),
 }
 
 FONT_MONO = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
@@ -394,6 +401,74 @@ def generate_elite_dossiers():
         raise SystemExit("Missing Elite sources: " + ", ".join(missing))
 
 
+def super_unit_dossier(name, code, display_name, source):
+    """Create a high-alert gold dossier while preserving the supplied unit render."""
+    seed = seed_for(name, 120)
+    rng = random.Random(seed)
+    canvas = paper_noise((640, 360), (194, 185, 160), seed, 6)
+    draw = ImageDraw.Draw(canvas, "RGBA")
+    gold = (205, 160, 48, 242)
+
+    raw = Image.open(BytesIO(base64.b64decode(source.read_text(encoding="ascii")))).convert("RGBA")
+    # The supplied clip has a title block in the upper-left. Keep the complete
+    # Atlas silhouette and exclude that promotional block from the dossier.
+    photo_box = (13, 58, 627, 326)
+    photo_size = (photo_box[2] - photo_box[0], photo_box[3] - photo_box[1])
+    photo = fit_contain(raw, photo_size)
+    photo = ImageEnhance.Color(photo).enhance(.78)
+    photo = ImageEnhance.Contrast(photo).enhance(1.14)
+    background = Image.new("RGBA", photo_size, (47, 35, 19, 255))
+    background.alpha_composite(photo, ((photo_size[0] - photo.width) // 2, (photo_size[1] - photo.height) // 2))
+    canvas.alpha_composite(background, (photo_box[0], photo_box[1]))
+
+    draw.rectangle(photo_box, outline=(74, 55, 27, 230), width=2)
+    for scan_y in range(photo_box[1] + 2, photo_box[3], 6):
+        draw.line((photo_box[0] + 2, scan_y, photo_box[2] - 2, scan_y), fill=(19, 15, 8, 30), width=1)
+    draw.rectangle((3, 3, 636, 356), outline=gold, width=5)
+    draw.rectangle((8, 8, 631, 351), outline=(94, 67, 25, 155), width=1)
+    draw.line((20, 51, 438, 51), fill=(91, 68, 33, 190), width=2)
+    draw.text((20, 13), f"{code} / {display_name}", font=font(FONT_SERIF_B, 24), fill=(43, 34, 23, 250))
+    draw.text((24, 76), "FIELD INTEL: SUPER UNIT", font=font(FONT_MONO_B, 8), fill=(255, 225, 143, 230))
+    draw.text((24, 89), "VITAL READING: 125,000,000 HP", font=font(FONT_MONO_B, 8), fill=(255, 204, 82, 235))
+    draw.text((24, 102), "STATUS: MAXIMUM ALERT", font=font(FONT_MONO_B, 8), fill=(255, 174, 71, 235))
+
+    stamp = Image.new("RGBA", (390, 66), (0, 0, 0, 0))
+    stamp_draw = ImageDraw.Draw(stamp, "RGBA")
+    stamp_draw.rectangle((5, 6, 384, 60), outline=(174, 125, 30, 225), width=4)
+    stamp_draw.text((18, 13), "SUPER UNIT // OMEGA", font=font(FONT_SERIF_B, 27), fill=(177, 128, 31, 225))
+    stamp = stamp.rotate(6, resample=Image.Resampling.BICUBIC, expand=True)
+    original_alpha = np.array(stamp.getchannel("A"), dtype=np.uint16)
+    wear = np.array(distress_alpha(stamp.size, seed_for(name, 121), .075), dtype=np.uint16)
+    stamp.putalpha(Image.fromarray((original_alpha * wear // 255).astype(np.uint8), "L"))
+    canvas.alpha_composite(stamp, (220, 270))
+
+    draw.rectangle((18, 330, 258, 351), outline=(94, 68, 26, 150), width=1)
+    draw.text((26, 336), "STRONGHOLD 5-5 // OMEGA FILE", font=font(FONT_MONO_B, 7), fill=(75, 56, 29, 210))
+    for _ in range(26):
+        x = rng.randrange(8, 632)
+        y = rng.randrange(6, 354)
+        draw.line((x, y, min(633, x + rng.randrange(4, 30)), y), fill=(93, 68, 29, rng.randrange(15, 42)), width=1)
+    canvas.convert("RGB").save(INTEL / f"{name}.png", optimize=True)
+
+
+def generate_super_unit_dossiers():
+    expected_sources = {f"{name}.jpg.b64" for name in SUPER_UNIT_SPECS}
+    actual_sources = {path.name for path in RAW_SUPER_UNITS.iterdir() if path.is_file()} if RAW_SUPER_UNITS.exists() else set()
+    unexpected = actual_sources - expected_sources
+    missing = expected_sources - actual_sources
+    if unexpected:
+        raise SystemExit("Unexpected Super Unit sources: " + ", ".join(sorted(unexpected)))
+    if missing:
+        raise SystemExit("Missing Super Unit sources: " + ", ".join(sorted(missing)))
+    for name, (code, display_name) in SUPER_UNIT_SPECS.items():
+        super_unit_dossier(name, code, display_name, RAW_SUPER_UNITS / f"{name}.jpg.b64")
+        destination = INTEL / f"{name}.png"
+        with Image.open(destination) as verified:
+            if verified.size != (640, 360) or verified.format != "PNG":
+                raise SystemExit(f"Super Unit dossier must be a valid 640x360 PNG: {destination.relative_to(ROOT)}")
+        print(f"SIEGE intel: prepared {display_name} Super Unit dossier")
+
+
 def common_patch(base, name, confirmed):
     x, y, w, h = 454, 10, 174, 60
     seed = seed_for(name)
@@ -477,6 +552,7 @@ def main():
     generate_tank_dossiers()
     generate_boss_dossiers()
     generate_elite_dossiers()
+    generate_super_unit_dossiers()
     files = sorted(INTEL.glob("*.png"))
     names = {path.stem for path in files}
     if names != EXPECTED:

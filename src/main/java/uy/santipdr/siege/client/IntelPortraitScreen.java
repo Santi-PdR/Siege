@@ -13,7 +13,7 @@ public final class IntelPortraitScreen extends Screen {
     private final IntelEntry entry;
     private final SiegeImageViewport camera = new SiegeImageViewport();
     private final ResourceLocation texture;
-    private SiegeButton minus, plus, fitButton;
+    private SiegeButton minus, plus, fitButton, backgroundButton, mapButton, zoomPresetButton, centerButton;
     private final int top = 64;
     private int bottom;
     private boolean draggingImage, draggingMap;
@@ -39,19 +39,23 @@ public final class IntelPortraitScreen extends Screen {
         addRenderableWidget(new SiegeButton(x + (w + 4) * 3, height - 27, w, 19,
                 text("VOLVER", "BACK"), b -> onClose(), 0xFFD65A4B));
         int optionW = (width - 28) / 4;
-        addRenderableWidget(new SiegeButton(8, 39, optionW, 18, text("FONDO", "BACKGROUND"), b -> {
-            SiegeConfig.inspectorBackground = (SiegeConfig.inspectorBackground + 1) % 3; SiegeConfig.save(); SiegeUiSounds.click();
-        }, 0xFFD6A94B)).setTooltip(Tooltip.create(text("Alternar fondo negro, gris o papel", "Cycle black, gray or paper background")));
-        addRenderableWidget(new SiegeButton(12 + optionW, 39, optionW, 18, text("MINIMAPA", "MINIMAP"), b -> {
+        backgroundButton = addRenderableWidget(new SiegeButton(8, 39, optionW, 18, text(backgroundLabelEs(), backgroundLabelEn()), b -> {
+            SiegeConfig.inspectorBackground = (SiegeConfig.inspectorBackground + 1) % 3; SiegeConfig.save(); SiegeUiSounds.click(); refresh();
+        }, 0xFFD6A94B));
+        backgroundButton.setTooltip(Tooltip.create(text("Alternar fondo negro, gris o papel", "Cycle black, gray or paper background")));
+        mapButton = addRenderableWidget(new SiegeButton(12 + optionW, 39, optionW, 18, text("MINIMAPA", "MINIMAP"), b -> {
             SiegeConfig.inspectorMap = !SiegeConfig.inspectorMap; SiegeConfig.save();
             ((SiegeButton)b).setSelected(SiegeConfig.inspectorMap); SiegeUiSounds.click();
         }, 0xFF55BFD9).setSelected(SiegeConfig.inspectorMap));
-        addRenderableWidget(new SiegeButton(16 + optionW * 2, 39, optionW, 18, text("ZOOM 2×/4×", "ZOOM 2×/4×"), b -> {
+        mapButton.setTooltip(Tooltip.create(text("Mostrar orientación cuando la imagen está ampliada", "Show orientation while the image is zoomed")));
+        zoomPresetButton = addRenderableWidget(new SiegeButton(16 + optionW * 2, 39, optionW, 18, text("ZOOM 2×", "ZOOM 2×"), b -> {
             changeZoom(camera.zoom() < 1.99 || camera.zoom() >= 3.99 ? 2 : 4, width / 2.0, (top + bottom) / 2.0);
         }, 0xFF55BFD9));
-        addRenderableWidget(new SiegeButton(20 + optionW * 3, 39, optionW, 18, text("CENTRAR", "CENTER"), b -> {
+        zoomPresetButton.setTooltip(Tooltip.create(text("Alternar ampliación precisa entre 2× y 4×", "Toggle precise magnification between 2× and 4×")));
+        centerButton = addRenderableWidget(new SiegeButton(20 + optionW * 3, 39, optionW, 18, text("CENTRAR", "CENTER"), b -> {
             camera.centerOn(0.5, 0.5); SiegeUiSounds.click();
-        }, 0xFF55BFD9)).setTooltip(Tooltip.create(text("Centrar sin cambiar el zoom", "Center without changing zoom")));
+        }, 0xFF55BFD9));
+        centerButton.setTooltip(Tooltip.create(text("Centrar sin cambiar el zoom", "Center without changing zoom")));
         minus.setTooltip(Tooltip.create(text("Alejar la imagen", "Zoom out")));
         plus.setTooltip(Tooltip.create(text("Ampliar la imagen", "Zoom in")));
         fitButton.setTooltip(Tooltip.create(text("Centrar y mostrar el expediente completo", "Center and show the complete artwork")));
@@ -65,6 +69,10 @@ public final class IntelPortraitScreen extends Screen {
         minus.active = camera.zoom() > 1.001;
         plus.active = camera.zoom() < 3.999;
         fitButton.active = camera.zoom() > 1.001;
+        centerButton.active = camera.zoom() > 1.001;
+        zoomPresetButton.setMessage(text(camera.zoom() < 1.99 || camera.zoom() >= 3.99 ? "ZOOM 2×" : "ZOOM 4×",
+                camera.zoom() < 1.99 || camera.zoom() >= 3.99 ? "ZOOM 2×" : "ZOOM 4×"));
+        backgroundButton.setMessage(text(backgroundLabelEs(), backgroundLabelEn()));
     }
     private boolean hasMap() { return SiegeConfig.inspectorMap && camera.zoom() > 1.001 && width >= 500 && height >= 300; }
     private SiegeGalleryLayout.Rect map() { return new SiegeGalleryLayout.Rect(width - 120, top + 8, 104, 59); }
@@ -77,15 +85,20 @@ public final class IntelPortraitScreen extends Screen {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
         g.fill(0, 0, width, height, 0xFF0B0D10);
-        g.drawCenteredString(font, font.plainSubstrByWidth(entry.code() + " · " + entry.name(), width - 16), width / 2, 8, 0xFFE7DFC9);
-        String hint = label("Rueda: ampliar · Arrastrar: mover", "Wheel: zoom · Drag: pan");
+        int accent = IntelPresentation.accent(entry.category());
+        g.drawCenteredString(font, font.plainSubstrByWidth(entry.code() + " · " + entry.name(), width - 16), width / 2, 7, 0xFFE7DFC9);
+        String hint = IntelPresentation.categoryCode(entry.category()) + " · HP " + entry.hp() + " · "
+                + label("Rueda: ampliar · Arrastrar: mover", "Wheel: zoom · Drag: pan");
         String amount = Math.round(camera.zoom() * 100) + "%";
         g.drawString(font, font.plainSubstrByWidth(hint, width - font.width(amount) - 34), 8, 23, 0xFF9CA7AE, false);
         g.drawString(font, amount, width - font.width(amount) - 8, 23, 0xFFF0CE74, false);
+        g.fill(8, 34, width - 8, 35, accent);
         int backdrop = switch (SiegeConfig.inspectorBackground) {
             case 1 -> 0xFF777777; case 2 -> 0xFFE7DFC9; default -> 0xFF08090A;
         };
         g.fill(8, top, width - 8, bottom, backdrop);
+        g.fill(8, top, width - 8, top + 1, accent);
+        g.fill(8, bottom - 1, width - 8, bottom, accent);
         g.enableScissor(8, top, width - 8, bottom);
         g.blit(texture, 8 + (int)Math.round(camera.x()), top + (int)Math.round(camera.y()),
                 (int)Math.round(camera.imageWidth()), (int)Math.round(camera.imageHeight()), 0, 0, 640, 360, 640, 360);
@@ -93,6 +106,7 @@ public final class IntelPortraitScreen extends Screen {
         if (hasMap()) {
             var m = map();
             g.fill(m.x() - 3, m.y() - 3, m.right() + 3, m.bottom() + 3, 0xEE0B0D10);
+            g.fill(m.x() - 2, m.y() - 2, m.right() + 2, m.y() - 1, accent);
             g.blit(texture, m.x(), m.y(), m.w(), m.h(), 0, 0, 640, 360, 640, 360);
             int x1 = m.x() + (int)(camera.visibleLeft() * m.w());
             int x2 = m.x() + (int)(camera.visibleRight() * m.w());
@@ -102,7 +116,13 @@ public final class IntelPortraitScreen extends Screen {
             g.fill(x1, y2 - 1, x2, y2, 0xFFFFD978);
             g.fill(x1, y1, x1 + 1, y2, 0xFFFFD978);
             g.fill(x2 - 1, y1, x2, y2, 0xFFFFD978);
+            int cx = (x1 + x2) / 2;
+            int cy = (y1 + y2) / 2;
+            g.fill(cx - 2, cy, cx + 3, cy + 1, accent);
+            g.fill(cx, cy - 2, cx + 1, cy + 3, accent);
         }
+        int zoomBar = Math.max(1, Math.round((float)((camera.zoom() - 1) / 3.0) * (width - 16)));
+        if (camera.zoom() > 1.001) g.fill(8, bottom - 3, 8 + zoomBar, bottom - 2, accent);
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
     }
@@ -146,4 +166,10 @@ public final class IntelPortraitScreen extends Screen {
     public boolean isPauseScreen() { return false; }
     private Component text(String es, String en) { return Component.literal(label(es, en)); }
     private String label(String es, String en) { return minecraft.getLanguageManager().getSelected().startsWith("es_") ? es : en; }
+    private String backgroundLabelEs() {
+        return switch (SiegeConfig.inspectorBackground) { case 1 -> "FONDO GRIS"; case 2 -> "FONDO PAPEL"; default -> "FONDO NEGRO"; };
+    }
+    private String backgroundLabelEn() {
+        return switch (SiegeConfig.inspectorBackground) { case 1 -> "GRAY BACKGROUND"; case 2 -> "PAPER BACKGROUND"; default -> "BLACK BACKGROUND"; };
+    }
 }

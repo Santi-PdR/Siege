@@ -21,6 +21,9 @@ public final class IntelScreenV3 extends Screen {
     );
     private static String rememberedCategory = "UNIT";
     private static String rememberedCode;
+    private static String rememberedQuery = "";
+    private static final java.util.Map<String, Integer> READING_POSITIONS = new java.util.HashMap<>();
+    private static final java.util.Map<String, String> CATEGORY_SELECTIONS = new java.util.HashMap<>();
 
     private final Screen parent;
     private final String requestedCategory;
@@ -29,13 +32,11 @@ public final class IntelScreenV3 extends Screen {
     private final List<SiegeButton> entryButtons = new ArrayList<>();
     private final List<SiegeButton> navigationButtons = new ArrayList<>();
     private EditBox search;
-    private String query = "";
+    private String query = rememberedQuery;
     private SiegeButton clearSearch, readingButton, inspectButton;
     private boolean readingMode = SiegeConfig.intelReadingMode;
-    private final java.util.Map<String, Integer> readingPositions = new java.util.HashMap<>();
     private String lastReadingCode;
     private SiegeButton readStart, readEnd;
-    private final java.util.Map<String, String> categorySelections = new java.util.HashMap<>();
     private List<IntelEntry> cachedFiles;
     private String cachedQuery, cachedCategory;
     private boolean cachedSpanish;
@@ -92,6 +93,7 @@ public final class IntelScreenV3 extends Screen {
         layout = SiegeIntelLayout.of(width, height, CATEGORIES.size());
         wide = layout.wide();
         ultraCompact = layout.ultraCompact();
+        if (entryChangedAt == 0L) entryChangedAt = System.currentTimeMillis();
         applyInitialEntry();
         if (wide) initWide(); else initCompact();
         initTools();
@@ -187,11 +189,15 @@ public final class IntelScreenV3 extends Screen {
         search = new EditBox(font, x, y, searchW, 18, Component.literal(label("Buscar expediente", "Search dossiers")));
         search.setMaxLength(80);
         search.setHint(Component.literal(label("Buscar...", "Search...")));
+        search.setTooltip(Tooltip.create(Component.literal(label(
+                "Busca texto, usa comillas para frases y !palabra para excluir",
+                "Search text, quote phrases and use !word to exclude"))));
         search.setValue(query);
         search.setResponder(value -> {
             List<IntelEntry> before = filtered();
             String keep = before.isEmpty() ? null : before.get(Math.min(selected, before.size() - 1)).code();
             query = value;
+            rememberedQuery = value;
             selected = listOffset = detailScroll = 0;
             List<IntelEntry> after = filtered();
             for (int i = 0; i < after.size(); i++) if (after.get(i).code().equals(keep)) selected = i;
@@ -253,7 +259,7 @@ public final class IntelScreenV3 extends Screen {
         category = value;
         selected = 0;
         List<IntelEntry> nextCategory = filtered();
-        String keep = categorySelections.get(value);
+        String keep = CATEGORY_SELECTIONS.get(value);
         for (int i = 0; i < nextCategory.size(); i++) if (nextCategory.get(i).code().equals(keep)) selected = i;
         listOffset = 0;
         detailScroll = 0;
@@ -329,10 +335,12 @@ public final class IntelScreenV3 extends Screen {
         for (int i = listOffset; i < files.size() && i < listOffset + visible; i++) {
             int index = i;
             IntelEntry entry = files.get(i);
+            String row = entry.code() + "  " + entry.name() + " · " + IntelPresentation.compactHp(entry.hp());
             SiegeButton button = new SiegeButton(10, y, sidebarWidth - 20, 19,
-                    Component.literal(entry.code() + "  " + entry.name()),
+                    Component.literal(row),
                     b -> selectEntry(index), categoryAccent(entry.category()));
-            button.setTooltip(Tooltip.create(Component.literal(entry.code() + " · " + entry.name())));
+            button.setTooltip(Tooltip.create(Component.literal(entry.code() + " · " + entry.name() + " · HP " + entry.hp()
+                    + " · " + entry.text(spanish()).status())));
             button.setSelected(i == selected);
             entryButtons.add(button);
             addRenderableWidget(button);
@@ -364,6 +372,18 @@ public final class IntelScreenV3 extends Screen {
         rememberSelection();
     }
 
+    private void scrollEntry(int direction) {
+        List<IntelEntry> files = filtered();
+        if (files.isEmpty()) return;
+        int next = Math.max(0, Math.min(files.size() - 1, selected + direction));
+        if (next == selected) return;
+        selectEntry(next);
+        if (wide) {
+            ensureSelectedVisible(visibleEntries(), files.size());
+            rebuildEntryNavigator();
+        }
+    }
+
     private void ensureSelectedVisible(int visible, int size) {
         if (visible <= 0) { listOffset = 0; return; }
         if (selected < listOffset) listOffset = selected;
@@ -392,7 +412,9 @@ public final class IntelScreenV3 extends Screen {
             IntelEntry.IntelText text = entry.text(es);
             return IntelSearch.matches(query, entry.code() + " " + entry.name() + " " + text.origin()
                     + " " + text.armament() + " " + text.description() + " " + text.advisory()
-                    + " " + text.status() + " " + text.variants() + " " + entry.hp() + " " + entry.defense());
+                    + " " + text.status() + " " + text.variants() + " " + entry.hp() + " " + entry.defense()
+                    + " " + entry.category() + " " + categoryFullName(entry.category())
+                    + " " + IntelPresentation.compactHp(entry.hp()));
         }).toList();
         return cachedFiles;
     }
@@ -401,7 +423,7 @@ public final class IntelScreenV3 extends Screen {
         rememberedCategory = category;
         List<IntelEntry> files = filtered();
         rememberedCode = files.isEmpty() ? null : files.get(Math.max(0, Math.min(selected, files.size() - 1))).code();
-        if (rememberedCode != null) categorySelections.put(category, rememberedCode);
+        if (rememberedCode != null) CATEGORY_SELECTIONS.put(category, rememberedCode);
     }
 
 
@@ -414,11 +436,11 @@ public final class IntelScreenV3 extends Screen {
         }
 
         if (wide && mouseX >= 10 && mouseX < sidebarWidth - 10 && mouseY >= listTop && mouseY < listBottom) {
-            stepEntry(direction);
+            scrollEntry(direction);
             return true;
         }
         if (!wide && mouseY >= listTop && mouseY < contentTop) {
-            stepEntry(direction);
+            scrollEntry(direction);
             return true;
         }
         if (mouseY >= detailBodyTop && mouseY < bodyBottom && mouseX >= bodyLeft && mouseX < bodyRight && maxDetailScroll > 0) {
@@ -468,6 +490,11 @@ public final class IntelScreenV3 extends Screen {
                     : label("La base de datos todavía no contiene registros.", "The database does not contain records yet.");
             g.drawCenteredString(font, font.plainSubstrByWidth(empty, wide ? width - sidebarWidth - 30 : width - 20),
                     centerX, height / 2 + 10, 0xFF68727A);
+            if (!query.isBlank()) {
+                String searched = label("BÚSQUEDA: ", "QUERY: ") + query;
+                g.drawCenteredString(font, font.plainSubstrByWidth(searched, wide ? width - sidebarWidth - 50 : width - 40),
+                        centerX, height / 2 + 24, accent);
+            }
         } else {
             selected = Math.max(0, Math.min(selected, files.size() - 1));
             IntelEntry entry = files.get(selected);
@@ -506,24 +533,36 @@ public final class IntelScreenV3 extends Screen {
         String heading = label("INTEL // CLASIFICADO", "INTEL // CLASSIFIED");
         g.drawCenteredString(font, font.plainSubstrByWidth(heading, width - sidebarWidth - 20),
                 (sidebarWidth + width) / 2, 16, 0xFFF0EEE8);
-        g.drawString(font, label("ARCHIVOS", "FILES") + " [" + filtered().size() + "]",
+        List<IntelEntry> files = filtered();
+        int visible = visibleEntries();
+        int from = files.isEmpty() ? 0 : listOffset + 1;
+        int to = Math.min(files.size(), listOffset + visible);
+        String range = files.size() > visible && visible > 0 ? "  " + from + "–" + to + "/" + files.size() : " [" + files.size() + "]";
+        g.drawString(font, font.plainSubstrByWidth(label("ARCHIVOS", "FILES") + range, sidebarWidth - 24),
                 12, filesBandTop + 7, 0xFF89959D, false);
     }
 
     private void renderCompactChrome(GuiGraphics g, int accent) {
         g.fill(0, 0, width, 26, 0xF207090B);
         g.fill(0, 25, width, 27, accent);
-        g.drawCenteredString(font, label("INTEL // CLASIFICADO", "INTEL // CLASSIFIED"), width / 2, 8, 0xFFF0EEE8);
+        String heading = font.plainSubstrByWidth(label("INTEL // CLASIFICADO", "INTEL // CLASSIFIED"), Math.max(40, width - 180));
+        g.drawCenteredString(font, heading, width / 2, 8, 0xFFF0EEE8);
         g.fill(0, contentTop - 3, width, contentTop - 2, 0x4C454E55);
     }
 
     private void renderFile(GuiGraphics g, IntelEntry entry, int x, int y, int availableWidth, boolean compactMode) {
         IntelEntry.IntelText text = entry.text(spanish());
-        boolean advanced = entry.category().equals("ADVANCED");
         boolean dark = SiegeConfig.darkIntelPaper;
-        int paper = dark ? 0xFF20262B : advanced ? 0xFFE0E7EB : 0xFFDEDCD3;
-        int ink = dark ? 0xFFE5E7E2 : advanced ? 0xFF13232D : 0xFF29261F;
-        int muted = dark ? 0xFFADB8BE : advanced ? 0xFF53646E : 0xFF6B6454;
+        int paper = dark ? 0xFF20262B : switch (entry.category()) {
+            case "ADVANCED" -> 0xFFE0E7EB;
+            case "TANK" -> 0xFFE2DDD0;
+            case "BOSS" -> 0xFFE1D8D3;
+            case "ELITE" -> 0xFFE1DAE3;
+            case "SUPER-UNIT" -> 0xFFE4DDC8;
+            default -> 0xFFDEDCD3;
+        };
+        int ink = dark ? 0xFFE5E7E2 : entry.category().equals("ADVANCED") ? 0xFF13232D : 0xFF29261F;
+        int muted = dark ? 0xFFADB8BE : entry.category().equals("ADVANCED") ? 0xFF53646E : 0xFF6B6454;
         int accent = dark ? 0xFF91CFE2 : accentInk(entry.category());
         int warning = dark ? 0xFFFFA99B : 0xFF8A2E27;
         int bottom = height - 7;
@@ -534,7 +573,13 @@ public final class IntelScreenV3 extends Screen {
         g.fill(x, y + 2, x + 1, bottom, 0x40505050);
         g.fill(x + availableWidth - 1, y + 2, x + availableWidth, bottom, 0x40505050);
         g.fill(x, y, x + availableWidth, y + 2, categoryAccent(entry.category()));
+        if (entry.category().equals("SUPER-UNIT")) {
+            g.fill(x, y + 3, x + availableWidth, y + 4, 0x887A5B21);
+            g.fill(x + 3, y + 5, x + 4, bottom - 3, 0x557A5B21);
+            g.fill(x + availableWidth - 4, y + 5, x + availableWidth - 3, bottom - 3, 0x557A5B21);
+        }
         String ref = entry.code() + "  ·  " + (selected + 1) + "/" + filtered().size();
+        ref = font.plainSubstrByWidth(ref, Math.max(24, inner));
         g.drawString(font, ref, x + pad, y + 6, muted, false);
         int classificationWidth = inner - font.width(ref) - 12;
         if (classificationWidth >= 24) {
@@ -554,6 +599,10 @@ public final class IntelScreenV3 extends Screen {
             int imageY = y + 37;
             portraitX = bodyRight - imageW; portraitY = imageY; portraitW = imageW; portraitH = imageH;
             g.blit(portraitTexture(entry, bossFrame(entry)), portraitX, imageY, imageW, imageH, 0, 0, 640, 360, 640, 360);
+            g.fill(portraitX, imageY, portraitX + imageW, imageY + 1, accent);
+            g.fill(portraitX, imageY + imageH - 1, portraitX + imageW, imageY + imageH, accent);
+            g.fill(portraitX, imageY, portraitX + 1, imageY + imageH, accent);
+            g.fill(portraitX + imageW - 1, imageY, portraitX + imageW, imageY + imageH, accent);
             renderTacticalSummary(g, entry, portraitX, imageY + imageH + 8, imageW, bodyBottom, ink, muted, accent);
             bodyRight = portraitX - 14;
         } else if (!readingMode && bodyBottom - detailBodyTop >= 140) {
@@ -562,12 +611,13 @@ public final class IntelScreenV3 extends Screen {
             imageH = imageW * 9 / 16;
             portraitX = bodyLeft + (inner - imageW) / 2; portraitY = detailBodyTop; portraitW = imageW; portraitH = imageH;
             g.blit(portraitTexture(entry, bossFrame(entry)), portraitX, detailBodyTop, imageW, imageH, 0, 0, 640, 360, 640, 360);
+            g.fill(portraitX, portraitY, portraitX + portraitW, portraitY + 1, accent);
+            g.fill(portraitX, portraitY + portraitH - 1, portraitX + portraitW, portraitY + portraitH, accent);
             detailBodyTop += imageH + 8;
         }
         if (portraitW > 0 && pointerX >= portraitX && pointerX < portraitX + portraitW && pointerY >= portraitY && pointerY < portraitY + portraitH) {
-            g.fill(portraitX, portraitY + portraitH - 17, portraitX + portraitW, portraitY + portraitH, 0xB8070A0D);
-            String open = label("AMPLIAR ↗", "INSPECT ↗");
-            g.drawCenteredString(font, open, portraitX + portraitW / 2, portraitY + portraitH - 13, accent);
+            g.fill(portraitX + portraitW - 18, portraitY + 2, portraitX + portraitW - 2, portraitY + 18, 0xB8070A0D);
+            g.drawCenteredString(font, "↗", portraitX + portraitW - 10, portraitY + 6, accent);
             g.fill(portraitX, portraitY, portraitX + portraitW, portraitY + 1, accent);
             g.fill(portraitX, portraitY + portraitH - 1, portraitX + portraitW, portraitY + portraitH, accent);
         }
@@ -578,7 +628,10 @@ public final class IntelScreenV3 extends Screen {
         boolean sameEntry = lastReadingCode != null && lastReadingCode.startsWith(entry.code() + ":");
         List<DetailLine> lines = new ArrayList<>();
         appendWrapped(lines, label("AMENAZA", "THREAT") + " " + (entry.threat() > 0 ? stars(entry.threat()) : label("SIN DATOS", "NO DATA")), bodyWidth, warning);
-        appendWrapped(lines, "HP " + entry.hp() + ("N/D".equals(entry.defense()) ? "" : "  DEF " + entry.defense()), bodyWidth, ink);
+        String hp = entry.hp();
+        String compactHp = IntelPresentation.compactHp(hp);
+        appendWrapped(lines, "HP " + hp + (compactHp.equals(hp) ? "" : "  [" + compactHp + "]")
+                + ("N/D".equals(entry.defense()) ? "" : "  DEF " + entry.defense()), bodyWidth, ink);
         appendWrapped(lines, label("ORIGEN: ", "ORIGIN: ") + text.origin(), bodyWidth, muted);
         appendWrapped(lines, label("ESTADO: ", "STATUS: ") + text.status(), bodyWidth, muted);
         appendWrapped(lines, label("ARMAMENTO: ", "ARMAMENT: ") + text.armament(), bodyWidth, ink);
@@ -600,7 +653,7 @@ public final class IntelScreenV3 extends Screen {
         String readingKey = entry.code() + ":" + readingMode;
         if (!readingKey.equals(lastReadingCode)) {
             lastReadingCode = readingKey;
-            detailScroll = readingPositions.getOrDefault(readingKey, 0);
+            detailScroll = READING_POSITIONS.getOrDefault(readingKey, 0);
         }
         maxDetailScroll = Math.max(0, lines.size() - visible);
         detailScroll = Math.max(0, Math.min(detailScroll, maxDetailScroll));
@@ -613,19 +666,25 @@ public final class IntelScreenV3 extends Screen {
             int thumbH = Math.min(trackH, Math.max(10, trackH * visible / lines.size()));
             int thumbY = detailBodyTop + (trackH - thumbH) * detailScroll / maxDetailScroll;
             thumbTop = thumbY; thumbHeight = thumbH;
-            g.fill(bodyRight - 4, detailBodyTop, bodyRight, bodyBottom, 0x33413B32);
-            g.fill(bodyRight - 4, thumbY, bodyRight, thumbY + thumbH, accent);
+            boolean scrollHot = pointerX >= bodyRight - 7 && pointerX <= bodyRight + 2 && pointerY >= detailBodyTop && pointerY < bodyBottom;
+            int scrollWidth = scrollHot || draggingScroll ? 5 : 4;
+            g.fill(bodyRight - scrollWidth, detailBodyTop, bodyRight, bodyBottom, scrollHot ? 0x55413B32 : 0x33413B32);
+            g.fill(bodyRight - scrollWidth, thumbY, bodyRight, thumbY + thumbH, accent);
             if (bodyRight - bodyLeft >= 90) {
                 String percent = Math.round(detailScroll * 100.0F / maxDetailScroll) + "%";
                 g.drawString(font, percent, bodyRight - font.width(percent), detailBodyTop - 11, muted, false);
             }
         }
-        readingPositions.put(readingKey, detailScroll);
+        READING_POSITIONS.put(readingKey, detailScroll);
         readStart.visible = readEnd.visible = maxDetailScroll > 0;
         readStart.setX(bodyLeft); readEnd.setX(bodyLeft + 28);
         readStart.active = detailScroll > 0; readEnd.active = detailScroll < maxDetailScroll;
         String progress = maxDetailScroll == 0 ? label("COMPLETO", "COMPLETE") : (detailScroll + 1) + "–" + Math.min(lines.size(), detailScroll + visible) + " / " + lines.size();
         g.drawString(font, progress, bodyRight - font.width(progress), bottom - 11, muted, false);
+        if (maxDetailScroll > 0) {
+            int progressW = Math.max(1, (bodyRight - bodyLeft) * detailScroll / maxDetailScroll);
+            g.fill(bodyLeft, bottom - 3, bodyLeft + progressW, bottom - 2, accent);
+        }
 
         long age = System.currentTimeMillis() - entryChangedAt;
         if (age < 230 && SiegeConfig.menuEffects && !SiegeConfig.reducedMotion) {
@@ -637,7 +696,15 @@ public final class IntelScreenV3 extends Screen {
     private void renderTacticalSummary(GuiGraphics g, IntelEntry entry, int x, int y, int w, int bottom, int ink, int muted, int accent) {
         if (bottom - y < 52) return;
         g.fill(x, y, x + w, y + 1, accent);
-        g.drawString(font, font.plainSubstrByWidth(label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), w), x, y + 5, accent, false);
+        IntelEntry.IntelText text = entry.text(spanish());
+        int completeness = IntelPresentation.completeness(entry, text);
+        String data = label("DATOS ", "DATA ") + completeness + "%";
+        int titleWidth = Math.max(24, w - font.width(data) - 10);
+        g.drawString(font, font.plainSubstrByWidth(label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), titleWidth), x, y + 5, accent, false);
+        g.drawString(font, data, x + w - font.width(data), y + 5, muted, false);
+        int dataWidth = Math.max(1, (w - 2) * completeness / 100);
+        g.fill(x, y + 16, x + w, y + 17, 0x33413B32);
+        g.fill(x, y + 16, x + dataWidth, y + 17, accent);
         String key = entry.code() + ":" + w + ":" + spanish();
         if (!key.equals(summaryCacheKey)) {
             summaryCache = List.copyOf(font.split(Component.literal(entry.text(spanish()).advisory()), w - 8));
@@ -646,7 +713,7 @@ public final class IntelScreenV3 extends Screen {
         int visible = Math.max(1, (bottom - y - 40) / 11);
         summaryMax = Math.max(0, summaryCache.size() - visible);
         summaryScroll = Math.max(0, Math.min(summaryMax, summaryScroll));
-        summaryX = x; summaryTop = y + 20; summaryRight = x + w; summaryBottom = bottom;
+        summaryX = x; summaryTop = y + 22; summaryRight = x + w; summaryBottom = bottom;
         g.enableScissor(x, summaryTop, x + w, bottom - 20);
         for (int i = summaryScroll; i < Math.min(summaryCache.size(), summaryScroll + visible); i++)
             g.drawString(font, summaryCache.get(i), x + 4, summaryTop + (i - summaryScroll) * 11, ink, false);
@@ -660,8 +727,10 @@ public final class IntelScreenV3 extends Screen {
             int trackHeight = Math.max(1, trackBottom - summaryTop);
             summaryThumbHeight = Math.min(trackHeight, Math.max(8, trackHeight * visible / summaryCache.size()));
             summaryThumbTop = summaryTop + (trackHeight - summaryThumbHeight) * summaryScroll / summaryMax;
-            g.fill(x + w - 3, summaryTop, x + w, trackBottom, 0x33413B32);
-            g.fill(x + w - 3, summaryThumbTop, x + w, summaryThumbTop + summaryThumbHeight, accent);
+            boolean scrollHot = pointerX >= x + w - 7 && pointerX <= x + w + 2 && pointerY >= summaryTop && pointerY < trackBottom;
+            int scrollWidth = scrollHot || draggingSummary ? 4 : 3;
+            g.fill(x + w - scrollWidth, summaryTop, x + w, trackBottom, scrollHot ? 0x55413B32 : 0x33413B32);
+            g.fill(x + w - scrollWidth, summaryThumbTop, x + w, summaryThumbTop + summaryThumbHeight, accent);
             String range = (summaryScroll + 1) + "–" + Math.min(summaryCache.size(), summaryScroll + visible) + "/" + summaryCache.size();
             g.drawString(font, range, x + w - font.width(range), bottom - 12, muted, false);
         }
@@ -727,6 +796,9 @@ public final class IntelScreenV3 extends Screen {
         return switch (category) {
             case "ADVANCED" -> 0xFF245F86;
             case "TANK" -> 0xFF8A571B;
+            case "BOSS" -> 0xFF91253A;
+            case "ELITE" -> 0xFF70428E;
+            case "SUPER-UNIT" -> 0xFF8A691F;
             default -> 0xFF8C302B;
         };
     }
@@ -758,17 +830,8 @@ public final class IntelScreenV3 extends Screen {
     private String categoryLabel(String value) {
         int count = IntelCatalog.count(value);
         if (sidebarWidth < 180) {
-            String shortName = switch (value) {
-                case "ALL" -> "ALL";
-                case "UNIT" -> spanish() ? "UNI" : "UNIT";
-                case "ADVANCED" -> "ADV";
-                case "TANK" -> spanish() ? "TNQ" : "TNK";
-                case "BOSS" -> spanish() ? "JEF" : "BOS";
-                case "ELITE" -> "ELT";
-                case "SUPER-UNIT" -> "SUP";
-                default -> value;
-            };
-            return shortName;
+            String shortName = IntelPresentation.categoryCode(value);
+            return shortName + (count > 0 ? " " + count : "");
         }
 
         String name = switch (value) {
@@ -785,16 +848,7 @@ public final class IntelScreenV3 extends Screen {
     }
 
     private int categoryAccent(String value) {
-        return switch (value) {
-            case "ALL" -> 0xFF55BFD9;
-            case "UNIT" -> 0xFFD94A4A;
-            case "ADVANCED" -> 0xFF2F80FF;
-            case "TANK" -> 0xFFD98A2B;
-            case "BOSS" -> 0xFFB5162D;
-            case "ELITE" -> 0xFF9B59D0;
-            case "SUPER-UNIT" -> 0xFFE0B93F;
-            default -> 0xFFB8C0C8;
-        };
+        return IntelPresentation.accent(value);
     }
 
     private String stars(int count) {

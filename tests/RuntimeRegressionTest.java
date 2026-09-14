@@ -41,10 +41,29 @@ public class RuntimeRegressionTest {
         check(aurelionis.hp().equals("1") && aurelionis.threat() == 0, "Aurelionis unknown data was inferred");
         check(aurelionis.text(true).description().equals("???") && aurelionis.text(false).advisory().equals("???"),
                 "Aurelionis lore must remain unknown");
+        check(IntelCatalog.filtered("SUPER-UNIT").size() == 1, "Atlas must be the only Super Unit");
+        IntelEntry atlas = IntelCatalog.filtered("SUPER-UNIT").get(0);
+        check(atlas.code().equals("SUP-001") && atlas.name().equals("ATLAS"), "Atlas identity changed");
+        check(atlas.hp().equals("125,000,000") && IntelPresentation.hpValue(atlas.hp()).longValueExact() == 125_000_000L,
+                "Atlas HP changed");
+        check(IntelPresentation.compactHp(atlas.hp()).equals("125M"), "Atlas compact HP");
+        check(atlas.text(true).armament().equals("Información no recuperada")
+                && atlas.text(false).origin().equals("No confirmed record"), "Unconfirmed Atlas capabilities were invented");
+        check(IntelPresentation.completeness(atlas, atlas.text(true)) == 50, "Atlas data completeness");
+        check(IntelPresentation.completeness(aurelionis, aurelionis.text(true)) == 17, "Aurelionis data completeness");
+        check(java.util.Set.of("UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT").stream()
+                .allMatch(category -> IntelCatalog.count(category) > 0), "Every visible category must contain a dossier");
+        check(IntelCatalog.byCode("SUP-001") == atlas, "Code lookup must preserve Atlas identity");
+        check(IntelCatalog.total() == IntelCatalog.files().size(), "Catalog total changed");
+        try {
+            IntelCatalog.filtered("SUPER-UNIT").clear();
+            throw new AssertionError("Category groups must be immutable");
+        } catch (UnsupportedOperationException expected) { }
         for (IntelEntry e : IntelCatalog.files()) {
             Path image = Path.of("src/main/resources/assets/siege/textures/gui/intel/" + e.image() + ".png");
             check(Files.isRegularFile(image), "Missing image " + image);
             check(!e.text(true).advisory().isBlank() && !e.text(false).advisory().isBlank(), "Missing advisory " + e.code());
+            check(IntelPresentation.hpValue(e.hp()).signum() >= 0, "Invalid HP value " + e.code());
         }
         System.out.println("Audio recovery, catalog identity and resource validation passed");
     }
