@@ -4,7 +4,9 @@ public final class MultiplayerLayoutTest {
         int cases = 0;
         for (int w = 320; w <= 1920; w += 8) for (int h = 240; h <= 1080; h += 8) {
             var l = SiegeMultiplayerLayout.of(w, h);
-            check(l.x() >= 0 && l.x() + l.width() <= w, "horizontal bounds");
+            check(l.x() >= 6 && l.x() + l.width() <= w - 6, "horizontal safe bounds");
+            if (w >= 520 && l.width() < 700) check(l.x() >= 10 && l.x() + l.width() <= w - 10,
+                    "wide-screen safe margin");
             check(l.bottom() - l.top() >= 72, "two visible server rows");
             check(l.bottom() + 14 < l.firstRow(), "status separate from controls");
             check(l.firstRow() + 24 <= l.secondRow() && l.secondRow() + 24 <= h, "button shadows");
