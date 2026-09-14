@@ -5,7 +5,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.OptionsScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.ConfirmScreen;
-import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -64,7 +63,7 @@ public final class SiegeTitleScreen extends Screen {
 
         int y = menuTop;
         SiegeButton deployment = addRenderableWidget(command(menuX, y, menuWidth, buttonHeight, "siege.menu.deployment",
-                b -> minecraft.setScreen(new JoinMultiplayerScreen(this))));
+                b -> minecraft.setScreen(new SiegeMultiplayerScreen(this))));
         setInitialFocus(deployment);
         addRenderableWidget(command(menuX, y += buttonHeight + gap, menuWidth, buttonHeight, "siege.menu.intel",
                 b -> minecraft.setScreen(new IntelScreenV3(this))));
