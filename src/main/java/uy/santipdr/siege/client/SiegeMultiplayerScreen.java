@@ -20,6 +20,7 @@ import net.minecraft.network.chat.contents.TranslatableContents;
  */
 public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
     private static final int RED = 0xFFE54852;
+    private static final String OFFICIAL_ADDRESS = "SiegeLacontinuacion.exaroton.me:18736";
     private final Screen parent;
     private final List<Control> controls = new ArrayList<>();
     private SiegeMultiplayerLayout layout;
@@ -35,6 +36,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
     protected void init() {
         controls.clear();
         super.init();
+        ensureOfficialServer();
         layout = SiegeMultiplayerLayout.of(width, height);
         serverSelectionList.updateSize(layout.listWidth(), height, layout.top(), layout.bottom());
         serverSelectionList.setLeftPos(layout.x());
@@ -59,7 +61,15 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
             if (slot < 0) continue;
             int count = slot < 3 ? 3 : 4;
             int index = slot < 3 ? slot : slot - 3;
-            Component message = slot == 0 ? Component.literal(label("CONECTAR", "CONNECT")) : original.getMessage();
+            Component message = Component.literal(switch (slot) {
+                case 0 -> label("CONECTAR", "CONNECT");
+                case 1 -> label("CONEXIÓN DIRECTA", "DIRECT CONNECTION");
+                case 2 -> label("AGREGAR", "ADD");
+                case 3 -> label("EDITAR", "EDIT");
+                case 4 -> label("BORRAR", "DELETE");
+                case 5 -> label("ACTUALIZAR", "REFRESH");
+                default -> label("VOLVER", "BACK");
+            });
             SiegeButton button = new SiegeButton(layout.buttonX(index, count),
                     slot < 3 ? layout.firstRow() : layout.secondRow(),
                     layout.buttonWidth(index, count), 20, message, b -> {
@@ -70,14 +80,17 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
                     if (slot == 5) refresh();
                     else original.onPress();
                 }
-            }, slot == 4 ? 0xFFCA7777 : RED).setCompactCenter(true);
+            }, slot == 4 ? 0xFFCA7777 : RED)
+                    .setCompactCenter(true)
+                    .setFullHoverFrame(true)
+                    .setTextOffsetY(-1);
             button.active = original.active;
             button.setTooltip(Tooltip.create(slot == 0
                     ? Component.literal(label("Conectar al servidor seleccionado.", "Connect to the selected server."))
                     : original.getMessage()));
             removeWidget(original);
             addRenderableWidget(button);
-            controls.add(new Control(original, button));
+            controls.add(new Control(slot, original, button));
         }
         SiegeUiSounds.resetHover();
         lastSelection = serverSelectionList.getSelected();
@@ -98,7 +111,35 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
 
     private void syncControls() {
         if (controls == null) return;
-        for (Control control : controls) control.view.active = control.original.active;
+        boolean locked = selectedServerIsOfficial();
+        for (Control control : controls)
+            control.view.active = control.original.active && !(locked && (control.slot == 3 || control.slot == 4));
+    }
+
+    private void ensureOfficialServer() {
+        String name = label("Servidor oficial de SIEGE", "SIEGE Official Server");
+        int found = -1;
+        for (int i = 0; i < getServers().size(); i++) {
+            if (OFFICIAL_ADDRESS.equalsIgnoreCase(getServers().get(i).ip.trim())) {
+                found = i;
+                break;
+            }
+        }
+        if (found < 0) {
+            getServers().add(new ServerData(name, OFFICIAL_ADDRESS, false), false);
+            found = getServers().size() - 1;
+        } else {
+            getServers().get(found).name = name;
+        }
+        if (found > 0) getServers().swap(found, 0);
+        else getServers().save();
+        serverSelectionList.updateOnlineServers(getServers());
+    }
+
+    private boolean selectedServerIsOfficial() {
+        var selected = serverSelectionList.getSelected();
+        return selected instanceof ServerSelectionList.OnlineServerEntry online
+                && OFFICIAL_ADDRESS.equalsIgnoreCase(online.getServerData().ip.trim());
     }
 
     private void refresh() { minecraft.setScreen(new SiegeMultiplayerScreen(parent)); }
@@ -121,7 +162,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
 
     @Override
     public void renderBackground(GuiGraphics g) {
-        SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
+        SiegeBackgrounds.renderCover(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, 0x79000000);
     }
 
@@ -134,6 +175,9 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         g.fill(x, 8, right, layout.top() - 5, 0xEB101113);
         g.fill(x, 8, x + 3, layout.top() - 5, RED);
         g.drawString(font, "SIEGE / " + label("DESPLIEGUE", "DEPLOYMENT"), x + 12, 15, 0xFFF0EDEA, false);
+        String fixed = label("DESTINO OFICIAL FIJO", "PINNED OFFICIAL DESTINATION");
+        if (font.width(fixed) + font.width("SIEGE / DESPLIEGUE") + 36 < layout.width())
+            g.drawString(font, fixed, right - 12 - font.width(fixed), 15, 0xFFE1C579, false);
         String count = label("Servidores guardados: ", "Saved servers: ") + getServers().size();
         g.drawString(font, count, x + 12, 29, 0xFFADB1B5, false);
         if (layout.top() > 48)
@@ -170,7 +214,13 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
             int left = serverSelectionList.getRowLeft() - 2;
             g.fill(left, y, left + serverSelectionList.getRowWidth(), y + 34,
                     selected ? 0xC337292B : (i % 2 == 0 ? 0xA21E2023 : 0xA2181A1D));
-            if (selected) g.fill(left - 3, y, left - 1, y + 34, RED);
+            if (selected) {
+                int rowRight = left + serverSelectionList.getRowWidth();
+                g.fill(left - 3, y, rowRight, y + 1, RED);
+                g.fill(left - 3, y + 33, rowRight, y + 34, RED);
+                g.fill(left - 3, y, left - 2, y + 34, RED);
+                g.fill(rowRight - 1, y, rowRight, y + 34, RED);
+            }
         }
         g.disableScissor();
     }
@@ -248,6 +298,11 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
             return;
         }
         int next = drawWrapped(g, server.name, x + 10, y + 34, w - 20, y + 64, 0xFFF0EDEA);
+        if (OFFICIAL_ADDRESS.equalsIgnoreCase(server.ip.trim())) {
+            g.drawString(font, label("DESTINO OFICIAL · FIJO", "OFFICIAL DESTINATION · PINNED"),
+                    x + 10, next + 3, 0xFFE1C579, false);
+            next += 14;
+        }
         g.drawString(font, fit(status, w - 20), x + 10, next + 5, color, false);
         next += 23;
         g.drawString(font, fit(label("Versión: ", "Version: ") + server.version.getString(), w - 20),
@@ -299,5 +354,5 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         return minecraft.getLanguageManager().getSelected().startsWith("es_") ? es : en;
     }
 
-    private record Control(Button original, SiegeButton view) {}
+    private record Control(int slot, Button original, SiegeButton view) {}
 }
