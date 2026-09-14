@@ -164,7 +164,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         var entries = serverSelectionList.children();
         for (int i = 0; i < entries.size(); i++) {
             if (entries.get(i) instanceof ServerSelectionList.LANHeader) continue;
-            int y = serverSelectionList.getRowTop(i);
+            int y = layout.top() + 4 + i * 36 - (int)serverSelectionList.getScrollAmount();
             if (y + 36 < layout.top() || y >= layout.bottom()) continue;
             boolean selected = entries.get(i) == serverSelectionList.getSelected();
             int left = serverSelectionList.getRowLeft() - 2;
@@ -179,7 +179,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         var entries = serverSelectionList.children();
         for (int i = 0; i < entries.size(); i++) {
             if (!(entries.get(i) instanceof ServerSelectionList.LANHeader)) continue;
-            int y = serverSelectionList.getRowTop(i);
+            int y = layout.top() + 4 + i * 36 - (int)serverSelectionList.getScrollAmount();
             if (y + 34 < layout.top() || y >= layout.bottom()) return;
             int left = layout.x() + 4;
             int right = layout.x() + layout.listWidth() - 4;
@@ -202,7 +202,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
     }
 
     private void renderEmptyState(GuiGraphics g) {
-        if (!getServers().isEmpty() || serverSelectionList.children().size() > 1) return;
+        if (getServers().size() != 0 || serverSelectionList.children().size() > 1) return;
         int center = layout.listCenterX();
         int start = layout.top() + 68;
         int available = layout.bottom() - start;
