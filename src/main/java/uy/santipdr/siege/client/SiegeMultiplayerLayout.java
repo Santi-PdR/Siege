@@ -14,6 +14,7 @@ public record SiegeMultiplayerLayout(int x, int width, int top, int bottom,
         return new SiegeMultiplayerLayout(x, total, top, Math.max(top + 36, height - 86),
                 list, x + list + 12, detail, height - 54, height - 28);
     }
+    public int listCenterX() { return x + listWidth / 2; }
     public int buttonX(int index, int count) { return x + index * (width + 6) / count; }
     public int buttonWidth(int index, int count) {
         return buttonX(index + 1, count) - buttonX(index, count) - 6;
