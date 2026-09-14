@@ -86,6 +86,12 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
 
     @Override
     protected void onSelectedChange() {
+        // The LAN scanner is a status row, never a destination. Vanilla can select
+        // it when the list receives focus or is clicked, producing a large white frame.
+        if (serverSelectionList.getSelected() instanceof ServerSelectionList.LANHeader) {
+            serverSelectionList.setSelected(null);
+            return;
+        }
         super.onSelectedChange();
         syncControls();
     }
@@ -139,6 +145,10 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         // registered children once instead, preserving entry behavior and tooltips.
         for (var child : children()) if (child instanceof Renderable renderable)
             renderable.render(g, mouseX, mouseY, partialTick);
+        // LANHeader centers itself against the whole Minecraft screen. Cover that
+        // vanilla row and redraw it inside the SIEGE list column.
+        renderLanScanner(g);
+        renderEmptyState(g);
         renderSelectionSummary(g, mouseX, mouseY);
         if (entryTooltip != null) g.renderComponentTooltip(font, entryTooltip, mouseX, mouseY);
         SiegeUiSounds.updateHover(children());
@@ -153,7 +163,8 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         g.enableScissor(layout.x(), layout.top(), layout.x() + layout.listWidth(), layout.bottom());
         var entries = serverSelectionList.children();
         for (int i = 0; i < entries.size(); i++) {
-            int y = layout.top() + 4 + i * 36 - (int)serverSelectionList.getScrollAmount();
+            if (entries.get(i) instanceof ServerSelectionList.LANHeader) continue;
+            int y = serverSelectionList.getRowTop(i);
             if (y + 36 < layout.top() || y >= layout.bottom()) continue;
             boolean selected = entries.get(i) == serverSelectionList.getSelected();
             int left = serverSelectionList.getRowLeft() - 2;
@@ -162,6 +173,51 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
             if (selected) g.fill(left - 3, y, left - 1, y + 34, RED);
         }
         g.disableScissor();
+    }
+
+    private void renderLanScanner(GuiGraphics g) {
+        var entries = serverSelectionList.children();
+        for (int i = 0; i < entries.size(); i++) {
+            if (!(entries.get(i) instanceof ServerSelectionList.LANHeader)) continue;
+            int y = serverSelectionList.getRowTop(i);
+            if (y + 34 < layout.top() || y >= layout.bottom()) return;
+            int left = layout.x() + 4;
+            int right = layout.x() + layout.listWidth() - 4;
+            int bottom = Math.min(y + 34, layout.bottom());
+            g.fill(left, y, right, bottom, 0xF0181A1D);
+            g.fill(left, y, left + 2, bottom, 0xFF8A4148);
+            g.fill(left + 8, bottom - 1, right - 8, bottom, 0xFF383A3E);
+
+            String title = label("EXPLORANDO RED LOCAL", "SCANNING LOCAL NETWORK");
+            String detail = label("Detección automática LAN", "Automatic LAN discovery");
+            String dots = ".".repeat((int)(System.currentTimeMillis() / 450L % 4L));
+            g.drawString(font, fit(title, Math.max(1, right - left - 28)), left + 10, y + 7,
+                    0xFFE5E1DE, false);
+            g.drawString(font, fit(detail, Math.max(1, right - left - 42)), left + 10, y + 19,
+                    0xFF92979C, false);
+            if (!dots.isEmpty())
+                g.drawString(font, dots, right - 10 - font.width(dots), y + 19, 0xFFE1C579, false);
+            return;
+        }
+    }
+
+    private void renderEmptyState(GuiGraphics g) {
+        if (!getServers().isEmpty() || serverSelectionList.children().size() > 1) return;
+        int center = layout.listCenterX();
+        int start = layout.top() + 68;
+        int available = layout.bottom() - start;
+        if (available < 42) return;
+        g.drawCenteredString(font, label("SIN DESTINOS GUARDADOS", "NO SAVED DESTINATIONS"),
+                center, start, 0xFFB8BBBE);
+        int textWidth = Math.min(layout.listWidth() - 40, 220);
+        String help = label("Agregá un servidor para guardarlo o usá Conexión directa para desplegarte una sola vez.",
+                "Add a server to save it or use Direct Connection for a one-time deployment.");
+        int y = start + 18;
+        for (var line : font.split(Component.literal(help), Math.max(1, textWidth))) {
+            if (y + font.lineHeight > layout.bottom() - 10) break;
+            g.drawCenteredString(font, line, center, y, 0xFF858A90);
+            y += font.lineHeight + 3;
+        }
     }
 
     private void renderSelectionSummary(GuiGraphics g, int mouseX, int mouseY) {
