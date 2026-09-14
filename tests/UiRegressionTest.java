@@ -6,6 +6,7 @@ import uy.santipdr.siege.client.IntelEntry;
 import java.util.List;
 import uy.santipdr.siege.client.SiegeImageViewport;
 import uy.santipdr.siege.client.SiegeUiLayout;
+import uy.santipdr.siege.client.IntelPresentation;
 
 /** Tests production geometry, including Minecraft's minimum logical viewport and odd sizes. */
 public class UiRegressionTest {
@@ -64,6 +65,18 @@ public class UiRegressionTest {
         check(IntelSearch.matches("", "Patriot"), "Empty search");
         check(!IntelSearch.matches(".*", "Patriot"), "Query must be literal");
         check(!IntelSearch.matches("sniper", "Patriot"), "Unrelated search");
+        check(IntelSearch.matches("\"alerta maxima\"", "Estado: ALERTA MÁXIMA"), "Quoted phrase search");
+        check(IntelSearch.matches("atlas !nusia", "Atlas Super Unit"), "Excluded search token");
+        check(!IntelSearch.matches("atlas !nusia", "Atlas de Nusia"), "Excluded search match");
+        check(IntelSearch.matches("125000000", "HP 125,000,000"), "Numeric separator search");
+        check(IntelSearch.matches("super unit", "SUPER-UNIT"), "Hyphen-insensitive search");
+        check(IntelSearch.matches("  atlas\t super  ", "Atlas Super Unit"), "Whitespace-normalized search");
+        check(IntelSearch.matches(null, "Atlas"), "Null query must be empty");
+        check(IntelPresentation.compactHp("1,250").equals("1.2K"), "Compact thousands");
+        check(IntelPresentation.compactHp("125,000,000").equals("125M"), "Compact millions");
+        check(IntelPresentation.hpValue("N/D").signum() == 0, "Unknown HP parsing");
+        check(java.util.stream.Stream.of("UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT")
+                .map(IntelPresentation::accent).distinct().count() == 6, "Category accents must be distinct");
         SiegeImageViewport camera = new SiegeImageViewport();
         camera.resize(640, 360);
         double beforeU = (400 - camera.x()) / camera.imageWidth();
