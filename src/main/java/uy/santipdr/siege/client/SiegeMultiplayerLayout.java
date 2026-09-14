@@ -5,7 +5,8 @@ public record SiegeMultiplayerLayout(int x, int width, int top, int bottom,
                                      int listWidth, int detailX, int detailWidth,
                                      int firstRow, int secondRow) {
     public static SiegeMultiplayerLayout of(int width, int height) {
-        int total = Math.min(700, Math.max(1, width - 12));
+        int safeMargin = width < 360 ? 6 : width < 520 ? 8 : 10;
+        int total = Math.min(700, Math.max(1, width - safeMargin * 2));
         int x = (width - total) / 2;
         int detail = width >= 640 ? total - 372 : 0;
         int list = detail > 0 ? 360 : Math.min(360, total);

@@ -85,6 +85,15 @@ public final class SiegeBackgrounds {
     }
 
     public static void render(GuiGraphics graphics, int width, int height, long now) {
+        renderInternal(graphics, width, height, now, false);
+    }
+
+    /** Aspect-preserving fullscreen crop used by Multiplayer. */
+    public static void renderCover(GuiGraphics graphics, int width, int height, long now) {
+        renderInternal(graphics, width, height, now, true);
+    }
+
+    private static void renderInternal(GuiGraphics graphics, int width, int height, long now, boolean cover) {
         graphics.fill(0, 0, width, height, 0xFF080A0C);
         boolean animated = SiegeConfig.animatedBackgrounds && SiegeConfig.selectedScene < 0;
         long slot = animated ? now / SCENE_MS : 0L;
@@ -95,7 +104,7 @@ public final class SiegeBackgrounds {
 
         boolean allowPan = !SiegeConfig.reducedMotion && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE;
         float currentProgress = allowPan ? local : 0.5F;
-        drawScene(graphics, SCENES.get(current), width, height, 1.0F, current, currentProgress, allowPan);
+        drawScene(graphics, SCENES.get(current), width, height, 1.0F, current, currentProgress, allowPan, cover);
 
         if (animated) {
             long fadeStart = SCENE_MS - CROSSFADE_MS;
@@ -103,7 +112,7 @@ public final class SiegeBackgrounds {
                 float raw = (localMs - fadeStart) / (float) CROSSFADE_MS;
                 float alpha = smoother(raw);
                 float incomingProgress = allowPan ? Math.min(0.18F, raw * 0.18F) : 0.5F;
-                drawScene(graphics, SCENES.get(next), width, height, alpha, next, incomingProgress, allowPan);
+                drawScene(graphics, SCENES.get(next), width, height, alpha, next, incomingProgress, allowPan, cover);
 
                 // A very small midpoint veil masks large exposure differences between source images
                 // without turning the transition into a visible black flash.
@@ -125,11 +134,18 @@ public final class SiegeBackgrounds {
 
     private static void drawScene(GuiGraphics g, ResourceLocation texture, int w, int h, float alpha,
                                   int sceneIndex, float progress, boolean allowPan) {
+        drawScene(g, texture, w, h, alpha, sceneIndex, progress, allowPan, false);
+    }
+
+    private static void drawScene(GuiGraphics g, ResourceLocation texture, int w, int h, float alpha,
+                                  int sceneIndex, float progress, boolean allowPan, boolean cover) {
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, Math.max(0.0F, Math.min(1.0F, alpha)));
 
-        // Fit the complete image; crossfades provide movement without cropping its edges.
-        double scale = Math.min(w / 960.0D, h / 540.0D);
+        // Menus normally preserve the complete image. Multiplayer may request a
+        // cover crop so no empty bands or stretched-looking inset remain.
+        double scale = cover ? Math.max(w / 960.0D, h / 540.0D)
+                : Math.min(w / 960.0D, h / 540.0D);
         int drawW = Math.max(1, (int)Math.floor(960 * scale));
         int drawH = Math.max(1, (int)Math.floor(540 * scale));
         int x = (w - drawW) / 2;
