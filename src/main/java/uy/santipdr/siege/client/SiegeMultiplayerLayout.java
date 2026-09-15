@@ -11,7 +11,7 @@ public record SiegeMultiplayerLayout(int x, int width, int top, int bottom,
         int detail = width >= 640 ? total - 372 : 0;
         int list = detail > 0 ? 360 : Math.min(360, total);
         if (detail == 0) { total = list; x = (width - total) / 2; }
-        int top = height < 300 ? 48 : 62;
+        int top = height < 300 ? 44 : 50;
         return new SiegeMultiplayerLayout(x, total, top, Math.max(top + 36, height - 86),
                 list, x + list + 12, detail, height - 54, height - 28);
     }

@@ -66,7 +66,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
                 case 1 -> label("CONEXIÓN DIRECTA", "DIRECT CONNECTION");
                 case 2 -> label("AGREGAR", "ADD");
                 case 3 -> label("EDITAR", "EDIT");
-                case 4 -> label("BORRAR", "DELETE");
+                case 4 -> label("ELIMINAR", "DELETE");
                 case 5 -> label("ACTUALIZAR", "REFRESH");
                 default -> label("VOLVER", "BACK");
             });
@@ -85,9 +85,13 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
                     .setFullHoverFrame(true)
                     .setTextOffsetY(-1);
             button.active = original.active;
-            button.setTooltip(Tooltip.create(slot == 0
-                    ? Component.literal(label("Conectar al servidor seleccionado.", "Connect to the selected server."))
-                    : original.getMessage()));
+            button.setTooltip(Tooltip.create(Component.literal(switch (slot) {
+                case 0 -> label("Conectar al servidor seleccionado.", "Connect to the selected server.");
+                case 3 -> label("Editar el servidor seleccionado.", "Edit the selected server.");
+                case 4 -> label("Eliminar el servidor seleccionado.", "Delete the selected server.");
+                case 5 -> label("Volver a consultar los servidores.", "Query the servers again.");
+                default -> message.getString();
+            })));
             removeWidget(original);
             addRenderableWidget(button);
             controls.add(new Control(slot, original, button));
@@ -112,8 +116,22 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
     private void syncControls() {
         if (controls == null) return;
         boolean locked = selectedServerIsOfficial();
-        for (Control control : controls)
-            control.view.active = control.original.active && !(locked && (control.slot == 3 || control.slot == 4));
+        for (Control control : controls) {
+            boolean protectedAction = locked && (control.slot == 3 || control.slot == 4);
+            control.view.active = control.original.active && !protectedAction;
+            if (control.slot == 3 || control.slot == 4) {
+                String explanation = protectedAction
+                        ? control.slot == 3
+                            ? label("El servidor oficial está fijado y no se puede editar.",
+                                    "The official server is pinned and cannot be edited.")
+                            : label("El servidor oficial está fijado y no se puede eliminar.",
+                                    "The official server is pinned and cannot be deleted.")
+                        : control.slot == 3
+                            ? label("Editar el servidor seleccionado.", "Edit the selected server.")
+                            : label("Eliminar el servidor seleccionado.", "Delete the selected server.");
+                control.view.setTooltip(Tooltip.create(Component.literal(explanation)));
+            }
+        }
     }
 
     private void ensureOfficialServer() {
@@ -163,7 +181,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
     @Override
     public void renderBackground(GuiGraphics g) {
         SiegeBackgrounds.renderCover(g, width, height, System.currentTimeMillis());
-        g.fill(0, 0, width, height, 0x79000000);
+        g.fill(0, 0, width, height, 0x92000000);
     }
 
     @Override
@@ -175,14 +193,10 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         g.fill(x, 8, right, layout.top() - 5, 0xEB101113);
         g.fill(x, 8, x + 3, layout.top() - 5, RED);
         g.drawString(font, "SIEGE / " + label("DESPLIEGUE", "DEPLOYMENT"), x + 12, 15, 0xFFF0EDEA, false);
-        String fixed = label("DESTINO OFICIAL FIJO", "PINNED OFFICIAL DESTINATION");
-        if (font.width(fixed) + font.width("SIEGE / DESPLIEGUE") + 36 < layout.width())
-            g.drawString(font, fixed, right - 12 - font.width(fixed), 15, 0xFFE1C579, false);
-        String count = label("Servidores guardados: ", "Saved servers: ") + getServers().size();
+        int saved = getServers().size();
+        String count = saved + " " + label(saved == 1 ? "SERVIDOR" : "SERVIDORES",
+                saved == 1 ? "SERVER" : "SERVERS");
         g.drawString(font, count, x + 12, 29, 0xFFADB1B5, false);
-        if (layout.top() > 48)
-            g.drawString(font, label("Seleccioná un destino para conectar.", "Select a destination to connect."),
-                    x + 12, 43, 0xFFADB1B5, false);
         panel(g, x, layout.top(), layout.listWidth(), layout.bottom() - layout.top());
         renderRowPlates(g);
         // JoinMultiplayerScreen draws its own title and dirt background. Render its
@@ -194,6 +208,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         renderLanScanner(g);
         renderEmptyState(g);
         renderSelectionSummary(g, mouseX, mouseY);
+        renderLockedActionTooltip(mouseX, mouseY);
         if (entryTooltip != null) g.renderComponentTooltip(font, entryTooltip, mouseX, mouseY);
         SiegeUiSounds.updateHover(children());
         var selected = serverSelectionList.getSelected();
@@ -234,19 +249,16 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
             int left = layout.x() + 4;
             int right = layout.x() + layout.listWidth() - 4;
             int bottom = Math.min(y + 34, layout.bottom());
-            g.fill(left, y, right, bottom, 0xF0181A1D);
+            g.fill(left, y, right, bottom, 0xFF181A1D);
             g.fill(left, y, left + 2, bottom, 0xFF8A4148);
             g.fill(left + 8, bottom - 1, right - 8, bottom, 0xFF383A3E);
 
-            String title = label("EXPLORANDO RED LOCAL", "SCANNING LOCAL NETWORK");
-            String detail = label("Detección automática LAN", "Automatic LAN discovery");
+            String title = label("RED LOCAL", "LOCAL NETWORK");
             String dots = ".".repeat((int)(System.currentTimeMillis() / 450L % 4L));
-            g.drawString(font, fit(title, Math.max(1, right - left - 28)), left + 10, y + 7,
-                    0xFFE5E1DE, false);
-            g.drawString(font, fit(detail, Math.max(1, right - left - 42)), left + 10, y + 19,
-                    0xFF92979C, false);
+            g.drawString(font, fit(title, Math.max(1, right - left - 42)), left + 10, y + 13,
+                    0xFFBFC3C6, false);
             if (!dots.isEmpty())
-                g.drawString(font, dots, right - 10 - font.width(dots), y + 19, 0xFFE1C579, false);
+                g.drawString(font, dots, right - 10 - font.width(dots), y + 13, 0xFFE1C579, false);
             return;
         }
     }
@@ -276,57 +288,103 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
                 ? online.getServerData() : null;
         String status = server == null
                 ? selected instanceof ServerSelectionList.NetworkServerEntry ? label("RED LOCAL", "LOCAL NETWORK")
-                    : label("Seleccioná un servidor", "Select a server")
+                    : label("Sin servidor seleccionado", "No server selected")
                 : status(server);
         int color = server == null ? 0xFFADB1B5 : statusColor(server);
-        int footerY = layout.bottom() + 5;
-        String summary = server == null ? status : server.name + " / " + status;
-        g.fill(layout.x(), layout.bottom() + 2, layout.x() + layout.width(), layout.firstRow() - 4, 0xEA101113);
-        g.drawString(font, fit(summary, layout.width() - 16), layout.x() + 8, footerY, color, false);
-        if (mouseX >= layout.x() && mouseX < layout.x() + layout.width()
-                && mouseY >= footerY && mouseY < footerY + 12 && font.width(summary) > layout.width() - 16)
-            entryTooltip = List.of(Component.literal(summary));
-        if (layout.detailWidth() <= 0) return;
-        int x = layout.detailX(), y = layout.top(), w = layout.detailWidth();
-        panel(g, x, y, w, layout.bottom() - y);
-        g.drawString(font, label("DESTINO SELECCIONADO", "SELECTED DESTINATION"), x + 10, y + 10, 0xFFAAAEB3, false);
-        g.fill(x + 10, y + 24, x + w - 10, y + 25, 0xFF5C363B);
-        if (server == null) {
-            drawWrapped(g, label("Elegí un servidor de la lista o usá Conexión directa. Agregar servidor permite guardar un destino.",
-                    "Choose a server from the list or use Direct Connection. Add Server saves a destination."),
-                    x + 10, y + 35, w - 20, layout.bottom() - 12, 0xFFC4C6C9);
+
+        // Compact layouts have no detail panel, so they receive one concise footer.
+        if (layout.detailWidth() <= 0) {
+            int footerY = layout.bottom() + 5;
+            String summary = server == null ? status : server.name + " · " + status;
+            g.fill(layout.x(), layout.bottom() + 2, layout.x() + layout.width(),
+                    layout.firstRow() - 4, 0xF2101113);
+            g.drawString(font, fit(summary, layout.width() - 16), layout.x() + 8, footerY, color, false);
+            if (mouseX >= layout.x() && mouseX < layout.x() + layout.width()
+                    && mouseY >= footerY && mouseY < footerY + 12
+                    && font.width(summary) > layout.width() - 16)
+                entryTooltip = List.of(Component.literal(summary));
             return;
         }
-        int next = drawWrapped(g, server.name, x + 10, y + 34, w - 20, y + 64, 0xFFF0EDEA);
-        if (OFFICIAL_ADDRESS.equalsIgnoreCase(server.ip.trim())) {
-            g.drawString(font, label("DESTINO OFICIAL · FIJO", "OFFICIAL DESTINATION · PINNED"),
+
+        int x = layout.detailX(), y = layout.top(), w = layout.detailWidth();
+        panel(g, x, y, w, layout.bottom() - y);
+        g.drawString(font, label("DETALLES", "DETAILS"), x + 10, y + 10, 0xFFAAAEB3, false);
+        g.fill(x + 10, y + 24, x + w - 10, y + 25, 0xFF5C363B);
+        if (server == null) {
+            g.drawString(font, label("Sin servidor seleccionado.", "No server selected."),
+                    x + 10, y + 36, 0xFFADB1B5, false);
+            return;
+        }
+
+        int next = drawWrapped(g, server.name, x + 10, y + 36, w - 20, y + 66, 0xFFF0EDEA);
+        boolean official = OFFICIAL_ADDRESS.equalsIgnoreCase(server.ip.trim());
+        if (official) {
+            g.drawString(font, label("OFICIAL · FIJO", "OFFICIAL · PINNED"),
                     x + 10, next + 3, 0xFFE1C579, false);
             next += 14;
         }
         g.drawString(font, fit(status, w - 20), x + 10, next + 5, color, false);
-        next += 23;
-        g.drawString(font, fit(label("Versión: ", "Version: ") + server.version.getString(), w - 20),
-                x + 10, next, 0xFFC4C6C9, false);
-        next += 18;
-        if (next + 24 < layout.bottom()) {
-            g.drawString(font, label("MENSAJE DEL SERVIDOR", "SERVER MESSAGE"), x + 10, next, 0xFFAAAEB3, false);
-            drawWrapped(g, server.motd.getString(), x + 10, next + 15, w - 20, layout.bottom() - 10, 0xFFDDDFE0);
+        next += 20;
+
+        if (official) {
+            g.drawString(font, fit(OFFICIAL_ADDRESS, w - 20), x + 10, next, 0xFF92979C, false);
+            next += 17;
         }
-        if (mouseX >= x && mouseX < x + w && mouseY >= y + 26 && mouseY < layout.bottom())
-            entryTooltip = List.of(Component.literal(server.name), server.version, server.motd);
+
+        if (!isOfflineState(server)
+                && server.protocol != SharedConstants.getCurrentVersion().getProtocolVersion()) {
+            String version = server.version.getString().trim();
+            if (!version.isEmpty())
+                g.drawString(font, fit(version, w - 20), x + 10, next, 0xFFFFA0A5, false);
+            next += 17;
+        }
+
+        String motd = server.motd.getString().trim();
+        if (isUsefulMotd(server, motd) && next + font.lineHeight < layout.bottom() - 10)
+            drawWrapped(g, motd, x + 10, next, w - 20, layout.bottom() - 10, 0xFFC4C6C9);
+    }
+
+    private void renderLockedActionTooltip(int mouseX, int mouseY) {
+        if (!selectedServerIsOfficial()) return;
+        for (Control control : controls) {
+            if ((control.slot == 3 || control.slot == 4) && control.view.isMouseOver(mouseX, mouseY)) {
+                String reason = control.slot == 3
+                        ? label("El servidor oficial está fijado y no se puede editar.",
+                                "The official server is pinned and cannot be edited.")
+                        : label("El servidor oficial está fijado y no se puede eliminar.",
+                                "The official server is pinned and cannot be deleted.");
+                entryTooltip = List.of(Component.literal(reason));
+                return;
+            }
+        }
+    }
+
+    private boolean isOfflineState(ServerData server) {
+        String version = server.version.getString().trim();
+        String motd = server.motd.getString().trim();
+        return version.equalsIgnoreCase("Offline") || motd.equalsIgnoreCase("Offline");
+    }
+
+    private boolean isUsefulMotd(ServerData server, String motd) {
+        return !motd.isEmpty()
+                && !motd.equalsIgnoreCase("SIEGE")
+                && !motd.equalsIgnoreCase("Offline")
+                && !motd.equalsIgnoreCase(server.name);
     }
 
     private String status(ServerData s) {
         if (!s.pinged || s.ping < -1) return label("CONSULTANDO…", "QUERYING…");
+        if (isOfflineState(s)) return label("SERVIDOR APAGADO", "SERVER OFFLINE");
         if (s.ping < 0) return label("SIN RESPUESTA", "NO RESPONSE");
         if (s.protocol != SharedConstants.getCurrentVersion().getProtocolVersion())
             return label("VERSIÓN INCOMPATIBLE", "INCOMPATIBLE VERSION");
-        return label("EN LÍNEA", "ONLINE") + " / " + s.ping + " ms";
+        return label("EN LÍNEA", "ONLINE") + " · " + s.ping + " ms";
     }
 
     private int statusColor(ServerData s) {
         if (!s.pinged || s.ping < -1) return 0xFFE1C579;
-        if (s.ping < 0 || s.protocol != SharedConstants.getCurrentVersion().getProtocolVersion()) return 0xFFFF8B91;
+        if (isOfflineState(s) || s.ping < 0
+                || s.protocol != SharedConstants.getCurrentVersion().getProtocolVersion()) return 0xFFFF8B91;
         return 0xFF9DCEAB;
     }
 
@@ -345,7 +403,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
     }
 
     private void panel(GuiGraphics g, int x, int y, int w, int h) {
-        g.fill(x, y, x + w, y + h, 0xE7101215);
+        g.fill(x, y, x + w, y + h, 0xF2101215);
         g.fill(x, y, x + w, y + 1, 0xFF55575B);
         g.fill(x, y + h - 1, x + w, y + h, 0xFF383A3E);
     }
