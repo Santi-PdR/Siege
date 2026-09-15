@@ -14,6 +14,7 @@ public final class SiegeSlider extends AbstractSliderButton {
     private final Component label;
     private final IntConsumer consumer;
     private int lastPercent;
+    private boolean dragging;
     private java.util.function.IntFunction<String> valueText;
 
     public SiegeSlider(int x, int y, int width, int height, Component label, int initialPercent, IntConsumer consumer) {
@@ -51,8 +52,25 @@ public final class SiegeSlider extends AbstractSliderButton {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
-        if (handled) SiegeUiSounds.click();
+        if (handled) { dragging = true; updateFromPointer(mouseX); SiegeUiSounds.click(); }
         return handled;
+    }
+
+    private void updateFromPointer(double mouseX) {
+        if (!Double.isFinite(mouseX)) return;
+        value = Math.round(Math.max(0, Math.min(1, (mouseX - getX() - 9) / Math.max(1, getWidth() - 18))) * 100) / 100.0;
+        applyValue(); updateMessage();
+    }
+    @Override
+    public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
+        if (button == 0 && dragging && active && visible) { updateFromPointer(x); return true; }
+        return false;
+    }
+    @Override
+    public boolean mouseReleased(double x, double y, int button) {
+        boolean handled = button == 0 && dragging;
+        if (button == 0) { dragging = false; if (handled) SiegeConfig.save(); }
+        return super.mouseReleased(x, y, button) || handled;
     }
 
     @Override
@@ -61,6 +79,9 @@ public final class SiegeSlider extends AbstractSliderButton {
         int top = getY();
         int right = left + getWidth();
         int bottom = top + getHeight();
+        if (isFocused() && active) {
+            g.fill(left - 1, top - 1, right + 1, bottom + 1, 0xFFF2D36F);
+        }
         int accent = !active ? 0xFF59636A : isHoveredOrFocused() ? 0xFF6BD8F2 : 0xFF55BFD9;
 
         g.fill(left, top, right, bottom, 0xED0A0F13);
@@ -69,7 +90,7 @@ public final class SiegeSlider extends AbstractSliderButton {
         g.fill(left, top, left + 2, bottom, accent);
 
         int trackLeft = left + 9;
-        int trackRight = right - 9;
+        int trackRight = Math.max(trackLeft, right - 9);
         int trackY = bottom - 6;
         g.fill(trackLeft, trackY, trackRight, trackY + 2, 0xFF28343B);
         for (int i = 0; i <= 4; i++) {
@@ -86,7 +107,10 @@ public final class SiegeSlider extends AbstractSliderButton {
         var font = Minecraft.getInstance().font;
         String amount = valueText == null ? lastPercent + "%" : valueText.apply(lastPercent);
         int amountWidth = font.width(amount);
-        int textWidth = Math.max(1, getWidth() - amountWidth - 26);
+        if (amountWidth > Math.max(1, getWidth() - 18)) {
+            amount = font.plainSubstrByWidth(amount, Math.max(1, getWidth() - 18)); amountWidth = font.width(amount);
+        }
+        int textWidth = Math.max(0, getWidth() - amountWidth - 26);
         String clipped = font.plainSubstrByWidth(label.getString(), textWidth);
         if (!clipped.equals(label.getString()) && textWidth >= font.width("…"))
             clipped = font.plainSubstrByWidth(label.getString(), textWidth - font.width("…")) + "…";
@@ -105,7 +129,14 @@ public final class SiegeSlider extends AbstractSliderButton {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!active || !visible || !isFocused()) return false;
         int before = lastPercent;
+        if (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT) {
+            value = clamp(lastPercent + (keyCode == GLFW.GLFW_KEY_LEFT ? -1 : 1)) / 100.0;
+            applyValue(); updateMessage();
+            if (before != lastPercent) { SiegeUiSounds.click(); SiegeConfig.save(); }
+            return true;
+        }
         boolean handled = super.keyPressed(keyCode, scanCode, modifiers);
         if (handled && before != lastPercent && (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT))
             SiegeUiSounds.click();
@@ -116,3 +147,4 @@ public final class SiegeSlider extends AbstractSliderButton {
         return Math.max(0, Math.min(100, value));
     }
 }
+

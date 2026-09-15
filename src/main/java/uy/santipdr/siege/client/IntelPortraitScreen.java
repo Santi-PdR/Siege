@@ -28,7 +28,7 @@ public final class IntelPortraitScreen extends Screen {
     protected void init() {
         SiegeUiSounds.resetHover();
         draggingImage = draggingMap = false;
-        bottom = height - 35;
+        bottom = Math.max(top + 1, height - 35);
         camera.resize(width - 16, bottom - top);
         int w = Math.min(110, (width - 28) / 4);
         int x = (width - w * 4 - 12) / 2;
@@ -128,10 +128,10 @@ public final class IntelPortraitScreen extends Screen {
     }
     @Override
     public boolean mouseScrolled(double x, double y, double delta) {
-        if (inImage(x, y) && delta != 0) {
+        if (inImage(x, y) && Double.isFinite(delta) && delta != 0) {
             // The minimap is an overview, not the point in the artwork beneath it.
             boolean overMap = hasMap() && map().contains(x, y);
-            changeZoom(camera.zoom() * (delta > 0 ? 1.25 : 0.8), overMap ? width / 2.0 : x, overMap ? (top + bottom) / 2.0 : y);
+            changeZoom(camera.zoom() * Math.pow(1.25, Math.max(-4, Math.min(4, delta))), overMap ? width / 2.0 : x, overMap ? (top + bottom) / 2.0 : y);
             return true;
         }
         return super.mouseScrolled(x, y, delta);
@@ -157,8 +157,9 @@ public final class IntelPortraitScreen extends Screen {
     }
     @Override
     public boolean mouseReleased(double x, double y, int button) {
+        boolean handled = button == 0 && (draggingImage || draggingMap);
         if (button == 0) { draggingImage = draggingMap = false; }
-        return super.mouseReleased(x, y, button);
+        return super.mouseReleased(x, y, button) || handled;
     }
     @Override
     public void onClose() { SiegeUiSounds.back(); minecraft.setScreen(parent); }
@@ -173,3 +174,4 @@ public final class IntelPortraitScreen extends Screen {
         return switch (SiegeConfig.inspectorBackground) { case 1 -> "GRAY BACKGROUND"; case 2 -> "PAPER BACKGROUND"; default -> "BLACK BACKGROUND"; };
     }
 }
+

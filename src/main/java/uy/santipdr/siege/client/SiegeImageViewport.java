@@ -2,11 +2,11 @@ package uy.santipdr.siege.client;
 
 /** Bounded image camera. Zoom preserves the image point under the pointer when edges allow it. */
 public final class SiegeImageViewport {
-    private double width, height, zoom = 1, panX, panY;
+    private double width = 1, height = 1, zoom = 1, panX, panY;
     public void resize(double width, double height) {
         double oldFit = fit();
-        this.width = Math.max(1, width);
-        this.height = Math.max(1, height);
+        this.width = Double.isFinite(width) ? Math.max(1, width) : 1;
+        this.height = Double.isFinite(height) ? Math.max(1, height) : 1;
         if (oldFit > 0) { panX *= fit() / oldFit; panY *= fit() / oldFit; }
         clamp();
     }
@@ -18,6 +18,7 @@ public final class SiegeImageViewport {
     public double y() { return (height - imageHeight()) / 2 + panY; }
     public void reset() { zoom = 1; panX = panY = 0; }
     public boolean zoomAt(double value, double pointerX, double pointerY) {
+        if (!Double.isFinite(value) || !Double.isFinite(pointerX) || !Double.isFinite(pointerY)) return false;
         double next = Math.max(1, Math.min(4, value));
         if (Math.abs(next - zoom) < 0.0001) return false;
         double ratio = next / zoom;
@@ -27,8 +28,9 @@ public final class SiegeImageViewport {
         clamp();
         return true;
     }
-    public void drag(double dx, double dy) { panX += dx; panY += dy; clamp(); }
+    public void drag(double dx, double dy) { if (!Double.isFinite(dx) || !Double.isFinite(dy)) return; panX += dx; panY += dy; clamp(); }
     public void centerOn(double u, double v) {
+        if (!Double.isFinite(u) || !Double.isFinite(v)) return;
         panX = (0.5 - Math.max(0, Math.min(1, u))) * imageWidth();
         panY = (0.5 - Math.max(0, Math.min(1, v))) * imageHeight();
         clamp();
@@ -44,3 +46,4 @@ public final class SiegeImageViewport {
         panY = Math.max(-maxY, Math.min(maxY, panY));
     }
 }
+

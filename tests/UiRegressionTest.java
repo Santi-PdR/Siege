@@ -72,6 +72,23 @@ public class UiRegressionTest {
         check(IntelSearch.matches("super unit", "SUPER-UNIT"), "Hyphen-insensitive search");
         check(IntelSearch.matches("  atlas\t super  ", "Atlas Super Unit"), "Whitespace-normalized search");
         check(IntelSearch.matches(null, "Atlas"), "Null query must be empty");
+        check(!IntelSearch.matches("\"missing phrase", "Atlas"), "Unclosed quote must not discard query");
+        check(IntelSearch.matches("“alerta máxima”", "Estado: alerta maxima"), "Smart quotes");
+        check(IntelSearch.matches("atlas\u00a0unit", "Atlas Super Unit"), "NBSP tokens");
+        check(IntelSearch.matches("ＡＴＬＡＳ", "Atlas"), "Compatibility normalization");
+        check(IntelSearch.matches("SUP—001", "SUP-001"), "Unicode code dash");
+        check(IntelSearch.matches("at\u200blas", "Atlas"), "Invisible pasted marker");
+        check(IntelSearch.matches("!", "Atlas"), "Empty exclusion ignored");
+        check(IntelSearch.matches("atlas atlas", "Atlas"), "Duplicate tokens");
+        check(!IntelSearch.matches("!\"super unit", "Atlas super unit"), "Unclosed excluded phrase");
+        SiegeImageViewport uninitialized = new SiegeImageViewport();
+        check(Double.isFinite(uninitialized.visibleLeft()), "Camera valid before resize");
+        uninitialized.resize(Double.NaN, Double.POSITIVE_INFINITY);
+        check(Double.isFinite(uninitialized.imageWidth()), "Invalid dimensions repaired");
+        check(!uninitialized.zoomAt(Double.NaN, 0, 0), "Invalid zoom ignored");
+        uninitialized.drag(Double.NaN, 1);
+        uninitialized.centerOn(Double.POSITIVE_INFINITY, 0);
+        check(Double.isFinite(uninitialized.x()), "Invalid pan inputs ignored");
         check(IntelPresentation.compactHp("1,250").equals("1.2K"), "Compact thousands");
         check(IntelPresentation.compactHp("125,000,000").equals("125M"), "Compact millions");
         check(IntelPresentation.hpValue("N/D").signum() == 0, "Unknown HP parsing");
@@ -123,3 +140,4 @@ public class UiRegressionTest {
         System.out.println(cases + " viewport layouts and search regressions passed");
     }
 }
+

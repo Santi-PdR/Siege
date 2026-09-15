@@ -42,6 +42,7 @@ public final class SiegeSettingsScreen extends Screen {
     private boolean draggingScrollbar;
     private int scrollThumbTop, scrollThumbHeight, scrollGrab;
     private int soundSample;
+    private double wheelRemainder;
     private int scrollOffset, scrollMax, viewportTop, viewportBottom, informationY;
 
 
@@ -63,11 +64,12 @@ public final class SiegeSettingsScreen extends Screen {
         musicTrackButtons.clear();
         shuffleButton = null;
         int previousScroll = SECTION_SCROLL.getOrDefault(section, scrollOffset);
+        soundSample = Math.floorMod(soundSample, 3);
         draggingScrollbar = false;
         compact = width < 700 || height < 355;
 
         int margin = compact ? 7 : 14;
-        panelWidth = Math.max(230, Math.min(compact ? 520 : 760, width - margin * 2));
+        panelWidth = Math.max(1, Math.min(compact ? 520 : 760, width - margin * 2));
         panelX = (width - panelWidth) / 2;
         panelY = compact ? 42 : 54;
         panelBottom = height - (height >= 300 ? 28 : 8);
@@ -79,7 +81,7 @@ public final class SiegeSettingsScreen extends Screen {
         else initWideNavigation();
 
         viewportTop = contentY + (section == Section.AUDIO ? 49 : compact ? 25 : 51);
-        viewportBottom = panelBottom - 7;
+        viewportBottom = Math.max(viewportTop + 1, panelBottom - 7);
         int firstControl = children().size();
         initSectionControls();
         int lastBottom = viewportTop;
@@ -345,6 +347,7 @@ public final class SiegeSettingsScreen extends Screen {
                 addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
                         Component.literal(label("GALERÍA DE FONDOS", "BACKGROUND GALLERY")), b -> {
                     SiegeUiSounds.click();
+                    SECTION_SCROLL.put(section, scrollOffset);
                     minecraft.setScreen(new SiegeSceneScreen(this));
                 }, ACCENT));
                 addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
@@ -405,19 +408,19 @@ public final class SiegeSettingsScreen extends Screen {
             case "siege.settings.ui_sounds" -> label("Controla los sonidos de botones y navegación del menú.", "Control menu button and navigation sounds.");
             case "siege.settings.backgrounds" -> label("Alterna automáticamente los fondos completos del menú.", "Automatically cycle full menu backgrounds.");
             case "siege.settings.reduced_motion" -> label("Desactiva interferencia y animaciones de movimiento; conserva la respuesta de los controles.", "Disable interference and motion animations while retaining control feedback.");
-            case "PAUSA AL LEER", "PAUSE WHILE READING", "PAUSA AL SEÑALAR", "PAUSE ON HOVER" -> label("Pausa el dossier bajo el cursor y reanuda dos segundos después de salir.", "Pause the dossier under the pointer and resume two seconds after leaving.");
+            case "PAUSAR INTEL AL LEER", "PAUSE INTEL ON HOVER", "PAUSA AL LEER", "PAUSE WHILE READING", "PAUSA AL SEÑALAR", "PAUSE ON HOVER" -> label("Pausa el dossier bajo el cursor y reanuda dos segundos después de salir.", "Pause the dossier under the pointer and resume two seconds after leaving.");
             case "AVISO DE NUEVA PISTA", "NEW TRACK NOTICE" -> label("Muestra el nombre cuando el motor de audio confirma que comenzó la pista.", "Show the name when the audio engine confirms playback started.");
             case "PROGRESO DE ROTACIÓN", "ROTATION PROGRESS" -> label("Muestra cuánto falta para el próximo cambio automático de dossier.", "Show progress until the next automatic dossier change.");
             case "ESTADO DEL DOSSIER", "DOSSIER STATE" -> label("Distingue lectura, rotación automática y expediente fijo.", "Distinguish reading, automatic rotation and a fixed dossier.");
             case "PAPEL OSCURO", "DARK PAPER" -> label("Usa papel oscuro y texto claro para leer Intel.", "Use dark paper and light text in Intel.");
-            case "LECTURA CÓMODA", "COMFORTABLE READING" -> label("Aumenta la separación entre renglones del expediente.", "Increase the spacing between dossier lines.");
+            case "LECTURA ESPACIADA", "COMFORTABLE LINE SPACING", "LECTURA CÓMODA", "COMFORTABLE READING" -> label("Aumenta la separación entre renglones del expediente.", "Increase the spacing between dossier lines.");
             default -> label("Cambia esta preferencia de presentación de SIEGE. Se guarda al modificarla.", "Change this SIEGE presentation preference. Changes are saved automatically.");
         };
     }
 
     private Component graphicsLabel() {
         return Component.translatable("siege.settings.graphics").append(": ")
-                .append(Component.translatable("siege.settings.graphics." + SiegeConfig.graphics.name().toLowerCase()));
+                .append(Component.translatable("siege.settings.graphics." + SiegeConfig.graphics.name().toLowerCase(java.util.Locale.ROOT)));
     }
 
     private Component toggleLabel(String key, boolean enabled) {
@@ -529,6 +532,12 @@ public final class SiegeSettingsScreen extends Screen {
         int availableBottom = bottom - 12;
         if (infoY >= availableBottom) return;
 
+        if (!SiegeConfig.lastSaveSucceeded) {
+            renderWrapped(g, label("No se pudieron guardar los ajustes. Revisá el archivo y sus permisos.",
+                    "Settings could not be saved. Check the file and its permissions."), contentX, infoY, contentWidth,
+                    0xFFFFA0A5, 3, 11);
+            return;
+        }
         if (section == Section.OVERVIEW) {
             renderWrapped(g, sectionDescription(section), contentX, infoY, contentWidth, 0xFFB8C0C5,
                     compact ? 3 : 4, 11);
@@ -565,8 +574,12 @@ public final class SiegeSettingsScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double x, double y, double delta) {
-        if (delta != 0 && x >= contentX && x < contentX + contentWidth && y >= viewportTop && y < viewportBottom) {
-            scrollOffset -= (int)Math.round(delta * (compact ? 23 : 31));
+        if (Double.isFinite(delta) && delta != 0 && x >= contentX && x < contentX + contentWidth && y >= viewportTop && y < viewportBottom) {
+            if (scrollMax == 0 || delta > 0 && scrollOffset == 0 || delta < 0 && scrollOffset == scrollMax) { wheelRemainder = 0; return false; }
+            wheelRemainder += delta * (compact ? 23 : 31);
+            int amount = (int)wheelRemainder;
+            wheelRemainder -= amount;
+            scrollOffset -= amount;
             positionControls();
             return true;
         }
@@ -604,7 +617,8 @@ public final class SiegeSettingsScreen extends Screen {
             for (var child : children()) if (child instanceof AbstractWidget widget && widget.active) order.add(widget);
             if (order.isEmpty()) return false;
             int index = order.indexOf(getFocused());
-            AbstractWidget next = order.get(Math.floorMod(index + (hasShiftDown() ? -1 : 1), order.size()));
+            int target = index < 0 ? (hasShiftDown() ? order.size() - 1 : 0) : Math.floorMod(index + (hasShiftDown() ? -1 : 1), order.size());
+            AbstractWidget next = order.get(target);
             int control = controls.indexOf(next);
             if (control >= 0) {
                 int top = controlY.get(control);
@@ -621,14 +635,16 @@ public final class SiegeSettingsScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double x, double y, int button) {
+        boolean wasDragging = button == 0 && draggingScrollbar;
         if (button == 0) draggingScrollbar = false;
-        boolean handled = super.mouseReleased(x, y, button);
+        boolean handled = super.mouseReleased(x, y, button) || wasDragging;
         SiegeConfig.save();
         return handled;
     }
 
     @Override
     public void removed() {
+        draggingScrollbar = false;
         SiegeConfig.save();
         super.removed();
     }
@@ -725,3 +741,4 @@ public final class SiegeSettingsScreen extends Screen {
         GRAPHICS
     }
 }
+

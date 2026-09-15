@@ -52,13 +52,21 @@ public final class SiegeConfig {
     public static int trackNoticeSeconds = 8;
     public static Graphics graphics = Graphics.CINEMATIC;
 
+    private static Properties lastSaved;
+    private static boolean loadedSuccessfully = true;
+    public static boolean lastSaveSucceeded = true;
     private SiegeConfig() {}
 
-    public static void load() {
+    public static synchronized void load() {
         Properties p = new Properties();
+        loadedSuccessfully = true;
         if (Files.isRegularFile(FILE)) {
             try (InputStream in = Files.newInputStream(FILE)) { p.load(in); }
-            catch (IOException | IllegalArgumentException error) { LogUtils.getLogger().warn("Could not load SIEGE settings", error); }
+            catch (IOException | IllegalArgumentException error) {
+                loadedSuccessfully = false;
+                LogUtils.getLogger().warn("Could not load SIEGE settings; original file preserved", error);
+                return;
+            }
         }
         intelReadingMode = bool(p, "intelReadingMode", false);
         comfortableReading = bool(p, "comfortableReading", false);
@@ -70,7 +78,7 @@ public final class SiegeConfig {
         uiVolume = integer(p, "uiVolume", 100, 0, 100);
         hoverSounds = bool(p, "hoverSounds", true);
         int loadedRevision = integer(p, "settingsRevision", 0, 0, SETTINGS_REVISION);
-        autoRotateIntel = loadedRevision < SETTINGS_REVISION || bool(p, "autoRotateIntel", true);
+        autoRotateIntel = bool(p, "autoRotateIntel", true);
         music = bool(p, "music", true);
         musicVolume = integer(p, "musicVolume", 75, 0, 100);
         uiSounds = bool(p, "uiSounds", true);
@@ -90,12 +98,21 @@ public final class SiegeConfig {
         backgroundDarkness = integer(p, "backgroundDarkness", 23, 0, 70);
         panelDarkness = integer(p, "panelDarkness", 63, 20, 90);
         trackNoticeSeconds = integer(p, "trackNoticeSeconds", 8, 3, 15);
-        try { graphics = Graphics.valueOf(p.getProperty("graphics", Graphics.CINEMATIC.name())); }
+        try { graphics = Graphics.valueOf(p.getProperty("graphics", Graphics.CINEMATIC.name()).trim().toUpperCase(java.util.Locale.ROOT)); }
         catch (IllegalArgumentException ignored) { graphics = Graphics.CINEMATIC; }
         if (loadedRevision < SETTINGS_REVISION) save();
     }
 
-    public static void save() {
+    public static synchronized void save() {
+        if (!loadedSuccessfully) { lastSaveSucceeded = false; return; }
+        inspectorBackground = Math.max(0, Math.min(2, inspectorBackground));
+        selectedTrack = Math.max(-1, Math.min(3, selectedTrack));
+        selectedScene = Math.max(-1, Math.min(8, selectedScene));
+        uiVolume = clampVolume(uiVolume); musicVolume = clampVolume(musicVolume);
+        backgroundDarkness = Math.max(0, Math.min(70, backgroundDarkness));
+        panelDarkness = Math.max(20, Math.min(90, panelDarkness));
+        trackNoticeSeconds = Math.max(3, Math.min(15, trackNoticeSeconds));
+        if (graphics == null) graphics = Graphics.CINEMATIC;
         Properties p = new Properties();
         p.setProperty("intelReadingMode", Boolean.toString(intelReadingMode));
         p.setProperty("comfortableReading", Boolean.toString(comfortableReading));
@@ -128,6 +145,7 @@ public final class SiegeConfig {
         p.setProperty("panelDarkness", Integer.toString(panelDarkness));
         p.setProperty("trackNoticeSeconds", Integer.toString(trackNoticeSeconds));
         p.setProperty("graphics", graphics.name());
+        if (p.equals(lastSaved) && Files.isRegularFile(FILE)) { lastSaveSucceeded = true; return; }
         Path temporary = null;
         try {
             Files.createDirectories(FILE.getParent());
@@ -140,7 +158,10 @@ public final class SiegeConfig {
             } catch (AtomicMoveNotSupportedException unsupported) {
                 Files.move(temporary, FILE, StandardCopyOption.REPLACE_EXISTING);
             }
+            lastSaved = (Properties)p.clone();
+            lastSaveSucceeded = true;
         } catch (IOException error) {
+            lastSaveSucceeded = false;
             LogUtils.getLogger().warn("Could not save SIEGE settings; previous file retained", error);
         } finally {
             if (temporary != null) try { Files.deleteIfExists(temporary); }
@@ -149,6 +170,12 @@ public final class SiegeConfig {
     }
 
     public static void resetDefaults() {
+        if (!loadedSuccessfully && Files.exists(FILE)) {
+            try { Files.copy(FILE, FILE.resolveSibling("siege-client-corrupt-" + System.currentTimeMillis() + ".properties")); }
+            catch (IOException error) { lastSaveSucceeded = false; return; }
+        }
+        loadedSuccessfully = true;
+        lastSaved = null;
         intelReadingMode = false;
         comfortableReading = false;
         darkIntelPaper = false;
@@ -196,13 +223,15 @@ public final class SiegeConfig {
 
     private static boolean bool(Properties p, String key, boolean fallback) {
         String value = p.getProperty(key);
+        if (value != null) value = value.trim();
         if ("true".equalsIgnoreCase(value)) return true;
         if ("false".equalsIgnoreCase(value)) return false;
         return fallback;
     }
 
     private static int integer(Properties p, String key, int fallback, int min, int max) {
-        try { return Math.max(min, Math.min(max, Integer.parseInt(p.getProperty(key, Integer.toString(fallback))))); }
+        try { return Math.max(min, Math.min(max, Integer.parseInt(p.getProperty(key, Integer.toString(fallback)).trim()))); }
         catch (NumberFormatException ignored) { return fallback; }
     }
 }
+

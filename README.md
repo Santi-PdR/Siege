@@ -1,3 +1,9 @@
+## Actualización 0.17.0
+
+[100 mejoras y correcciones](docs/CHANGELOG-0.17.0.md) · [Revisión visual pendiente](docs/QA-0.17.0.md)
+
+Búsqueda, lectura, controles, audio, Multiplayer y actualización segura. Conserva la disposición aprobada y el gameplay.
+
 ## 0.14.0 — Atlas y 50 mejoras nuevas
 
 **Atlas** entra como `SUP-001`, primera Super Unit de la base Intel, con **125.000.000 HP** y un expediente Omega creado desde el video entregado. La actualización mejora búsqueda, navegación, lectura, ficha táctica, visor y validación sin mover el dossier ni recuperar controles descartados. [Lista exacta de 50 cambios](docs/CHANGELOG-0.14.0.md).
@@ -398,3 +404,4 @@ The Fedora installer never invokes local Java or Gradle. It verifies a staged co
 ### Legacy Windows environment
 
 `scripts/install-latest.ps1` remains available only for the previous Windows setup.
+

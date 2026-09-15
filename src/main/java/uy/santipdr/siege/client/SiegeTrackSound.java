@@ -25,7 +25,7 @@ public final class SiegeTrackSound extends AbstractTickableSoundInstance {
     }
 
     public void setGain(float gain) {
-        this.volume = Math.max(0.0F, Math.min(1.0F, gain));
+        this.volume = Float.isFinite(gain) ? Math.max(0.0F, Math.min(1.0F, gain)) : 0;
     }
 
     @Override
@@ -40,3 +40,4 @@ public final class SiegeTrackSound extends AbstractTickableSoundInstance {
         return true;
     }
 }
+

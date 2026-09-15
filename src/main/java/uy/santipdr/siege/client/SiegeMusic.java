@@ -81,13 +81,13 @@ public final class SiegeMusic {
 
         Minecraft minecraft = Minecraft.getInstance();
         var manager = minecraft.getSoundManager();
-        long now = System.currentTimeMillis();
+        long now = (System.nanoTime() / 1_000_000L);
 
         boolean backendPlaying = manager.isActive(active);
         if (!clockAnchored && backendPlaying) {
             playbackAnchorAt = now; clockAnchored = true; announcementStartedAt = now;
         }
-        if (health.recover(now, backendPlaying)) {
+        if (fadeState != FadeState.OUT && health.recover(now, backendPlaying)) {
             // Replay the same track after sustained loss; preserve queue and bound retries.
             manager.stop(active);
             active = new SiegeTrackSound(resolveTrack(previous));
@@ -114,6 +114,7 @@ public final class SiegeMusic {
         }
 
         if (fadeState == FadeState.IN) {
+            if (!clockAnchored) { fadeStartedAt = now; applyLiveVolume(); return; }
             float progress = progress(now, fadeStartedAt, fadeDurationMs);
             fadeGain = progress;
             applyLiveVolume();
@@ -174,11 +175,13 @@ public final class SiegeMusic {
     public static void previousTrack() {
         int fallback = previous < 0 ? 0 : Math.floorMod(previous - 1, TRACKS.size());
         requestedNext = beforePrevious >= 0 ? beforePrevious : fallback;
+        if (SiegeConfig.selectedTrack >= 0) { SiegeConfig.selectedTrack = requestedNext; SiegeConfig.save(); }
         enableMusicAndTransition();
     }
 
     public static void restartTrack() {
         if (previous < 0) {
+            SiegeConfig.music = true; SiegeConfig.save();
             ensurePlaying();
             return;
         }
@@ -208,7 +211,7 @@ public final class SiegeMusic {
         if (index < -1 || index >= TRACKS.size()) return;
         requestedNext = -1;
         SiegeConfig.selectedTrack = index;
-        queue.clear();
+        if (index >= 0) queue.clear();
         if (index >= 0) SiegeConfig.music = true;
         SiegeConfig.save();
         if (!shouldPlay()) return;
@@ -233,7 +236,7 @@ public final class SiegeMusic {
 
     public static long trackAnnouncementAgeMs() {
         if (active == null || announcementStartedAt <= 0L) return -1L;
-        long age = Math.max(0L, System.currentTimeMillis() - announcementStartedAt);
+        long age = Math.max(0L, (System.nanoTime() / 1_000_000L) - announcementStartedAt);
         return age <= trackAnnouncementDurationMs() ? age : -1L;
     }
 
@@ -252,10 +255,12 @@ public final class SiegeMusic {
 
     public static long currentRemainingMs() {
         if (!clockAnchored || active == null) return currentDurationMs();
-        return Math.max(0L, currentDurationMs() - (System.currentTimeMillis() - playbackAnchorAt));
+        return Math.max(0L, currentDurationMs() - ((System.nanoTime() / 1_000_000L) - playbackAnchorAt));
     }
 
     public static String transitionLabel(boolean spanish) {
+        if (!SiegeConfig.music) return spanish ? "MÚSICA DESACTIVADA" : "MUSIC OFF";
+        if (SiegeConfig.musicVolume == 0) return spanish ? "SILENCIADA" : "MUTED";
         if (!isActuallyPlaying()) return spanish ? "ESPERANDO AUDIO" : "WAITING FOR AUDIO";
         return switch (fadeState) {
             case IN -> spanish ? "ENTRADA SUAVE" : "FADING IN";
@@ -268,7 +273,9 @@ public final class SiegeMusic {
 
     private static boolean shouldPlay() {
         Minecraft minecraft = Minecraft.getInstance();
-        return SiegeConfig.music && minecraft.level == null && minecraft.screen != null;
+        return SiegeConfig.music && minecraft.level == null && minecraft.screen != null
+                && !(minecraft.screen instanceof net.minecraft.client.gui.screens.ConnectScreen)
+                && !(minecraft.screen instanceof net.minecraft.client.gui.screens.ReceivingLevelScreen);
     }
 
     private static void startNext(boolean fadeIn) {
@@ -294,7 +301,7 @@ public final class SiegeMusic {
         if (active != null) manager.stop(active);
 
         active = new SiegeTrackSound(resolveTrack(index));
-        startRequestedAt = System.currentTimeMillis();
+        startRequestedAt = (System.nanoTime() / 1_000_000L);
         announcementStartedAt = 0L;
         health.begin(startRequestedAt);
         playbackAnchorAt = startRequestedAt;
@@ -321,7 +328,7 @@ public final class SiegeMusic {
         fadeFromGain = Math.max(0.0F, Math.min(1.0F, fadeGain));
         if (fadeState == FadeState.NONE) fadeFromGain = 1.0F;
         fadeState = FadeState.OUT;
-        fadeStartedAt = System.currentTimeMillis();
+        fadeStartedAt = (System.nanoTime() / 1_000_000L);
         fadeDurationMs = Math.max(1L, durationMs);
         naturalFadeOut = natural;
     }
@@ -354,8 +361,10 @@ public final class SiegeMusic {
             for (int i = 0; i < TRACK_KEYS.size(); i++) {
                 String raw = props.getProperty(TRACK_KEYS.get(i));
                 if (raw == null) continue;
-                long parsed = Long.parseLong(raw.trim());
-                if (parsed > 1_000L) values[i] = parsed;
+                try {
+                    long parsed = Long.parseLong(raw.trim());
+                    if (parsed > 1_000L && parsed <= 3_600_000L) values[i] = parsed;
+                } catch (NumberFormatException ignored) { /* Retain this track's fallback only. */ }
             }
         } catch (Exception ignored) {
             // A missing/corrupt metadata file must never crash the menu; fallbacks remain usable.
@@ -378,3 +387,4 @@ public final class SiegeMusic {
 
     private enum FadeState { NONE, IN, OUT }
 }
+

@@ -58,7 +58,8 @@ public final class SiegeSceneScreen extends Screen {
         undo = addRenderableWidget(new SiegeButton(12 + optionWidth, 65, optionWidth, 18, text("DESHACER", "UNDO"), b -> {
             if (undoAvailable) {
                 SiegeConfig.selectedScene = undoScene; SiegeConfig.animatedBackgrounds = undoAnimated;
-                SiegeConfig.save(); undoAvailable = false; refresh(); SiegeUiSounds.click();
+                SiegeConfig.save(); undoAvailable = false;
+                select(SiegeBackgrounds.currentIndex(System.currentTimeMillis())); refresh(); SiegeUiSounds.click();
             }
         }, 0xFFD6A94B));
         current = addRenderableWidget(new SiegeButton(16 + optionWidth * 2, 65, optionWidth, 18, text("ACTUAL", "CURRENT"),
@@ -83,16 +84,21 @@ public final class SiegeSceneScreen extends Screen {
 
     private void refresh() {
         pin.setSelected(SiegeConfig.selectedScene == index);
+        pin.active = SiegeConfig.selectedScene != index;
         pin.setMessage(SiegeConfig.selectedScene == index ? text("FIJADO", "PINNED") : text("FIJAR FONDO", "PIN BACKGROUND"));
         auto.setSelected(SiegeConfig.selectedScene < 0 && SiegeConfig.animatedBackgrounds);
+        auto.active = !(SiegeConfig.selectedScene < 0 && SiegeConfig.animatedBackgrounds);
         for (int i = 0; i < thumbnails.size(); i++) {
             Thumbnail tile = thumbnails.get(i);
             tile.scene = page * layout.capacity() + i;
             tile.active = tile.scene < SiegeBackgrounds.count();
+            tile.visible = tile.active && !cleanView;
+            if (!tile.active && getFocused() == tile) setFocused(null);
             tile.setMessage(tile.active ? Component.literal(SiegeBackgrounds.name(tile.scene, spanish())) : Component.empty());
+            if (tile.active) tile.setTooltip(Tooltip.create(Component.literal((tile.scene + 1) + " / " + SiegeBackgrounds.count() + " · " + tile.getMessage().getString())));
         }
         for (var child : children()) if (child instanceof AbstractWidget widget)
-            widget.setTooltip(Tooltip.create(widget.getMessage()));
+            if (widget.getTooltip() == null) widget.setTooltip(Tooltip.create(widget.getMessage()));
         current.setTooltip(Tooltip.create(text("Ver el fondo que está usando el menú", "Show the background currently used by the menu")));
         contrast.setSelected(menuPreview);
         contrast.setTooltip(Tooltip.create(text("Previsualizar la oscuridad de fondo y panel del menú", "Preview the menu background and panel darkness")));
@@ -101,6 +107,7 @@ public final class SiegeSceneScreen extends Screen {
         nextPage.active = (page + 1) * layout.capacity() < SiegeBackgrounds.count();
         previousPage.setTooltip(Tooltip.create(text("Página anterior de miniaturas", "Previous thumbnail page")));
         nextPage.setTooltip(Tooltip.create(text("Página siguiente de miniaturas", "Next thumbnail page")));
+        clean.setSelected(cleanView);
         clean.setTooltip(Tooltip.create(text("Ver sin interfaz. Clic o Escape para volver.", "Hide the interface. Click or Escape to return.")));
     }
 
@@ -144,7 +151,7 @@ public final class SiegeSceneScreen extends Screen {
         g.fill(0, 0, width, height, 0xFF0B0D10);
         var p = layout.preview();
         g.fill(p.x() - 1, p.y() - 1, p.right() + 1, p.bottom() + 1, 0xFF56616A);
-        float progress = Math.min(1F, (System.currentTimeMillis() - changedAt) / 260F);
+        float progress = Math.max(0F, Math.min(1F, (System.currentTimeMillis() - changedAt) / 260F));
         if (SiegeConfig.reducedMotion || !SiegeConfig.menuEffects) progress = 1F;
         g.fill(p.x(), p.y(), p.right(), p.bottom(), 0xFF0B0D10);
         if (progress < 1F) renderPreviewImage(g, p.x(), p.y(), p.w(), p.h(), previousIndex, 1F);
@@ -216,7 +223,7 @@ public final class SiegeSceneScreen extends Screen {
         SiegeUiSounds.resetHover();
     }
     private void applyVisibility() {
-        for (var child : children()) if (child instanceof AbstractWidget widget) widget.visible = !cleanView;
+        for (var child : children()) if (child instanceof AbstractWidget widget) widget.visible = !cleanView && (!(widget instanceof Thumbnail tile) || tile.active);
     }
     @Override
     public boolean mouseClicked(double x, double y, int button) {
@@ -260,3 +267,4 @@ public final class SiegeSceneScreen extends Screen {
         }
     }
 }
+
