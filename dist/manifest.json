@@ -1,6 +1,6 @@
 {
-  "jar": "siege-menu-0.16.0.jar",
-  "version": "0.16.0",
-  "commit": "eb7687939671432226a60ecc7debd76c5ea6b03a",
-  "sha256": "4d9b5936dcc7cdac60928969cf6f9ae823e65d1e157d2dbaa6fa9fa2536065a6"
+  "jar": "siege-menu-0.16.1.jar",
+  "version": "0.16.1",
+  "commit": "d31ccfb8f238515cc820c7264a69aea88f9098d5",
+  "sha256": "a547d624f93a3f61ec31105f49cf5871d800d9173f321fe2ca811d8108f965d8"
 }
