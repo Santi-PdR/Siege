@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+umask 077
 
 REPO="Santi-PdR/Siege"
 BRANCH="main"
@@ -14,22 +15,31 @@ cleanup() {
 trap cleanup EXIT
 
 echo "SIEGE // Descargando build validado desde GitHub..."
-for dependency in gh python3 sha256sum curl; do
+for dependency in gh python3 sha256sum curl flock install cmp find; do
     if ! command -v "$dependency" >/dev/null 2>&1; then
         echo "ERROR: falta $dependency. Instalalo antes de continuar." >&2
         exit 1
     fi
 done
+# One installation per destination. Keep the lock inode after exit to avoid lock races.
+mkdir -p -- "$MODS_DIR"
+MODS_DIR="$(cd -- "$MODS_DIR" && pwd -P)"
+exec 9>"$MODS_DIR/.siege-install.lock"
+if ! flock -n 9; then echo "ERROR: ya hay otra instalación en esta carpeta." >&2; exit 1; fi
+if [[ ! -w "$MODS_DIR" ]]; then echo "ERROR: la carpeta mods no permite escritura." >&2; exit 1; fi
 gh auth status >/dev/null
 # Pin metadata and artifact to one immutable repository revision.
 REVISION="$(gh api "repos/$REPO/commits/$BRANCH" --jq .sha)"
+if [[ ! "$REVISION" =~ ^[0-9a-f]{40}$ ]]; then echo "ERROR: revisión inválida." >&2; exit 1; fi
 gh api "repos/$REPO/contents/dist/manifest.json?ref=$REVISION" -H 'Accept: application/vnd.github.raw+json' > "$WORK_DIR/manifest.json"
 mapfile -t METADATA < <(python3 - "$WORK_DIR/manifest.json" <<'PYMETA'
 import json, re, sys
 m = json.load(open(sys.argv[1]))
+if not isinstance(m, dict): raise SystemExit("Invalid manifest")
 assert re.fullmatch(r"siege-menu-[0-9]+\.[0-9]+\.[0-9]+\.jar", m["jar"]), "Invalid jar name"
 assert re.fullmatch(r"[0-9a-f]{64}", m["sha256"]), "Invalid SHA256"
 assert re.fullmatch(r"[0-9a-f]{40}", m["commit"]), "Invalid revision"
+assert m.get("version") == m["jar"][11:-4], "Version does not match filename"
 print(m["jar"])
 print(m["sha256"])
 print(m["commit"])
@@ -59,13 +69,27 @@ if ! curl --disable --fail --silent --show-error --location --proto '=https' --p
 fi
 echo "Comprobando integridad del JAR..."
 printf '%s  %s\n' "${METADATA[1]}" "$JAR_FILE" | sha256sum --check --status
-python3 - "$JAR_FILE" <<'PYCHECK'
-import sys, zipfile
+python3 - "$JAR_FILE" "${METADATA[0]}" <<'PYCHECK'
+import sys, zipfile, re
 with zipfile.ZipFile(sys.argv[1]) as archive:
     assert archive.testzip() is None, "Corrupt JAR"
     assert "META-INF/mods.toml" in archive.namelist(), "Not a Forge mod"
+    assert len(archive.namelist()) == len(set(archive.namelist())), "Duplicate JAR entries"
+    assert all(not n.startswith("/") and ".." not in n.split("/") for n in archive.namelist()), "Unsafe JAR entry"
+    metadata = archive.read("META-INF/mods.toml").decode("utf-8")
+    assert re.search(r'(?m)^\s*modId\s*=\s*"siege"\s*$', metadata), "Not the SIEGE mod"
+    version = sys.argv[2][11:-4]
+    assert re.search(r'(?m)^\s*version\s*=\s*"' + re.escape(version) + r'"\s*$', metadata), "Wrong mod version"
 PYCHECK
 echo "Build verificado: ${METADATA[2]}"
+TARGET_JAR="$MODS_DIR/${METADATA[0]}"
+if [[ -L "$TARGET_JAR" || ( -e "$TARGET_JAR" && ! -f "$TARGET_JAR" ) ]]; then
+    echo "ERROR: el destino no es un archivo regular. Se conserva intacto." >&2; exit 1
+fi
+mapfile -d '' EXISTING_JARS < <(find "$MODS_DIR" -maxdepth 1 -type f -name 'siege-menu-*.jar' -print0)
+if (( ${#EXISTING_JARS[@]} == 1 )) && [[ -f "$TARGET_JAR" ]] && cmp -s -- "$JAR_FILE" "$TARGET_JAR"; then
+    echo "SIEGE ya está actualizado: ${METADATA[0]}"; exit 0
+fi
 
 mkdir -p -- "$MODS_DIR"
 # Stage and compare before moving any installed version out of the mods directory.
@@ -75,10 +99,13 @@ if [[ ! -s "$STAGED_JAR" ]] || ! cmp -s -- "$JAR_FILE" "$STAGED_JAR"; then
     echo "ERROR: la copia no coincide. Se conserva la version instalada." >&2
     exit 1
 fi
-BACKUP_DIR="$(mktemp -d "${MODS_DIR%/mods}/siege-backup-XXXXXX")"
+BACKUP_DIR="$(mktemp -d "$(dirname -- "$MODS_DIR")/siege-backup-XXXXXX")"
 mapfile -d '' OLD_JARS < <(find "$MODS_DIR" -maxdepth 1 -type f -name 'siege-menu-*.jar' -print0)
 for old_jar in "${OLD_JARS[@]}"; do
     cp -p -- "$old_jar" "$BACKUP_DIR/"
+    if ! cmp -s -- "$old_jar" "$BACKUP_DIR/$(basename -- "$old_jar")"; then
+        echo "ERROR: el respaldo no coincide; instalación detenida." >&2; exit 1
+    fi
 done
 INSTALLED_JAR="$MODS_DIR/$(basename "$JAR_FILE")"
 mv -f -- "$STAGED_JAR" "$INSTALLED_JAR"
@@ -95,4 +122,5 @@ fi
 echo
 echo "SIEGE instalado correctamente:"
 echo "$INSTALLED_JAR"
+
 

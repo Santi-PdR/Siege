@@ -43,6 +43,7 @@ public final class IntelScreenV3 extends Screen {
     private int thumbTop, thumbHeight, scrollGrab;
     private int pointerX, pointerY;
     private String bodyCacheKey, summaryCacheKey;
+    private final java.util.Map<String, ResourceLocation> textures = new java.util.HashMap<>();
     private List<DetailLine> bodyCache = List.of();
     private List<FormattedCharSequence> summaryCache = List.of();
     private int summaryScroll, summaryMax, summaryX, summaryTop, summaryRight, summaryBottom;
@@ -80,12 +81,15 @@ public final class IntelScreenV3 extends Screen {
         this.parent = parent;
         this.requestedCategory = requestedEntry == null ? null : requestedEntry.category();
         this.requestedCode = requestedEntry == null ? null : requestedEntry.code();
+        if (requestedEntry != null) query = "";
     }
 
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
         bodyCacheKey = summaryCacheKey = null;
+        draggingScroll = draggingSummary = false;
+        portraitW = summaryMax = maxDetailScroll = 0;
         categoryButtons.clear();
         entryButtons.clear();
         navigationButtons.clear();
@@ -205,7 +209,7 @@ public final class IntelScreenV3 extends Screen {
         });
         addRenderableWidget(search);
         clearSearch = addRenderableWidget(new SiegeButton(x + searchW + 4, y, small, 18,
-                Component.literal("×"), b -> search.setValue(""), 0xFFD65A4B));
+                Component.literal("×"), b -> { search.setValue(""); setFocused(search); SiegeUiSounds.click(); }, 0xFFD65A4B));
         clearSearch.setTooltip(Tooltip.create(Component.literal(label("Limpiar búsqueda", "Clear search"))));
         readingButton = addRenderableWidget(new SiegeButton(twoRows ? x : x + searchW + small + 8, twoRows ? y + 22 : y, modeW, 18,
                 Component.literal(label(readingMode ? "CON IMAGEN" : "LECTURA", readingMode ? "SHOW IMAGE" : "READING")), b -> {
@@ -250,10 +254,11 @@ public final class IntelScreenV3 extends Screen {
     }
 
     @Override
-    public void tick() { search.tick(); }
+    public void tick() { if (search != null) search.tick(); }
 
     private void setCategory(String value) {
         if (category.equals(value)) return;
+        entryChangedAt = System.currentTimeMillis();
         SiegeUiSounds.click();
         rememberSelection();
         category = value;
@@ -291,6 +296,7 @@ public final class IntelScreenV3 extends Screen {
         if (inspectButton != null) inspectButton.active = !files.isEmpty();
         if (readingButton != null) readingButton.active = !files.isEmpty();
         if (files.isEmpty()) {
+            lastReadingCode = null; bodyCacheKey = summaryCacheKey = null;
             selected = 0;
             listOffset = 0;
             return;
@@ -360,7 +366,7 @@ public final class IntelScreenV3 extends Screen {
 
     private void stepEntry(int direction) {
         List<IntelEntry> files = filtered();
-        if (files.isEmpty()) return;
+        if (files.size() < 2) return;
         SiegeUiSounds.click();
         selected = Math.floorMod(selected + direction, files.size());
         entryChangedAt = System.currentTimeMillis();
@@ -408,9 +414,10 @@ public final class IntelScreenV3 extends Screen {
         if (cachedFiles != null && query.equals(cachedQuery) && category.equals(cachedCategory) && es == cachedSpanish) return cachedFiles;
         cachedQuery = query; cachedCategory = category; cachedSpanish = es;
         List<IntelEntry> source = IntelCatalog.filtered(category);
+        var matcher = IntelSearch.compile(query);
         cachedFiles = query.isBlank() ? source : source.stream().filter(entry -> {
             IntelEntry.IntelText text = entry.text(es);
-            return IntelSearch.matches(query, entry.code() + " " + entry.name() + " " + text.origin()
+            return matcher.test(entry.code() + " " + entry.name() + " " + text.origin()
                     + " " + text.armament() + " " + text.description() + " " + text.advisory()
                     + " " + text.status() + " " + text.variants() + " " + entry.hp() + " " + entry.defense()
                     + " " + entry.category() + " " + categoryFullName(entry.category())
@@ -650,7 +657,7 @@ public final class IntelScreenV3 extends Screen {
         List<DetailLine> lines = bodyCache;
         int lineHeight = SiegeConfig.comfortableReading ? 14 : 11;
         int visible = Math.max(1, (bodyBottom - detailBodyTop) / lineHeight);
-        String readingKey = entry.code() + ":" + readingMode;
+        String readingKey = entry.code() + ":" + readingMode + ":" + spanish();
         if (!readingKey.equals(lastReadingCode)) {
             lastReadingCode = readingKey;
             detailScroll = READING_POSITIONS.getOrDefault(readingKey, 0);
@@ -707,8 +714,8 @@ public final class IntelScreenV3 extends Screen {
         g.fill(x, y + 16, x + dataWidth, y + 17, accent);
         String key = entry.code() + ":" + w + ":" + spanish();
         if (!key.equals(summaryCacheKey)) {
-            summaryCache = List.copyOf(font.split(Component.literal(entry.text(spanish()).advisory()), w - 8));
-            summaryScroll = 0; summaryCacheKey = key;
+            summaryCache = List.copyOf(font.split(Component.literal(entry.text(spanish()).advisory()), Math.max(1, w - 12)));
+            if (summaryCacheKey == null || !summaryCacheKey.startsWith(entry.code() + ":")) summaryScroll = 0; summaryCacheKey = key;
         }
         int visible = Math.max(1, (bottom - y - 40) / 11);
         summaryMax = Math.max(0, summaryCache.size() - visible);
@@ -774,8 +781,9 @@ public final class IntelScreenV3 extends Screen {
     }
     @Override
     public boolean mouseReleased(double x, double y, int button) {
+        boolean handled = button == 0 && (draggingScroll || draggingSummary);
         if (button == 0) { draggingScroll = false; draggingSummary = false; }
-        return super.mouseReleased(x, y, button);
+        return super.mouseReleased(x, y, button) || handled;
     }
 
     private void appendWrapped(List<DetailLine> target, String value, int width, int color) {
@@ -813,7 +821,7 @@ public final class IntelScreenV3 extends Screen {
         if (entry.category().equals("BOSS")) {
             image = image.substring(0, image.length() - 2) + String.format("%02d", frame);
         }
-        return new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/intel/" + image + ".png");
+        return textures.computeIfAbsent(image, key -> new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/intel/" + key + ".png"));
     }
 
     private String categoryFullName(String value) {
@@ -876,3 +884,4 @@ public final class IntelScreenV3 extends Screen {
 
     private record DetailLine(FormattedCharSequence value, int color, String source, int offset) { }
 }
+

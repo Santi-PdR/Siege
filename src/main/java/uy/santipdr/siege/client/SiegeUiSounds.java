@@ -27,7 +27,7 @@ public final class SiegeUiSounds {
         if (next == null) next = focused;
         if (next != hovered) {
             hovered = next;
-            long now = System.currentTimeMillis();
+            long now = (System.nanoTime() / 1_000_000L);
             if (SiegeConfig.hoverSounds && next != null && now - lastHover > 80L) {
                 play(SiegeMod.UI_HOVER, 1.0f);
                 lastHover = now;
@@ -62,3 +62,4 @@ public final class SiegeUiSounds {
                 event, pitch, SiegeConfig.clampVolume(SiegeConfig.uiVolume) / 100.0F));
     }
 }
+

@@ -14,8 +14,8 @@ with tempfile.TemporaryDirectory() as directory:
     binary.mkdir()
     jar = root / 'source.jar'
     with zipfile.ZipFile(jar, 'w') as z:
-        z.writestr('META-INF/mods.toml', 'modId="siege"')
-    manifest = {'jar': 'siege-menu-0.11.0.jar', 'commit': 'a' * 40,
+        z.writestr('META-INF/mods.toml', 'modId="siege"\nversion="0.11.0"\n')
+    manifest = {'jar': 'siege-menu-0.11.0.jar', 'version': '0.11.0', 'commit': 'a' * 40,
                 'sha256': hashlib.sha256(jar.read_bytes()).hexdigest()}
     (root / 'manifest.json').write_text(json.dumps(manifest))
     gh = binary / 'gh'
@@ -54,4 +54,27 @@ else: sys.exit('transform: short source buffer')
     backups = list((root / 'instance').glob('siege-backup-*/siege-menu-0.10.5.jar'))
     assert len(backups) == 1 and backups[0].read_bytes() == b'previous installation'
     assert not list(mods.glob('.siege-stage-*'))
+    again = subprocess.run(['bash', str(installer), str(mods)], env=env, capture_output=True)
+    assert again.returncode == 0 and b'ya est' in again.stdout
+    assert len(list((root / 'instance').glob('siege-backup-*'))) == 1
+    manifest['version'] = '0.99.0'
+    (root / 'manifest.json').write_text(json.dumps(manifest))
+    mismatched = subprocess.run(['bash', str(installer), str(mods)], env=env, capture_output=True)
+    assert mismatched.returncode != 0
+    manifest['version'] = '0.11.0'
+    (root / 'manifest.json').write_text(json.dumps(manifest))
+    target = mods / manifest['jar']
+    target.unlink()
+    target.symlink_to(jar)
+    linked = subprocess.run(['bash', str(installer), str(mods)], env=env, capture_output=True)
+    assert linked.returncode != 0 and target.is_symlink()
+    target.unlink()
+    # A signed/hashed artifact still must identify itself as SIEGE.
+    with zipfile.ZipFile(jar, 'w') as z:
+        z.writestr('META-INF/mods.toml', 'modId="other"\nversion="0.11.0"\n')
+    manifest['sha256'] = hashlib.sha256(jar.read_bytes()).hexdigest()
+    (root / 'manifest.json').write_text(json.dumps(manifest))
+    wrongmod = subprocess.run(['bash', str(installer), str(mods)], env=env, capture_output=True)
+    assert wrongmod.returncode != 0 and not target.exists()
 print('Installer binary transport, interrupted download, checksum rejection, replacement and backup passed')
+
