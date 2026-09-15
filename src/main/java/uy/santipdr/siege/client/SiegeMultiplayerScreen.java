@@ -395,7 +395,9 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
     private void renderLockedActionTooltip(int mouseX, int mouseY) {
         if (!selectedServerIsOfficial()) return;
         for (Control control : controls) {
-            if ((control.slot == 3 || control.slot == 4) && control.view.isMouseOver(mouseX, mouseY)) {
+            if ((control.slot == 3 || control.slot == 4) && control.view.visible
+                    && mouseX >= control.view.getX() && mouseX < control.view.getX() + control.view.getWidth()
+                    && mouseY >= control.view.getY() && mouseY < control.view.getY() + control.view.getHeight()) {
                 String reason = control.slot == 3
                         ? label("El servidor oficial está fijado y no se puede editar.",
                                 "The official server is pinned and cannot be edited.")

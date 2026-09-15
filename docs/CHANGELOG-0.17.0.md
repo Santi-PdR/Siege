@@ -99,7 +99,7 @@ Se conservan posiciones, imágenes completas, lore y músicas. No se añaden ata
 67. Elimina duplicados del servidor oficial conservando la primera entrada y sus preferencias.
 68. Fijar el servidor preserva el orden relativo de los demás.
 69. Abrir Multiplayer sin cambios deja de reescribir servers.dat.
-70. Protección de edición y eliminación también se comprueba dentro del callback.
+70. Protección de edición y eliminación también se comprueba dentro del callback; la ayuda usa el área del botón aunque esté desactivado.
 71. Ayudas de Editar y Eliminar sólo se recrean cuando cambia la selección.
 72. Actualizar restaura el servidor seleccionado por su dirección.
 73. Actualizar conserva la posición de desplazamiento.
