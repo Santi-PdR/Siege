@@ -119,13 +119,17 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         for (Control control : controls) {
             boolean protectedAction = locked && (control.slot == 3 || control.slot == 4);
             control.view.active = control.original.active && !protectedAction;
-            if (protectedAction) {
-                String reason = control.slot == 3
-                        ? label("El servidor oficial está fijado y no se puede editar.",
-                                "The official server is pinned and cannot be edited.")
-                        : label("El servidor oficial está fijado y no se puede eliminar.",
-                                "The official server is pinned and cannot be deleted.");
-                control.view.setTooltip(Tooltip.create(Component.literal(reason)));
+            if (control.slot == 3 || control.slot == 4) {
+                String explanation = protectedAction
+                        ? control.slot == 3
+                            ? label("El servidor oficial está fijado y no se puede editar.",
+                                    "The official server is pinned and cannot be edited.")
+                            : label("El servidor oficial está fijado y no se puede eliminar.",
+                                    "The official server is pinned and cannot be deleted.")
+                        : control.slot == 3
+                            ? label("Editar el servidor seleccionado.", "Edit the selected server.")
+                            : label("Eliminar el servidor seleccionado.", "Delete the selected server.");
+                control.view.setTooltip(Tooltip.create(Component.literal(explanation)));
             }
         }
     }
