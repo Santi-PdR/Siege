@@ -1,3 +1,9 @@
+## Actualización 0.18.0
+
+Tema común para conexión, desconexión, formularios y confirmaciones del menú. Nuevos acabados de botones, ayudas, iconos, Intel y Galería, respetando la distribución aprobada.
+
+[Cambios](docs/CHANGELOG-0.18.0.md) · [Verificación visual pendiente](docs/QA-0.18.0.md)
+
 ## Actualización 0.17.0
 
 [100 mejoras y correcciones](docs/CHANGELOG-0.17.0.md) · [Revisión visual pendiente](docs/QA-0.17.0.md)

@@ -43,6 +43,7 @@ public final class SiegeUiSounds {
         }
     }
     public static void click() { play(SiegeMod.UI_CLICK, 1.0f); }
+    public static void confirm() { play(SiegeMod.UI_TRACK, 0.98f); }
     public static void back() { play(SiegeMod.UI_BACK, 0.96f); }
     public static void nextTrack() { play(SiegeMod.UI_TRACK, 1.04f); }
     public static void resetHover() { hovered = null; }
@@ -59,7 +60,7 @@ public final class SiegeUiSounds {
             event = SoundEvent.createVariableRangeEvent(id);
         }
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(
-                event, pitch, SiegeConfig.clampVolume(SiegeConfig.uiVolume) / 100.0F));
+                event, pitch, SiegeConfig.clampVolume(SiegeConfig.uiVolume) / 100.0F * (sound == SiegeMod.UI_HOVER ? 0.55F : sound == SiegeMod.UI_BACK ? 0.8F : 1.0F)));
     }
 }
 

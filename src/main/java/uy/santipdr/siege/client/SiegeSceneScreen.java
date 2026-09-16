@@ -38,32 +38,32 @@ public final class SiegeSceneScreen extends Screen {
         thumbnails.clear();
         int firstVisible = layout == null ? index : page * layout.capacity();
         layout = SiegeGalleryLayout.of(width, height);
-        addAction(0, text("← ANTERIOR", "← PREVIOUS"), b -> step(-1), 0xFF55BFD9);
-        addAction(1, text("SIGUIENTE →", "NEXT →"), b -> step(1), 0xFF55BFD9);
-        pin = addAction(2, text("FIJAR FONDO", "PIN BACKGROUND"), b -> pinCurrent(), 0xFFD6A94B);
+        addAction(0, text("← ANTERIOR", "← PREVIOUS"), b -> step(-1), SiegeTheme.RED);
+        addAction(1, text("SIGUIENTE →", "NEXT →"), b -> step(1), SiegeTheme.RED);
+        pin = addAction(2, text("FIJAR FONDO", "PIN BACKGROUND"), b -> pinCurrent(), SiegeTheme.GOLD);
         addAction(3, text("VOLVER", "BACK"), b -> onClose(), 0xFFD65A4B);
         int topWidth = Math.min(128, (width - 24) / 2);
         auto = addRenderableWidget(new SiegeButton(8, 8, topWidth, 20,
-                text("ROTACIÓN AUTO", "AUTO ROTATION"), b -> resumeRotation(), 0xFFD6A94B));
+                text("ROTACIÓN AUTO", "AUTO ROTATION"), b -> resumeRotation(), SiegeTheme.GOLD));
         clean = addRenderableWidget(new SiegeButton(width - topWidth - 8, 8, topWidth, 20,
-                text("VISTA LIMPIA", "CLEAN VIEW"), b -> toggleCleanView(), 0xFF55BFD9));
+                text("VISTA LIMPIA", "CLEAN VIEW"), b -> toggleCleanView(), SiegeTheme.RED));
         previousPage = addRenderableWidget(new SiegeButton(width - 60, 36, 24, 20,
-                Component.literal("←"), b -> changePage(-1), 0xFF55BFD9));
+                Component.literal("←"), b -> changePage(-1), SiegeTheme.RED));
         nextPage = addRenderableWidget(new SiegeButton(width - 32, 36, 24, 20,
-                Component.literal("→"), b -> changePage(1), 0xFF55BFD9));
+                Component.literal("→"), b -> changePage(1), SiegeTheme.RED));
         int optionWidth = (width - 24) / 3;
         contrast = addRenderableWidget(new SiegeButton(8, 65, optionWidth, 18, text("CONTRASTE", "CONTRAST"), b -> {
             menuPreview = !menuPreview; refresh(); SiegeUiSounds.click();
-        }, 0xFF55BFD9));
+        }, SiegeTheme.RED));
         undo = addRenderableWidget(new SiegeButton(12 + optionWidth, 65, optionWidth, 18, text("DESHACER", "UNDO"), b -> {
             if (undoAvailable) {
                 SiegeConfig.selectedScene = undoScene; SiegeConfig.animatedBackgrounds = undoAnimated;
                 SiegeConfig.save(); undoAvailable = false;
                 select(SiegeBackgrounds.currentIndex(System.currentTimeMillis())); refresh(); SiegeUiSounds.click();
             }
-        }, 0xFFD6A94B));
+        }, SiegeTheme.GOLD));
         current = addRenderableWidget(new SiegeButton(16 + optionWidth * 2, 65, optionWidth, 18, text("ACTUAL", "CURRENT"),
-                b -> select(SiegeBackgrounds.currentIndex(System.currentTimeMillis())), 0xFFD6A94B));
+                b -> select(SiegeBackgrounds.currentIndex(System.currentTimeMillis())), SiegeTheme.GOLD));
         current.setTooltip(Tooltip.create(text("Ver el fondo que está usando el menú", "Show the background currently used by the menu")));
         auto.setTooltip(Tooltip.create(text("Volver al cambio automático de fondos completos", "Resume automatic cycling of complete backgrounds")));
         pin.setTooltip(Tooltip.create(text("Usar esta imagen como fondo fijo", "Use this image as the fixed background")));
@@ -150,7 +150,7 @@ public final class SiegeSceneScreen extends Screen {
         }
         g.fill(0, 0, width, height, 0xFF0B0D10);
         var p = layout.preview();
-        g.fill(p.x() - 1, p.y() - 1, p.right() + 1, p.bottom() + 1, 0xFF56616A);
+        SiegeTheme.panel(g, p.x() - 2, p.y() - 2, p.w() + 4, p.h() + 4, SiegeTheme.GOLD);
         float progress = Math.max(0F, Math.min(1F, (System.currentTimeMillis() - changedAt) / 260F));
         if (SiegeConfig.reducedMotion || !SiegeConfig.menuEffects) progress = 1F;
         g.fill(p.x(), p.y(), p.right(), p.bottom(), 0xFF0B0D10);
@@ -255,14 +255,15 @@ public final class SiegeSceneScreen extends Screen {
             if (!active) return;
             int x = getX(), y = getY(), w = getWidth(), h = getHeight();
             int edge = scene == index ? 0xFFF0CE74 : isHoveredOrFocused() ? 0xFFF4EEE0 : 0xFF39434C;
-            g.fill(x, y, x + w, y + h, edge);
+            g.fill(x, y, x + w, y + h, 0xFF232023);
+            SiegeTheme.frame(g, x, y, w, h, edge);
             g.fill(x + 2, y + 2, x + w - 2, y + h - 17, 0xFF0B0D10);
             SiegeBackgrounds.renderRegion(g, x + 2, y + 2, w - 4, h - 17, scene, 1F);
             g.fill(x + 1, y + h - 15, x + w - 1, y + h - 1, 0xFF14191E);
             g.drawString(font, font.plainSubstrByWidth(getMessage().getString(), w - 8), x + 4, y + h - 12, edge, false);
             if (SiegeConfig.selectedScene == scene) {
                 g.fill(x + 3, y + 3, x + 14, y + 14, 0xDD14191E);
-                g.drawString(font, "●", x + 5, y + 4, 0xFFF0CE74, false);
+                SiegeTheme.icon(g, x + 4, y + 4, "pin", SiegeTheme.GOLD);
             }
         }
     }

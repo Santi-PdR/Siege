@@ -15,6 +15,7 @@ public final class SiegeSlider extends AbstractSliderButton {
     private final IntConsumer consumer;
     private int lastPercent;
     private boolean dragging;
+    private int themeAccent = SiegeTheme.RED;
     private java.util.function.IntFunction<String> valueText;
 
     public SiegeSlider(int x, int y, int width, int height, Component label, int initialPercent, IntConsumer consumer) {
@@ -34,6 +35,8 @@ public final class SiegeSlider extends AbstractSliderButton {
         }
         setMessage(label.copy().append(": " + (valueText == null ? percent + "%" : valueText.apply(percent))));
     }
+
+    public SiegeSlider withAccent(int accent) { themeAccent = accent; return this; }
 
     public SiegeSlider withValueText(java.util.function.IntFunction<String> formatter) {
         valueText = formatter;
@@ -82,9 +85,9 @@ public final class SiegeSlider extends AbstractSliderButton {
         if (isFocused() && active) {
             g.fill(left - 1, top - 1, right + 1, bottom + 1, 0xFFF2D36F);
         }
-        int accent = !active ? 0xFF59636A : isHoveredOrFocused() ? 0xFF6BD8F2 : 0xFF55BFD9;
+        int accent = !active ? 0xFF696064 : themeAccent;
 
-        g.fill(left, top, right, bottom, 0xED0A0F13);
+        SiegeTheme.panel(g, left, top, getWidth(), getHeight(), active ? themeAccent : 0xFF696064);
         g.fill(left, top, right, top + 1, 0xFF2A343C);
         g.fill(left, bottom - 1, right, bottom, 0xFF1B252C);
         g.fill(left, top, left + 2, bottom, accent);

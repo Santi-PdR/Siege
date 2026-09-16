@@ -15,9 +15,9 @@ import org.lwjgl.glfw.GLFW;
 
 /** Responsive, section-based client settings hub for SIEGE. */
 public final class SiegeSettingsScreen extends Screen {
-    private static final int ACCENT = 0xFF55BFD9;
+    private static final int ACCENT = SiegeTheme.RED;
     private static final int WARNING = 0xFFD65A4B;
-    private static final int GOLD = 0xFFD6A94B;
+    private static final int GOLD = SiegeTheme.GOLD;
     private static final EnumMap<Section, Integer> SECTION_SCROLL = new EnumMap<>(Section.class);
     private static Section rememberedSection = Section.OVERVIEW;
 
@@ -145,7 +145,7 @@ public final class SiegeSettingsScreen extends Screen {
     private SiegeButton sectionButton(int x, int y, int w, int h, Section value) {
         SiegeButton button = new SiegeButton(x, y, w, h, Component.literal(sectionLabel(value)), b -> switchSection(value),
                 value == Section.AUDIO ? GOLD : ACCENT);
-        return button.setSelected(value == section);
+        return button.setSelected(value == section).withIcon(value == Section.AUDIO ? "music" : value == Section.INTEL ? "intel" : "settings");
     }
 
     private void switchSection(Section value) {
@@ -191,8 +191,7 @@ public final class SiegeSettingsScreen extends Screen {
                         percent -> {
                             SiegeMusic.setVolumeLive(percent);
                             // Save on release/close, not on every drag event.
-
-                        }));
+                        }).withAccent(SiegeTheme.GOLD));
 
                 y += sliderHeight + gap;
                 int transportWidth = (w - 8) / 3;
@@ -222,7 +221,7 @@ public final class SiegeSettingsScreen extends Screen {
                         Component.literal(label("DURACIÓN DEL AVISO", "NOTICE DURATION")),
                         Math.round((SiegeConfig.trackNoticeSeconds - 3) * 100.0F / 12.0F),
                         percent -> SiegeConfig.trackNoticeSeconds = 3 + Math.round(percent * 12.0F / 100.0F))
-                        .withValueText(percent -> (3 + Math.round(percent * 12.0F / 100.0F)) + " s"));
+                        .withValueText(percent -> (3 + Math.round(percent * 12.0F / 100.0F)) + " s").withAccent(SiegeTheme.GOLD));
                 y += noticeSliderHeight - h;
                 shuffleButton = addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
                         Component.literal(label("ALEATORIO SIN REPETIR", "SHUFFLE WITHOUT REPEATS")), b -> {
@@ -439,7 +438,7 @@ public final class SiegeSettingsScreen extends Screen {
         g.fill(0, 0, width, height, 0xAA070A0D);
 
         int bottom = panelBottom;
-        g.fill(panelX - 5, panelY - 7, panelX + panelWidth + 5, bottom, 0xF20B1015);
+        SiegeTheme.panel(g, panelX - 5, panelY - 7, panelWidth + 10, bottom - panelY + 7, ACCENT);
         g.fill(panelX - 5, panelY - 7, panelX + panelWidth + 5, panelY - 4, ACCENT);
         g.fill(panelX - 5, bottom - 1, panelX + panelWidth + 5, bottom, 0xFF29353D);
 
@@ -463,20 +462,12 @@ public final class SiegeSettingsScreen extends Screen {
             scrollThumbTop = top; scrollThumbHeight = thumb;
             boolean overScroll = mouseX >= contentX + contentWidth - 8 && mouseX < contentX + contentWidth
                     && mouseY >= viewportTop && mouseY < viewportBottom;
-            int barColor = overScroll || draggingScrollbar ? 0xFF7BE2F4 : ACCENT;
+            int barColor = overScroll || draggingScrollbar ? 0xFFFF9298 : ACCENT;
             g.fill(contentX + contentWidth - 5, viewportTop, contentX + contentWidth - 2, viewportBottom, 0xFF27343C);
             g.fill(contentX + contentWidth - 5, top, contentX + contentWidth - 2, top + thumb, barColor);
             String scrollState = Math.round(scrollOffset * 100.0F / scrollMax) + "%";
             if (contentWidth >= 100) g.drawString(font, scrollState, contentX + contentWidth - font.width(scrollState) - 9,
                     viewportBottom - 10, 0xFF72818A, false);
-        }
-
-        if (height >= 300) {
-            String rule = label(
-                    "Los cambios son del cliente. La música SIEGE nunca se reproduce dentro del gameplay.",
-                    "These are client settings. SIEGE music never plays during gameplay.");
-            g.drawCenteredString(font, font.plainSubstrByWidth(rule, Math.max(120, width - 24)), width / 2,
-                    height - 13, 0xFF68747C);
         }
 
         super.render(g, mouseX, mouseY, partialTick);

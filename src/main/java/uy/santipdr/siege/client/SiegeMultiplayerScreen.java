@@ -274,7 +274,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
             boolean selected = entries.get(i) == serverSelectionList.getSelected();
             int left = serverSelectionList.getRowLeft() - 2;
             g.fill(left, y, left + serverSelectionList.getRowWidth(), y + 34,
-                    selected ? 0xC337292B : (i % 2 == 0 ? 0xA21E2023 : 0xA2181A1D));
+                    selected ? 0xD52F2226 : (i % 2 == 0 ? 0xA21F1D20 : 0xA218181B));
             if (selected) {
                 int rowRight = left + serverSelectionList.getRowWidth();
                 g.fill(left - 3, y, rowRight, y + 1, RED);
@@ -365,8 +365,8 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         int next = drawWrapped(g, server.name, x + 10, y + 36, w - 20, y + 66, 0xFFF0EDEA);
         boolean official = sameAddress(server.ip, OFFICIAL_ADDRESS);
         if (official) {
-            g.drawString(font, label("OFICIAL · FIJO", "OFFICIAL · PINNED"),
-                    x + 10, next + 3, 0xFFE1C579, false);
+            SiegeTheme.icon(g, x + 10, next + 3, "pin", SiegeTheme.GOLD);
+            g.drawString(font, label("OFICIAL", "OFFICIAL"), x + 24, next + 3, SiegeTheme.GOLD, false);
             next += 14;
         }
         g.drawString(font, fit(status, w - 20), x + 10, next + 5, color, false);
@@ -455,9 +455,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
     }
 
     private void panel(GuiGraphics g, int x, int y, int w, int h) {
-        g.fill(x, y, x + w, y + h, 0xF2101215);
-        g.fill(x, y, x + w, y + 1, 0xFF55575B);
-        g.fill(x, y + h - 1, x + w, y + h, 0xFF383A3E);
+        SiegeTheme.panel(g, x, y, w, h, 0xFF865055);
     }
 
     private String label(String es, String en) {
