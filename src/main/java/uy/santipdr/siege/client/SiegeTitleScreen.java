@@ -77,7 +77,7 @@ public final class SiegeTitleScreen extends Screen {
         int trackWidth = compact ? 88 : 100;
         int musicY = SiegeUiLayout.musicButtonY(height, compact);
         musicButton = addRenderableWidget(new SiegeButton(width - trackWidth - 9, musicY, trackWidth, compact ? 18 : 20,
-                Component.literal(musicButtonLabel()), b -> changeTrack(), 0xFFD64B4B).setCompactCenter(true));
+                Component.literal(musicButtonLabel()), b -> changeTrack(), 0xFFD64B4B).setCompactCenter(true).withIcon("music"));
 
     }
 
@@ -85,7 +85,12 @@ public final class SiegeTitleScreen extends Screen {
         return new SiegeButton(x, y, width, height, Component.translatable(key), button -> {
             SiegeUiSounds.click();
             press.onPress(button);
-        }, 0xFFE54852).setMainMenuStyle(true);
+        }, 0xFFE54852).setMainMenuStyle(true).withIcon(switch (key) {
+            case "siege.menu.deployment" -> "connect";
+            case "siege.menu.intel" -> "intel";
+            case "siege.menu.settings", "siege.menu.armory" -> "settings";
+            default -> "";
+        });
     }
 
     @Override
@@ -165,7 +170,7 @@ public final class SiegeTitleScreen extends Screen {
 
         int dividerY = subY + Math.round(font.lineHeight * subScale) + 5;
         int dividerHalf = Math.min(110, Math.max(34, mainWidth / 2));
-        g.fill(center - dividerHalf, dividerY, center + dividerHalf, dividerY + 1, 0x8055BFD9);
+        g.fill(center - dividerHalf, dividerY, center + dividerHalf, dividerY + 1, 0x80675C60);
         g.fill(center - 12, dividerY, center + 12, dividerY + 2, 0xFFE54852);
     }
 
@@ -571,3 +576,4 @@ public final class SiegeTitleScreen extends Screen {
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }
+

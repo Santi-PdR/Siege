@@ -12,8 +12,9 @@ import net.minecraft.network.chat.Component;
  * widget texture and vanilla click sound so the menu keeps one visual/audio
  * language at every GUI scale.
  */
-public final class SiegeButton extends Button {
+public class SiegeButton extends Button {
     private final int accent;
+    private String icon = "";
     private boolean selected;
     private boolean mainMenuStyle;
     private float hoverAmount;
@@ -27,6 +28,11 @@ public final class SiegeButton extends Button {
     public SiegeButton(int x, int y, int width, int height, Component message, OnPress onPress, int accent) {
         super(x, y, Math.max(1, width), Math.max(1, height), message, onPress, DEFAULT_NARRATION);
         this.accent = accent;
+    }
+
+    public SiegeButton withIcon(String icon) {
+        this.icon = icon == null ? "" : icon;
+        return this;
     }
 
     public SiegeButton setSelected(boolean selected) {
@@ -80,12 +86,14 @@ public final class SiegeButton extends Button {
         }
 
         boolean pressed = active && (System.nanoTime() / 1_000_000L) < pressedUntil;
-        int body = !active ? 0xB90A0C0F : pressed ? 0xF0242C33 : selected ? 0xE51A2026 : blend(0xD20B0F13, 0xE5181D22, hoverAmount);
+        int body = !active ? 0xE0151516 : pressed ? 0xFF252124 : selected ? 0xF02F2528 : blend(0xF01B1B1D, 0xFA302A2C, hoverAmount);
         int edge = !active ? 0xFF41464C : selected || fullHoverFrame && hot ? accent
                 : focused ? 0xFFF2D36F : hot ? accent : 0xFF4C555E;
 
         g.fill(x + 2, y + 2, x + w + 2, y + h + 2, 0x55000000);
         g.fill(x, y, x + w, y + h, body);
+        SiegeTheme.frame(g, x, y, w, h, selected ? accent : 0xFF454044);
+        if (h >= 18 && w >= 48) g.fill(x + 3, y + 2, x + w - 3, y + 3, 0x185D5859);
         g.fill(x, y, x + 2, y + h, edge);
         g.fill(x + 2, y, x + w, y + 1, hot ? edge : 0xFF293038);
         g.fill(x + 2, y + h - 1, x + w, y + h, selected ? edge : 0xFF20262C);
@@ -124,24 +132,26 @@ public final class SiegeButton extends Button {
         int underlineWidth = Math.round((w - 4) * hoverAmount);
         if (underlineWidth > 0) g.fill(x + 2, y + h - 2, x + 2 + underlineWidth, y + h - 1, accent);
 
-        int left = 13;
+        boolean showIcon = !icon.isEmpty() && w >= 96;
+        int left = showIcon ? 27 : 13;
         int usable = Math.max(1, w <= 40 ? w - 8 : w - left - (selected ? 17 : 9));
         String text = fit(font, getMessage().getString(), usable);
-        if (w <= 40 || compactCenter) left = Math.max(2, (w - font.width(text)) / 2);
+        if (w <= 40 || compactCenter) left = Math.max(showIcon ? 25 : 2, (w - font.width(text)) / 2);
         int textColor = !active ? 0xFF6F767D : hot || selected ? 0xFFF5F3EC : 0xFFD8DDE1;
         if (pressed) {
             g.fill(x + 2, y + 1, x + w - 1, y + 2, edge);
             g.fill(x + 2, y + h - 2, x + w - 1, y + h - 1, edge);
         }
         int textY = y + Math.max(1, (h - font.lineHeight) / 2) + textOffsetY;
-        g.drawString(font, text, x + left, textY, textColor, false);
+        if (showIcon) SiegeTheme.icon(g, x + 11, y + (h - 9) / 2, icon, !active ? 0xFF777174 : accent);
+        g.drawString(font, text, x + left, textY + (pressed ? 1 : 0), textColor, false);
     }
 
     private void renderMainMenuWidget(GuiGraphics g, Font font, int x, int y, int w, int h,
                                       boolean hot, boolean effects) {
         boolean pressed = (System.nanoTime() / 1_000_000L) < pressedUntil;
-        int face = !active ? 0xFF56585A : pressed ? 0xFF555759 : selected ? 0xFF858789 : blend(0xFF696B6D, 0xFF858789, hoverAmount);
-        int inset = !active ? 0xFF606264 : pressed ? 0xFF626466 : selected ? 0xFF929496 : blend(0xFF747678, 0xFF929496, hoverAmount);
+        int face = !active ? 0xFF49484A : pressed ? 0xFF474245 : selected ? 0xFF686367 : blend(0xFF555357, 0xFF70696D, hoverAmount);
+        int inset = !active ? 0xFF504D50 : pressed ? 0xFF514A4D : selected ? 0xFF757074 : blend(0xFF5E5B60, 0xFF777174, hoverAmount);
         int rim = pressed ? accent : hot || selected ? 0xFFF0F0EC : 0xFF9A9C9E;
 
         // Old reference: solid grey plate, deep lower/right shadow and square double rim.
@@ -156,9 +166,11 @@ public final class SiegeButton extends Button {
         if (hot || selected) {
             int cy = y + h / 2;
             int ax = x + 9;
-            g.fill(ax, cy - 4, ax + 3, cy + 5, accent);
-            g.fill(ax + 3, cy - 3, ax + 6, cy + 4, accent);
-            g.fill(ax + 6, cy - 1, ax + 9, cy + 2, accent);
+            if (icon.isEmpty()) {
+                g.fill(ax, cy - 4, ax + 3, cy + 5, accent);
+                g.fill(ax + 3, cy - 3, ax + 6, cy + 4, accent);
+                g.fill(ax + 6, cy - 1, ax + 9, cy + 2, accent);
+            }
             g.fill(x + 2, y + 2, x + 4, y + h - 2, accent);
             if (effects && hoverAmount > 0.05F && (System.nanoTime() / 1_000_000L) - hoverStartedAt < 450) {
                 int shineX = x + 5 + (int) (((System.nanoTime() / 1_000_000L) - hoverStartedAt) * Math.max(1, w - 12) / 450L);
@@ -168,6 +180,7 @@ public final class SiegeButton extends Button {
             }
         }
 
+        if (!icon.isEmpty()) SiegeTheme.icon(g, x + 10, y + (h - 9) / 2, icon, hot ? accent : 0xFFD4CBCD);
         String label = getMessage().getString();
         int labelWidth = Math.max(1, w - 42);
         float labelScale = Math.max(0.85F, Math.min(1.0F, labelWidth / (float)Math.max(1, font.width(label))));

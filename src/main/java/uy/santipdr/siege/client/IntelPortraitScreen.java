@@ -32,29 +32,29 @@ public final class IntelPortraitScreen extends Screen {
         camera.resize(width - 16, bottom - top);
         int w = Math.min(110, (width - 28) / 4);
         int x = (width - w * 4 - 12) / 2;
-        minus = addRenderableWidget(new SiegeButton(x, height - 27, w, 19, Component.literal("−"), b -> changeZoom(camera.zoom() / 1.25, width / 2.0, (top + bottom) / 2.0), 0xFF55BFD9));
-        plus = addRenderableWidget(new SiegeButton(x + w + 4, height - 27, w, 19, Component.literal("+"), b -> changeZoom(camera.zoom() * 1.25, width / 2.0, (top + bottom) / 2.0), 0xFF55BFD9));
+        minus = addRenderableWidget(new SiegeButton(x, height - 27, w, 19, Component.literal("−"), b -> changeZoom(camera.zoom() / 1.25, width / 2.0, (top + bottom) / 2.0), SiegeTheme.RED));
+        plus = addRenderableWidget(new SiegeButton(x + w + 4, height - 27, w, 19, Component.literal("+"), b -> changeZoom(camera.zoom() * 1.25, width / 2.0, (top + bottom) / 2.0), SiegeTheme.RED));
         fitButton = addRenderableWidget(new SiegeButton(x + (w + 4) * 2, height - 27, w, 19,
-                text("AJUSTAR", "FIT"), b -> { camera.reset(); refresh(); SiegeUiSounds.click(); }, 0xFFD6A94B));
+                text("AJUSTAR", "FIT"), b -> { camera.reset(); refresh(); SiegeUiSounds.click(); }, SiegeTheme.GOLD));
         addRenderableWidget(new SiegeButton(x + (w + 4) * 3, height - 27, w, 19,
                 text("VOLVER", "BACK"), b -> onClose(), 0xFFD65A4B));
         int optionW = (width - 28) / 4;
         backgroundButton = addRenderableWidget(new SiegeButton(8, 39, optionW, 18, text(backgroundLabelEs(), backgroundLabelEn()), b -> {
             SiegeConfig.inspectorBackground = (SiegeConfig.inspectorBackground + 1) % 3; SiegeConfig.save(); SiegeUiSounds.click(); refresh();
-        }, 0xFFD6A94B));
+        }, SiegeTheme.GOLD));
         backgroundButton.setTooltip(Tooltip.create(text("Alternar fondo negro, gris o papel", "Cycle black, gray or paper background")));
         mapButton = addRenderableWidget(new SiegeButton(12 + optionW, 39, optionW, 18, text("MINIMAPA", "MINIMAP"), b -> {
             SiegeConfig.inspectorMap = !SiegeConfig.inspectorMap; SiegeConfig.save();
             ((SiegeButton)b).setSelected(SiegeConfig.inspectorMap); SiegeUiSounds.click();
-        }, 0xFF55BFD9).setSelected(SiegeConfig.inspectorMap));
+        }, SiegeTheme.RED).setSelected(SiegeConfig.inspectorMap));
         mapButton.setTooltip(Tooltip.create(text("Mostrar orientación cuando la imagen está ampliada", "Show orientation while the image is zoomed")));
         zoomPresetButton = addRenderableWidget(new SiegeButton(16 + optionW * 2, 39, optionW, 18, text("ZOOM 2×", "ZOOM 2×"), b -> {
             changeZoom(camera.zoom() < 1.99 || camera.zoom() >= 3.99 ? 2 : 4, width / 2.0, (top + bottom) / 2.0);
-        }, 0xFF55BFD9));
+        }, SiegeTheme.RED));
         zoomPresetButton.setTooltip(Tooltip.create(text("Alternar ampliación precisa entre 2× y 4×", "Toggle precise magnification between 2× and 4×")));
         centerButton = addRenderableWidget(new SiegeButton(20 + optionW * 3, 39, optionW, 18, text("CENTRAR", "CENTER"), b -> {
             camera.centerOn(0.5, 0.5); SiegeUiSounds.click();
-        }, 0xFF55BFD9));
+        }, SiegeTheme.RED));
         centerButton.setTooltip(Tooltip.create(text("Centrar sin cambiar el zoom", "Center without changing zoom")));
         minus.setTooltip(Tooltip.create(text("Alejar la imagen", "Zoom out")));
         plus.setTooltip(Tooltip.create(text("Ampliar la imagen", "Zoom in")));

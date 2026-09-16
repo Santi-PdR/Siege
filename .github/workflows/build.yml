@@ -39,6 +39,12 @@ jobs:
           java -cp build/config-tests ConfigRegressionTest
           python3 tests/test_installer.py
           python3 tests/test_release_014.py
+      - name: Verify menu theme scope and drawing bounds
+        run: |
+          javac -d build/theme-tests src/main/java/uy/santipdr/siege/client/SiegeMenuPolicy.java tests/MenuThemePolicyTest.java
+          java -cp build/theme-tests MenuThemePolicyTest
+          javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
+          java -cp build/theme-drawing MenuThemeDrawingTest
       - name: Verify dossier navigation
         shell: bash
         run: |
@@ -145,3 +151,4 @@ jobs:
             git commit -m "build: publish validated Siege jar [skip ci]"
             git push
           fi
+

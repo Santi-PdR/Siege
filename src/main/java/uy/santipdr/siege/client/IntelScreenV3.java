@@ -577,6 +577,7 @@ public final class IntelScreenV3 extends Screen {
         int inner = availableWidth - pad * 2;
         g.fill(x + 3, y + 3, x + availableWidth + 3, bottom + 3, 0x66000000);
         g.fill(x, y, x + availableWidth, bottom, paper);
+        SiegeTheme.paper(g, x, y, availableWidth, bottom - y, dark);
         g.fill(x, y + 2, x + 1, bottom, 0x40505050);
         g.fill(x + availableWidth - 1, y + 2, x + availableWidth, bottom, 0x40505050);
         g.fill(x, y, x + availableWidth, y + 2, categoryAccent(entry.category()));
