@@ -120,6 +120,16 @@ public final class SiegeMenuThemeEvents {
         event.setBorderStart(0xFF9B555A);
         event.setBorderEnd(0xFF494346);
     }
+    @SubscribeEvent
+    public static void nativeClick(net.minecraftforge.client.event.sound.PlaySoundEvent event) {
+        if (!nativeDialog(Minecraft.getInstance().screen) || event.getSound() == null) return;
+        var location = event.getSound().getLocation();
+        if (!location.getNamespace().equals("minecraft") || !location.getPath().equals("ui.button.click")) return;
+        if (!SiegeConfig.uiSounds || SiegeConfig.uiVolume <= 0) { event.setSound(null); return; }
+        var sound = net.minecraft.sounds.SoundEvent.createVariableRangeEvent(SiegeMod.UI_CLICK.getId());
+        event.setSound(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(sound, 1.0F,
+                SiegeConfig.clampVolume(SiegeConfig.uiVolume) / 100.0F));
+    }
     /** Keeps the original object alive because vanilla screen fields update it after init. */
     private static final class NativeButton extends SiegeButton {
         private final AbstractButton source;
@@ -137,12 +147,22 @@ public final class SiegeMenuThemeEvents {
         @Override public void onPress() {
             sync();
             if (!active || !visible) return;
+            super.onPress();
             String key = source.getMessage().getContents() instanceof TranslatableContents tr ? tr.getKey() : "";
             if (key.equals("gui.cancel") || key.equals("gui.back") || key.equals("gui.no")) SiegeUiSounds.back();
             else SiegeUiSounds.confirm();
             source.onPress();
         }
-        @Override public boolean mouseClicked(double x, double y, int button) { sync(); return super.mouseClicked(x, y, button); }
+        @Override public boolean mouseClicked(double x, double y, int button) {
+            sync();
+            // CycleButton supports reverse cycling with the secondary mouse button.
+            if (button == 1 && active && visible) return source.mouseClicked(x, y, button);
+            return super.mouseClicked(x, y, button);
+        }
+        @Override public boolean mouseScrolled(double x, double y, double delta) {
+            sync();
+            return active && visible && source.isMouseOver(x, y) && source.mouseScrolled(x, y, delta);
+        }
         @Override public boolean keyPressed(int key, int scan, int modifiers) { sync(); return super.keyPressed(key, scan, modifiers); }
     }
 }

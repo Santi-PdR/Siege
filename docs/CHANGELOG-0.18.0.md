@@ -8,7 +8,7 @@ Base: 0.17.0. Respaldo: `backup/pre-0.18.0`.
 - Agregar, editar y conexión directa: controles tematizados, campos con texto claro y marco de foco rojo.
 - Confirmaciones abiertas desde SIEGE: mismo acabado para salir, eliminar servidor o restaurar preferencias.
 - Se mantienen las pantallas nativas y sus callbacks: dirección, validación, motivo real de error, estado de conexión y cancelación no se simulan.
-- Los controles reflejan el estado activo, visible, mensaje y ayuda del control original.
+- Los controles reflejan el estado activo, visible, mensaje y ayuda del control original. Los selectores conservan el clic secundario y la rueda nativos, con sonido SIEGE.
 - Lista explícita de pantallas: no se aplica al mundo, chat, inventario, pausa ni ajustes de vídeo. Confirmaciones ajenas tampoco se tematizan.
 
 ## Acabado común
