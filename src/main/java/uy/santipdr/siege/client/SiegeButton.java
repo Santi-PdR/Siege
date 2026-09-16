@@ -87,8 +87,8 @@ public class SiegeButton extends Button {
 
         boolean pressed = active && (System.nanoTime() / 1_000_000L) < pressedUntil;
         int body = !active ? 0xE0151516 : pressed ? 0xFF252124 : selected ? 0xF02F2528 : blend(0xF01B1B1D, 0xFA302A2C, hoverAmount);
-        int edge = !active ? 0xFF41464C : selected || fullHoverFrame && hot ? accent
-                : focused ? 0xFFF2D36F : hot ? accent : 0xFF4C555E;
+        int edge = !active ? 0xFF41464C : focused ? 0xFFF2D36F : selected || fullHoverFrame && hot ? accent
+                : hot ? accent : 0xFF4C555E;
 
         g.fill(x + 2, y + 2, x + w + 2, y + h + 2, 0x55000000);
         g.fill(x, y, x + w, y + h, body);
@@ -152,7 +152,7 @@ public class SiegeButton extends Button {
         boolean pressed = (System.nanoTime() / 1_000_000L) < pressedUntil;
         int face = !active ? 0xFF49484A : pressed ? 0xFF474245 : selected ? 0xFF686367 : blend(0xFF555357, 0xFF70696D, hoverAmount);
         int inset = !active ? 0xFF504D50 : pressed ? 0xFF514A4D : selected ? 0xFF757074 : blend(0xFF5E5B60, 0xFF777174, hoverAmount);
-        int rim = pressed ? accent : hot || selected ? 0xFFF0F0EC : 0xFF9A9C9E;
+        int rim = isFocused() && active ? SiegeTheme.GOLD : pressed ? accent : hot || selected ? 0xFFF0F0EC : 0xFF9A9C9E;
 
         // Old reference: solid grey plate, deep lower/right shadow and square double rim.
         g.fill(x + 3, y + 4, x + w + 4, y + h + 4, 0xA0000000);
@@ -163,6 +163,7 @@ public class SiegeButton extends Button {
         g.fill(x + 2, y + h - 3, x + w - 2, y + h - 2, 0xFF4A4C4E);
         g.fill(x + 2, y + 2, x + 3, y + h - 2, 0xFF8B8D8F);
 
+        if (isFocused() && active) SiegeTheme.frame(g, x, y, w, h, SiegeTheme.GOLD);
         if (hot || selected) {
             int cy = y + h / 2;
             int ax = x + 9;

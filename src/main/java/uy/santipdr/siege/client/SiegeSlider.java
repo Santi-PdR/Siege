@@ -54,14 +54,14 @@ public final class SiegeSlider extends AbstractSliderButton {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        boolean handled = super.mouseClicked(mouseX, mouseY, button);
+        boolean handled = active && visible && button == 0 && isMouseOver(mouseX, mouseY);
         if (handled) { dragging = true; updateFromPointer(mouseX); SiegeUiSounds.click(); }
         return handled;
     }
 
     private void updateFromPointer(double mouseX) {
         if (!Double.isFinite(mouseX)) return;
-        value = Math.round(Math.max(0, Math.min(1, (mouseX - getX() - 9) / Math.max(1, getWidth() - 18))) * 100) / 100.0;
+        value = SiegeSliderGeometry.percent(mouseX, getX(), getWidth()) / 100.0;
         applyValue(); updateMessage();
     }
     @Override
@@ -88,23 +88,25 @@ public final class SiegeSlider extends AbstractSliderButton {
         int accent = !active ? 0xFF696064 : themeAccent;
 
         SiegeTheme.panel(g, left, top, getWidth(), getHeight(), active ? themeAccent : 0xFF696064);
-        g.fill(left, top, right, top + 1, 0xFF2A343C);
-        g.fill(left, bottom - 1, right, bottom, 0xFF1B252C);
+        g.fill(left, top, right, top + 1, 0xFF343033);
+        g.fill(left, bottom - 1, right, bottom, 0xFF252123);
         g.fill(left, top, left + 2, bottom, accent);
 
         int trackLeft = left + 9;
         int trackRight = Math.max(trackLeft, right - 9);
         int trackY = bottom - 6;
-        g.fill(trackLeft, trackY, trackRight, trackY + 2, 0xFF28343B);
+        g.fill(trackLeft, trackY, trackRight, trackY + 2, 0xFF343033);
         for (int i = 0; i <= 4; i++) {
             int tick = trackLeft + (trackRight - trackLeft) * i / 4;
-            g.fill(tick, trackY - 1, tick + 1, trackY + 3, 0xFF52616A);
+            g.fill(tick, trackY - 1, tick + 1, trackY + 3, 0xFF71696D);
         }
         int fillRight = trackLeft + (int)Math.round((trackRight - trackLeft) * value);
         g.fill(trackLeft, trackY, fillRight, trackY + 2, accent);
 
-        int knobX = Math.max(trackLeft, Math.min(trackRight - 3, fillRight - 2));
-        g.fill(knobX, trackY - 3, knobX + 5, trackY + 5, 0xFFE8EEF1);
+        int knobX = fillRight - 2;
+        if (active && (dragging || isHovered() || isFocused()))
+            g.fill(knobX - 1, trackY - 4, knobX + 6, trackY + 6, accent);
+        g.fill(knobX, trackY - 3, knobX + 5, trackY + 5, active ? SiegeTheme.INK : SiegeTheme.MUTED);
         g.fill(knobX + 1, trackY - 2, knobX + 4, trackY + 4, accent);
 
         var font = Minecraft.getInstance().font;
@@ -117,7 +119,7 @@ public final class SiegeSlider extends AbstractSliderButton {
         String clipped = font.plainSubstrByWidth(label.getString(), textWidth);
         if (!clipped.equals(label.getString()) && textWidth >= font.width("…"))
             clipped = font.plainSubstrByWidth(label.getString(), textWidth - font.width("…")) + "…";
-        g.drawString(font, clipped, left + 9, top + 4, 0xFFE6ECEF, false);
+        g.drawString(font, clipped, left + 9, top + 4, SiegeTheme.INK, false);
         g.drawString(font, amount, right - amountWidth - 9, top + 4, accent, false);
     }
 
