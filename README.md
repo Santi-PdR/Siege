@@ -1,3 +1,9 @@
+## Actualización 0.19.0
+
+Sliders más precisos, contraste cálido e indicación clara del foco de teclado.
+
+[Cambios](docs/CHANGELOG-0.19.0.md). Revisión visual en Minecraft pendiente.
+
 ## Actualización 0.18.0
 
 Tema común para conexión, desconexión, formularios y confirmaciones del menú. Nuevos acabados de botones, ayudas, iconos, Intel y Galería, respetando la distribución aprobada.

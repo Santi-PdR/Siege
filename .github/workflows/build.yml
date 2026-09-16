@@ -43,6 +43,8 @@ jobs:
         run: |
           javac -d build/theme-tests src/main/java/uy/santipdr/siege/client/SiegeMenuPolicy.java tests/MenuThemePolicyTest.java
           java -cp build/theme-tests MenuThemePolicyTest
+          javac -d build/theme-tests src/main/java/uy/santipdr/siege/client/SiegeSliderGeometry.java tests/SliderGeometryTest.java
+          java -cp build/theme-tests SliderGeometryTest
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
       - name: Verify dossier navigation
