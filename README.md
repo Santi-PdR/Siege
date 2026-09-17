@@ -1,3 +1,9 @@
+## Actualización 0.20.1
+
+Corrige el regreso desde mundos, servidores, desconexiones y errores para que las rutas finales permanezcan en las interfaces de SIEGE. También persiste correctamente el servidor oficial en primer lugar.
+
+[Cambios](docs/CHANGELOG-0.20.1.md) · [Comprobación en Minecraft pendiente](docs/QA-0.20.1.md)
+
 ## Actualización 0.20.0
 
 Agreement incorpora el reporte sobre Gates, Rifts y sabotaje con su procedencia señalada. Además, 50 mejoras de interfaz en Configuración, Galería, visor e Intel.
@@ -422,4 +428,3 @@ The Fedora installer never invokes local Java or Gradle. It verifies a staged co
 ### Legacy Windows environment
 
 `scripts/install-latest.ps1` remains available only for the previous Windows setup.
-
