@@ -32,6 +32,7 @@ public final class IntelScreenV3 extends Screen {
     private final List<SiegeButton> entryButtons = new ArrayList<>();
     private final List<SiegeButton> navigationButtons = new ArrayList<>();
     private EditBox search;
+    private Component contextualHint;
     private String query = rememberedQuery;
     private SiegeButton clearSearch, readingButton, inspectButton;
     private boolean readingMode = SiegeConfig.intelReadingMode;
@@ -205,6 +206,7 @@ public final class IntelScreenV3 extends Screen {
             selected = listOffset = detailScroll = 0;
             List<IntelEntry> after = filtered();
             for (int i = 0; i < after.size(); i++) if (after.get(i).code().equals(keep)) selected = i;
+            refreshCategoryButtons();
             rebuildEntryNavigator();
         });
         addRenderableWidget(search);
@@ -278,7 +280,11 @@ public final class IntelScreenV3 extends Screen {
             String value = CATEGORIES.get(i);
             SiegeButton button = categoryButtons.get(i);
             button.setMessage(Component.literal(categoryLabel(value)));
-            button.setTooltip(Tooltip.create(Component.literal(categoryFullName(value) + " · " + IntelCatalog.count(value))));
+            int matches = query.isBlank() ? IntelCatalog.count(value) : (int)IntelCatalog.filtered(value).stream()
+                    .filter(e -> IntelSearch.matches(query, searchable(e, spanish()))).count();
+            if (!query.isBlank()) button.setMessage(Component.literal(IntelPresentation.categoryCode(value) + " " + matches + "/" + IntelCatalog.count(value)));
+            button.setTooltip(Tooltip.create(Component.literal(categoryFullName(value) + " · " + matches + "/" + IntelCatalog.count(value)
+                    + label(" expedientes", " dossiers"))));
             button.setSelected(value.equals(category));
             button.active = IntelCatalog.count(value) > 0;
         }
@@ -415,15 +421,15 @@ public final class IntelScreenV3 extends Screen {
         cachedQuery = query; cachedCategory = category; cachedSpanish = es;
         List<IntelEntry> source = IntelCatalog.filtered(category);
         var matcher = IntelSearch.compile(query);
-        cachedFiles = query.isBlank() ? source : source.stream().filter(entry -> {
-            IntelEntry.IntelText text = entry.text(es);
-            return matcher.test(entry.code() + " " + entry.name() + " " + text.origin()
-                    + " " + text.armament() + " " + text.description() + " " + text.advisory()
-                    + " " + text.status() + " " + text.variants() + " " + entry.hp() + " " + entry.defense()
-                    + " " + entry.category() + " " + categoryFullName(entry.category())
-                    + " " + IntelPresentation.compactHp(entry.hp()));
-        }).toList();
+        cachedFiles = query.isBlank() ? source : source.stream().filter(entry -> matcher.test(searchable(entry, es))).toList();
         return cachedFiles;
+    }
+
+    private String searchable(IntelEntry entry, boolean es) {
+        IntelEntry.IntelText text = entry.text(es);
+        return entry.code() + " " + entry.name() + " " + text.origin() + " " + text.armament() + " " + text.description()
+                + " " + text.advisory() + " " + text.status() + " " + text.variants() + " " + entry.hp() + " " + entry.defense()
+                + " " + entry.category() + " " + categoryFullName(entry.category()) + " " + IntelPresentation.compactHp(entry.hp());
     }
 
     private void rememberSelection() {
@@ -476,6 +482,7 @@ public final class IntelScreenV3 extends Screen {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
         pointerX = mouseX; pointerY = mouseY;
+        contextualHint = null;
         clearSearch.active = !query.isEmpty();
         clearSearch.visible = !query.isEmpty();
         readStart.visible = readEnd.visible = false;
@@ -491,9 +498,10 @@ public final class IntelScreenV3 extends Screen {
         List<IntelEntry> files = filtered();
         if (files.isEmpty()) {
             int centerX = wide ? (sidebarWidth + width) / 2 : width / 2;
+            if (height / 2 - 26 > contentTop) SiegeTheme.icon(g, centerX - 4, height / 2 - 26, "search", accent);
             g.drawCenteredString(font, font.plainSubstrByWidth(label("SIN RESULTADOS", "NO RESULTS"), wide ? width - sidebarWidth - 30 : width - 20),
                     centerX, height / 2 - 5, 0xFF8A9298);
-            String empty = !query.isBlank() ? label("Prueba otra búsqueda o pulsa × para borrarla.", "Try another search or use × to clear it.")
+            String empty = !query.isBlank() ? label("Revisá los contadores de categorías o borrá la búsqueda con ×.", "Check category counts or clear the search with ×.")
                     : label("La base de datos todavía no contiene registros.", "The database does not contain records yet.");
             g.drawCenteredString(font, font.plainSubstrByWidth(empty, wide ? width - sidebarWidth - 30 : width - 20),
                     centerX, height / 2 + 10, 0xFF68727A);
@@ -514,6 +522,7 @@ public final class IntelScreenV3 extends Screen {
         }
 
         super.render(g, mouseX, mouseY, partialTick);
+        if (contextualHint != null) g.renderTooltip(font, contextualHint, mouseX, mouseY);
         SiegeUiSounds.updateHover(children());
     }
 
@@ -560,7 +569,7 @@ public final class IntelScreenV3 extends Screen {
     private void renderFile(GuiGraphics g, IntelEntry entry, int x, int y, int availableWidth, boolean compactMode) {
         IntelEntry.IntelText text = entry.text(spanish());
         boolean dark = SiegeConfig.darkIntelPaper;
-        int paper = dark ? 0xFF20262B : switch (entry.category()) {
+        int paper = dark ? 0xFF262326 : switch (entry.category()) {
             case "ADVANCED" -> 0xFFE0E7EB;
             case "TANK" -> 0xFFE2DDD0;
             case "BOSS" -> 0xFFE1D8D3;
@@ -570,7 +579,7 @@ public final class IntelScreenV3 extends Screen {
         };
         int ink = dark ? 0xFFE5E7E2 : entry.category().equals("ADVANCED") ? 0xFF13232D : 0xFF29261F;
         int muted = dark ? 0xFFADB8BE : entry.category().equals("ADVANCED") ? 0xFF53646E : 0xFF6B6454;
-        int accent = dark ? 0xFF91CFE2 : accentInk(entry.category());
+        int accent = dark ? categoryAccent(entry.category()) : accentInk(entry.category());
         int warning = dark ? 0xFFFFA99B : 0xFF8A2E27;
         int bottom = height - 7;
         int pad = compactMode ? 6 : 12;
@@ -596,6 +605,8 @@ public final class IntelScreenV3 extends Screen {
         }
 
         g.drawString(font, font.plainSubstrByWidth(entry.name(), inner), x + pad, y + 18, ink, false);
+        if (font.width(entry.name()) > inner && pointerX >= x + pad && pointerX < x + availableWidth - pad && pointerY >= y + 18 && pointerY < y + 29)
+            contextualHint = Component.literal(entry.name());
         bodyLeft = x + pad;
         bodyRight = x + availableWidth - pad;
         detailBodyTop = y + 34;
@@ -646,7 +657,16 @@ public final class IntelScreenV3 extends Screen {
         appendWrapped(lines, label("VARIANTES: ", "VARIANTS: ") + text.variants(), bodyWidth, muted);
         lines.add(blankLine());
         appendWrapped(lines, label("PERFIL OPERATIVO", "OPERATIONAL PROFILE"), bodyWidth, accent);
-        appendWrapped(lines, text.description(), bodyWidth, ink);
+        if (AgreementReport.applies(entry)) {
+            for (String paragraph : text.description().split("\\n\\n")) {
+                int newline = paragraph.indexOf('\n');
+                if (newline >= 0) {
+                    appendWrapped(lines, paragraph.substring(0, newline), bodyWidth, accent);
+                    appendWrapped(lines, paragraph.substring(newline + 1), bodyWidth, ink);
+                } else appendWrapped(lines, paragraph, bodyWidth, ink);
+                lines.add(blankLine());
+            }
+        } else appendWrapped(lines, text.description(), bodyWidth, ink);
         if (sameEntry && anchor != null) {
             for (int i = 0; i < lines.size(); i++) {
                 DetailLine line = lines.get(i);
@@ -666,8 +686,12 @@ public final class IntelScreenV3 extends Screen {
         maxDetailScroll = Math.max(0, lines.size() - visible);
         detailScroll = Math.max(0, Math.min(detailScroll, maxDetailScroll));
         g.enableScissor(bodyLeft, detailBodyTop, bodyRight - 6, bodyBottom);
-        for (int i = detailScroll; i < Math.min(lines.size(), detailScroll + visible); i++)
-            g.drawString(font, lines.get(i).value(), bodyLeft, detailBodyTop + (i - detailScroll) * lineHeight, lines.get(i).color(), false);
+        for (int i = detailScroll; i < Math.min(lines.size(), detailScroll + visible); i++) {
+            DetailLine line = lines.get(i);
+            int lineY = detailBodyTop + (i - detailScroll) * lineHeight;
+            if (line.source().isEmpty()) g.fill(bodyLeft, lineY + lineHeight / 2, bodyLeft + Math.min(36, bodyWidth), lineY + lineHeight / 2 + 1, dark ? 0xFF65595D : 0xFFB0A38E);
+            g.drawString(font, line.value(), bodyLeft, lineY, line.color(), false);
+        }
         g.disableScissor();
         if (maxDetailScroll > 0) {
             int trackH = bodyBottom - detailBodyTop;
@@ -687,7 +711,7 @@ public final class IntelScreenV3 extends Screen {
         readStart.visible = readEnd.visible = maxDetailScroll > 0;
         readStart.setX(bodyLeft); readEnd.setX(bodyLeft + 28);
         readStart.active = detailScroll > 0; readEnd.active = detailScroll < maxDetailScroll;
-        String progress = maxDetailScroll == 0 ? label("COMPLETO", "COMPLETE") : (detailScroll + 1) + "–" + Math.min(lines.size(), detailScroll + visible) + " / " + lines.size();
+        String progress = maxDetailScroll == 0 || detailScroll == maxDetailScroll ? label("FIN DEL TEXTO", "END OF TEXT") : (detailScroll + 1) + "–" + Math.min(lines.size(), detailScroll + visible) + " / " + lines.size();
         g.drawString(font, progress, bodyRight - font.width(progress), bottom - 11, muted, false);
         if (maxDetailScroll > 0) {
             int progressW = Math.max(1, (bodyRight - bodyLeft) * detailScroll / maxDetailScroll);
@@ -706,13 +730,19 @@ public final class IntelScreenV3 extends Screen {
         g.fill(x, y, x + w, y + 1, accent);
         IntelEntry.IntelText text = entry.text(spanish());
         int completeness = IntelPresentation.completeness(entry, text);
-        String data = label("DATOS ", "DATA ") + completeness + "%";
+        boolean reported = AgreementReport.applies(entry);
+        String data = reported ? label("REPORTE", "REPORT") : label("DATOS ", "DATA ") + completeness + "%";
         int titleWidth = Math.max(24, w - font.width(data) - 10);
         g.drawString(font, font.plainSubstrByWidth(label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), titleWidth), x, y + 5, accent, false);
         g.drawString(font, data, x + w - font.width(data), y + 5, muted, false);
+        if (pointerX >= x + w - font.width(data) && pointerX < x + w && pointerY >= y && pointerY < y + 19)
+            contextualHint = Component.literal(reported
+                    ? label("Fuente: testimonio de jugador. No verificado por staff.", "Source: player testimony. Not staff-verified.")
+                    : label("Campos documentados; no mide la certeza de la información.", "Documented fields; this does not measure information certainty."));
         int dataWidth = Math.max(1, (w - 2) * completeness / 100);
         g.fill(x, y + 16, x + w, y + 17, 0x33413B32);
-        g.fill(x, y + 16, x + dataWidth, y + 17, accent);
+        if (!reported) g.fill(x, y + 16, x + dataWidth, y + 17, accent);
+        else for (int dash = 0; dash < w; dash += 8) g.fill(x + dash, y + 16, x + Math.min(w, dash + 4), y + 17, accent);
         String key = entry.code() + ":" + w + ":" + spanish();
         if (!key.equals(summaryCacheKey)) {
             summaryCache = List.copyOf(font.split(Component.literal(entry.text(spanish()).advisory()), Math.max(1, w - 12)));

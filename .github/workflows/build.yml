@@ -45,6 +45,8 @@ jobs:
           java -cp build/theme-tests MenuThemePolicyTest
           javac -d build/theme-tests src/main/java/uy/santipdr/siege/client/SiegeSliderGeometry.java tests/SliderGeometryTest.java
           java -cp build/theme-tests SliderGeometryTest
+          javac -d build/theme-tests src/main/java/uy/santipdr/siege/client/SiegeControlLayout.java tests/ControlLayoutTest.java
+          java -cp build/theme-tests ControlLayoutTest
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
       - name: Verify dossier navigation
@@ -127,7 +129,7 @@ jobs:
           fi
       - name: Verify audio state and catalog resources
         run: |
-          javac -d build/runtime-tests src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/IntelPresentation.java src/main/java/uy/santipdr/siege/client/SiegeAudioHealth.java src/main/java/uy/santipdr/siege/client/SiegePreviewClock.java tests/RuntimeRegressionTest.java
+          javac -d build/runtime-tests src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/IntelPresentation.java src/main/java/uy/santipdr/siege/client/SiegeAudioHealth.java src/main/java/uy/santipdr/siege/client/SiegePreviewClock.java tests/RuntimeRegressionTest.java
           java -cp build/runtime-tests uy.santipdr.siege.client.RuntimeRegressionTest
       - name: Compile and verify
         run: gradle --no-daemon reportBuildTools clean build

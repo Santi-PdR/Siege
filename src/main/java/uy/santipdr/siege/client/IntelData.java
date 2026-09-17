@@ -132,12 +132,10 @@ final class IntelData {
                     "A loud heavy-assault tank. It trots until players are found, then commits to close combat with an M48 Tomahawk capable of projecting attacks in several directions. Its charge deals up to 650 HP and has a 75% chance to ignore defences, although it can be dodged while the Combatant has not learned to correct its trajectory.",
                     "Keep your distance and focus ranged fire. Avoid close combat, preserve mobility for the charge and attack during its recovery."),
             tankFile("TNK-003", "AGREEMENT", 0, "3,000", "100", "agreement",
-                    "Corporación Secure Contain Protect", "Información no recuperada", "Sin registro", "ARCHIVO INCOMPLETO",
-                    "Solo se confirmó la designación Agreement, su resistencia estimada y la vinculación corporativa con Secure Contain Protect. No existen datos verificados sobre armamento, habilidades, comportamiento o función de combate.",
-                    "No completar el expediente con suposiciones. Mantener observación y tratar la unidad como hostil hasta obtener evidencia operativa.",
-                    "Secure Contain Protect Corporation", "Information not recovered", "No record", "INCOMPLETE FILE",
-                    "Only the Agreement designation, estimated durability and corporate link to Secure Contain Protect have been confirmed. There is no verified data about weapons, abilities, behaviour or combat role.",
-                    "Do not fill the dossier with assumptions. Maintain observation and treat the unit as hostile until operational evidence is recovered."),
+                    "Corporación Secure Contain Protect", "Portales y visores: reporte sin verificar", "Gates / Rifts (testimonio)", "REPORTE SIN VERIFICAR",
+                    AgreementReport.ES, AgreementReport.ADVICE_ES,
+                    "Secure Contain Protect Corporation", "Portals and visors: unverified report", "Gates / Rifts (testimony)", "UNVERIFIED REPORT",
+                    AgreementReport.EN, AgreementReport.ADVICE_EN),
             tankFile("TNK-004", "JAGANT", 0, "2,500", "100", "jagant",
                     "Sin registro confirmado", "Información no recuperada", "Sin registro", "ARCHIVO INCOMPLETO",
                     "El archivo únicamente conserva el nombre Jagant, una captura parcial y sus valores estimados de resistencia. Su origen, armamento, capacidades y patrón de despliegue siguen sin confirmar.",
@@ -265,3 +263,4 @@ final class IntelData {
     }
 
 }
+
