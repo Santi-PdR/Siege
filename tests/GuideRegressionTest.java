@@ -54,7 +54,12 @@ public final class GuideRegressionTest {
         check(SiegeGuideData.entries(SiegeGuideData.Category.CHRONICLES, "AURELIONIS", true).size() == 1, "search chronicle title");
         check(SiegeGuideData.entries(SiegeGuideData.Category.ITEMS, "Shadow", true).size() == 1, "search item body");
         String race = SiegeGuideData.ENTRIES.get(0).body(true);
-        for (String word : new String[] {"Shadow", "INDEPENDIENTE", "Bloodluck", "@romax141403", "sin asumir que 2"}) check(race.contains(word), "race rule " + word);
+        for (String word : new String[] {"Shadow", "INDEPENDIENTE", "Bloodluck", "@romax141403"}) check(race.contains(word), "race rule " + word);
+        check(!race.contains("Original Cost") && !race.contains("CAPTURA DEL OBJETO"), "no technical screenshot transcription");
+        String allSpanish = SiegeGuideData.ENTRIES.stream().map(e -> e.body(true)).reduce("", (a, b) -> a + " " + b);
+        for (String forbidden : new String[] {"aportad", "Canal Summary", "skullsitox", "littleskull", "emoji", "Discord"})
+            check(!allSpanish.contains(forbidden), "no out-of-world label " + forbidden);
+        check(SiegeGuideData.entries(SiegeGuideData.Category.INSPIRATIONS, "economía de guerra", true).size() == 1, "inspiration lore searchable");
         check(SiegeGuideData.ENTRIES.stream().filter(e -> e.id().equals("ending-aurelionis")).findFirst().orElseThrow().body(true).contains("escapar con vida"), "Aurelionis alive");
         check(SiegeGuideData.ENTRIES.stream().filter(e -> e.id().equals("ending-hermes")).findFirst().orElseThrow().body(true).contains("No se encontró su cuerpo"), "Hermes uncertainty");
         System.out.println("Guide: " + layouts + " layouts, 27 bilingual records, 10 original PNGs, spoiler and source rules passed");
