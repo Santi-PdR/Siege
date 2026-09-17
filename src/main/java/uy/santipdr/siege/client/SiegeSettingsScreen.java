@@ -38,7 +38,12 @@ public final class SiegeSettingsScreen extends Screen {
     private final List<AbstractWidget> controls = new ArrayList<>();
     private final List<Integer> controlY = new ArrayList<>();
     private final List<SiegeButton> musicTrackButtons = new ArrayList<>();
-    private SiegeButton shuffleButton;
+    private SiegeButton shuffleButton, sampleButton;
+    private SiegeSlider noticeDuration;
+    private final List<AbstractWidget> musicControls = new ArrayList<>();
+    private long calmAppliedUntil;
+    private final List<Runnable> toggleRefreshers = new ArrayList<>();
+
     private boolean draggingScrollbar;
     private int scrollThumbTop, scrollThumbHeight, scrollGrab;
     private int soundSample;
@@ -62,7 +67,10 @@ public final class SiegeSettingsScreen extends Screen {
         controls.clear();
         controlY.clear();
         musicTrackButtons.clear();
-        shuffleButton = null;
+        musicControls.clear();
+        toggleRefreshers.clear();
+        shuffleButton = sampleButton = null;
+        noticeDuration = null;
         int previousScroll = SECTION_SCROLL.getOrDefault(section, scrollOffset);
         soundSample = Math.floorMod(soundSample, 3);
         draggingScrollbar = false;
@@ -91,6 +99,8 @@ public final class SiegeSettingsScreen extends Screen {
                 controlY.add(widget.getY());
                 lastBottom = Math.max(lastBottom, widget.getY() + widget.getHeight());
                 if (widget.getTooltip() == null) widget.setTooltip(Tooltip.create(widget.getMessage()));
+                if (section == Section.AUDIO && widget instanceof SiegeSlider && widget != noticeDuration)
+                    musicControls.add(widget);
             }
         }
         informationY = lastBottom + 12;
@@ -145,7 +155,7 @@ public final class SiegeSettingsScreen extends Screen {
     private SiegeButton sectionButton(int x, int y, int w, int h, Section value) {
         SiegeButton button = new SiegeButton(x, y, w, h, Component.literal(sectionLabel(value)), b -> switchSection(value),
                 value == Section.AUDIO ? GOLD : ACCENT);
-        return button.setSelected(value == section).withIcon(value == Section.AUDIO ? "music" : value == Section.INTEL ? "intel" : "settings");
+        return button.setSelected(value == section).withIcon(switch (value) { case AUDIO -> "music"; case INTEL -> "intel"; case ACCESSIBILITY -> "eye"; case GRAPHICS -> "image"; case OVERVIEW -> "overview"; default -> "settings"; });
     }
 
     private void switchSection(Section value) {
@@ -195,29 +205,29 @@ public final class SiegeSettingsScreen extends Screen {
 
                 y += sliderHeight + gap;
                 int transportWidth = (w - 8) / 3;
-                addRenderableWidget(new SiegeButton(contentX, y, transportWidth, h,
+                musicControls.add(addRenderableWidget(new SiegeButton(contentX, y, transportWidth, h,
                         Component.literal(label("ANTERIOR", "PREVIOUS")), b -> {
                     SiegeUiSounds.nextTrack();
                     SiegeMusic.previousTrack();
                     refreshMusicSelection();
-                }, GOLD));
-                addRenderableWidget(new SiegeButton(contentX + transportWidth + 4, y, transportWidth, h,
+                }, GOLD)));
+                musicControls.add(addRenderableWidget(new SiegeButton(contentX + transportWidth + 4, y, transportWidth, h,
                         Component.literal(label("REINICIAR", "RESTART")), b -> {
                     SiegeUiSounds.nextTrack();
                     SiegeMusic.restartTrack();
-                }, GOLD));
-                addRenderableWidget(new SiegeButton(contentX + (transportWidth + 4) * 2, y, transportWidth, h,
+                }, GOLD)));
+                musicControls.add(addRenderableWidget(new SiegeButton(contentX + (transportWidth + 4) * 2, y, transportWidth, h,
                         Component.literal(label("SIGUIENTE", "NEXT")), b -> {
                     SiegeUiSounds.nextTrack();
                     SiegeMusic.nextTrack();
                     refreshMusicSelection();
-                }, GOLD));
+                }, GOLD)));
                 addRenderableWidget(literalToggle(contentX, y += h + gap, w, h,
                         label("AVISO DE NUEVA PISTA", "NEW TRACK NOTICE"),
                         () -> SiegeConfig.trackAnnouncements = !SiegeConfig.trackAnnouncements,
                         () -> SiegeConfig.trackAnnouncements));
                 int noticeSliderHeight = compact ? 25 : 31;
-                addRenderableWidget(new SiegeSlider(contentX, y += h + gap, w, noticeSliderHeight,
+                noticeDuration = addRenderableWidget(new SiegeSlider(contentX, y += h + gap, w, noticeSliderHeight,
                         Component.literal(label("DURACIÓN DEL AVISO", "NOTICE DURATION")),
                         Math.round((SiegeConfig.trackNoticeSeconds - 3) * 100.0F / 12.0F),
                         percent -> SiegeConfig.trackNoticeSeconds = 3 + Math.round(percent * 12.0F / 100.0F))
@@ -241,7 +251,7 @@ public final class SiegeSettingsScreen extends Screen {
                 }
             }
             case INTERFACE -> {
-                addRenderableWidget(new SiegeButton(contentX, y, w, h,
+                sampleButton = addRenderableWidget(new SiegeButton(contentX, y, w, h,
                         Component.literal(label("PROBAR SONIDOS", "PREVIEW UI SOUNDS")), b -> {
                     SiegeUiSounds.preview(soundSample++ % 3);
                 }, GOLD));
@@ -317,7 +327,10 @@ public final class SiegeSettingsScreen extends Screen {
                 addRenderableWidget(new SiegeButton(contentX, y += h + gap, w, h,
                         Component.literal(label("APLICAR PERFIL TRANQUILO", "APPLY CALM PRESET")), b -> {
                     SiegeConfig.applyCalmPreset();
-                    minecraft.setScreen(new SiegeSettingsScreen(parent, Section.ACCESSIBILITY));
+                    SiegeSettingsScreen next = new SiegeSettingsScreen(parent, Section.ACCESSIBILITY);
+                    next.calmAppliedUntil = System.currentTimeMillis() + 3000;
+                    minecraft.setScreen(next);
+                    SiegeUiSounds.confirm();
                 }, ACCENT));
             }
             case GRAPHICS -> {
@@ -366,6 +379,26 @@ public final class SiegeSettingsScreen extends Screen {
             musicTrackButtons.get(i).setSelected(SiegeConfig.selectedTrack == i);
     }
 
+    private void updateLiveStates() {
+        for (Runnable refresh : toggleRefreshers) refresh.run();
+        for (AbstractWidget control : musicControls) control.active = SiegeConfig.music;
+        if (noticeDuration != null) noticeDuration.active = SiegeConfig.trackAnnouncements;
+        if (sampleButton != null) {
+            boolean audible = SiegeConfig.uiSounds && SiegeConfig.uiVolume > 0;
+            if (sampleButton.active != audible || sampleButton.getTooltip() == null) sampleButton.setTooltip(Tooltip.create(audible
+                    ? Component.literal(label("Escuchar una muestra de los sonidos del menú", "Listen to a sample of menu sounds"))
+                    : Component.literal(label("Activá los sonidos y subí su volumen para probarlos", "Enable UI sounds and raise their volume to preview them"))));
+            sampleButton.active = audible;
+            sampleButton.withBadge(sampleButton.active ? "" : label("MUDO", "MUTED"));
+        }
+        for (int i = 0; i < musicTrackButtons.size(); i++) {
+            SiegeButton button = musicTrackButtons.get(i);
+            boolean playing = SiegeMusic.isActuallyPlaying() && SiegeMusic.currentTrackNumber() == i + 1;
+            button.withIcon(playing ? "play" : "music").withBadge(playing ? label("SUENA", "LIVE") : "");
+            button.setSelected(SiegeConfig.selectedTrack == i);
+        }
+    }
+
     private SiegeButton graphicsButton(int x, int y, int w, int h) {
         return new SiegeButton(x, y, w, h, graphicsLabel(), b -> {
             SiegeUiSounds.click();
@@ -382,10 +415,11 @@ public final class SiegeSettingsScreen extends Screen {
             SiegeConfig.save();
             b.setMessage(toggleLabel(key, flag.get()));
             // Keep the descriptive tooltip while the state changes.
-            ((SiegeButton)b).setSelected(flag.get());
-        }, ACCENT);
+            ((SiegeButton)b).setSelected(flag.get()).withBadge(label(flag.get() ? "SÍ" : "NO", flag.get() ? "ON" : "OFF"));
+        }, key.equals("siege.settings.music") ? GOLD : ACCENT);
         button.setTooltip(Tooltip.create(Component.literal(settingHelp(key))));
-        return button.setSelected(flag.get());
+        trackToggle(button, flag, enabled -> toggleLabel(key, enabled));
+        return button.setSelected(flag.get()).withFaceLabel(Component.translatable(key).getString()).withBadge(label(flag.get() ? "SÍ" : "NO", flag.get() ? "ON" : "OFF"));
     }
 
     private SiegeButton literalToggle(int x, int y, int w, int h, String text, Runnable action, Flag flag) {
@@ -395,10 +429,22 @@ public final class SiegeSettingsScreen extends Screen {
             SiegeConfig.save();
             b.setMessage(literalToggleLabel(text, flag.get()));
             // Keep the descriptive tooltip while the state changes.
-            ((SiegeButton)b).setSelected(flag.get());
+            ((SiegeButton)b).setSelected(flag.get()).withBadge(label(flag.get() ? "SÍ" : "NO", flag.get() ? "ON" : "OFF"));
         }, ACCENT);
         button.setTooltip(Tooltip.create(Component.literal(settingHelp(text))));
-        return button.setSelected(flag.get());
+        trackToggle(button, flag, enabled -> literalToggleLabel(text, enabled));
+        return button.setSelected(flag.get()).withFaceLabel(text).withBadge(label(flag.get() ? "SÍ" : "NO", flag.get() ? "ON" : "OFF"));
+    }
+
+    private void trackToggle(SiegeButton button, Flag flag, java.util.function.Function<Boolean, Component> message) {
+        boolean[] previous = {flag.get()};
+        toggleRefreshers.add(() -> {
+            boolean value = flag.get();
+            if (previous[0] == value) return;
+            previous[0] = value;
+            button.setMessage(message.apply(value));
+            button.setSelected(value).withBadge(label(value ? "SÍ" : "NO", value ? "ON" : "OFF"));
+        });
     }
 
     private String settingHelp(String key) {
@@ -413,6 +459,16 @@ public final class SiegeSettingsScreen extends Screen {
             case "ESTADO DEL DOSSIER", "DOSSIER STATE" -> label("Distingue lectura, rotación automática y expediente fijo.", "Distinguish reading, automatic rotation and a fixed dossier.");
             case "PAPEL OSCURO", "DARK PAPER" -> label("Usa papel oscuro y texto claro para leer Intel.", "Use dark paper and light text in Intel.");
             case "LECTURA ESPACIADA", "COMFORTABLE LINE SPACING", "LECTURA CÓMODA", "COMFORTABLE READING" -> label("Aumenta la separación entre renglones del expediente.", "Increase the spacing between dossier lines.");
+            case "SONIDO AL SEÑALAR", "HOVER SOUND" -> label("Reproduce un sonido al entrar en un control; no se repite mientras mantenés el cursor encima.", "Play a sound when entering a control; it does not repeat while the pointer stays on it.");
+            case "EFECTOS TÁCTICOS", "TACTICAL EFFECTS" -> label("Activa barridos y transiciones del menú. Movimiento reducido tiene prioridad.", "Enable menu sweeps and transitions. Reduced motion takes priority.");
+            case "MOSTRAR BUILD", "SHOW BUILD LABEL" -> label("Muestra la versión instalada en la portada para identificar actualizaciones.", "Show the installed version on the title screen to identify updates.");
+            case "CONFIRMAR AL SALIR", "CONFIRM BEFORE QUIT" -> label("Pide confirmación antes de cerrar Minecraft desde la portada.", "Ask for confirmation before quitting Minecraft from the title screen.");
+            case "MODO LECTURA AL ABRIR", "OPEN IN READING MODE" -> label("Abre Intel con más espacio para el texto; Ampliar sigue disponible.", "Open Intel with more room for text; Inspect remains available.");
+            case "INTEL EN MENÚ PRINCIPAL", "MAIN-MENU INTEL" -> label("Muestra los expedientes de unidades y avanzados a la derecha de la portada.", "Show unit and advanced dossiers on the right of the title screen.");
+            case "ANIMACIONES DE INTEL", "INTEL ANIMATIONS" -> label("Anima los retratos compatibles. No cambia la rotación entre expedientes.", "Animate supported portraits. This does not change rotation between dossiers.");
+            case "ROTACIÓN AUTOMÁTICA INTEL", "AUTO-ROTATE INTEL" -> label("Cambia de expediente automáticamente. Las flechas siguen disponibles si se desactiva.", "Change dossiers automatically. Arrows remain available when disabled.");
+            case "LÍNEAS DE ESCANEO", "SCANLINES" -> label("Añade líneas discretas al fondo. Desactivalas si dificultan la lectura.", "Add subtle lines to the background. Disable them if they affect readability.");
+            case "INTERFERENCIA DEL TÍTULO", "TITLE INTERFERENCE" -> label("Activa la interferencia del título; se omite con movimiento reducido.", "Enable title interference; it is skipped with reduced motion.");
             default -> label("Cambia esta preferencia de presentación de SIEGE. Se guarda al modificarla.", "Change this SIEGE presentation preference. Changes are saved automatically.");
         };
     }
@@ -434,6 +490,7 @@ public final class SiegeSettingsScreen extends Screen {
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
+        updateLiveStates();
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, 0xAA070A0D);
 
@@ -465,11 +522,16 @@ public final class SiegeSettingsScreen extends Screen {
             int barColor = overScroll || draggingScrollbar ? 0xFFFF9298 : ACCENT;
             g.fill(contentX + contentWidth - 5, viewportTop, contentX + contentWidth - 2, viewportBottom, 0xFF27343C);
             g.fill(contentX + contentWidth - 5, top, contentX + contentWidth - 2, top + thumb, barColor);
-            String scrollState = Math.round(scrollOffset * 100.0F / scrollMax) + "%";
-            if (contentWidth >= 100) g.drawString(font, scrollState, contentX + contentWidth - font.width(scrollState) - 9,
-                    viewportBottom - 10, 0xFF72818A, false);
+            if (thumb >= 12) {
+                int gripY = top + thumb / 2;
+                g.fill(contentX + contentWidth - 5, gripY, contentX + contentWidth - 2, gripY + 1, SiegeTheme.INK);
+            }
         }
 
+        if (!SiegeConfig.lastSaveSucceeded && width >= 320) {
+            String failed = label("AJUSTES SIN GUARDAR", "SETTINGS NOT SAVED");
+            g.drawString(font, failed, panelX + panelWidth - font.width(failed), panelY + 5, 0xFFFFA0A5, false);
+        }
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
     }
@@ -484,16 +546,21 @@ public final class SiegeSettingsScreen extends Screen {
         int accent = section == Section.AUDIO ? GOLD : ACCENT;
         if (section == Section.AUDIO) {
             g.drawString(font, sectionTitle(section), contentX, titleY, GOLD, false);
-            String track = SiegeConfig.music ? SiegeMusic.currentTrackName() : label("MÚSICA DESACTIVADA", "MUSIC OFF");
+            String track = !SiegeConfig.music ? label("MÚSICA DESACTIVADA", "MUSIC OFF")
+                    : SiegeConfig.musicVolume == 0 ? label("VOLUMEN EN CERO", "VOLUME AT ZERO") : SiegeMusic.currentTrackName();
             g.drawString(font, font.plainSubstrByWidth(track, contentWidth), contentX, titleY + 13, 0xFFF0EEE8, false);
             long total = SiegeMusic.currentDurationMs();
             long remaining = Math.max(0, Math.min(total, SiegeMusic.currentRemainingMs()));
             String times = SiegeMusic.isActuallyPlaying() ? formatTime(total - remaining) + " / " + formatTime(total)
                     + "  ·  −" + formatTime(remaining) : SiegeConfig.music ? label("EN ESPERA", "WAITING") : label("SILENCIADO", "OFF");
             g.drawString(font, font.plainSubstrByWidth(times, contentWidth), contentX, titleY + 26, 0xFFABBBC5, false);
-            g.fill(contentX, titleY + 39, contentX + contentWidth, titleY + 41, 0xFF29343B);
+            g.fill(contentX, titleY + 39, contentX + contentWidth, titleY + 41, 0xFF393236);
             if (SiegeMusic.isActuallyPlaying() && total > 0) g.fill(contentX, titleY + 39,
                     contentX + Math.round(contentWidth * SiegeMusic.currentProgress()), titleY + 41, GOLD);
+            for (int mark = 1; mark < 4; mark++) {
+                int mx = contentX + contentWidth * mark / 4;
+                g.fill(mx, titleY + 39, mx + 1, titleY + 41, 0xAA181518);
+            }
             return;
         }
         if (compact) {
@@ -534,13 +601,11 @@ public final class SiegeSettingsScreen extends Screen {
                     compact ? 3 : 4, 11);
             int statusY = infoY + (compact ? 39 : 50);
             if (statusY < availableBottom - 10) {
-                String audio = label("AUDIO", "AUDIO") + "  " + (SiegeConfig.music ? label("ACTIVO", "ON") : label("DESACTIVADO", "OFF"))
-                        + "  //  " + SiegeConfig.musicVolume + "%";
-                String ui = label("INTERFAZ", "INTERFACE") + "  "
-                        + (SiegeConfig.animatedBackgrounds ? label("DINÁMICA", "DYNAMIC") : label("ESTÁTICA", "STATIC"))
-                        + "  //  " + SiegeConfig.graphics.name();
-                g.drawString(font, font.plainSubstrByWidth(audio, contentWidth), contentX, statusY, 0xFFD7DDE0, false);
-                if (statusY + 13 < availableBottom) g.drawString(font, font.plainSubstrByWidth(ui, contentWidth), contentX, statusY + 13, 0xFF8FA0A9, false);
+                int cardWidth = Math.max(1, (contentWidth - 6) / 2);
+                overviewCard(g, contentX, statusY, cardWidth, label("MÚSICA", "MUSIC"),
+                        SiegeConfig.music ? SiegeConfig.musicVolume + "%" : label("DESACTIVADA", "OFF"), GOLD, "music");
+                overviewCard(g, contentX + cardWidth + 6, statusY, cardWidth, label("FONDO", "BACKGROUND"),
+                        SiegeConfig.selectedScene >= 0 ? label("FIJO", "PINNED") : SiegeConfig.animatedBackgrounds ? label("ROTACIÓN", "ROTATING") : label("ESTÁTICO", "STATIC"), ACCENT, "image");
             }
             return;
         }
@@ -549,6 +614,14 @@ public final class SiegeSettingsScreen extends Screen {
 
         renderWrapped(g, sectionDescription(section), contentX, infoY, contentWidth, 0xFF9DA8AE,
                 compact ? 2 : 3, 11);
+    }
+
+    private void overviewCard(GuiGraphics g, int x, int y, int w, String title, String value, int color, String icon) {
+        SiegeTheme.panel(g, x, y, w, 34, color);
+        if (w >= 80) SiegeTheme.icon(g, x + 6, y + 6, icon, color);
+        int inset = w >= 80 ? 20 : 5;
+        g.drawString(font, font.plainSubstrByWidth(title, Math.max(1, w - inset - 5)), x + inset, y + 5, SiegeTheme.MUTED, false);
+        g.drawString(font, font.plainSubstrByWidth(value, Math.max(1, w - 10)), x + 5, y + 19, SiegeTheme.INK, false);
     }
 
     private void positionControls() {
@@ -670,6 +743,8 @@ public final class SiegeSettingsScreen extends Screen {
     }
 
     private String sectionTitle(Section value) {
+        if (value == Section.ACCESSIBILITY && System.currentTimeMillis() < calmAppliedUntil)
+            return label("PERFIL TRANQUILO APLICADO", "CALM PRESET APPLIED");
         return switch (value) {
             case OVERVIEW -> label("CENTRO DE CONTROL", "CONTROL CENTER");
             case AUDIO -> label("MÚSICA DEL MENÚ", "MENU MUSIC");

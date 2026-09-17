@@ -75,6 +75,15 @@ public final class SiegeTheme {
                 g.fill(x + 1, y + 4, x + 8, y + 5, color);
                 g.fill(x + 4, y + 5, x + 5, y + 9, color);
             }
+            case "check" -> { g.fill(x + 1, y + 4, x + 3, y + 6, color); g.fill(x + 3, y + 6, x + 5, y + 8, color); g.fill(x + 5, y + 4, x + 7, y + 6, color); g.fill(x + 7, y + 2, x + 9, y + 4, color); }
+            case "play" -> { for (int i = 0; i < 4; i++) g.fill(x + 2 + i, y + 1 + i, x + 3 + i, y + 8 - i, color); }
+            case "pause" -> { g.fill(x + 1, y + 1, x + 3, y + 8, color); g.fill(x + 6, y + 1, x + 8, y + 8, color); }
+            case "eye" -> { frame(g, x, y + 2, 9, 5, color); g.fill(x + 4, y + 3, x + 5, y + 6, color); }
+            case "image" -> { frame(g, x, y, 9, 9, color); g.fill(x + 2, y + 2, x + 4, y + 4, color); g.fill(x + 4, y + 5, x + 7, y + 7, color); }
+            case "shield" -> { frame(g, x + 1, y, 7, 6, color); g.fill(x + 2, y + 6, x + 7, y + 7, color); g.fill(x + 3, y + 7, x + 6, y + 8, color); g.fill(x + 4, y + 8, x + 5, y + 9, color); }
+            case "overview" -> { frame(g, x, y, 4, 4, color); frame(g, x + 5, y, 4, 4, color); frame(g, x, y + 5, 4, 4, color); frame(g, x + 5, y + 5, 4, 4, color); }
+            case "lock" -> { frame(g, x + 2, y, 5, 5, color); frame(g, x + 1, y + 4, 7, 5, color); g.fill(x + 4, y + 6, x + 5, y + 8, color); }
+            case "search" -> { frame(g, x, y, 6, 6, color); g.fill(x + 5, y + 5, x + 7, y + 7, color); g.fill(x + 7, y + 7, x + 9, y + 9, color); }
             default -> { }
         }
     }

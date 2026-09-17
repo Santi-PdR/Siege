@@ -45,17 +45,18 @@ public final class IntelPortraitScreen extends Screen {
         backgroundButton.setTooltip(Tooltip.create(text("Alternar fondo negro, gris o papel", "Cycle black, gray or paper background")));
         mapButton = addRenderableWidget(new SiegeButton(12 + optionW, 39, optionW, 18, text("MINIMAPA", "MINIMAP"), b -> {
             SiegeConfig.inspectorMap = !SiegeConfig.inspectorMap; SiegeConfig.save();
-            ((SiegeButton)b).setSelected(SiegeConfig.inspectorMap); SiegeUiSounds.click();
+            ((SiegeButton)b).setSelected(SiegeConfig.inspectorMap); refresh(); SiegeUiSounds.click();
         }, SiegeTheme.RED).setSelected(SiegeConfig.inspectorMap));
-        mapButton.setTooltip(Tooltip.create(text("Mostrar orientación cuando la imagen está ampliada", "Show orientation while the image is zoomed")));
+        mapButton.withIcon("overview"); backgroundButton.withIcon("image");
         zoomPresetButton = addRenderableWidget(new SiegeButton(16 + optionW * 2, 39, optionW, 18, text("ZOOM 2×", "ZOOM 2×"), b -> {
             changeZoom(camera.zoom() < 1.99 || camera.zoom() >= 3.99 ? 2 : 4, width / 2.0, (top + bottom) / 2.0);
         }, SiegeTheme.RED));
         zoomPresetButton.setTooltip(Tooltip.create(text("Alternar ampliación precisa entre 2× y 4×", "Toggle precise magnification between 2× and 4×")));
         centerButton = addRenderableWidget(new SiegeButton(20 + optionW * 3, 39, optionW, 18, text("CENTRAR", "CENTER"), b -> {
-            camera.centerOn(0.5, 0.5); SiegeUiSounds.click();
+            camera.centerOn(0.5, 0.5); refresh(); SiegeUiSounds.click();
         }, SiegeTheme.RED));
         centerButton.setTooltip(Tooltip.create(text("Centrar sin cambiar el zoom", "Center without changing zoom")));
+        fitButton.withIcon("image"); centerButton.withIcon("overview");
         minus.setTooltip(Tooltip.create(text("Alejar la imagen", "Zoom out")));
         plus.setTooltip(Tooltip.create(text("Ampliar la imagen", "Zoom in")));
         fitButton.setTooltip(Tooltip.create(text("Centrar y mostrar el expediente completo", "Center and show the complete artwork")));
@@ -69,7 +70,15 @@ public final class IntelPortraitScreen extends Screen {
         minus.active = camera.zoom() > 1.001;
         plus.active = camera.zoom() < 3.999;
         fitButton.active = camera.zoom() > 1.001;
-        centerButton.active = camera.zoom() > 1.001;
+        centerButton.active = camera.zoom() > 1.001 && (Math.abs(camera.visibleLeft() + camera.visibleRight() - 1) > 0.001
+                || Math.abs(camera.visibleTop() + camera.visibleBottom() - 1) > 0.001);
+        mapButton.active = width >= 500 && height >= 300;
+        mapButton.setTooltip(Tooltip.create(!mapButton.active ? text("El minimapa necesita una ventana más amplia", "The minimap needs a larger window")
+                : camera.zoom() <= 1.001 ? text("Aparecerá al ampliar la imagen", "Appears when the image is zoomed")
+                : text("Clic o arrastre en el minimapa para desplazarte", "Click or drag the minimap to move")));
+        mapButton.withBadge(SiegeConfig.inspectorMap ? label("SÍ", "ON") : label("NO", "OFF"));
+        minus.setTooltip(Tooltip.create(minus.active ? text("Alejar la imagen", "Zoom out") : text("La imagen ya está ajustada completa", "The full image already fits")));
+        plus.setTooltip(Tooltip.create(plus.active ? text("Ampliar la imagen", "Zoom in") : text("Ampliación máxima: 400%", "Maximum magnification: 400%")));
         zoomPresetButton.setMessage(text(camera.zoom() < 1.99 || camera.zoom() >= 3.99 ? "ZOOM 2×" : "ZOOM 4×",
                 camera.zoom() < 1.99 || camera.zoom() >= 3.99 ? "ZOOM 2×" : "ZOOM 4×"));
         backgroundButton.setMessage(text(backgroundLabelEs(), backgroundLabelEn()));
@@ -80,6 +89,11 @@ public final class IntelPortraitScreen extends Screen {
     private void moveMap(double x, double y) {
         var map = map();
         camera.centerOn((x - map.x()) / map.w(), (y - map.y()) / map.h());
+        updateCenterState();
+    }
+    private void updateCenterState() {
+        centerButton.active = camera.zoom() > 1.001 && (Math.abs(camera.visibleLeft() + camera.visibleRight() - 1) > 0.001
+                || Math.abs(camera.visibleTop() + camera.visibleBottom() - 1) > 0.001);
     }
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
@@ -87,8 +101,9 @@ public final class IntelPortraitScreen extends Screen {
         g.fill(0, 0, width, height, 0xFF0B0D10);
         int accent = IntelPresentation.accent(entry.category());
         g.drawCenteredString(font, font.plainSubstrByWidth(entry.code() + " · " + entry.name(), width - 16), width / 2, 7, 0xFFE7DFC9);
-        String hint = IntelPresentation.categoryCode(entry.category()) + " · HP " + entry.hp() + " · "
-                + label("Rueda: ampliar · Arrastrar: mover", "Wheel: zoom · Drag: pan");
+        String hint = camera.zoom() <= 1.001 ? label("IMAGEN COMPLETA · Rueda para ampliar", "FULL IMAGE · Scroll to zoom")
+                : draggingImage || draggingMap ? label("MOVIENDO IMAGEN", "PANNING IMAGE")
+                : label("ARRASTRÁ PARA EXPLORAR · Rueda para ampliar", "DRAG TO EXPLORE · Scroll to zoom");
         String amount = Math.round(camera.zoom() * 100) + "%";
         g.drawString(font, font.plainSubstrByWidth(hint, width - font.width(amount) - 34), 8, 23, 0xFF9CA7AE, false);
         g.drawString(font, amount, width - font.width(amount) - 8, 23, 0xFFF0CE74, false);
@@ -99,6 +114,8 @@ public final class IntelPortraitScreen extends Screen {
         g.fill(8, top, width - 8, bottom, backdrop);
         g.fill(8, top, width - 8, top + 1, accent);
         g.fill(8, bottom - 1, width - 8, bottom, accent);
+        SiegeTheme.frame(g, 7, top - 1, width - 14, bottom - top + 2,
+                draggingImage ? SiegeTheme.GOLD : accent);
         g.enableScissor(8, top, width - 8, bottom);
         g.blit(texture, 8 + (int)Math.round(camera.x()), top + (int)Math.round(camera.y()),
                 (int)Math.round(camera.imageWidth()), (int)Math.round(camera.imageHeight()), 0, 0, 640, 360, 640, 360);
@@ -112,6 +129,12 @@ public final class IntelPortraitScreen extends Screen {
             int x2 = m.x() + (int)(camera.visibleRight() * m.w());
             int y1 = m.y() + (int)(camera.visibleTop() * m.h());
             int y2 = m.y() + (int)(camera.visibleBottom() * m.h());
+            g.fill(m.x(), m.y(), m.right(), y1, 0x88000000);
+            g.fill(m.x(), y2, m.right(), m.bottom(), 0x88000000);
+            g.fill(m.x(), y1, x1, y2, 0x88000000);
+            g.fill(x2, y1, m.right(), y2, 0x88000000);
+            SiegeTheme.frame(g, m.x() - 2, m.y() - 2, m.w() + 4, m.h() + 4,
+                    draggingMap || m.contains(mouseX, mouseY) ? SiegeTheme.GOLD : accent);
             g.fill(x1, y1, x2, y1 + 1, 0xFFFFD978);
             g.fill(x1, y2 - 1, x2, y2, 0xFFFFD978);
             g.fill(x1, y1, x1 + 1, y2, 0xFFFFD978);
@@ -122,8 +145,17 @@ public final class IntelPortraitScreen extends Screen {
             g.fill(cx, cy - 2, cx + 1, cy + 3, accent);
         }
         int zoomBar = Math.max(1, Math.round((float)((camera.zoom() - 1) / 3.0) * (width - 16)));
-        if (camera.zoom() > 1.001) g.fill(8, bottom - 3, 8 + zoomBar, bottom - 2, accent);
+        g.fill(8, bottom + 2, width - 8, bottom + 3, 0xFF494044);
+        if (camera.zoom() > 1.001) g.fill(8, bottom + 2, 8 + zoomBar, bottom + 3, accent);
+        for (int mark = 0; mark < 4; mark++) {
+            int mx = 8 + (width - 17) * mark / 3;
+            g.fill(mx, bottom + 1, mx + 1, bottom + 4, SiegeTheme.MUTED);
+        }
         super.render(g, mouseX, mouseY, partialTick);
+        if (mouseY >= 5 && mouseY < 19 && font.width(entry.code() + " · " + entry.name()) > width - 16)
+            g.renderTooltip(font, Component.literal(entry.code() + " · " + entry.name()), mouseX, mouseY);
+        else if (mouseY >= 20 && mouseY < 34 && mouseX >= width - font.width(amount) - 12)
+            g.renderTooltip(font, text("Ampliación respecto del ajuste completo (100–400%)", "Magnification relative to full fit (100–400%)"), mouseX, mouseY);
         SiegeUiSounds.updateHover(children());
     }
     @Override
@@ -152,7 +184,7 @@ public final class IntelPortraitScreen extends Screen {
     @Override
     public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
         if (button == 0 && draggingMap) { moveMap(x, y); return true; }
-        if (button == 0 && draggingImage) { camera.drag(dx, dy); return true; }
+        if (button == 0 && draggingImage) { camera.drag(dx, dy); updateCenterState(); return true; }
         return super.mouseDragged(x, y, button, dx, dy);
     }
     @Override

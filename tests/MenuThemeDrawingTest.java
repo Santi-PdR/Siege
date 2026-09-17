@@ -13,7 +13,7 @@ public class MenuThemeDrawingTest {
             for (var fill : g.fills) if (fill.y() >= 21 && fill.x() > 13 && fill.right() < 9 + w - 4)
                 throw new AssertionError("Paper ornament invaded readable area");
         }
-        for (String icon : new String[] {"connect", "intel", "settings", "music", "pin"}) {
+        for (String icon : new String[] {"connect", "intel", "settings", "music", "pin", "check", "play", "pause", "eye", "image", "shield", "overview", "lock", "search"}) {
             GuiGraphics g = new GuiGraphics(); SiegeTheme.icon(g, 0, 0, icon, SiegeTheme.RED); inside(g, 0, 0, 9, 9);
             if (g.fills.isEmpty()) throw new AssertionError("Empty icon " + icon);
         }

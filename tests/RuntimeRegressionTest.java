@@ -54,6 +54,15 @@ public class RuntimeRegressionTest {
         check(java.util.Set.of("UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT").stream()
                 .allMatch(category -> IntelCatalog.count(category) > 0), "Every visible category must contain a dossier");
         check(IntelCatalog.byCode("SUP-001") == atlas, "Code lookup must preserve Atlas identity");
+        IntelEntry agreement = IntelCatalog.byCode("TNK-003");
+        check(AgreementReport.applies(agreement) && !AgreementReport.applies(atlas), "Report scope");
+        check(agreement.hp().equals("3,000") && agreement.defense().equals("100") && agreement.threat() == 0, "Report must not invent stats");
+        check(agreement.text(true).status().contains("SIN VERIFICAR") && agreement.text(false).status().contains("UNVERIFIED"), "Report provenance");
+        for (boolean es : new boolean[]{true, false}) {
+            String report = agreement.text(es).description();
+            check(report.contains("GATES") && report.contains("RIFTS") && report.contains("Rick Sanchez"), "Missing reported distinction");
+            check(report.split("\\n\\n").length == 5, "Report sections must remain readable");
+        }
         check(IntelCatalog.total() == IntelCatalog.files().size(), "Catalog total changed");
         try {
             IntelCatalog.filtered("SUPER-UNIT").clear();
@@ -68,3 +77,4 @@ public class RuntimeRegressionTest {
         System.out.println("Audio recovery, catalog identity and resource validation passed");
     }
 }
+

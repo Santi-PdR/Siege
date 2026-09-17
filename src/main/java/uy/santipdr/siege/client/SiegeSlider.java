@@ -83,7 +83,7 @@ public final class SiegeSlider extends AbstractSliderButton {
         int right = left + getWidth();
         int bottom = top + getHeight();
         if (isFocused() && active) {
-            g.fill(left - 1, top - 1, right + 1, bottom + 1, 0xFFF2D36F);
+            g.fill(left - 1, top - 1, right + 1, bottom + 1, SiegeTheme.GOLD);
         }
         int accent = !active ? 0xFF696064 : themeAccent;
 
@@ -108,6 +108,7 @@ public final class SiegeSlider extends AbstractSliderButton {
             g.fill(knobX - 1, trackY - 4, knobX + 6, trackY + 6, accent);
         g.fill(knobX, trackY - 3, knobX + 5, trackY + 5, active ? SiegeTheme.INK : SiegeTheme.MUTED);
         g.fill(knobX + 1, trackY - 2, knobX + 4, trackY + 4, accent);
+        g.fill(knobX + 2, trackY - 1, knobX + 3, trackY + 3, active ? SiegeTheme.INK : SiegeTheme.MUTED);
 
         var font = Minecraft.getInstance().font;
         String amount = valueText == null ? lastPercent + "%" : valueText.apply(lastPercent);
@@ -119,7 +120,7 @@ public final class SiegeSlider extends AbstractSliderButton {
         String clipped = font.plainSubstrByWidth(label.getString(), textWidth);
         if (!clipped.equals(label.getString()) && textWidth >= font.width("…"))
             clipped = font.plainSubstrByWidth(label.getString(), textWidth - font.width("…")) + "…";
-        g.drawString(font, clipped, left + 9, top + 4, SiegeTheme.INK, false);
+        g.drawString(font, clipped, left + 9, top + 4, active ? SiegeTheme.INK : SiegeTheme.MUTED, false);
         g.drawString(font, amount, right - amountWidth - 9, top + 4, accent, false);
     }
 

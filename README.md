@@ -1,3 +1,9 @@
+## Actualización 0.20.0
+
+Agreement incorpora el reporte sobre Gates, Rifts y sabotaje con su procedencia señalada. Además, 50 mejoras de interfaz en Configuración, Galería, visor e Intel.
+
+[Todos los cambios](docs/CHANGELOG-0.20.0.md) · [Revisión visual pendiente](docs/QA-0.20.0.md)
+
 ## Actualización 0.19.0
 
 Sliders más precisos, contraste cálido e indicación clara del foco de teclado.

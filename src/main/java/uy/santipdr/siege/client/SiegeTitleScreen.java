@@ -351,7 +351,7 @@ public final class SiegeTitleScreen extends Screen {
             case "MISSILER" -> "Francotirador invisible que dispara misiles guiados. Un destello amarillo concede cinco segundos para escapar.";
             case "ZAPPER" -> "Tanque eléctrico con bastón y bobinas Tesla recargables. Sus impactos pueden encadenar aturdimientos prolongados.";
             case "COMBATANT" -> "Tanque de asalto pesado con M48 Tomahawk. Su carga causa daño devastador y puede ignorar defensas.";
-            case "AGREEMENT" -> "Solo se confirmó su vínculo con Secure Contain Protect. Armamento y capacidades permanecen sin datos.";
+            case "AGREEMENT" -> "Vinculado a Secure Contain Protect. Un reporte sin verificar menciona Rifts, Gates y saturación de sus visores.";
             case "JAGANT" -> "La captura y sus valores de resistencia son los únicos datos recuperados. Su método de ataque sigue desconocido.";
             case "STRIDER" -> "Se recuperó el render de una estructura mecánica de patas largas. Su origen y comportamiento siguen desconocidos.";
             case "TEMPEST" -> "Jefe eléctrico que castiga a grupos y objetivos cercanos. También puede sabotear habilidades durante el combate.";
@@ -384,7 +384,7 @@ public final class SiegeTitleScreen extends Screen {
             case "MISSILER" -> "An invisible marksman that launches guided missiles. A yellow flash grants five seconds to escape.";
             case "ZAPPER" -> "An electric tank with a staff and rechargeable Tesla coils. Its hits can chain prolonged stuns.";
             case "COMBATANT" -> "A heavy assault tank carrying an M48 Tomahawk. Its charge deals devastating damage and may ignore defence.";
-            case "AGREEMENT" -> "Only its link to Secure Contain Protect is confirmed. Weapons and capabilities remain unknown.";
+            case "AGREEMENT" -> "Linked to Secure Contain Protect. An unverified report mentions Rifts, Gates and visor overload.";
             case "JAGANT" -> "The image and durability values are the only recovered data. Its attack method remains unknown.";
             case "STRIDER" -> "A render of a long-legged mechanical structure was recovered. Its origin and behaviour remain unknown.";
             case "TEMPEST" -> "An electric boss that punishes groups and nearby targets. It can also sabotage abilities during combat.";

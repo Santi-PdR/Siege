@@ -15,6 +15,11 @@ import net.minecraft.network.chat.Component;
 public class SiegeButton extends Button {
     private final int accent;
     private String icon = "";
+    private String badge = "";
+    private String faceLabel;
+    public SiegeButton withBadge(String value) { badge = value == null ? "" : value; return this; }
+    public SiegeButton withFaceLabel(String value) { faceLabel = value; return this; }
+
     private boolean selected;
     private boolean mainMenuStyle;
     private float hoverAmount;
@@ -77,6 +82,7 @@ public class SiegeButton extends Button {
         long now = System.nanoTime();
         float elapsed = lastRenderNanos == 0 ? 1.0F / 60.0F : Math.min(0.1F, (now - lastRenderNanos) / 1_000_000_000.0F);
         lastRenderNanos = now;
+        if (!active) hoverAmount = 0;
         if (effects) hoverAmount += (target - hoverAmount) * (1.0F - (float)Math.exp(-16.0F * elapsed));
         else hoverAmount = target;
 
@@ -100,7 +106,7 @@ public class SiegeButton extends Button {
 
         if (hoverAmount > 0.02F) {
             int alpha = Math.min(150, Math.max(0, Math.round(hoverAmount * 150.0F)));
-            g.fill(x + 5, y + 3, x + 7, y + h - 3, (alpha << 24) | (accent & 0x00FFFFFF));
+            if (icon.isEmpty() && w > 40 && h >= 14) g.fill(x + 5, y + 3, x + 7, y + h - 3, (alpha << 24) | (accent & 0x00FFFFFF));
 
             if (effects && (System.nanoTime() / 1_000_000L) - hoverStartedAt < 450) {
                 // Thin tactical sweep, clipped to the button instead of washing out the text.
@@ -118,10 +124,8 @@ public class SiegeButton extends Button {
             g.fill(x + w - bracket, y + h - 1, x + w, y + h, edge);
             g.fill(x + w - 1, y + h - bracket, x + w, y + h, edge);
         }
-        if (selected && w > 40) {
-            g.fill(x + w - 12, y + 4, x + w - 5, y + 5, accent);
-            g.fill(x + w - 9, y + 7, x + w - 5, y + 8, accent);
-        }
+        if (selected && badge.isEmpty() && w > 40 && h >= 13)
+            SiegeTheme.icon(g, x + w - 13, y + (h - 9) / 2, "check", active ? accent : SiegeTheme.MUTED);
         if (focused || fullHoverFrame && hot) {
             g.fill(x, y, x + w, y + 1, edge);
             g.fill(x, y + h - 1, x + w, y + h, edge);
@@ -133,10 +137,19 @@ public class SiegeButton extends Button {
         if (underlineWidth > 0) g.fill(x + 2, y + h - 2, x + 2 + underlineWidth, y + h - 1, accent);
 
         boolean showIcon = !icon.isEmpty() && w >= 96;
-        int left = showIcon ? 27 : 13;
-        int usable = Math.max(1, w <= 40 ? w - 8 : w - left - (selected ? 17 : 9));
-        String text = fit(font, getMessage().getString(), usable);
-        if (w <= 40 || compactCenter) left = Math.max(showIcon ? 25 : 2, (w - font.width(text)) / 2);
+        SiegeControlLayout positions = SiegeControlLayout.of(w, showIcon, selected, badge.isEmpty() ? 0 : font.width(badge));
+        int left = positions.labelX();
+        int badgeWidth = positions.badgeWidth();
+        int usable = positions.labelWidth();
+        String text = fit(font, faceLabel == null ? getMessage().getString() : faceLabel, usable);
+        if (badgeWidth > 0) {
+            int bx = x + positions.badgeX();
+            SiegeTheme.frame(g, bx, y + 3, badgeWidth, h - 6, active && selected ? accent : 0xFF777174);
+            String state = fit(font, badge, Math.max(1, badgeWidth - 6));
+            g.drawString(font, state, bx + (badgeWidth - font.width(state)) / 2, y + (h - font.lineHeight) / 2,
+                    active && selected ? SiegeTheme.INK : SiegeTheme.MUTED, false);
+        }
+        if (w <= 40 || compactCenter) left = Math.max(positions.labelX(), positions.labelX() + (positions.labelWidth() - font.width(text)) / 2);
         int textColor = !active ? 0xFF6F767D : hot || selected ? 0xFFF5F3EC : 0xFFD8DDE1;
         if (pressed) {
             g.fill(x + 2, y + 1, x + w - 1, y + 2, edge);
