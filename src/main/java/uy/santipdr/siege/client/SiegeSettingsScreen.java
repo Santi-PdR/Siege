@@ -42,6 +42,7 @@ public final class SiegeSettingsScreen extends Screen {
     private SiegeSlider noticeDuration;
     private final List<AbstractWidget> musicControls = new ArrayList<>();
     private long calmAppliedUntil;
+    private final List<Runnable> toggleRefreshers = new ArrayList<>();
 
     private boolean draggingScrollbar;
     private int scrollThumbTop, scrollThumbHeight, scrollGrab;
@@ -67,6 +68,7 @@ public final class SiegeSettingsScreen extends Screen {
         controlY.clear();
         musicTrackButtons.clear();
         musicControls.clear();
+        toggleRefreshers.clear();
         shuffleButton = sampleButton = null;
         noticeDuration = null;
         int previousScroll = SECTION_SCROLL.getOrDefault(section, scrollOffset);
@@ -378,6 +380,7 @@ public final class SiegeSettingsScreen extends Screen {
     }
 
     private void updateLiveStates() {
+        for (Runnable refresh : toggleRefreshers) refresh.run();
         for (AbstractWidget control : musicControls) control.active = SiegeConfig.music;
         if (noticeDuration != null) noticeDuration.active = SiegeConfig.trackAnnouncements;
         if (sampleButton != null) {
@@ -415,6 +418,7 @@ public final class SiegeSettingsScreen extends Screen {
             ((SiegeButton)b).setSelected(flag.get()).withBadge(label(flag.get() ? "SÍ" : "NO", flag.get() ? "ON" : "OFF"));
         }, key.equals("siege.settings.music") ? GOLD : ACCENT);
         button.setTooltip(Tooltip.create(Component.literal(settingHelp(key))));
+        trackToggle(button, flag, enabled -> toggleLabel(key, enabled));
         return button.setSelected(flag.get()).withFaceLabel(Component.translatable(key).getString()).withBadge(label(flag.get() ? "SÍ" : "NO", flag.get() ? "ON" : "OFF"));
     }
 
@@ -428,7 +432,19 @@ public final class SiegeSettingsScreen extends Screen {
             ((SiegeButton)b).setSelected(flag.get()).withBadge(label(flag.get() ? "SÍ" : "NO", flag.get() ? "ON" : "OFF"));
         }, ACCENT);
         button.setTooltip(Tooltip.create(Component.literal(settingHelp(text))));
+        trackToggle(button, flag, enabled -> literalToggleLabel(text, enabled));
         return button.setSelected(flag.get()).withFaceLabel(text).withBadge(label(flag.get() ? "SÍ" : "NO", flag.get() ? "ON" : "OFF"));
+    }
+
+    private void trackToggle(SiegeButton button, Flag flag, java.util.function.Function<Boolean, Component> message) {
+        boolean[] previous = {flag.get()};
+        toggleRefreshers.add(() -> {
+            boolean value = flag.get();
+            if (previous[0] == value) return;
+            previous[0] = value;
+            button.setMessage(message.apply(value));
+            button.setSelected(value).withBadge(label(value ? "SÍ" : "NO", value ? "ON" : "OFF"));
+        });
     }
 
     private String settingHelp(String key) {
