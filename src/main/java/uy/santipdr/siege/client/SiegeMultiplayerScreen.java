@@ -175,8 +175,9 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         int found = 0;
         while (found < getServers().size() && getServers().get(found) != official) found++;
         // Adjacent moves preserve the user's relative order of all other servers.
+        if (found > 0) changed = true;
         for (int i = found; i > 0; i--) getServers().swap(i, i - 1);
-        if (changed && found == 0) getServers().save();
+        if (changed) getServers().save();
         serverSelectionList.updateOnlineServers(getServers());
     }
 
@@ -464,4 +465,3 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
 
     private record Control(int slot, Button original, SiegeButton view) {}
 }
-
