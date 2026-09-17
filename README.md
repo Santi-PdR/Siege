@@ -1,3 +1,9 @@
+## Actualización 0.21.0
+
+Nueva **Guía SIEGE** desde Intel o Configuración → Resumen: Giro de Raza, lore de 2044/Dominia, dificultades, crónicas con spoilers opcionales e inspiraciones con imágenes originales completas. 27 artículos bilingües; no modifica gameplay ni probabilidades.
+
+[Cambios y comprobación visual pendiente](docs/CHANGELOG-0.21.0.md)
+
 ## Actualización 0.20.1
 
 Corrige el regreso desde mundos, servidores, desconexiones y errores para que las rutas finales permanezcan en las interfaces de SIEGE. También persiste correctamente el servidor oficial en primer lugar.

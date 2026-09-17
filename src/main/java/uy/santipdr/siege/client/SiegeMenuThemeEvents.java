@@ -33,7 +33,8 @@ public final class SiegeMenuThemeEvents {
     private static boolean owned(Screen s) {
         return s instanceof SiegeTitleScreen || s instanceof SiegeMultiplayerScreen
                 || s instanceof SiegeSettingsScreen || s instanceof IntelScreenV3
-                || s instanceof IntelPortraitScreen || s instanceof SiegeSceneScreen;
+                || s instanceof IntelPortraitScreen || s instanceof SiegeSceneScreen
+                || s instanceof SiegeGuideScreen || s instanceof SiegeGuideImageScreen;
     }
     private static boolean nativeDialog(Screen s) {
         if (s == null) return false;

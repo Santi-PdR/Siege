@@ -188,9 +188,10 @@ public final class IntelScreenV3 extends Screen {
         int space = wide ? width - sidebarWidth - 30 : width - 12;
         int small = 22;
         boolean twoRows = space < 340;
-        int modeW = twoRows ? (space - 4) / 2 : Math.min(90, space / 4);
-        int inspectW = twoRows ? space - modeW - 4 : Math.min(88, space / 4);
-        int searchW = twoRows ? space - small - 4 : space - small - modeW - inspectW - 12;
+        int modeW = twoRows ? (space - 8) / 3 : Math.min(90, space / 5);
+        int inspectW = twoRows ? (space - 8) / 3 : Math.min(88, space / 5);
+        int guideW = twoRows ? space - modeW - inspectW - 8 : Math.min(66, space / 6);
+        int searchW = twoRows ? space - small - 4 : space - small - modeW - inspectW - guideW - 16;
         search = new EditBox(font, x, y, searchW, 18, Component.literal(label("Buscar expediente", "Search dossiers")));
         search.setMaxLength(80);
         search.setHint(Component.literal(label("Buscar...", "Search...")));
@@ -223,7 +224,7 @@ public final class IntelScreenV3 extends Screen {
                     SiegeUiSounds.click();
                 }, 0xFFD6A94B).setSelected(readingMode));
         readingButton.setTooltip(Tooltip.create(Component.literal(label("Alternar entre texto e imagen del expediente", "Switch between text and dossier image"))));
-        inspectButton = addRenderableWidget(new SiegeButton(x + space - inspectW, twoRows ? y + 22 : y, inspectW, 18,
+        inspectButton = addRenderableWidget(new SiegeButton(x + space - inspectW - guideW - 4, twoRows ? y + 22 : y, inspectW, 18,
                 Component.literal(label("AMPLIAR", "INSPECT")), b -> {
                     List<IntelEntry> files = filtered();
                     if (!files.isEmpty()) {
@@ -232,6 +233,11 @@ public final class IntelScreenV3 extends Screen {
                     }
                 }, 0xFF55BFD9));
         inspectButton.setTooltip(Tooltip.create(Component.literal(label("Ver el documento completo con zoom", "View the complete document with zoom"))));
+        addRenderableWidget(new SiegeButton(x + space - guideW, twoRows ? y + 22 : y, guideW, 18,
+                Component.literal(label("GUÍA", "GUIDE")), b -> {
+            SiegeUiSounds.click(); minecraft.setScreen(new SiegeGuideScreen(this));
+        }, SiegeTheme.GOLD).setCompactCenter(true)).setTooltip(Tooltip.create(Component.literal(label(
+                "Objetos, lore, dificultades, crónicas e inspiraciones", "Items, lore, difficulties, chronicles and inspirations"))));
     }
 
     private void initReadingActions() {
@@ -915,4 +921,3 @@ public final class IntelScreenV3 extends Screen {
 
     private record DetailLine(FormattedCharSequence value, int color, String source, int offset) { }
 }
-
