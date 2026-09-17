@@ -176,6 +176,11 @@ public final class SiegeSettingsScreen extends Screen {
         switch (section) {
             case OVERVIEW -> {
                 addRenderableWidget(new SiegeButton(contentX, y, w, h,
+                        Component.literal(label("GUÍA SIEGE", "SIEGE GUIDE")), b -> {
+                    SiegeUiSounds.click(); minecraft.setScreen(new SiegeGuideScreen(this));
+                }, GOLD).withIcon("intel"));
+                y += h + gap;
+                addRenderableWidget(new SiegeButton(contentX, y, w, h,
                         Component.literal(label("RESTAURAR AJUSTES DE SIEGE", "RESET SIEGE SETTINGS")), b -> {
                     SiegeUiSounds.click();
                     minecraft.setScreen(new ConfirmScreen(confirmed -> {
@@ -807,4 +812,3 @@ public final class SiegeSettingsScreen extends Screen {
         GRAPHICS
     }
 }
-

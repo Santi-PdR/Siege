@@ -35,6 +35,8 @@ jobs:
           java -cp build/layout-tests UiRegressionTest
           javac -d build/layout-tests src/main/java/uy/santipdr/siege/client/SiegeMultiplayerLayout.java tests/MultiplayerLayoutTest.java
           java -cp build/layout-tests MultiplayerLayoutTest
+          javac -d build/guide-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/SiegeGuideLayout.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java tests/GuideRegressionTest.java
+          java -cp build/guide-tests GuideRegressionTest
           javac -d build/config-tests tests/stubs/net/minecraftforge/fml/loading/FMLPaths.java tests/stubs/com/mojang/logging/LogUtils.java src/main/java/uy/santipdr/siege/client/SiegeConfig.java tests/ConfigRegressionTest.java
           java -cp build/config-tests ConfigRegressionTest
           python3 tests/test_installer.py
