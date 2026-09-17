@@ -9,16 +9,16 @@
 - Fotografías originales completas con ajuste proporcional y visor ampliado; ninguna imagen recortada o deformada.
 - Tematización oscura, roja y dorada, sonidos SIEGE y descripciones de controles.
 
-## Contenido aportado
+## Contenido incorporado
 
 - Giro de Raza: Shadow como única fuente indicada, independencia de cada giro, repeticiones posibles, ausencia de garantías, Suerte/Bloodluck sin efecto y conjunto de posibilidades modificable.
-- Autoría del texto del giro: @romax141403. Se muestran las dos capturas aportadas; Original Cost: 2 no se interpreta como precio de Shadow ni probabilidad.
+- Autoría del texto del giro: @romax141403. Se muestran dos imágenes del objeto dentro de su ficha.
 - Contexto de 2044, guerra como negocio, organizaciones enemigas, Dominia, Dominianos, Erikase y Stronghold 5-5.
 - Vidas, reanimación, países/civilizaciones y reglas declaradas: Forge 1.20.1; End y Nether deshabilitados.
 - Casual 50%, Conscripto 75%, Dinámico 100%, Masoquista 200%, HELL 300% en desarrollo.
 - Orden de las seis calaveras suministradas; la calavera dorada adicional se conserva en la captura sin inventarle una equivalencia.
 - Trece crónicas con revelación voluntaria de spoilers, resúmenes no gráficos, fechas e incertidumbres. No cambian las fichas de combate: Aurelionis escapó vivo; el cuerpo del piloto de Hermes no fue encontrado. The Twins y Sparta no reciben estadísticas inventadas.
-- Siete inspiraciones declaradas, con Dummies vs Noobs como principal. Imágenes originales del ZIP y aviso de derechos/ausencia de afiliación oficial.
+- Siete inspiraciones declaradas, con Dummies vs Noobs como principal e imágenes originales completas.
 
 ## Alcance y validación
 

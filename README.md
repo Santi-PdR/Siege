@@ -1,3 +1,9 @@
+## Actualización 0.21.1
+
+La Guía SIEGE queda escrita como un archivo interno de 2044: escala de amenaza militar, crónicas históricas y lore breve de cada inspiración, sin etiquetas externas ni explicaciones técnicas de las capturas.
+
+[Cambios](docs/CHANGELOG-0.21.1.md)
+
 ## Actualización 0.21.0
 
 Nueva **Guía SIEGE** desde Intel o Configuración → Resumen: Giro de Raza, lore de 2044/Dominia, dificultades, crónicas con spoilers opcionales e inspiraciones con imágenes originales completas. 27 artículos bilingües; no modifica gameplay ni probabilidades.
