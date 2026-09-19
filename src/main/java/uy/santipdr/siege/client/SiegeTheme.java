@@ -6,6 +6,8 @@ import net.minecraft.client.gui.GuiGraphics;
 public final class SiegeTheme {
     public static final int RED = 0xFFE54852;
     public static final int GOLD = 0xFFD6AE65;
+    public static final int CYAN = 0xFF55BFD9;
+    public static final int WARNING = 0xFFD65A4B;
     public static final int INK = 0xFFF0EDEA;
     public static final int MUTED = 0xFFA4A3A1;
     public static final int SURFACE = 0xF018181A;
