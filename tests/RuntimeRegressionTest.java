@@ -1,5 +1,7 @@
 package uy.santipdr.siege.client;
 
+import javax.imageio.ImageIO;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -15,7 +17,7 @@ public class RuntimeRegressionTest {
         sourceBackedDvnContract();
         existingIntelContract();
         resourceContract();
-        System.out.println("Audio recovery, SIEGE 0.70 deployment Intel, DVN references and image resources passed");
+        System.out.println("Audio recovery, SIEGE 1.20 Intel, DVN references and decodable image resources passed");
     }
 
     private static void previewClockContract() {
@@ -131,7 +133,13 @@ public class RuntimeRegressionTest {
     private static void resourceContract() {
         for (IntelEntry entry : IntelCatalog.files()) {
             Path image = Path.of("src/main/resources/assets/siege/textures/gui/intel/" + entry.image() + ".png");
-            check(Files.isRegularFile(image), "Missing image " + image);
+            decodeImage(image);
+            if (entry.category().equals("BOSS") && entry.image().endsWith("frame_00")) {
+                String framePrefix = entry.image().substring(0, entry.image().length() - 2);
+                for (int frame = 0; frame < 6; frame++) {
+                    decodeImage(Path.of("src/main/resources/assets/siege/textures/gui/intel/" + framePrefix + String.format("%02d", frame) + ".png"));
+                }
+            }
             check(!entry.text(true).advisory().isBlank() && !entry.text(false).advisory().isBlank(), "Missing advisory " + entry.code());
             check(IntelPresentation.hpValue(entry.hp()).signum() >= 0, "Invalid HP value " + entry.code());
             check(IntelPresentation.coverageGrade(entry, entry.text(true)).matches("[A-E]"), "Invalid coverage grade " + entry.code());
@@ -140,5 +148,16 @@ public class RuntimeRegressionTest {
             IntelCatalog.filtered("SUPER-UNIT").clear();
             throw new AssertionError("Category groups must be immutable");
         } catch (UnsupportedOperationException expected) { }
+    }
+
+    private static void decodeImage(Path image) {
+        check(Files.isRegularFile(image), "Missing image " + image);
+        try {
+            var decoded = ImageIO.read(image.toFile());
+            check(decoded != null, "Unreadable image " + image);
+            check(decoded.getWidth() > 0 && decoded.getHeight() > 0, "Invalid image dimensions " + image);
+        } catch (IOException error) {
+            throw new AssertionError("Corrupt image " + image + ": " + error.getMessage(), error);
+        }
     }
 }
