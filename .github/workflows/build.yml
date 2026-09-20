@@ -71,7 +71,11 @@ jobs:
           grep -q 'IntelScreenV3(Screen parent, IntelEntry requestedEntry)' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'targetCode.equals(files.get(i).code())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'new IntelScreenV3(this, entry)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
-          grep -q 'new SiegeArchiveScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeSystemScreen.java
+          grep -q 'new SiegeArchiveScreen(screen)' src/main/java/uy/santipdr/siege/client/SiegeMenuThemeEvents.java
+          if grep -q 'new SiegeArchiveScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeSystemScreen.java; then
+            echo "Gameplay knowledge must be opened from Intel, not Settings/System."
+            exit 1
+          fi
           grep -q 'SHELLSHOCK' src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java
           grep -q 'MUTILATED' src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java
           if grep -nE 'FAVORITES|toggleFavoriteIntel|favoriteButton|addIndexButton|copyText|GUARDAR' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then

@@ -10,8 +10,8 @@ import net.minecraftforge.fml.ModList;
 import uy.santipdr.siege.SiegeMod;
 
 /**
- * 0.40 system center: live runtime information, compatibility, accessibility
- * and direct access to the chronological operations archive.
+ * Client configuration/diagnostic center. Gameplay knowledge intentionally lives
+ * under Intel, never under Settings.
  */
 public final class SiegeSystemScreen extends Screen {
     private final Screen parent;
@@ -28,7 +28,7 @@ public final class SiegeSystemScreen extends Screen {
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
-        compact = width < 620 || height < 380;
+        compact = width < 620 || height < 350;
         int margin = compact ? 7 : 14;
         panelW = Math.max(260, Math.min(780, width - margin * 2));
         panelW = Math.min(panelW, Math.max(1, width - margin * 2));
@@ -39,7 +39,7 @@ public final class SiegeSystemScreen extends Screen {
         addRenderableWidget(new SiegeButton(8, 7, Math.min(86, Math.max(62, width / 6)), 19,
                 Component.literal(label("VOLVER", "BACK")), b -> onClose(), SiegeTheme.RED));
 
-        int controlsHeight = compact ? 91 : 103;
+        int controlsHeight = compact ? 69 : 79;
         int controlsTop = Math.max(panelY + 105, panelBottom - controlsHeight);
         int gap = 5;
         int rowH = compact ? 17 : 20;
@@ -84,26 +84,14 @@ public final class SiegeSystemScreen extends Screen {
                 }, SiegeTheme.GOLD).withIcon("intel"));
 
         int row3 = row2 + rowH + gap;
-        addRenderableWidget(new SiegeButton(innerX, row3, half, rowH,
+        SiegeButton minecraftOptions = addRenderableWidget(new SiegeButton(innerX, row3, innerW, rowH,
                 Component.literal(label("AJUSTES DE MINECRAFT", "MINECRAFT OPTIONS")), b -> {
                     SiegeUiSounds.click();
                     minecraft.setScreen(new OptionsScreen(this, minecraft.options));
-                }, SiegeTheme.ORANGE).withIcon("settings"));
-        addRenderableWidget(new SiegeButton(innerX + half + gap, row3, innerW - half - gap, rowH,
-                Component.literal(label("GUÍA SIEGE", "SIEGE GUIDE")), b -> {
-                    SiegeUiSounds.click();
-                    minecraft.setScreen(new SiegeGuideScreen(this));
-                }, SiegeTheme.GOLD).withIcon("intel"));
-
-        int row4 = row3 + rowH + gap;
-        SiegeButton archive = addRenderableWidget(new SiegeButton(innerX, row4, innerW, rowH,
-                Component.literal(label("ARCHIVO DE OPERACIONES 0.40", "OPERATIONS ARCHIVE 0.40")), b -> {
-                    SiegeUiSounds.confirm();
-                    minecraft.setScreen(new SiegeArchiveScreen(this));
-                }, SiegeTheme.CYAN).withIcon("overview").setCompactCenter(true));
-        archive.setTooltip(Tooltip.create(Component.literal(label(
-                "Avisos SIEGE en orden temporal, misiones, equipo, unidades y estados de caída.",
-                "Chronological SIEGE notices, missions, equipment, units and downed states."))));
+                }, SiegeTheme.ORANGE).withIcon("settings").setCompactCenter(true));
+        minecraftOptions.setTooltip(Tooltip.create(Component.literal(label(
+                "Abre las opciones nativas de Minecraft tematizadas por SIEGE.",
+                "Opens Minecraft's native options themed by SIEGE."))));
 
         refreshButtons();
     }
@@ -137,9 +125,9 @@ public final class SiegeSystemScreen extends Screen {
 
         int textX = panelX + 12;
         int innerW = panelW - 24;
-        g.drawString(font, "SIEGE // 0.40 SYSTEM CENTER", textX, panelY + 10, SiegeTheme.CYAN, false);
-        String subtitle = label("Estado real del cliente, compatibilidad, archivo y accesibilidad.",
-                "Live client state, compatibility, archive and accessibility.");
+        g.drawString(font, "SIEGE // 0.40 SYSTEM SETTINGS", textX, panelY + 10, SiegeTheme.CYAN, false);
+        String subtitle = label("Configuración avanzada, compatibilidad y accesibilidad del cliente.",
+                "Advanced client configuration, compatibility and accessibility.");
         g.drawString(font, font.plainSubstrByWidth(subtitle, innerW), textX, panelY + 24, SiegeTheme.MUTED, false);
         SiegeTheme.divider(g, textX, panelY + 38, innerW, SiegeTheme.CYAN);
 
@@ -149,24 +137,20 @@ public final class SiegeSystemScreen extends Screen {
         int cardH = compact ? 24 : 30;
         int x2 = textX + cardW + gap;
 
-        card(g, textX, cardsTop, cardW, cardH, label("BUILD", "BUILD"), version(SiegeMod.MOD_ID), SiegeTheme.RED);
+        card(g, textX, cardsTop, cardW, cardH, "BUILD", version(SiegeMod.MOD_ID), SiegeTheme.RED);
         if (!compact) card(g, x2, cardsTop, innerW - cardW - gap, cardH,
                 "MINECRAFT / FORGE", SharedConstants.getCurrentVersion().getName() + " / " + version("forge"), SiegeTheme.ORANGE);
 
         int row2 = cardsTop + cardH + gap;
         card(g, textX, row2, cardW, cardH, label("RENDER", "RENDER"), renderBackend(), SiegeTheme.CYAN);
         if (!compact) card(g, x2, row2, innerW - cardW - gap, cardH,
-                label("CONTENIDO", "CONTENT"), IntelCatalog.total() + " Intel · " + SiegeArchiveData.total() + " Archive · "
-                        + SiegeBackgrounds.count() + " BG · " + SiegeMusic.trackNames().size() + " Music", SiegeTheme.GOLD);
+                label("PERFIL GRÁFICO", "GRAPHICS PROFILE"), SiegeConfig.graphics.name(), SiegeTheme.GOLD);
 
         int stateY = compact ? row2 + cardH + 7 : row2 + cardH + 9;
         String config = SiegeConfig.lastSaveSucceeded ? label("CONFIG GUARDADA", "CONFIG SAVED")
                 : label("ERROR AL GUARDAR CONFIG", "CONFIG SAVE ERROR");
         g.drawString(font, config, textX, stateY,
                 SiegeConfig.lastSaveSucceeded ? SiegeTheme.GREEN : 0xFFFF8B91, false);
-        String graphics = label("PERFIL ", "PROFILE ") + SiegeConfig.graphics.name();
-        if (font.width(config) + font.width(graphics) + 18 < innerW)
-            g.drawString(font, graphics, panelX + panelW - 12 - font.width(graphics), stateY, SiegeTheme.MUTED, false);
 
         int sceneY = stateY + 13;
         String scene = label("FONDO: ", "BACKGROUND: ")
@@ -179,15 +163,15 @@ public final class SiegeSystemScreen extends Screen {
                 : SiegeMusic.currentTrackName() + " · " + SiegeConfig.musicVolume + "%");
         g.drawString(font, font.plainSubstrByWidth(music, innerW), textX, musicY, SiegeTheme.MUTED, false);
 
-        int policyY = musicY + 15;
-        if (policyY < panelBottom - 108) {
-            g.fill(textX, policyY, panelX + panelW - 12, policyY + 1, 0xFF31373C);
-            String policy = label(
-                    "0.40: dossiers = información oficial. Archivo = avisos en orden más nuevo → más viejo. Reportes de campo permanecen separados.",
-                    "0.40: dossiers = official information. Archive = notices ordered newest → oldest. Field reports remain separate.");
-            int y = policyY + 6;
-            for (var line : font.split(Component.literal(policy), Math.max(60, innerW))) {
-                if (y + font.lineHeight >= panelBottom - 105) break;
+        int noteY = musicY + 16;
+        if (noteY < panelBottom - 82) {
+            g.fill(textX, noteY, panelX + panelW - 12, noteY + 1, 0xFF31373C);
+            String note = label(
+                    "La información de unidades, misiones, equipo y estados de muerte se consulta desde Intel, no desde Configuración.",
+                    "Units, missions, equipment and death-state information is accessed from Intel, not Settings.");
+            int y = noteY + 6;
+            for (var line : font.split(Component.literal(note), Math.max(60, innerW))) {
+                if (y + font.lineHeight >= panelBottom - 78) break;
                 g.drawString(font, line, textX, y, SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
                 y += font.lineHeight + 2;
             }

@@ -119,6 +119,18 @@ public final class SiegeMenuPolicy {
         };
     }
 
+    /**
+     * The themed overlay is drawn after the vanilla screen. Vanilla titles can
+     * otherwise remain visible directly underneath the SIEGE header. Mask only
+     * the proven-empty title strip and stop before the first live widget.
+     */
+    public static int vanillaTitleMaskBottom(int firstWidgetY, int screenHeight) {
+        int safeHeight = Math.max(0, screenHeight);
+        if (safeHeight == 0) return 0;
+        int beforeWidgets = firstWidgetY <= 0 ? 20 : Math.max(20, firstWidgetY - 2);
+        return Math.min(safeHeight, Math.min(34, beforeWidgets));
+    }
+
     public static int entryShade(long age, boolean effects, boolean reducedMotion) {
         if (!effects || reducedMotion || age < 0 || age >= 180) return 0;
         return (int)(42 * (180 - age) / 180);
