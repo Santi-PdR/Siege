@@ -13,8 +13,8 @@ import com.mojang.logging.LogUtils;
 import java.util.Properties;
 
 public final class SiegeConfig {
-    // Keep the historical migration revision stable. New 0.30 options load their
-    // own defaults and must never re-run the old autoRotateIntel migration.
+    // Keep the historical migration revision stable. 0.50 profiles coordinate
+    // existing fields and therefore do not require a destructive config migration.
     private static final int SETTINGS_REVISION = 801;
 
     public enum Graphics { PERFORMANCE, BALANCED, CINEMATIC;
@@ -233,27 +233,14 @@ public final class SiegeConfig {
         save();
     }
 
+    /** Legacy settings entry now delegates to the full 0.50 calm profile. */
     public static void applyCalmPreset() {
-        reducedMotion = true;
-        reduceFlashes = true;
-        highContrast = true;
-        titleInterference = false;
-        scanlines = false;
-        hoverSounds = false;
-        graphics = Graphics.BALANCED;
-        save();
+        SiegeClientProfile.apply(SiegeClientProfile.Profile.CALM);
     }
 
+    /** Legacy settings entry now delegates to the full 0.50 reading profile. */
     public static void applyReadingPreset() {
-        intelReadingMode = true;
-        comfortableReading = true;
-        darkIntelPaper = true;
-        highContrast = true;
-        reducedMotion = true;
-        reduceFlashes = true;
-        titleInterference = false;
-        scanlines = false;
-        save();
+        SiegeClientProfile.apply(SiegeClientProfile.Profile.READING);
     }
 
     public static int clampVolume(int value) { return Math.max(0, Math.min(100, value)); }
