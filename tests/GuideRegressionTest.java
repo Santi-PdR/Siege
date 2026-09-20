@@ -59,6 +59,22 @@ public final class GuideRegressionTest {
         check(SiegeGuideData.entries(SiegeGuideData.Category.OPERATIONS, "Núcleo", true).size() == 1, "search reactive AI briefing");
         check(SiegeGuideData.entries(SiegeGuideData.Category.OPERATIONS, "interdimensional", true).size() == 1, "search Rift briefing");
         check(SiegeGuideData.entries(SiegeGuideData.Category.OPERATIONS, "3.000 HP", true).size() == 1, "search Agreement briefing");
+
+        // 0.30 source boundary: unverified Agreement/Gate/Rift material must stay
+        // in Operations, where it can keep provenance without entering Intel.
+        var agreementReport = SiegeGuideData.ENTRIES.stream().filter(e -> e.id().equals("agreement-field-report")).findFirst().orElseThrow();
+        var gatesRifts = SiegeGuideData.ENTRIES.stream().filter(e -> e.id().equals("gates-rifts")).findFirst().orElseThrow();
+        check(agreementReport.category() == SiegeGuideData.Category.OPERATIONS && gatesRifts.category() == SiegeGuideData.Category.OPERATIONS,
+                "Agreement field intelligence moved out of Operations");
+        check(agreementReport.body(true).contains("REPORTE SIN VERIFICAR") && agreementReport.body(false).contains("UNVERIFIED REPORT"),
+                "Agreement field report lost provenance");
+        check(agreementReport.body(true).contains("Rick Sanchez") && agreementReport.body(true).contains("3.000 HP"),
+                "Agreement field report lost retained context");
+        check(gatesRifts.body(true).contains("GATES") && gatesRifts.body(true).contains("RIFTS") && gatesRifts.body(true).contains("VISORES"),
+                "Gate/Rift field briefing incomplete");
+        check(gatesRifts.body(false).contains("GATES") && gatesRifts.body(false).contains("RIFTS") && gatesRifts.body(false).contains("VISORS"),
+                "English Gate/Rift field briefing incomplete");
+
         String race = SiegeGuideData.ENTRIES.get(0).body(true);
         for (String word : new String[] {"Shadow", "INDEPENDIENTE", "Bloodluck", "@romax141403"}) check(race.contains(word), "race rule " + word);
         check(!race.contains("Original Cost") && !race.contains("CAPTURA DEL OBJETO"), "no technical screenshot transcription");
@@ -68,6 +84,6 @@ public final class GuideRegressionTest {
         check(SiegeGuideData.entries(SiegeGuideData.Category.INSPIRATIONS, "economía de guerra", true).size() == 1, "inspiration lore searchable");
         check(SiegeGuideData.ENTRIES.stream().filter(e -> e.id().equals("ending-aurelionis")).findFirst().orElseThrow().body(true).contains("escapar con vida"), "Aurelionis alive");
         check(SiegeGuideData.ENTRIES.stream().filter(e -> e.id().equals("ending-hermes")).findFirst().orElseThrow().body(true).contains("No se encontró su cuerpo"), "Hermes uncertainty");
-        System.out.println("Guide: " + layouts + " layouts, 30 bilingual records, 10 original PNGs, operations, spoiler and source rules passed");
+        System.out.println("Guide: " + layouts + " layouts, 30 bilingual records, 10 original PNGs, operations source boundary, spoiler and source rules passed");
     }
 }
