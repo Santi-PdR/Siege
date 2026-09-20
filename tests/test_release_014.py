@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Durable release contracts from Atlas through SIEGE 1.20."""
+"""Durable release contracts from Atlas through SIEGE 0.75."""
 from pathlib import Path
 import re
 
@@ -10,7 +10,7 @@ CHANGELOG_014 = read("docs/CHANGELOG-0.14.0.md")
 CHANGELOG_050 = read("docs/CHANGELOG-0.50.0.md")
 CHANGELOG_060 = read("docs/CHANGELOG-0.60.0.md")
 CHANGELOG_070 = read("docs/CHANGELOG-0.70.0.md")
-CHANGELOG_120 = read("docs/CHANGELOG-1.20.0.md")
+CHANGELOG_075 = read("docs/CHANGELOG-0.75.0.md")
 INTEL_DATA = read("src/main/java/uy/santipdr/siege/client/IntelData.java")
 INTEL_CURRENT = read("src/main/java/uy/santipdr/siege/client/IntelCurrentData.java")
 INTEL_CATALOG = read("src/main/java/uy/santipdr/siege/client/IntelCatalog.java")
@@ -38,8 +38,9 @@ assert numbered(CHANGELOG_014) == list(range(1, 51))
 assert numbered(CHANGELOG_050) == list(range(1, 51))
 assert numbered(CHANGELOG_060) == list(range(1, 61))
 assert numbered(CHANGELOG_070) == list(range(1, 71))
-assert numbered(CHANGELOG_120) == list(range(1, 13))
-assert "version = '1.20.0'" in BUILD
+assert numbered(CHANGELOG_075) == list(range(1, 13))
+assert "version = '0.75.0'" in BUILD
+assert "version = '1.20.0'" not in BUILD
 
 # Atlas and earlier Intel contracts remain intact.
 assert 'file("SUP-001", "ATLAS", "SUPER-UNIT", 5, "125,000,000", "atlas"' in INTEL_DATA
@@ -48,7 +49,7 @@ for forbidden in ("FAVORITES", "toggleFavoriteIntel", "favoriteButton", "addInde
     assert forbidden not in INTEL_SCREEN, f"Removed Intel control returned: {forbidden}"
 assert 'label("AMPLIAR", "INSPECT")' in INTEL_SCREEN
 
-# 0.50 profiles and 0.60 diagnostics remain available in 1.20.
+# 0.50 profiles and 0.60 diagnostics remain available in 0.75.
 for profile in ("CINEMATIC", "TACTICAL", "PERFORMANCE", "CALM", "READING", "CUSTOM"):
     assert profile in PROFILE, f"Missing client profile {profile}"
 assert "CENTRO DE COMANDO" in SYSTEM and "COMMAND CENTER" in SYSTEM
@@ -107,9 +108,10 @@ assert "Proteus deja de figurar incorrectamente como Elite" in CHANGELOG_070
 assert "sigue en desarrollo" in CHANGELOG_070
 assert "No se copian renders o screenshots externos" in CHANGELOG_070
 
-# 1.20 closes the texture-corruption hole rather than only checking path existence.
-assert "siete PNG de placeholder" in CHANGELOG_120
-assert "ImageIO" in CHANGELOG_120
+# 0.75 closes the texture-corruption hole rather than only checking path existence.
+assert "siete PNG de placeholder" in CHANGELOG_075
+assert "ImageIO" in CHANGELOG_075
+assert "0.70.0" in CHANGELOG_075 and "0.75.0" in CHANGELOG_075
 assert "ImageIO.read" in RUNTIME_TEST
 assert "Corrupt image" in RUNTIME_TEST
 assert 'entry.category().equals("BOSS")' in RUNTIME_TEST and 'frame < 6' in RUNTIME_TEST
@@ -119,4 +121,4 @@ for source_name, source in (("profile", PROFILE), ("metrics", METRICS), ("diagno
                             ("diagnostics", DIAGNOSTICS_SCREEN)):
     assert "GLFW_KEY_" not in source, f"Unrequested keyboard shortcut added in {source_name}"
 
-print("SIEGE durable release contracts through 1.20 texture recovery passed")
+print("SIEGE durable release contracts through 0.75 texture recovery passed")

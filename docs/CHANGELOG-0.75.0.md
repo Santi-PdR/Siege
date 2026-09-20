@@ -1,8 +1,8 @@
-# SIEGE 1.20.0 — Intel Texture Recovery
+# SIEGE 0.75.0 — Intel Texture Recovery
 
-1. La versión salta de **0.70.0** a **1.20.0** (+0.50).
+1. La versión avanza de **0.70.0** a **0.75.0**.
 2. Se identifica la causa real del checker negro/magenta de Intel: siete PNG de placeholder estaban presentes dentro del JAR, pero su flujo de datos era inválido y Java no podía decodificarlos.
-3. Se reemplaza `placeholder/classified.png` por un PNG 640×360 válido con presentación SIEGE clasificada.
+3. Se reemplaza `placeholder/classified.png` por un PNG válido con presentación SIEGE clasificada.
 4. Se reemplazan `bosses/classified/frame_00..05.png` por placeholders Boss válidos.
 5. Engineer deja de caer en la textura de error de Minecraft cuando no existe un render local verificado.
 6. Informant, Tranquilizer, Agitator, Grappler, Skydiver, Skyliner y cualquier otro expediente que comparta el placeholder usan ahora un recurso decodificable.
@@ -13,6 +13,6 @@
 11. Un PNG ausente, ilegible o con dimensiones inválidas hace fallar el build antes de generar/publicar la release.
 12. El instalador continúa recibiendo únicamente el JAR validado que publica el workflow de `main`.
 
-## Motivo del salto
+## Alcance
 
-El salto 0.70.0 → 1.20.0 fue solicitado para separar claramente esta reparación de la release 0.70 y evitar que un arreglo de recursos crítico parezca un parche menor.
+0.75.0 es una evolución incremental de 0.70.0 centrada en recuperación y endurecimiento de recursos Intel. Mantiene intactas las mejoras de Despliegue, las nuevas clasificaciones y la información DVN añadidas en 0.70.0.
