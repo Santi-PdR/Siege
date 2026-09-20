@@ -1,8 +1,8 @@
 package uy.santipdr.siege.client;
 
 /**
- * High-level client profiles introduced in SIEGE 0.50.0. Profiles only touch
- * presentation/client preferences; they never change gameplay or server rules.
+ * High-level presentation profiles. 1.25 delegates every preset value to
+ * {@link SiegeProfileSpec}, so apply/detect/diagnostics can no longer drift apart.
  */
 public final class SiegeClientProfile {
     public enum Profile {
@@ -17,236 +17,16 @@ public final class SiegeClientProfile {
     private SiegeClientProfile() { }
 
     public static Profile detect() {
-        if (matchesReading()) return Profile.READING;
-        if (matchesCalm()) return Profile.CALM;
-        if (matchesPerformance()) return Profile.PERFORMANCE;
-        if (matchesTactical()) return Profile.TACTICAL;
-        if (matchesCinematic()) return Profile.CINEMATIC;
+        for (Profile profile : SiegeProfileSpec.presets()) {
+            if (SiegeProfileSpec.matches(profile)) return profile;
+        }
         return Profile.CUSTOM;
     }
 
     public static void apply(Profile profile) {
         if (profile == null || profile == Profile.CUSTOM) return;
-
-        switch (profile) {
-            case CINEMATIC -> {
-                commonReading(false);
-                SiegeConfig.graphics = SiegeConfig.Graphics.CINEMATIC;
-                SiegeConfig.reducedMotion = false;
-                SiegeConfig.reduceFlashes = false;
-                SiegeConfig.highContrast = false;
-                SiegeConfig.menuEffects = true;
-                SiegeConfig.animatedBackgrounds = true;
-                SiegeConfig.animatedIntel = true;
-                SiegeConfig.scanlines = true;
-                SiegeConfig.titleInterference = true;
-                SiegeConfig.hoverSounds = true;
-                SiegeConfig.mainMenuIntel = true;
-                SiegeConfig.autoRotateIntel = true;
-                SiegeConfig.pauseIntelOnHover = true;
-                SiegeConfig.showIntelProgress = true;
-                SiegeConfig.showIntelState = true;
-                SiegeConfig.trackAnnouncements = true;
-                SiegeConfig.backgroundDarkness = 18;
-                SiegeConfig.panelDarkness = 58;
-            }
-            case TACTICAL -> {
-                commonReading(false);
-                SiegeConfig.graphics = SiegeConfig.Graphics.BALANCED;
-                SiegeConfig.reducedMotion = false;
-                SiegeConfig.reduceFlashes = false;
-                SiegeConfig.highContrast = false;
-                SiegeConfig.menuEffects = true;
-                SiegeConfig.animatedBackgrounds = true;
-                SiegeConfig.animatedIntel = true;
-                SiegeConfig.scanlines = true;
-                SiegeConfig.titleInterference = false;
-                SiegeConfig.hoverSounds = true;
-                SiegeConfig.mainMenuIntel = true;
-                SiegeConfig.autoRotateIntel = true;
-                SiegeConfig.pauseIntelOnHover = true;
-                SiegeConfig.showIntelProgress = true;
-                SiegeConfig.showIntelState = true;
-                SiegeConfig.trackAnnouncements = true;
-                SiegeConfig.backgroundDarkness = 30;
-                SiegeConfig.panelDarkness = 72;
-            }
-            case PERFORMANCE -> {
-                commonReading(false);
-                SiegeConfig.graphics = SiegeConfig.Graphics.PERFORMANCE;
-                SiegeConfig.reducedMotion = true;
-                SiegeConfig.reduceFlashes = true;
-                SiegeConfig.highContrast = false;
-                SiegeConfig.menuEffects = false;
-                SiegeConfig.animatedBackgrounds = false;
-                SiegeConfig.animatedIntel = false;
-                SiegeConfig.scanlines = false;
-                SiegeConfig.titleInterference = false;
-                SiegeConfig.hoverSounds = false;
-                SiegeConfig.mainMenuIntel = true;
-                SiegeConfig.autoRotateIntel = false;
-                SiegeConfig.pauseIntelOnHover = true;
-                SiegeConfig.showIntelProgress = false;
-                SiegeConfig.showIntelState = true;
-                SiegeConfig.trackAnnouncements = false;
-                SiegeConfig.backgroundDarkness = 38;
-                SiegeConfig.panelDarkness = 78;
-            }
-            case CALM -> {
-                commonReading(false);
-                SiegeConfig.graphics = SiegeConfig.Graphics.BALANCED;
-                SiegeConfig.reducedMotion = true;
-                SiegeConfig.reduceFlashes = true;
-                SiegeConfig.highContrast = true;
-                SiegeConfig.menuEffects = false;
-                SiegeConfig.animatedBackgrounds = false;
-                SiegeConfig.animatedIntel = false;
-                SiegeConfig.scanlines = false;
-                SiegeConfig.titleInterference = false;
-                SiegeConfig.hoverSounds = false;
-                SiegeConfig.mainMenuIntel = true;
-                SiegeConfig.autoRotateIntel = false;
-                SiegeConfig.pauseIntelOnHover = true;
-                SiegeConfig.showIntelProgress = false;
-                SiegeConfig.showIntelState = true;
-                SiegeConfig.trackAnnouncements = false;
-                SiegeConfig.backgroundDarkness = 42;
-                SiegeConfig.panelDarkness = 84;
-            }
-            case READING -> {
-                commonReading(true);
-                SiegeConfig.graphics = SiegeConfig.Graphics.BALANCED;
-                SiegeConfig.reducedMotion = true;
-                SiegeConfig.reduceFlashes = true;
-                SiegeConfig.highContrast = true;
-                SiegeConfig.menuEffects = false;
-                SiegeConfig.animatedBackgrounds = false;
-                SiegeConfig.animatedIntel = false;
-                SiegeConfig.scanlines = false;
-                SiegeConfig.titleInterference = false;
-                SiegeConfig.hoverSounds = false;
-                SiegeConfig.mainMenuIntel = false;
-                SiegeConfig.autoRotateIntel = false;
-                SiegeConfig.pauseIntelOnHover = true;
-                SiegeConfig.showIntelProgress = false;
-                SiegeConfig.showIntelState = true;
-                SiegeConfig.trackAnnouncements = false;
-                SiegeConfig.backgroundDarkness = 48;
-                SiegeConfig.panelDarkness = 88;
-            }
-            default -> { }
-        }
+        SiegeProfileSpec.apply(profile);
         SiegeConfig.save();
-    }
-
-    private static void commonReading(boolean enabled) {
-        SiegeConfig.intelReadingMode = enabled;
-        SiegeConfig.comfortableReading = enabled;
-        SiegeConfig.darkIntelPaper = enabled;
-    }
-
-    private static boolean matchesCinematic() {
-        return !readingEnabled()
-                && SiegeConfig.graphics == SiegeConfig.Graphics.CINEMATIC
-                && !SiegeConfig.reducedMotion
-                && !SiegeConfig.reduceFlashes
-                && !SiegeConfig.highContrast
-                && SiegeConfig.menuEffects
-                && SiegeConfig.animatedBackgrounds
-                && SiegeConfig.animatedIntel
-                && SiegeConfig.scanlines
-                && SiegeConfig.titleInterference
-                && SiegeConfig.hoverSounds
-                && SiegeConfig.mainMenuIntel
-                && SiegeConfig.autoRotateIntel
-                && SiegeConfig.showIntelProgress
-                && SiegeConfig.trackAnnouncements
-                && SiegeConfig.backgroundDarkness == 18
-                && SiegeConfig.panelDarkness == 58;
-    }
-
-    private static boolean matchesTactical() {
-        return !readingEnabled()
-                && SiegeConfig.graphics == SiegeConfig.Graphics.BALANCED
-                && !SiegeConfig.reducedMotion
-                && !SiegeConfig.reduceFlashes
-                && !SiegeConfig.highContrast
-                && SiegeConfig.menuEffects
-                && SiegeConfig.animatedBackgrounds
-                && SiegeConfig.animatedIntel
-                && SiegeConfig.scanlines
-                && !SiegeConfig.titleInterference
-                && SiegeConfig.hoverSounds
-                && SiegeConfig.mainMenuIntel
-                && SiegeConfig.autoRotateIntel
-                && SiegeConfig.showIntelProgress
-                && SiegeConfig.trackAnnouncements
-                && SiegeConfig.backgroundDarkness == 30
-                && SiegeConfig.panelDarkness == 72;
-    }
-
-    private static boolean matchesPerformance() {
-        return !readingEnabled()
-                && SiegeConfig.graphics == SiegeConfig.Graphics.PERFORMANCE
-                && SiegeConfig.reducedMotion
-                && SiegeConfig.reduceFlashes
-                && !SiegeConfig.highContrast
-                && !SiegeConfig.menuEffects
-                && !SiegeConfig.animatedBackgrounds
-                && !SiegeConfig.animatedIntel
-                && !SiegeConfig.scanlines
-                && !SiegeConfig.titleInterference
-                && !SiegeConfig.hoverSounds
-                && SiegeConfig.mainMenuIntel
-                && !SiegeConfig.autoRotateIntel
-                && !SiegeConfig.showIntelProgress
-                && !SiegeConfig.trackAnnouncements
-                && SiegeConfig.backgroundDarkness == 38
-                && SiegeConfig.panelDarkness == 78;
-    }
-
-    private static boolean matchesCalm() {
-        return !readingEnabled()
-                && SiegeConfig.graphics == SiegeConfig.Graphics.BALANCED
-                && SiegeConfig.reducedMotion
-                && SiegeConfig.reduceFlashes
-                && SiegeConfig.highContrast
-                && !SiegeConfig.menuEffects
-                && !SiegeConfig.animatedBackgrounds
-                && !SiegeConfig.animatedIntel
-                && !SiegeConfig.scanlines
-                && !SiegeConfig.titleInterference
-                && !SiegeConfig.hoverSounds
-                && SiegeConfig.mainMenuIntel
-                && !SiegeConfig.autoRotateIntel
-                && !SiegeConfig.showIntelProgress
-                && !SiegeConfig.trackAnnouncements
-                && SiegeConfig.backgroundDarkness == 42
-                && SiegeConfig.panelDarkness == 84;
-    }
-
-    private static boolean matchesReading() {
-        return readingEnabled()
-                && SiegeConfig.graphics == SiegeConfig.Graphics.BALANCED
-                && SiegeConfig.reducedMotion
-                && SiegeConfig.reduceFlashes
-                && SiegeConfig.highContrast
-                && !SiegeConfig.menuEffects
-                && !SiegeConfig.animatedBackgrounds
-                && !SiegeConfig.animatedIntel
-                && !SiegeConfig.scanlines
-                && !SiegeConfig.titleInterference
-                && !SiegeConfig.hoverSounds
-                && !SiegeConfig.mainMenuIntel
-                && !SiegeConfig.autoRotateIntel
-                && !SiegeConfig.showIntelProgress
-                && !SiegeConfig.trackAnnouncements
-                && SiegeConfig.backgroundDarkness == 48
-                && SiegeConfig.panelDarkness == 88;
-    }
-
-    private static boolean readingEnabled() {
-        return SiegeConfig.intelReadingMode && SiegeConfig.comfortableReading && SiegeConfig.darkIntelPaper;
     }
 
     public static String label(Profile profile, boolean spanish) {
@@ -262,35 +42,35 @@ public final class SiegeClientProfile {
 
     public static String shortLabel(Profile profile, boolean spanish) {
         return switch (profile) {
-            case CINEMATIC -> spanish ? "CINE" : "CINE";
+            case CINEMATIC -> "CINE";
             case TACTICAL -> spanish ? "TÁCT" : "TACT";
             case PERFORMANCE -> spanish ? "REND" : "PERF";
             case CALM -> spanish ? "CALMA" : "CALM";
             case READING -> spanish ? "LEER" : "READ";
-            case CUSTOM -> spanish ? "CUSTOM" : "CUSTOM";
+            case CUSTOM -> "CUSTOM";
         };
     }
 
     public static String description(Profile profile, boolean spanish) {
         return switch (profile) {
             case CINEMATIC -> spanish
-                    ? "Máxima identidad visual: fondos y dossiers animados, interferencia y perfil gráfico cinematográfico."
-                    : "Maximum visual identity: animated backgrounds and dossiers, interference and cinematic graphics.";
+                    ? "Identidad visual máxima: fondos y dossiers animados, scanlines e interferencia controlable."
+                    : "Maximum visual identity: animated backgrounds and dossiers, scanlines and controllable interference.";
             case TACTICAL -> spanish
-                    ? "Equilibrio recomendado: información visible, animación moderada y contraste operativo sin exceso."
-                    : "Recommended balance: visible information, moderate animation and operational contrast without excess.";
+                    ? "Equilibrio operativo: información visible, animación moderada y contraste automático."
+                    : "Operational balance: visible information, moderate animation and automatic contrast.";
             case PERFORMANCE -> spanish
-                    ? "Reduce animaciones y efectos para priorizar fluidez del cliente y navegación rápida."
-                    : "Reduces animations and effects to prioritize client responsiveness and fast navigation.";
+                    ? "Reduce trabajo visual por frame: sin animaciones ambientales, scanlines ni interferencia."
+                    : "Reduces per-frame visual work: no ambient animation, scanlines or interference.";
             case CALM -> spanish
-                    ? "Minimiza movimiento, destellos, sonidos de hover y rotaciones automáticas."
-                    : "Minimizes motion, flashes, hover sounds and automatic rotations.";
+                    ? "Minimiza movimiento, destellos, sonidos de hover y rotaciones automáticas con alto contraste."
+                    : "Minimizes motion, flashes, hover sounds and automatic rotations with high contrast.";
             case READING -> spanish
-                    ? "Prioriza Intel: papel oscuro, espaciado cómodo, alto contraste y sin rotación automática."
-                    : "Prioritizes Intel: dark paper, comfortable spacing, high contrast and no automatic rotation.";
+                    ? "Prioriza Intel: papel oscuro, espaciado cómodo, alto contraste y sin movimiento automático."
+                    : "Prioritizes Intel: dark paper, comfortable spacing, high contrast and no automatic motion.";
             case CUSTOM -> spanish
-                    ? "Mezcla manual de ajustes. No coincide exactamente con un perfil predefinido."
-                    : "Manual settings mix. It does not exactly match a predefined profile.";
+                    ? "Mezcla manual. El Centro de Comando indica qué perfil está más cerca y cuánto difiere."
+                    : "Manual mix. Command Center shows the nearest profile and how far the settings drift.";
         };
     }
 
