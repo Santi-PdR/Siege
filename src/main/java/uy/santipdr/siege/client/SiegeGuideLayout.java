@@ -9,9 +9,13 @@ public record SiegeGuideLayout(int width, int height, int columns, int tabWidth,
         public boolean contains(double px, double py) { return px >= x && px < right() && py >= y && py < bottom(); }
     }
     public static SiegeGuideLayout of(int width, int height) {
-        int columns = width >= 600 ? 5 : 3;
-        int tabs = (width - 16 - (columns - 1) * 4) / columns;
-        int searchY = 34 + ((5 + columns - 1) / columns) * 22 + 4;
+        int tabCount = Math.max(1, SiegeGuideData.Category.values().length);
+        // Six archive families fit comfortably in one row on normal menu widths.
+        // Narrow logical viewports use two rows instead of shrinking labels into unreadable tabs.
+        int columns = width >= 560 ? tabCount : Math.min(3, tabCount);
+        int tabs = Math.max(1, (width - 16 - (columns - 1) * 4) / columns);
+        int rows = (tabCount + columns - 1) / columns;
+        int searchY = 34 + rows * 22 + 4;
         int top = searchY + 26;
         int bottom = height - 34;
         int nav = Math.min(190, Math.max(88, width / 4));
