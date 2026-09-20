@@ -71,7 +71,7 @@ assert "public static int readiness()" in DIAGNOSTIC
 assert "ERROR -> 40" in DIAGNOSTIC and "WARNING -> 12" in DIAGNOSTIC
 
 assert "class SiegeProfileMetrics" in METRICS
-assert "private static final int FIELDS = 21" in METRICS
+assert "private static final int FIELDS = 19" in METRICS
 assert "public static SiegeClientProfile.Profile nearest()" in METRICS
 assert "public static int distance(" in METRICS
 assert "public static int fitPercent(" in METRICS
