@@ -12,8 +12,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
 /**
- * 0.40 current-state and historical operations archive. It is client-side only;
- * entries document server announcements and references without changing gameplay.
+ * Intel field/archive view. It belongs to Intel, not Settings: current notices,
+ * missions, equipment, units, casualty states and older records live here.
  */
 public final class SiegeArchiveScreen extends Screen {
     private final Screen parent;
@@ -35,7 +35,7 @@ public final class SiegeArchiveScreen extends Screen {
     private record Line(int y, FormattedCharSequence text, int color, int spacing) { }
 
     public SiegeArchiveScreen(Screen parent) {
-        super(Component.literal("SIEGE // OPERATIONS ARCHIVE"));
+        super(Component.literal("SIEGE // INTEL ARCHIVE"));
         this.parent = parent;
     }
 
@@ -86,9 +86,10 @@ public final class SiegeArchiveScreen extends Screen {
             tabs.add(addRenderableWidget(tab));
         }
 
-        search = new EditBox(font, 8, layout.searchY(), width - 48, 18,
-                text("Buscar en el archivo", "Search the archive"));
-        search.setHint(text("Buscar aviso, unidad, estado…", "Search notice, unit, state…"));
+        int searchWidth = Math.max(50, width - 48);
+        search = new EditBox(font, 8, layout.searchY(), searchWidth, 18,
+                text("Buscar Intel", "Search Intel"));
+        search.setHint(text("Buscar estado, misión, unidad, equipo…", "Search state, mission, unit, equipment…"));
         search.setMaxLength(100);
         search.setValue(query);
         search.setResponder(value -> {
@@ -181,8 +182,8 @@ public final class SiegeArchiveScreen extends Screen {
 
         addLine(entry.title(es()), SiegeTheme.GOLD, 14);
         addLine(entry.source().label(es()) + "  //  PRIORITY " + entry.rank(), sourceColor(entry.source()), 17);
-        addLine(label("ORDEN 0.40: avisos más recientes prevalecen sobre avisos antiguos.",
-                "0.40 ORDER: newer notices override older notices."), SiegeTheme.MUTED, 20);
+        addLine(label("INTEL 0.40: avisos más recientes prevalecen sobre avisos antiguos.",
+                "INTEL 0.40: newer notices override older notices."), SiegeTheme.MUTED, 20);
 
         for (String paragraph : entry.body(es()).split("\n\n")) {
             int split = paragraph.indexOf('\n');
@@ -234,8 +235,13 @@ public final class SiegeArchiveScreen extends Screen {
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xE20A0B0D : 0xD00D0C0E);
 
-        String title = label("ARCHIVO DE OPERACIONES · 0.40", "OPERATIONS ARCHIVE · 0.40");
-        g.drawCenteredString(font, title, (80 + width - 8) / 2, 12,
+        int titleLeft = 80;
+        int titleRight = Math.max(titleLeft + 1, width - 8);
+        int titleSpace = Math.max(1, titleRight - titleLeft);
+        String rawTitle = width < 460 ? label("INTEL // ARCHIVO", "INTEL // ARCHIVE")
+                : label("INTEL // ARCHIVO OPERATIVO · 0.40", "INTEL // OPERATIONAL ARCHIVE · 0.40");
+        String title = font.plainSubstrByWidth(rawTitle, titleSpace);
+        g.drawCenteredString(font, title, titleLeft + titleSpace / 2, 12,
                 SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK);
 
         var article = layout.article();
