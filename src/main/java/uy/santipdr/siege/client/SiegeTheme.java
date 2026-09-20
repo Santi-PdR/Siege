@@ -9,6 +9,7 @@ public final class SiegeTheme {
     public static final int INK = 0xFFF0EDEA;
     public static final int MUTED = 0xFFA4A3A1;
     public static final int SURFACE = 0xF018181A;
+    public static final int FOCUS = 0xFFF2D36F;
     private SiegeTheme() { }
 
     public static void frame(GuiGraphics g, int x, int y, int w, int h, int color) {
@@ -18,16 +19,47 @@ public final class SiegeTheme {
         g.fill(x, y, x + 1, y + h, color);
         g.fill(x + w - 1, y, x + w, y + h, color);
     }
+
     public static void panel(GuiGraphics g, int x, int y, int w, int h, int accent) {
         if (w < 6 || h < 6) return;
         g.fill(x, y, x + w, y + h, SURFACE);
         frame(g, x, y, w, h, 0xFF424044);
+
+        // Layered one-pixel highlights add depth without introducing textures or
+        // expensive per-frame effects. Geometry stays identical for every screen.
         g.fill(x + 1, y + 1, x + w - 1, y + 2, 0xFF666166);
+        g.fill(x + 2, y + 2, x + w - 2, y + 3, 0x185F5B5F);
+        g.fill(x + 1, y + h - 3, x + w - 1, y + h - 2, 0x26000000);
         g.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, 0xFF0B0B0C);
-        int corner = Math.min(16, Math.min(w, h) / 4);
+        g.fill(x + 1, y + 3, x + 2, y + h - 3, 0x205F5B5F);
+        g.fill(x + w - 2, y + 3, x + w - 1, y + h - 3, 0x24000000);
+
+        int corner = Math.min(18, Math.min(w, h) / 4);
         g.fill(x, y, x + corner, y + 2, accent);
         g.fill(x + w - corner, y + h - 2, x + w, y + h, accent);
     }
+
+    /** Small focus brackets used by controls without changing their hit boxes. */
+    public static void focusCorners(GuiGraphics g, int x, int y, int w, int h, int color) {
+        if (w < 4 || h < 4) return;
+        int arm = Math.min(6, Math.max(3, Math.min(w, h) / 3));
+        g.fill(x, y, x + arm, y + 1, color);
+        g.fill(x, y, x + 1, y + arm, color);
+        g.fill(x + w - arm, y, x + w, y + 1, color);
+        g.fill(x + w - 1, y, x + w, y + arm, color);
+        g.fill(x, y + h - 1, x + arm, y + h, color);
+        g.fill(x, y + h - arm, x + 1, y + h, color);
+        g.fill(x + w - arm, y + h - 1, x + w, y + h, color);
+        g.fill(x + w - 1, y + h - arm, x + w, y + h, color);
+    }
+
+    /** Compact section divider shared by screens that need a quiet tactical accent. */
+    public static void divider(GuiGraphics g, int x, int y, int w, int accent) {
+        if (w <= 0) return;
+        g.fill(x, y, x + w, y + 1, 0xFF2A2D30);
+        g.fill(x, y, x + Math.min(56, w), y + 2, accent);
+    }
+
     /** Texture stays in the empty perimeter, never across the reading columns or portrait. */
     public static void paper(GuiGraphics g, int x, int y, int w, int h, boolean dark) {
         if (w < 40 || h < 40) return;
@@ -44,6 +76,7 @@ public final class SiegeTheme {
             }
         }
     }
+
     /** 9x9 pictograms, rendered as exact pixels at every GUI scale. */
     public static void icon(GuiGraphics g, int x, int y, String kind, int color) {
         switch (kind) {
