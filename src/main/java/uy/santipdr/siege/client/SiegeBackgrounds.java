@@ -24,6 +24,22 @@ public final class SiegeBackgrounds {
         return SiegeConfig.animatedBackgrounds ? (int)Math.floorMod(now / SCENE_MS, SCENES.size()) : 0;
     }
 
+    public static long rotationRemainingMs(long now) {
+        if (SiegeConfig.selectedScene >= 0 || !SiegeConfig.animatedBackgrounds) return -1L;
+        long local = Math.floorMod(now, SCENE_MS);
+        return SCENE_MS - local;
+    }
+
+    public static String rotationState(boolean spanish, long now) {
+        if (SiegeConfig.selectedScene >= 0)
+            return spanish ? "Fondo fijado" : "Background pinned";
+        if (!SiegeConfig.animatedBackgrounds)
+            return spanish ? "Rotación desactivada" : "Rotation disabled";
+        long remaining = rotationRemainingMs(now);
+        long seconds = Math.max(0, (remaining + 999L) / 1000L);
+        return (spanish ? "Siguiente escena en " : "Next scene in ") + seconds + " s";
+    }
+
     public static void renderContainedRegion(GuiGraphics g, int x, int y, int w, int h, int index, float alpha) {
         if (w <= 0 || h <= 0) return;
         double scale = Math.min(w / 960.0, h / 540.0);
@@ -82,7 +98,8 @@ public final class SiegeBackgrounds {
 
     public static void renderPanel(GuiGraphics g, int x, int y, int width, int height) {
         if (width <= 0 || height <= 0) return;
-        int alpha = Math.max(0, Math.min(255, SiegeConfig.panelDarkness * 255 / 100));
+        int percent = SiegeConfig.highContrast ? Math.max(SiegeConfig.panelDarkness, 72) : SiegeConfig.panelDarkness;
+        int alpha = Math.max(0, Math.min(255, percent * 255 / 100));
         g.fill(x, y, x + width, y + height, (alpha << 24) | 0x00050506);
     }
 
@@ -105,41 +122,45 @@ public final class SiegeBackgrounds {
         boolean animated = SiegeConfig.animatedBackgrounds && SiegeConfig.selectedScene < 0;
         long slot = animated ? now / SCENE_MS : 0L;
         long localMs = animated ? now % SCENE_MS : 0L;
-        float local = animated ? localMs / (float) SCENE_MS : 0.0F;
-        int current = SiegeConfig.selectedScene >= 0 ? Math.floorMod(SiegeConfig.selectedScene, SCENES.size()) : (int) (slot % SCENES.size());
+        float local = animated ? localMs / (float)SCENE_MS : 0.0F;
+        int current = SiegeConfig.selectedScene >= 0 ? Math.floorMod(SiegeConfig.selectedScene, SCENES.size()) : (int)(slot % SCENES.size());
         int next = (current + 1) % SCENES.size();
 
-        boolean allowPan = !SiegeConfig.reducedMotion && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE;
+        boolean allowPan = !SiegeConfig.reducedMotion && !SiegeConfig.reduceFlashes
+                && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE;
         float currentProgress = allowPan ? local : 0.5F;
         drawScene(graphics, SCENES.get(current), width, height, 1.0F, current, currentProgress, allowPan, cover);
 
         if (animated) {
             long fadeStart = SCENE_MS - CROSSFADE_MS;
             if (localMs >= fadeStart) {
-                float raw = (localMs - fadeStart) / (float) CROSSFADE_MS;
+                float raw = (localMs - fadeStart) / (float)CROSSFADE_MS;
                 float alpha = smoother(raw);
                 if (alpha > 0.01F) {
                     float incomingProgress = allowPan ? Math.min(0.18F, raw * 0.18F) : 0.5F;
                     drawScene(graphics, SCENES.get(next), width, height, alpha, next, incomingProgress, allowPan, cover);
                 }
 
-                // A very small midpoint veil masks large exposure differences between source images
-                // without turning the transition into a visible black flash.
-                int veilAlpha = Math.round((float) Math.sin(alpha * Math.PI) * 20.0F);
-                if (veilAlpha > 0) graphics.fill(0, 0, width, height, veilAlpha << 24);
+                // The midpoint veil hides large exposure jumps. Flash reduction
+                // disables it entirely and relies on the long crossfade instead.
+                if (!SiegeConfig.reduceFlashes) {
+                    int veilAlpha = Math.round((float)Math.sin(alpha * Math.PI) * 20.0F);
+                    if (veilAlpha > 0) graphics.fill(0, 0, width, height, veilAlpha << 24);
+                }
             }
         }
 
-        int darkness = Math.max(0, Math.min(255, SiegeConfig.backgroundDarkness * 255 / 100));
+        int darknessPercent = SiegeConfig.highContrast
+                ? Math.max(36, SiegeConfig.backgroundDarkness) : SiegeConfig.backgroundDarkness;
+        int darkness = Math.max(0, Math.min(255, darknessPercent * 255 / 100));
         graphics.fill(0, 0, width, height, darkness << 24);
 
         if (SiegeConfig.scanlines && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE) {
             int baseSpacing = SiegeConfig.graphics == SiegeConfig.Graphics.CINEMATIC ? 4 : 7;
-            // Preserve the same look on normal logical viewports while preventing
-            // very tall scale-1/ultrawide windows from producing hundreds of extra draws.
             int spacing = Math.max(baseSpacing, (height + 299) / 300);
+            int lineColor = SiegeConfig.highContrast ? 0x08000000 : 0x10000000;
             for (int y = 0; y < height; y += spacing) {
-                graphics.fill(0, y, width, Math.min(height, y + 1), 0x10000000);
+                graphics.fill(0, y, width, Math.min(height, y + 1), lineColor);
             }
         }
     }
@@ -155,8 +176,6 @@ public final class SiegeBackgrounds {
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, Math.max(0.0F, Math.min(1.0F, alpha)));
 
-        // Menus normally preserve the complete image. Multiplayer may request a
-        // cover crop so no empty bands or stretched-looking inset remain.
         double scale = cover ? Math.max(w / 960.0D, h / 540.0D)
                 : Math.min(w / 960.0D, h / 540.0D);
         int drawW = Math.max(1, (int)Math.floor(960 * scale));

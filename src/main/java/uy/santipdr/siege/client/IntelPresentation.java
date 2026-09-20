@@ -13,7 +13,9 @@ public final class IntelPresentation {
         return normalized.isEmpty() || normalized.equals("?") || normalized.equals("???")
                 || normalized.equals("N/D") || normalized.equals("N/A")
                 || normalized.contains("SIN REGISTRO CONFIRMADO") || normalized.contains("NO CONFIRMED RECORD")
-                || normalized.contains("NO RECUPERAD") || normalized.contains("NOT RECOVERED");
+                || normalized.contains("NO RECUPERAD") || normalized.contains("NOT RECOVERED")
+                || normalized.contains("SIN INFORMACIÓN OFICIAL CONFIRMADA")
+                || normalized.contains("NO OFFICIAL INFORMATION CONFIRMED");
     }
 
     public static int knownFields(IntelEntry entry, IntelEntry.IntelText text) {
@@ -29,6 +31,16 @@ public final class IntelPresentation {
 
     public static int completeness(IntelEntry entry, IntelEntry.IntelText text) {
         return Math.round(knownFields(entry, text) * 100.0F / 6.0F);
+    }
+
+    /** Compact official-file coverage grade; it does not claim certainty or threat. */
+    public static String coverageGrade(IntelEntry entry, IntelEntry.IntelText text) {
+        int value = completeness(entry, text);
+        if (value >= 100) return "A";
+        if (value >= 67) return "B";
+        if (value >= 34) return "C";
+        if (value > 0) return "D";
+        return "E";
     }
 
     public static BigInteger hpValue(String value) {

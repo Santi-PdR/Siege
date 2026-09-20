@@ -85,7 +85,7 @@ public final class SiegeVanillaChrome {
         SiegeMenuPolicy.NativeFamily family = family(screen);
         int accent = accent(family);
         SiegeBackgrounds.render(g, screen.width, screen.height, System.currentTimeMillis());
-        g.fill(0, 0, screen.width, screen.height, 0xB908090B);
+        g.fill(0, 0, screen.width, screen.height, SiegeConfig.highContrast ? 0xD608090B : 0xB908090B);
 
         int margin = screen.width < 380 ? 5 : screen.width < 640 ? 8 : 12;
         int top = 22;
@@ -93,13 +93,15 @@ public final class SiegeVanillaChrome {
         int panelWidth = Math.max(6, screen.width - margin * 2);
         int panelHeight = Math.max(6, bottom - top);
         SiegeTheme.panel(g, margin, top, panelWidth, panelHeight, accent);
+        if (SiegeConfig.highContrast)
+            SiegeTheme.frame(g, margin + 1, top + 1, Math.max(2, panelWidth - 2), Math.max(2, panelHeight - 2), 0xFF777D82);
 
         // Tactical registration marks stay in the empty perimeter and never sit
         // over option widgets. Each settings family has its own quiet signature.
         int right = margin + panelWidth;
         for (int x = margin + 24; x < right - 16; x += 52) {
-            g.fill(x, top + 3, x + 1, top + 6, 0x553E4348);
-            g.fill(x, bottom - 6, x + 1, bottom - 3, 0x442B3035);
+            g.fill(x, top + 3, x + 1, top + 6, SiegeConfig.highContrast ? 0x665D646A : 0x553E4348);
+            g.fill(x, bottom - 6, x + 1, bottom - 3, SiegeConfig.highContrast ? 0x55454C52 : 0x442B3035);
         }
         g.fill(margin + 2, top + 8, margin + 4, Math.min(bottom - 8, top + 42), accent);
         g.fill(Math.max(margin + 4, right - 4), Math.max(top + 8, bottom - 42), right - 2, bottom - 8, accent);
@@ -129,33 +131,37 @@ public final class SiegeVanillaChrome {
 
         g.pose().pushPose();
         g.pose().translate(0, 0, 430);
-        g.fill(0, 0, width, 20, 0xF20D0E10);
-        g.fill(0, 18, width, 20, 0xFF25292D);
+        g.fill(0, 0, width, 20, SiegeConfig.highContrast ? 0xFF090A0C : 0xF20D0E10);
+        g.fill(0, 18, width, 20, SiegeConfig.highContrast ? 0xFF4A5055 : 0xFF25292D);
         g.fill(0, 18, Math.min(width, 72), 20, accent);
         if (width > 92) g.fill(width - Math.min(width / 4, 92), 19, width, 20, accent);
 
         SiegeTheme.icon(g, 7, 5, familyIcon(family), accent);
         String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
         if (title.isBlank()) title = familyLabel(family);
+        int titleColor = SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK;
+        int mutedColor = SiegeConfig.highContrast ? 0xFFD7DBDE : SiegeTheme.MUTED;
 
         if (width >= 420) {
             String familyText = "SIEGE // " + familyLabel(family);
             familyText = font.plainSubstrByWidth(familyText, Math.max(70, width / 4));
             g.drawString(font, familyText, 21, 6, accent, false);
             String clipped = font.plainSubstrByWidth(title, Math.max(70, width / 3));
-            g.drawCenteredString(font, clipped, width / 2, 6, SiegeTheme.INK);
+            g.drawCenteredString(font, clipped, width / 2, 6, titleColor);
             if (width >= 620) {
-                String state = spanish() ? "INTERFAZ SEGURA" : "SECURE INTERFACE";
-                g.drawString(font, state, width - 8 - font.width(state), 6, SiegeTheme.MUTED, false);
+                String state = SiegeConfig.highContrast
+                        ? (spanish() ? "ALTO CONTRASTE" : "HIGH CONTRAST")
+                        : (spanish() ? "INTERFAZ SEGURA" : "SECURE INTERFACE");
+                g.drawString(font, state, width - 8 - font.width(state), 6, mutedColor, false);
             }
         } else {
             String clipped = font.plainSubstrByWidth(title, Math.max(1, width - 54));
-            g.drawCenteredString(font, clipped, width / 2 + 7, 6, SiegeTheme.INK);
+            g.drawCenteredString(font, clipped, width / 2 + 7, 6, titleColor);
         }
 
         renderContextStrip(screen, g, family, accent);
 
-        if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion && width > 80) {
+        if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion && !SiegeConfig.reduceFlashes && width > 80) {
             int span = Math.max(1, width - 36);
             int sweepX = 18 + (int)((System.currentTimeMillis() / 9L) % span);
             int sweepRight = Math.min(width - 2, sweepX + 28);
@@ -180,9 +186,9 @@ public final class SiegeVanillaChrome {
         int max = Math.max(1, screen.width - x * 2 - 6);
         String clipped = font.plainSubstrByWidth(note, max);
         int right = Math.min(screen.width - x, x + font.width(clipped) + 8);
-        g.fill(x, y, right, y + 10, 0xD018191B);
+        g.fill(x, y, right, y + 10, SiegeConfig.highContrast ? 0xFF101214 : 0xD018191B);
         g.fill(x, y, x + 2, y + 10, accent);
-        g.drawString(font, clipped, x + 5, y + 1, SiegeTheme.MUTED, false);
+        g.drawString(font, clipped, x + 5, y + 1, SiegeConfig.highContrast ? 0xFFF0F2F4 : SiegeTheme.MUTED, false);
     }
 
     private static String contextNote(SiegeMenuPolicy.NativeFamily family) {
@@ -201,9 +207,7 @@ public final class SiegeVanillaChrome {
         int accent = accent(family);
         for (var child : screen.children()) {
             if (child instanceof EditBox field && field.visible) {
-                int color = field.isFocused() ? SiegeTheme.FOCUS : 0xFF666B70;
-                // Decoration stays inside the native widget rectangle; neighbouring
-                // controls therefore cannot be painted over at dense GUI scales.
+                int color = field.isFocused() ? SiegeTheme.FOCUS : SiegeConfig.highContrast ? 0xFFAAB0B5 : 0xFF666B70;
                 frameWithin(screen, g, field.getX(), field.getY(),
                         field.getWidth(), field.getHeight(), color, field.isFocused());
 
@@ -212,7 +216,8 @@ public final class SiegeVanillaChrome {
                         field.getX() + Math.min(field.getWidth(), field.isFocused() ? 34 : 12));
                 int railY = Math.min(screen.height - 1, field.getY() + Math.max(0, field.getHeight() - 1));
                 if (railRight > railLeft && railY >= 0 && railY < screen.height)
-                    g.fill(railLeft, railY, railRight, railY + 1, field.isFocused() ? accent : 0xFF565B60);
+                    g.fill(railLeft, railY, railRight, railY + 1,
+                            field.isFocused() ? accent : SiegeConfig.highContrast ? 0xFF858C91 : 0xFF565B60);
             } else if (child instanceof AbstractSliderButton slider && slider.visible) {
                 int color = slider.isFocused() ? SiegeTheme.FOCUS : accent;
                 frameWithin(screen, g, slider.getX(), slider.getY(),
@@ -229,15 +234,14 @@ public final class SiegeVanillaChrome {
             }
         }
 
-        // Do not draw a broad list rail over ordinary Controls/Mouse screens.
-        // Only actual list screens get this frame.
         if (SiegeMenuPolicy.listRail(screen.getClass().getName())
                 && screen.width >= 120 && screen.height >= 96) {
             int inset = screen.width < 420 ? 8 : 12;
             int top = 28;
             int bottom = screen.height - 38;
             if (bottom > top + 8) {
-                SiegeTheme.frame(g, inset, top, screen.width - inset * 2, bottom - top, 0x804D555C);
+                SiegeTheme.frame(g, inset, top, screen.width - inset * 2, bottom - top,
+                        SiegeConfig.highContrast ? 0xCC7C8389 : 0x804D555C);
                 g.fill(inset, top, inset + 2, Math.min(bottom, top + 22), accent);
                 g.fill(screen.width - inset - 2, Math.max(top, bottom - 22), screen.width - inset, bottom, accent);
             }
@@ -264,7 +268,7 @@ public final class SiegeVanillaChrome {
         return switch (family) {
             case NETWORK -> es ? "ENLACE DE RED" : "NETWORK LINK";
             case AUDIO -> es ? "MEZCLADOR DE AUDIO" : "AUDIO MIXER";
-            case VIDEO -> es ? "VIDEO / RENDER" : "VIDEO / RENDER";
+            case VIDEO -> "VIDEO / RENDER";
             case CONTROLS -> es ? "CONTROLES" : "CONTROLS";
             case MOUSE -> es ? "RATÓN" : "MOUSE INPUT";
             case ACCESSIBILITY -> es ? "ACCESIBILIDAD" : "ACCESSIBILITY";
