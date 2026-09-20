@@ -2,6 +2,8 @@
 
 0.70 completa el segundo salto grande desde 0.50. La versión reconstruye la lectura operativa de Multiplayer/Despliegue y repara la nueva tanda de Intel que estaba mostrando texturas ausentes. La conexión y persistencia siguen en manos de Minecraft/Forge; SIEGE mejora la presentación, clasificación y control visual.
 
+La revisión de Intel usa información pública de Dummies vs Noobs cuando existe una referencia suficientemente clara. Los datos documentados por los update logs del desarrollador tienen prioridad; la wiki actual de DVN se utiliza para complementar apariencia y comportamiento actuales cuando no hay un registro de desarrollo equivalente. SIEGE no copia imágenes externas al mod: mientras no exista un asset local verificado, el expediente usa un placeholder documental válido.
+
 ## 70 mejoras
 
 1. La versión del mod avanza a **0.70.0**.
@@ -50,31 +52,38 @@
 44. La selección activa usa el color de su estado operativo.
 45. La lista de servidores mantiene el orden relativo de destinos no oficiales.
 46. Intel incorpora una séptima categoría: **DESCONOCIDO / UNKNOWN**.
-47. La categoría usa el código compacto `UNK`.
-48. La categoría Desconocido usa un acento neutral propio.
-49. El layout Intel calcula automáticamente su geometría con siete categorías.
-50. Desconocido aparece tanto en interfaz ancha como compacta.
-51. Engineer pasa a Desconocido mientras no exista clase confirmada.
-52. Informant pasa a Desconocido mientras no exista clase confirmada.
-53. Grappler pasa a Desconocido mientras no exista clase confirmada.
-54. Tranquilizer pasa a Desconocido mientras no exista clase confirmada.
-55. Skydiver pasa a Desconocido mientras no exista clase confirmada.
-56. Skyliner pasa a Desconocido mientras no exista clase confirmada.
-57. Agitator conserva su clasificación Tank.
-58. Sparta conserva su clasificación Boss.
-59. Fauna, Cerberus y Proteus conservan su clasificación Elite.
-60. Sauron y Hedalus conservan su clasificación Super Unit.
-61. Las tropas afectadas dejan de apuntar a la ruta inexistente `classified`.
-62. Los expedientes no-Boss sin imagen usan `placeholder/classified.png`.
-63. Sparta usa el placeholder Boss animado `bosses/classified/frame_00..05`.
-64. Los dossiers sin imagen indican **SIN REGISTRO VISUAL**.
-65. La interfaz inglesa indica **NO VISUAL RECORD**.
-66. No se inventan fotografías, apariencias ni renders para completar archivos faltantes.
-67. No se inventan categorías cuando el tipo de unidad no está confirmado.
+47. La categoría usa el código compacto `UNK` y un acento neutral propio.
+48. El layout Intel calcula automáticamente su geometría con siete categorías.
+49. Desconocido aparece tanto en interfaz ancha como compacta.
+50. Grappler permanece en Desconocido porque no se encontró una referencia fiable para fijar su clase.
+51. Skydiver permanece en Desconocido por la misma razón.
+52. Skyliner permanece en Desconocido por la misma razón.
+53. Engineer se reclasifica a **Advanced** usando la referencia de DVN; se documentan 150 HP, pistola, llave, Sentry y Teleporter.
+54. Informant se reclasifica a **Advanced**; se documentan 155 HP, H94 Rifle, granadas y su comportamiento de Infantry avanzada.
+55. Tranquilizer se reclasifica a **Advanced**; se documentan 100 HP, Dart Rifle, máscara de gas y su función de Epilogue/Hell.
+56. Agitator conserva **Tank** en SIEGE y recibe sus datos DVN de unidad armoured/mechanical, 300 HP y tanque de combustible vulnerable.
+57. Sparta conserva **Boss** y recibe un dossier basado en DVN: Khanblades, jetpack, persecución, stomp y cadenas de cortes.
+58. El dossier de Sparta registra 350 HP base y deja explícito que existe escalado por jugador.
+59. Proteus deja de figurar incorrectamente como Elite y pasa a **Boss** según la referencia actual de DVN.
+60. Proteus documenta Spectral Shotgun, Hivelink, Cloning y Spectral Leap, dejando claro que sigue en desarrollo.
+61. Fauna y Cerberus conservan su clasificación Elite existente sin mezclar material no fiable de fangames.
+62. Sauron y Hedalus conservan Super Unit y sus datos SIEGE existentes; no se inventan capacidades externas.
+63. Todas las tropas afectadas dejan de apuntar a la ruta inexistente `classified`.
+64. Los expedientes no-Boss sin imagen usan `placeholder/classified.png`.
+65. Sparta usa el placeholder Boss animado `bosses/classified/frame_00..05`.
+66. Los dossiers sin asset local indican **SIN REGISTRO VISUAL** o una variante equivalente.
+67. No se copian renders o screenshots externos al mod únicamente por existir en Internet.
 68. El resumen global de Intel incluye contador de expedientes desconocidos.
-69. Las pruebas de runtime verifican categoría, placeholder y archivo de imagen real para cada dossier.
-70. CI protege simultáneamente 0.60, el overhaul de despliegue 0.70 y la reparación de Intel.
+69. Las pruebas de runtime verifican las nuevas categorías, los datos DVN documentados y la existencia física de cada recurso de imagen.
+70. CI protege simultáneamente 0.60, el overhaul de despliegue 0.70 y la reparación/source-pass de Intel.
+
+## Fuentes de referencia para esta pasada
+
+- Dummies vs Noobs 1.8 update log: introducción y diseño original de Sparta.
+- Dummies vs Noobs 1.9 update log: cambios de movilidad, curación y leap de Sparta; introducción de Engineer entre las nuevas unidades.
+- Dummies vs Noobs 2.0 update log: Tranquilizer como unidad exclusiva de Epilogue y actualización visual de Sparta.
+- Dummies vs Noobs Wiki / documentación pública actual: detalles actuales de Engineer, Informant, Tranquilizer, Agitator, Sparta y Proteus.
 
 ## Límite de alcance
 
-0.70 no reemplaza la lógica de red de Minecraft, no modifica daño, IA, HP, raids ni reglas de servidor. Los cambios de Intel son de clasificación/presentación y preservan los datos confirmados existentes.
+0.70 no reemplaza la lógica de red de Minecraft, no modifica daño, IA, HP, raids ni reglas de servidor. Los cambios de Intel son de clasificación/presentación y preservan los datos confirmados existentes. Cuando la fuente pública indica que una unidad sigue en desarrollo, el dossier lo declara expresamente en lugar de presentarla como definitiva.
