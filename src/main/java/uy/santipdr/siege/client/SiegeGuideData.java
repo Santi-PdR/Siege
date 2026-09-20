@@ -6,8 +6,9 @@ import java.util.List;
 public final class SiegeGuideData {
     private SiegeGuideData() { }
     public enum Category {
-        ITEMS("OBJETOS", "ITEMS"), LORE("LORE", "LORE"), DIFFICULTY("DIFICULTAD", "DIFFICULTY"),
-        CHRONICLES("CRÓNICAS", "CHRONICLES"), INSPIRATIONS("INSPIRACIÓN", "INSPIRATION");
+        ITEMS("OBJETOS", "ITEMS"), LORE("LORE", "LORE"), OPERATIONS("OPERACIONES", "OPERATIONS"),
+        DIFFICULTY("DIFICULTAD", "DIFFICULTY"), CHRONICLES("CRÓNICAS", "CHRONICLES"),
+        INSPIRATIONS("INSPIRACIÓN", "INSPIRATION");
         private final String es, en;
         Category(String es, String en) { this.es = es; this.en = en; }
         public String title(boolean spanish) { return spanish ? es : en; }
@@ -84,6 +85,33 @@ public final class SiegeGuideData {
             "LIVES\nYou have limited lives: do not waste them. The assigned count depends on the operation."
             + "\n\nCIVILISATIONS\nYou can create your own country and civilisation. Dominia remains the origin country described in the introduction."
             + "\n\nDIMENSIONAL PROTOCOL\nThe End and Nether remain sealed by operational order. Forge 1.20.1 is the confirmed deployment platform."),
+        text("core-ai", Category.OPERATIONS, "El Núcleo", "The Core",
+            "ESTADO\nEl Núcleo es la inteligencia artificial reactiva que volvió a intervenir en el teatro de guerra de 2044. No funciona como un simple registro: observa el desarrollo de las operaciones y puede activar eventos que cambian las condiciones del campo de batalla."
+            + "\n\nINTERVENCIÓN\nSus eventos pueden reforzar amenazas, alterar la fuerza o el daño recibido y modificar la presión de una zona. No todos los eventos tienen el mismo alcance, duración ni objetivo."
+            + "\n\nLECTURA OPERATIVA\nUna intervención del Núcleo debe tratarse como un cambio real de condiciones. Reevalúa cobertura, recursos, rutas y capacidad del equipo antes de continuar una ofensiva."
+            + "\n\nLÍMITES DEL ARCHIVO\nEl expediente confirma su papel reactivo, pero no afirma que controle cada unidad ni que pueda alterar cualquier sistema sin restricciones.",
+            "STATUS\nThe Core is the reactive artificial intelligence that returned to the 2044 war theatre. It is not merely an archive: it observes how operations develop and can trigger events that change battlefield conditions."
+            + "\n\nINTERVENTION\nIts events can reinforce threats, alter incoming damage or enemy strength, and change pressure across an area. Not every event has the same scope, duration or purpose."
+            + "\n\nOPERATIONAL READING\nA Core intervention must be treated as a real change in conditions. Reassess cover, resources, routes and squad capability before continuing an offensive."
+            + "\n\nARCHIVE LIMITS\nThe file confirms its reactive role, but does not claim that it controls every unit or can alter every system without restriction."),
+        text("agreement-field-report", Category.OPERATIONS, "Agreement · Reporte de campo", "Agreement · Field report",
+            "DATOS CONSERVADOS\nAgreement figura con 3.000 HP, 100 DEF y un vínculo registrado con Secure Contain Protect."
+            + "\n\nREPORTE SIN VERIFICAR\nUn testimonio lo compara con una versión menos avanzada de Rick Sanchez por su tecnología de portales. La comparación es informal y no implica equivalencia de poderes."
+            + "\n\nRESPUESTA TÁCTICA\nEl mismo reporte propone que sabotajes repetidos, ejecutados más rápido de lo que Agreement puede responder, podrían saturarlo. No se ha demostrado que sea su única debilidad ni que garantice derrotarlo."
+            + "\n\nCRITERIO\nLos datos confirmados y las hipótesis del testimonio se mantienen separados para evitar convertir una teoría de campo en una capacidad establecida.",
+            "RETAINED DATA\nAgreement is recorded with 3,000 HP, 100 DEF and a documented link to Secure Contain Protect."
+            + "\n\nUNVERIFIED REPORT\nA testimony compares it to a less advanced version of Rick Sanchez because of its portal technology. The comparison is informal and does not imply equivalent powers."
+            + "\n\nTACTICAL RESPONSE\nThe same report proposes that repeated sabotage, performed faster than Agreement can respond, may overload it. This has not been shown to be its only weakness or a guaranteed way to defeat it."
+            + "\n\nSTANDARD\nConfirmed data and testimony-based hypotheses remain separated so a field theory is not presented as an established capability."),
+        text("gates-rifts", Category.OPERATIONS, "Gates y Rifts", "Gates and Rifts",
+            "GATES\nEl reporte disponible los describe como teletransportadores caseros y costosos. Sirven para traslado, pero no deben confundirse con la tecnología interdimensional de los Rifts."
+            + "\n\nRIFTS\nSe describen como portales de viaje interdimensional asociados a Agreement. Alcance, coste y tiempo de recarga permanecen sin confirmar."
+            + "\n\nVISORES\nExiste un testimonio sin verificar según el cual portales ajenos pueden bloquear temporalmente los visores de Agreement. La duración y las condiciones exactas no están demostradas."
+            + "\n\nDISTINCIÓN OPERATIVA\nGate significa teletransportador construido; Rift significa apertura interdimensional. Usar ambos términos como sinónimos produce análisis tácticos incorrectos.",
+            "GATES\nThe available report describes them as costly, homemade teleporters. They provide transport, but must not be confused with the interdimensional technology of Rifts."
+            + "\n\nRIFTS\nThey are described as interdimensional travel portals associated with Agreement. Range, cost and cooldown remain unconfirmed."
+            + "\n\nVISORS\nOne unverified testimony claims that foreign portals can temporarily lock Agreement's visors. Duration and exact conditions have not been demonstrated."
+            + "\n\nOPERATIONAL DISTINCTION\nGate means a constructed teleporter; Rift means an interdimensional opening. Treating both terms as synonyms leads to incorrect tactical analysis."),
         text("difficulty-levels", Category.DIFFICULTY, "Dificultades del servidor", "Server difficulties",
             "CASUAL · 50%\nRecomendada para nuevos jugadores."
             + "\n\nCONSCRIPTO · 75%\nRecomendada para quienes prefieren lanzarse directamente a la acción."
