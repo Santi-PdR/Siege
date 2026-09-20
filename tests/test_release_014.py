@@ -59,8 +59,15 @@ assert "0.40 SYSTEM SETTINGS" not in SYSTEM
 assert '"SISTEMA 0.40"' not in EVENTS and '"SYSTEM 0.40"' not in EVENTS
 assert "historial SIEGE" not in EVENTS
 assert "operational protocols" in EVENTS
-assert "SiegeClientProfile.apply(SiegeClientProfile.Profile.CALM)" in CONFIG
-assert "SiegeClientProfile.apply(SiegeClientProfile.Profile.READING)" in CONFIG
+
+# Legacy preset entry-points stay standalone because ConfigRegressionTest compiles
+# SiegeConfig without the rest of the client package. Their values must still
+# match the full 0.50 calm/reading profile behavior.
+assert "public static void applyCalmPreset()" in CONFIG
+assert "backgroundDarkness = 42;" in CONFIG and "panelDarkness = 84;" in CONFIG
+assert "public static void applyReadingPreset()" in CONFIG
+assert "backgroundDarkness = 48;" in CONFIG and "panelDarkness = 88;" in CONFIG
+assert "SiegeClientProfile." not in CONFIG, "SiegeConfig must remain standalone-compilable"
 
 # The release must remain free of newly invented menu hotkeys.
 for source_name, source in (("profile", PROFILE), ("runtime", RUNTIME), ("strip", STRIP), ("system", SYSTEM)):
