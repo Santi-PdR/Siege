@@ -50,14 +50,14 @@ final class IntelCatalog {
                         "Sin información oficial confirmada",
                         "EXPEDIENTE OFICIAL // PARCIAL",
                         "El expediente oficial confirma únicamente la designación Agreement, una resistencia de 3.000 HP, 100 DEF y su vínculo con Secure Contain Protect. No hay datos oficiales confirmados sobre armamento, capacidades, variantes ni patrón táctico.",
-                        "Sin protocolo táctico oficial confirmado. Los testimonios, hipótesis y consejos de campo se conservan por separado en Guía SIEGE > Operaciones y no forman parte de este dossier."),
+                        "Sin protocolo táctico oficial confirmado. Consulte Guía SIEGE > Operaciones para archivos de campo separados."),
                 new IntelEntry.IntelText(
                         "Secure Contain Protect Corporation",
                         "No official information confirmed",
                         "No official information confirmed",
                         "OFFICIAL DOSSIER // PARTIAL",
                         "The official dossier confirms only the Agreement designation, 3,000 HP, 100 DEF and its link to Secure Contain Protect. No official data is confirmed for armament, capabilities, variants or tactical pattern.",
-                        "No official tactical protocol has been confirmed. Testimony, hypotheses and field advice are stored separately under SIEGE Guide > Operations and are not part of this dossier."));
+                        "No official tactical protocol has been confirmed. See SIEGE Guide > Operations for separate field archives."));
     }
 
     private static boolean containsFieldReportMaterial(IntelEntry.IntelText text) {
