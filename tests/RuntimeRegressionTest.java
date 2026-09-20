@@ -36,17 +36,17 @@ public class RuntimeRegressionTest {
         check(IntelCatalog.previewable().stream().allMatch(e -> e.category().equals("UNIT") || e.category().equals("ADVANCED")), "Preview categories");
         check(IntelCatalog.previewable().stream().noneMatch(e -> e.code().equals("TNK-003")), "Agreement must not leak into main-menu preview pool");
         check(IntelCatalog.filtered("UNIT") == IntelCatalog.filtered("UNIT"), "Catalog allocation regression");
-        check(IntelCatalog.filtered("ELITE").size() == 3, "Elite catalog must contain exactly three records");
+        check(IntelCatalog.filtered("ELITE").size() == 3, "Illustrated Elite catalog must keep the three existing portrait records");
         check(IntelCatalog.filtered("ELITE").stream().map(IntelEntry::code).distinct().count() == 3, "Duplicate Elite codes");
         check(IntelCatalog.filtered("ELITE").stream().map(IntelEntry::name).toList().equals(
-                java.util.List.of("AGARES", "GHOST", "AURELIONIS")), "Elite order changed");
+                java.util.List.of("AGARES", "GHOST", "AURELIONIS")), "Illustrated Elite order changed");
 
         IntelEntry aurelionis = IntelCatalog.filtered("ELITE").get(2);
         check(aurelionis.hp().equals("1") && aurelionis.threat() == 0, "Aurelionis unknown data was inferred");
         check(aurelionis.text(true).description().equals("???") && aurelionis.text(false).advisory().equals("???"),
                 "Aurelionis lore must remain unknown");
 
-        check(IntelCatalog.filtered("SUPER-UNIT").size() == 1, "Atlas must be the only Super Unit");
+        check(IntelCatalog.filtered("SUPER-UNIT").size() == 1, "Illustrated Intel keeps Atlas as its existing Super Unit portrait");
         IntelEntry atlas = IntelCatalog.filtered("SUPER-UNIT").get(0);
         check(atlas.code().equals("SUP-001") && atlas.name().equals("ATLAS"), "Atlas identity changed");
         check(atlas.hp().equals("125,000,000") && IntelPresentation.hpValue(atlas.hp()).longValueExact() == 125_000_000L,
@@ -63,8 +63,7 @@ public class RuntimeRegressionTest {
                 .allMatch(category -> IntelCatalog.count(category) > 0), "Every visible category must contain a dossier");
         check(IntelCatalog.byCode("SUP-001") == atlas, "Code lookup must preserve Atlas identity");
 
-        // 0.30 source policy: the Agreement dossier is official-only. Field reports
-        // remain available separately but can never drive dossier content or styling.
+        // Official-only Agreement policy remains intact in 0.40.
         IntelEntry agreement = IntelCatalog.byCode("TNK-003");
         check(agreement.hp().equals("3,000") && agreement.defense().equals("100") && agreement.threat() == 0,
                 "Agreement official stats changed");
@@ -89,6 +88,26 @@ public class RuntimeRegressionTest {
         check(AgreementReport.ADVICE_ES.contains("SIN VERIFICAR") && AgreementReport.ADVICE_EN.contains("UNVERIFIED"),
                 "Field advice lost provenance");
 
+        // Newest announcement wins: current dossiers must expose the latest supplied
+        // Trident and Fusilier states rather than older simplified descriptions.
+        IntelEntry trident = IntelCatalog.byCode("BOS-004");
+        check(trident.hp().equals("38,000"), "Trident HP changed without a newer numeric announcement");
+        check(trident.text(true).variants().equals("VISOR PUESTO / VISOR REMOVIDO"), "Trident visor states missing");
+        check(trident.text(true).description().contains("40%") && trident.text(true).description().contains("10%"),
+                "Trident visor resistances missing");
+        check(trident.text(true).description().contains("cortar cuerda") && trident.text(true).description().contains("torso"),
+                "Trident hook rescue rules missing");
+        check(trident.text(false).description().contains("headshots") && trident.text(false).description().contains("flashbangs"),
+                "Trident visor-off vulnerabilities missing");
+
+        IntelEntry fusilier = IntelCatalog.byCode("BOS-002");
+        check(fusilier.hp().equals("8,000"), "Fusilier HP changed without a newer numeric announcement");
+        check(fusilier.text(true).variants().contains("Modo Mortero") && fusilier.text(true).variants().contains("Blox Drink"),
+                "Fusilier current modes missing");
+        check(fusilier.text(true).description().contains("seis segundos") && fusilier.text(true).description().contains("barra de jefe se vuelve blanca"),
+                "Fusilier nuclear/mortar cues missing");
+        check(fusilier.text(false).advisory().contains("correctly timed explosive"), "Fusilier drink interrupt missing");
+
         check(IntelCatalog.total() == IntelCatalog.files().size(), "Catalog total changed");
         try {
             IntelCatalog.filtered("SUPER-UNIT").clear();
@@ -102,6 +121,6 @@ public class RuntimeRegressionTest {
             check(IntelPresentation.hpValue(e.hp()).signum() >= 0, "Invalid HP value " + e.code());
             check(IntelPresentation.coverageGrade(e, e.text(true)).matches("[A-E]"), "Invalid coverage grade " + e.code());
         }
-        System.out.println("Audio recovery, official Intel source policy, catalog identity and resource validation passed");
+        System.out.println("Audio recovery, official Intel source policy, newest-first boss dossiers and resources passed");
     }
 }

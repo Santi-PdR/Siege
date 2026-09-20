@@ -10,8 +10,8 @@ import net.minecraftforge.fml.ModList;
 import uy.santipdr.siege.SiegeMod;
 
 /**
- * 0.30 system center: real runtime information, compatibility state and the
- * accessibility controls that materially alter SIEGE rendering.
+ * 0.40 system center: live runtime information, compatibility, accessibility
+ * and direct access to the chronological operations archive.
  */
 public final class SiegeSystemScreen extends Screen {
     private final Screen parent;
@@ -28,7 +28,7 @@ public final class SiegeSystemScreen extends Screen {
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
-        compact = width < 620 || height < 360;
+        compact = width < 620 || height < 380;
         int margin = compact ? 7 : 14;
         panelW = Math.max(260, Math.min(780, width - margin * 2));
         panelW = Math.min(panelW, Math.max(1, width - margin * 2));
@@ -39,9 +39,10 @@ public final class SiegeSystemScreen extends Screen {
         addRenderableWidget(new SiegeButton(8, 7, Math.min(86, Math.max(62, width / 6)), 19,
                 Component.literal(label("VOLVER", "BACK")), b -> onClose(), SiegeTheme.RED));
 
-        int controlsTop = Math.max(panelY + 106, panelBottom - (compact ? 70 : 78));
+        int controlsHeight = compact ? 91 : 103;
+        int controlsTop = Math.max(panelY + 105, panelBottom - controlsHeight);
         int gap = 5;
-        int rowH = compact ? 18 : 20;
+        int rowH = compact ? 17 : 20;
         int innerX = panelX + 10;
         int innerW = panelW - 20;
         int half = (innerW - gap) / 2;
@@ -65,8 +66,8 @@ public final class SiegeSystemScreen extends Screen {
                     SiegeUiSounds.click();
                 }, SiegeTheme.GREEN).withIcon("eye"));
         flashesButton.setTooltip(Tooltip.create(Component.literal(label(
-                "Desactiva la interferencia del título y el velo transitorio de fondos.",
-                "Disables title interference and the transient background veil."))));
+                "Desactiva interferencia, paneo y transiciones rápidas de SIEGE.",
+                "Disables SIEGE interference, panning and rapid transitions."))));
 
         int row2 = controlsTop + rowH + gap;
         addRenderableWidget(new SiegeButton(innerX, row2, half, rowH,
@@ -93,6 +94,16 @@ public final class SiegeSystemScreen extends Screen {
                     SiegeUiSounds.click();
                     minecraft.setScreen(new SiegeGuideScreen(this));
                 }, SiegeTheme.GOLD).withIcon("intel"));
+
+        int row4 = row3 + rowH + gap;
+        SiegeButton archive = addRenderableWidget(new SiegeButton(innerX, row4, innerW, rowH,
+                Component.literal(label("ARCHIVO DE OPERACIONES 0.40", "OPERATIONS ARCHIVE 0.40")), b -> {
+                    SiegeUiSounds.confirm();
+                    minecraft.setScreen(new SiegeArchiveScreen(this));
+                }, SiegeTheme.CYAN).withIcon("overview").setCompactCenter(true));
+        archive.setTooltip(Tooltip.create(Component.literal(label(
+                "Avisos SIEGE en orden temporal, misiones, equipo, unidades y estados de caída.",
+                "Chronological SIEGE notices, missions, equipment, units and downed states."))));
 
         refreshButtons();
     }
@@ -126,9 +137,9 @@ public final class SiegeSystemScreen extends Screen {
 
         int textX = panelX + 12;
         int innerW = panelW - 24;
-        g.drawString(font, "SIEGE // 0.30 SYSTEM CENTER", textX, panelY + 10, SiegeTheme.CYAN, false);
-        String subtitle = label("Estado real del cliente, compatibilidad, contenido y accesibilidad.",
-                "Live client state, compatibility, content and accessibility.");
+        g.drawString(font, "SIEGE // 0.40 SYSTEM CENTER", textX, panelY + 10, SiegeTheme.CYAN, false);
+        String subtitle = label("Estado real del cliente, compatibilidad, archivo y accesibilidad.",
+                "Live client state, compatibility, archive and accessibility.");
         g.drawString(font, font.plainSubstrByWidth(subtitle, innerW), textX, panelY + 24, SiegeTheme.MUTED, false);
         SiegeTheme.divider(g, textX, panelY + 38, innerW, SiegeTheme.CYAN);
 
@@ -145,8 +156,8 @@ public final class SiegeSystemScreen extends Screen {
         int row2 = cardsTop + cardH + gap;
         card(g, textX, row2, cardW, cardH, label("RENDER", "RENDER"), renderBackend(), SiegeTheme.CYAN);
         if (!compact) card(g, x2, row2, innerW - cardW - gap, cardH,
-                label("CONTENIDO", "CONTENT"), IntelCatalog.total() + " Intel · " + SiegeBackgrounds.count() + " BG · "
-                        + SiegeMusic.trackNames().size() + " Music", SiegeTheme.GOLD);
+                label("CONTENIDO", "CONTENT"), IntelCatalog.total() + " Intel · " + SiegeArchiveData.total() + " Archive · "
+                        + SiegeBackgrounds.count() + " BG · " + SiegeMusic.trackNames().size() + " Music", SiegeTheme.GOLD);
 
         int stateY = compact ? row2 + cardH + 7 : row2 + cardH + 9;
         String config = SiegeConfig.lastSaveSucceeded ? label("CONFIG GUARDADA", "CONFIG SAVED")
@@ -154,7 +165,8 @@ public final class SiegeSystemScreen extends Screen {
         g.drawString(font, config, textX, stateY,
                 SiegeConfig.lastSaveSucceeded ? SiegeTheme.GREEN : 0xFFFF8B91, false);
         String graphics = label("PERFIL ", "PROFILE ") + SiegeConfig.graphics.name();
-        g.drawString(font, graphics, panelX + panelW - 12 - font.width(graphics), stateY, SiegeTheme.MUTED, false);
+        if (font.width(config) + font.width(graphics) + 18 < innerW)
+            g.drawString(font, graphics, panelX + panelW - 12 - font.width(graphics), stateY, SiegeTheme.MUTED, false);
 
         int sceneY = stateY + 13;
         String scene = label("FONDO: ", "BACKGROUND: ")
@@ -168,15 +180,15 @@ public final class SiegeSystemScreen extends Screen {
         g.drawString(font, font.plainSubstrByWidth(music, innerW), textX, musicY, SiegeTheme.MUTED, false);
 
         int policyY = musicY + 15;
-        if (policyY < panelBottom - 86) {
+        if (policyY < panelBottom - 108) {
             g.fill(textX, policyY, panelX + panelW - 12, policyY + 1, 0xFF31373C);
             String policy = label(
-                    "INTEL 0.30: los dossiers muestran información oficial; testimonios e hipótesis quedan en Guía > Operaciones.",
-                    "INTEL 0.30: dossiers show official information; testimony and hypotheses stay in Guide > Operations.");
+                    "0.40: dossiers = información oficial. Archivo = avisos en orden más nuevo → más viejo. Reportes de campo permanecen separados.",
+                    "0.40: dossiers = official information. Archive = notices ordered newest → oldest. Field reports remain separate.");
             int y = policyY + 6;
             for (var line : font.split(Component.literal(policy), Math.max(60, innerW))) {
-                if (y + font.lineHeight >= panelBottom - 78) break;
-                g.drawString(font, line, textX, y, SiegeTheme.INK, false);
+                if (y + font.lineHeight >= panelBottom - 105) break;
+                g.drawString(font, line, textX, y, SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
                 y += font.lineHeight + 2;
             }
         }

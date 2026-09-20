@@ -37,6 +37,8 @@ jobs:
           java -cp build/layout-tests MultiplayerLayoutTest
           javac -d build/guide-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/SiegeGuideLayout.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java tests/GuideRegressionTest.java
           java -cp build/guide-tests GuideRegressionTest
+          javac -d build/archive-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java tests/ArchiveRegressionTest.java
+          java -cp build/archive-tests ArchiveRegressionTest
           javac -d build/config-tests tests/stubs/net/minecraftforge/fml/loading/FMLPaths.java tests/stubs/com/mojang/logging/LogUtils.java src/main/java/uy/santipdr/siege/client/SiegeConfig.java tests/ConfigRegressionTest.java
           java -cp build/config-tests ConfigRegressionTest
           python3 tests/test_installer.py
@@ -69,6 +71,9 @@ jobs:
           grep -q 'IntelScreenV3(Screen parent, IntelEntry requestedEntry)' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'targetCode.equals(files.get(i).code())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'new IntelScreenV3(this, entry)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
+          grep -q 'new SiegeArchiveScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeSystemScreen.java
+          grep -q 'SHELLSHOCK' src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java
+          grep -q 'MUTILATED' src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java
           if grep -nE 'FAVORITES|toggleFavoriteIntel|favoriteButton|addIndexButton|copyText|GUARDAR' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
             echo "Removed Intel controls must not return"
             exit 1
@@ -110,9 +115,6 @@ jobs:
         shell: bash
         run: |
           if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
-            # Chrome is unrelated to this build and its hosted-runner mirror can become
-            # temporarily inconsistent. Disable any Chrome source file (.list or .sources)
-            # before refreshing the Ubuntu package indexes used for ffmpeg.
             while IFS= read -r source_file; do
               sudo mv "$source_file" "$source_file.disabled"
             done < <(grep -rl 'dl\.google\.com/linux/chrome' /etc/apt/sources.list.d 2>/dev/null || true)
