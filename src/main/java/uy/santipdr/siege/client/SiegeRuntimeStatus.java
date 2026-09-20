@@ -6,7 +6,7 @@ import net.minecraft.SharedConstants;
 import net.minecraftforge.fml.ModList;
 import uy.santipdr.siege.SiegeMod;
 
-/** Live client diagnostics shared by the command, recovery and 0.70 Intel surfaces. */
+/** Live client status shared by command, diagnostics and operational chrome. */
 public final class SiegeRuntimeStatus {
     public enum Health { READY, ATTENTION, ERROR }
 
@@ -14,8 +14,7 @@ public final class SiegeRuntimeStatus {
 
     public static String version() {
         return ModList.get().getModContainerById(SiegeMod.MOD_ID)
-                .map(container -> container.getModInfo().getVersion().toString())
-                .orElse("DEV");
+                .map(container -> container.getModInfo().getVersion().toString()).orElse("DEV");
     }
 
     public static String forgeVersion() { return version("forge"); }
@@ -33,7 +32,7 @@ public final class SiegeRuntimeStatus {
 
     public static Health health() {
         if (SiegeDiagnosticReport.errors(false) > 0) return Health.ERROR;
-        if (SiegeDiagnosticReport.warnings(false) > 0) return Health.ATTENTION;
+        if (SiegeDiagnosticReport.warnings(false) > 0 || SiegeDiagnosticReport.notices(false) > 0) return Health.ATTENTION;
         return Health.READY;
     }
 
@@ -42,19 +41,16 @@ public final class SiegeRuntimeStatus {
     public static List<String> warnings(boolean spanish) {
         List<String> warnings = new ArrayList<>();
         for (SiegeDiagnosticReport.Entry entry : SiegeDiagnosticReport.entries(spanish)) {
-            if (entry.severity() == SiegeDiagnosticReport.Severity.ERROR
-                    || entry.severity() == SiegeDiagnosticReport.Severity.WARNING) {
-                warnings.add(entry.detail());
-            }
+            if (entry.severity() != SiegeDiagnosticReport.Severity.OK) warnings.add(entry.detail());
         }
         return List.copyOf(warnings);
     }
 
     public static String healthLabel(boolean spanish) {
         return switch (health()) {
-            case READY -> spanish ? "LISTO" : "READY";
-            case ATTENTION -> spanish ? "REVISAR" : "CHECK";
-            case ERROR -> spanish ? "ERROR DE CONFIG" : "CONFIG ERROR";
+            case READY -> spanish ? "OPERATIVO" : "OPERATIONAL";
+            case ATTENTION -> spanish ? "ATENCIÓN" : "ATTENTION";
+            case ERROR -> spanish ? "CRÍTICO" : "CRITICAL";
         };
     }
 
@@ -78,45 +74,44 @@ public final class SiegeRuntimeStatus {
     public static String audioLabel(boolean spanish) {
         if (!SiegeConfig.music) return spanish ? "MÚSICA OFF" : "MUSIC OFF";
         if (SiegeConfig.musicVolume == 0) return spanish ? "MÚSICA 0%" : "MUSIC 0%";
-        String state = SiegeMusic.isActuallyPlaying()
-                ? SiegeMusic.currentTrackName()
-                : (spanish ? "EN ESPERA" : "WAITING");
+        String state = SiegeMusic.isActuallyPlaying() ? SiegeMusic.currentTrackName() : (spanish ? "EN ESPERA" : "WAITING");
         return state + " · " + SiegeConfig.musicVolume + "%";
     }
 
     public static String backgroundLabel(boolean spanish) {
-        String state = SiegeConfig.selectedScene >= 0
-                ? (spanish ? "FIJO" : "PINNED")
-                : SiegeConfig.animatedBackgrounds
-                    ? (spanish ? "ROTACIÓN" : "ROTATING")
-                    : (spanish ? "ESTÁTICO" : "STATIC");
-        return state + " · " + SiegeBackgrounds.name(
-                SiegeBackgrounds.currentIndex(System.currentTimeMillis()), spanish);
+        String state = SiegeConfig.selectedScene >= 0 ? (spanish ? "FIJO" : "PINNED")
+                : SiegeConfig.animatedBackgrounds ? (spanish ? "ROTACIÓN" : "ROTATING") : (spanish ? "ESTÁTICO" : "STATIC");
+        return state + " · " + SiegeBackgrounds.name(SiegeBackgrounds.currentIndex(System.currentTimeMillis()), spanish);
     }
 
     public static String intelLabel(boolean spanish) {
         return IntelCatalog.total() + " " + (spanish ? "EXPEDIENTES" : "DOSSIERS")
-                + " · U " + IntelCatalog.count("UNIT")
-                + " · A " + IntelCatalog.count("ADVANCED")
-                + " · T " + IntelCatalog.count("TANK")
-                + " · B " + IntelCatalog.count("BOSS")
-                + " · E " + IntelCatalog.count("ELITE")
-                + " · S " + IntelCatalog.count("SUPER-UNIT")
+                + " · U " + IntelCatalog.count("UNIT") + " · A " + IntelCatalog.count("ADVANCED")
+                + " · T " + IntelCatalog.count("TANK") + " · B " + IntelCatalog.count("BOSS")
+                + " · E " + IntelCatalog.count("ELITE") + " · S " + IntelCatalog.count("SUPER-UNIT")
                 + " · ? " + IntelCatalog.count("UNKNOWN");
     }
 
     public static String accessibilityLabel(boolean spanish) {
         List<String> states = new ArrayList<>();
-        if (SiegeConfig.highContrast) states.add(spanish ? "CONTRASTE" : "CONTRAST");
+        if (SiegeConfig.autoContrast) states.add(spanish ? "AUTO CONTRASTE" : "AUTO CONTRAST");
+        if (SiegeConfig.highContrast) states.add(spanish ? "ALTO CONTRASTE" : "HIGH CONTRAST");
         if (SiegeConfig.reducedMotion) states.add(spanish ? "MOV. REDUCIDO" : "REDUCED MOTION");
         if (SiegeConfig.reduceFlashes) states.add(spanish ? "DESTELLOS OFF" : "FLASHES OFF");
         if (states.isEmpty()) return spanish ? "ESTÁNDAR" : "STANDARD";
         return String.join(" · ", states);
     }
 
+    public static String prioritySummary(boolean spanish) {
+        int critical = SiegeDiagnosticReport.errors(spanish);
+        int attention = SiegeDiagnosticReport.warnings(spanish) + SiegeDiagnosticReport.notices(spanish);
+        return (spanish ? "CRÍTICO " : "CRITICAL ") + critical + " · "
+                + (spanish ? "ATENCIÓN " : "ATTENTION ") + attention + " · "
+                + (spanish ? "OPERATIVO " : "OPERATIONAL ") + SiegeDiagnosticReport.operational(spanish);
+    }
+
     private static String version(String modId) {
         return ModList.get().getModContainerById(modId)
-                .map(container -> container.getModInfo().getVersion().toString())
-                .orElse("-");
+                .map(container -> container.getModInfo().getVersion().toString()).orElse("-");
     }
 }
