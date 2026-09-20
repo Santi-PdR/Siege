@@ -13,8 +13,8 @@ import com.mojang.logging.LogUtils;
 import java.util.Properties;
 
 public final class SiegeConfig {
-    // Keep the historical migration revision stable. 0.50 profiles coordinate
-    // existing fields and therefore do not require a destructive config migration.
+    // Keep the historical migration revision stable. Raising 801 would rerun an
+    // obsolete migration. 1.25 options load independent defaults instead.
     private static final int SETTINGS_REVISION = 801;
 
     public enum Graphics { PERFORMANCE, BALANCED, CINEMATIC;
@@ -51,6 +51,9 @@ public final class SiegeConfig {
     public static boolean showIntelState = true;
     public static boolean showBuildLabel = true;
     public static boolean confirmQuit = true;
+    public static boolean autoContrast = true;
+    public static int scanlineIntensity = 55;
+    public static int interferenceIntensity = 55;
     public static int backgroundDarkness = 23;
     public static int panelDarkness = 63;
     public static int trackNoticeSeconds = 8;
@@ -103,6 +106,9 @@ public final class SiegeConfig {
         showIntelState = bool(p, "showIntelState", true);
         showBuildLabel = bool(p, "showBuildLabel", true);
         confirmQuit = bool(p, "confirmQuit", true);
+        autoContrast = bool(p, "autoContrast", true);
+        scanlineIntensity = integer(p, "scanlineIntensity", 55, 0, 100);
+        interferenceIntensity = integer(p, "interferenceIntensity", 55, 0, 100);
         backgroundDarkness = integer(p, "backgroundDarkness", 23, 0, 70);
         panelDarkness = integer(p, "panelDarkness", 63, 20, 90);
         trackNoticeSeconds = integer(p, "trackNoticeSeconds", 8, 3, 15);
@@ -147,6 +153,9 @@ public final class SiegeConfig {
         p.setProperty("showIntelState", Boolean.toString(showIntelState));
         p.setProperty("showBuildLabel", Boolean.toString(showBuildLabel));
         p.setProperty("confirmQuit", Boolean.toString(confirmQuit));
+        p.setProperty("autoContrast", Boolean.toString(autoContrast));
+        p.setProperty("scanlineIntensity", Integer.toString(scanlineIntensity));
+        p.setProperty("interferenceIntensity", Integer.toString(interferenceIntensity));
         p.setProperty("backgroundDarkness", Integer.toString(backgroundDarkness));
         p.setProperty("panelDarkness", Integer.toString(panelDarkness));
         p.setProperty("trackNoticeSeconds", Integer.toString(trackNoticeSeconds));
@@ -182,13 +191,19 @@ public final class SiegeConfig {
         selectedScene = Math.max(-1, Math.min(8, selectedScene));
         uiVolume = clampVolume(uiVolume);
         musicVolume = clampVolume(musicVolume);
+        scanlineIntensity = clampVolume(scanlineIntensity);
+        interferenceIntensity = clampVolume(interferenceIntensity);
         backgroundDarkness = Math.max(0, Math.min(70, backgroundDarkness));
         panelDarkness = Math.max(20, Math.min(90, panelDarkness));
         trackNoticeSeconds = Math.max(3, Math.min(15, trackNoticeSeconds));
         if (graphics == null) graphics = Graphics.CINEMATIC;
 
         // Flash reduction is a hard accessibility guarantee, not merely a label.
-        if (reduceFlashes) titleInterference = false;
+        if (reduceFlashes) {
+            titleInterference = false;
+            interferenceIntensity = 0;
+        }
+        if (!scanlines) scanlineIntensity = 0;
     }
 
     public static void resetDefaults() {
@@ -226,6 +241,9 @@ public final class SiegeConfig {
         showIntelState = true;
         showBuildLabel = true;
         confirmQuit = true;
+        autoContrast = true;
+        scanlineIntensity = 55;
+        interferenceIntensity = 55;
         backgroundDarkness = 23;
         panelDarkness = 63;
         trackNoticeSeconds = 8;
@@ -233,7 +251,7 @@ public final class SiegeConfig {
         save();
     }
 
-    /** Full 0.50 calm profile kept local so config regression remains standalone. */
+    /** Full calm profile kept local so config regression remains standalone. */
     public static void applyCalmPreset() {
         intelReadingMode = false;
         comfortableReading = false;
@@ -254,12 +272,15 @@ public final class SiegeConfig {
         showIntelProgress = false;
         showIntelState = true;
         trackAnnouncements = false;
+        autoContrast = true;
+        scanlineIntensity = 0;
+        interferenceIntensity = 0;
         backgroundDarkness = 42;
         panelDarkness = 84;
         save();
     }
 
-    /** Full 0.50 reading profile kept local so config regression remains standalone. */
+    /** Full reading profile kept local so config regression remains standalone. */
     public static void applyReadingPreset() {
         intelReadingMode = true;
         comfortableReading = true;
@@ -280,6 +301,9 @@ public final class SiegeConfig {
         showIntelProgress = false;
         showIntelState = true;
         trackAnnouncements = false;
+        autoContrast = true;
+        scanlineIntensity = 0;
+        interferenceIntensity = 0;
         backgroundDarkness = 48;
         panelDarkness = 88;
         save();
