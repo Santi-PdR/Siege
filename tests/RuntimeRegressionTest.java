@@ -37,6 +37,18 @@ public class RuntimeRegressionTest {
         check(IntelCatalog.previewable().stream().noneMatch(e -> e.code().equals("TNK-003")), "Agreement must not leak into main-menu preview pool");
         check(IntelCatalog.filtered("UNIT") == IntelCatalog.filtered("UNIT"), "Catalog allocation regression");
 
+        var unknown = IntelCatalog.filtered("UNKNOWN");
+        check(unknown.size() == 6, "Unknown Intel category must contain the six unclassified new troops");
+        check(unknown.stream().map(IntelEntry::name).toList().equals(java.util.List.of(
+                "ENGINEER", "INFORMANT", "GRAPPLER", "TRANQUILIZER", "SKYDIVER", "SKYLINER")),
+                "Unknown troop order or membership changed");
+        for (IntelEntry entry : unknown) {
+            check(entry.image().equals("placeholder/classified"), "Unknown troop must use valid dossier placeholder: " + entry.name());
+            check(entry.text(true).status().contains("SIN REGISTRO VISUAL"), "Spanish missing-visual marker absent: " + entry.name());
+            check(entry.text(false).status().contains("NO VISUAL RECORD"), "English missing-visual marker absent: " + entry.name());
+        }
+        check(IntelPresentation.categoryCode("UNKNOWN").equals("UNK"), "Unknown short category code changed");
+
         var elites = IntelCatalog.filtered("ELITE");
         check(elites.size() == 6, "Current Elite catalog must include illustrated and partial current dossiers");
         check(elites.stream().map(IntelEntry::code).distinct().count() == elites.size(), "Duplicate Elite codes");
@@ -44,6 +56,8 @@ public class RuntimeRegressionTest {
                 java.util.List.of("AGARES", "GHOST", "AURELIONIS")), "Existing illustrated Elite order changed");
         check(elites.stream().map(IntelEntry::name).toList().containsAll(java.util.List.of("FAUNA", "CERBERUS", "PROTEUS")),
                 "Current Elite dossiers missing");
+        for (String code : new String[]{"ELT-004", "ELT-005", "ELT-006"})
+            check(IntelCatalog.byCode(code).image().equals("placeholder/classified"), "Elite placeholder repair missing: " + code);
 
         IntelEntry aurelionis = IntelCatalog.byCode("ELT-003");
         check(aurelionis != null && aurelionis.hp().equals("1") && aurelionis.threat() == 0,
@@ -75,13 +89,17 @@ public class RuntimeRegressionTest {
             check(exodus != null && exodus.hp().equals("23,400,000") && exodus.defense().equals("N/D"),
                     "Exodus Super Unit stats changed or invented: " + code);
             check(exodus.text(true).variants().equals("Operation Exodus"), "Exodus classification missing: " + code);
+            check(exodus.image().equals("placeholder/classified"), "Exodus missing-image repair absent: " + code);
         }
 
-        check(java.util.Set.of("UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT").stream()
+        check(java.util.Set.of("UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT", "UNKNOWN").stream()
                 .allMatch(category -> IntelCatalog.count(category) > 0), "Every visible category must contain a dossier");
         check(IntelCatalog.byCode("SUP-001") == atlas, "Code lookup must preserve Atlas identity");
+        check(IntelCatalog.byCode("TNK-006").category().equals("TANK")
+                && IntelCatalog.byCode("TNK-006").image().equals("placeholder/classified"), "Agitator classification/visual repair changed");
+        check(IntelCatalog.byCode("BOS-010").category().equals("BOSS")
+                && IntelCatalog.byCode("BOS-010").image().equals("bosses/classified/frame_00"), "Sparta Boss dossier placeholder changed");
 
-        // Official-only Agreement policy remains intact in 0.40.2.
         IntelEntry agreement = IntelCatalog.byCode("TNK-003");
         check(agreement.hp().equals("3,000") && agreement.defense().equals("100") && agreement.threat() == 0,
                 "Agreement official stats changed");
@@ -106,7 +124,6 @@ public class RuntimeRegressionTest {
         check(AgreementReport.ADVICE_ES.contains("SIN VERIFICAR") && AgreementReport.ADVICE_EN.contains("UNVERIFIED"),
                 "Field advice lost provenance");
 
-        // Latest supplied unit information belongs in the dossiers themselves.
         IntelEntry trident = IntelCatalog.byCode("BOS-004");
         check(trident.hp().equals("38,000"), "Trident HP changed without a newer numeric announcement");
         check(trident.text(true).variants().equals("VISOR PUESTO / VISOR REMOVIDO"), "Trident visor states missing");
@@ -128,6 +145,7 @@ public class RuntimeRegressionTest {
         check(IntelCatalog.byCode("SOP-002") != null, "Stalker dossier missing");
         check(IntelCatalog.byCode("HU-008") != null && IntelCatalog.byCode("HU-008").text(true).armament().contains("Sound Erradicator"),
                 "Engineer current dossier missing");
+        check(IntelCatalog.byCode("HU-008").category().equals("UNKNOWN"), "Engineer must remain unclassified until confirmed");
         check(IntelCatalog.byCode("ADV-001").text(true).variants().contains("Stop Time"), "Specialist Stop Time missing");
         check(IntelCatalog.byCode("ADV-004").text(true).description().contains("parry"), "Cloaker parry capability missing");
 
@@ -144,6 +162,6 @@ public class RuntimeRegressionTest {
             check(IntelPresentation.hpValue(e.hp()).signum() >= 0, "Invalid HP value " + e.code());
             check(IntelPresentation.coverageGrade(e, e.text(true)).matches("[A-E]"), "Invalid coverage grade " + e.code());
         }
-        System.out.println("Audio recovery, current unit dossiers, official source policy and Intel resources passed");
+        System.out.println("Audio recovery, 0.70 unknown dossiers, official source policy and Intel resources passed");
     }
 }
