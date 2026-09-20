@@ -31,8 +31,8 @@ public final class SiegeVanillaChrome {
         return switch (family) {
             case AUDIO, PACKS -> SiegeTheme.GOLD;
             case VIDEO, LANGUAGE -> SiegeTheme.CYAN;
-            case CONTROLS -> SiegeTheme.BLUE;
-            case WORLD -> SiegeTheme.GREEN;
+            case CONTROLS, MOUSE -> SiegeTheme.BLUE;
+            case ACCESSIBILITY, WORLD -> SiegeTheme.GREEN;
             case NETWORK, CONFIRM -> SiegeTheme.RED;
             case SYSTEM -> SiegeTheme.ORANGE;
             default -> SiegeTheme.RED;
@@ -49,6 +49,8 @@ public final class SiegeVanillaChrome {
             case AUDIO -> "music";
             case VIDEO -> "image";
             case CONTROLS -> "keyboard";
+            case MOUSE -> "mouse";
+            case ACCESSIBILITY -> "eye";
             case LANGUAGE -> "globe";
             case PACKS -> "package";
             case WORLD -> "world";
@@ -67,9 +69,10 @@ public final class SiegeVanillaChrome {
         if (key.contains("done") || key.contains("yes") || key.contains("confirm")) return "check";
         if (key.contains("sound") || key.contains("music") || key.contains("volume")) return "music";
         if (key.contains("video") || key.contains("graphics") || key.contains("fullscreen")) return "image";
+        if (key.contains("mouse") || key.contains("sensitivity")) return "mouse";
         if (key.contains("language")) return "globe";
         if (key.contains("control") || key.contains("keybind") || key.contains("key.")) return "keyboard";
-        if (key.contains("accessib")) return "eye";
+        if (key.contains("accessib") || key.contains("narrator") || key.contains("subtitle")) return "eye";
         if (key.contains("resource") || key.contains("pack")) return "package";
         if (key.contains("skin")) return "user";
         if (key.contains("chat")) return "chat";
@@ -79,7 +82,8 @@ public final class SiegeVanillaChrome {
     }
 
     public static void renderBackground(Screen screen, GuiGraphics g) {
-        int accent = accent(screen);
+        SiegeMenuPolicy.NativeFamily family = family(screen);
+        int accent = accent(family);
         SiegeBackgrounds.render(g, screen.width, screen.height, System.currentTimeMillis());
         g.fill(0, 0, screen.width, screen.height, 0xB908090B);
 
@@ -90,7 +94,8 @@ public final class SiegeVanillaChrome {
         int panelHeight = Math.max(6, bottom - top);
         SiegeTheme.panel(g, margin, top, panelWidth, panelHeight, accent);
 
-        // Tactical registration marks are fixed-cost and stay in the perimeter.
+        // Tactical registration marks stay in the empty perimeter and never sit
+        // over option widgets. Each settings family has its own quiet signature.
         int right = margin + panelWidth;
         for (int x = margin + 24; x < right - 16; x += 52) {
             g.fill(x, top + 3, x + 1, top + 6, 0x553E4348);
@@ -98,6 +103,21 @@ public final class SiegeVanillaChrome {
         }
         g.fill(margin + 2, top + 8, margin + 4, Math.min(bottom - 8, top + 42), accent);
         g.fill(Math.max(margin + 4, right - 4), Math.max(top + 8, bottom - 42), right - 2, bottom - 8, accent);
+
+        if (panelWidth >= 90 && panelHeight >= 50) {
+            int motifY = top + 10;
+            if (family == SiegeMenuPolicy.NativeFamily.AUDIO) {
+                for (int i = 0; i < 4; i++)
+                    g.fill(margin + 6 + i * 2, motifY + 8 - i * 2, margin + 7 + i * 2, motifY + 10, accent);
+            } else if (family == SiegeMenuPolicy.NativeFamily.VIDEO) {
+                g.fill(margin + 6, motifY, margin + 15, motifY + 1, accent);
+                g.fill(margin + 6, motifY, margin + 7, motifY + 7, accent);
+            } else if (family == SiegeMenuPolicy.NativeFamily.MOUSE) {
+                SiegeTheme.icon(g, margin + 6, motifY, "mouse", accent);
+            } else if (family == SiegeMenuPolicy.NativeFamily.ACCESSIBILITY) {
+                SiegeTheme.icon(g, margin + 6, motifY, "eye", accent);
+            }
+        }
     }
 
     public static void renderOverlay(Screen screen, GuiGraphics g) {
@@ -133,6 +153,8 @@ public final class SiegeVanillaChrome {
             g.drawCenteredString(font, clipped, width / 2 + 7, 6, SiegeTheme.INK);
         }
 
+        renderContextStrip(screen, g, family, accent);
+
         if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion && width > 80) {
             int span = Math.max(1, width - 36);
             int sweepX = 18 + (int)((System.currentTimeMillis() / 9L) % span);
@@ -143,43 +165,73 @@ public final class SiegeVanillaChrome {
         g.pose().popPose();
     }
 
+    private static void renderContextStrip(Screen screen, GuiGraphics g, SiegeMenuPolicy.NativeFamily family, int accent) {
+        String note = contextNote(family);
+        if (note.isBlank() || screen.width < 260) return;
+        int firstWidgetY = screen.height;
+        for (var child : screen.children()) {
+            if (child instanceof AbstractWidget widget && widget.visible)
+                firstWidgetY = Math.min(firstWidgetY, widget.getY());
+        }
+        int y = 23;
+        if (firstWidgetY - y < 12) return;
+        var font = Minecraft.getInstance().font;
+        int x = screen.width < 420 ? 8 : 14;
+        int max = Math.max(1, screen.width - x * 2 - 6);
+        String clipped = font.plainSubstrByWidth(note, max);
+        int right = Math.min(screen.width - x, x + font.width(clipped) + 8);
+        g.fill(x, y, right, y + 10, 0xD018191B);
+        g.fill(x, y, x + 2, y + 10, accent);
+        g.drawString(font, clipped, x + 5, y + 1, SiegeTheme.MUTED, false);
+    }
+
+    private static String contextNote(SiegeMenuPolicy.NativeFamily family) {
+        boolean es = spanish();
+        return switch (family) {
+            case AUDIO -> es ? "MEZCLA NATIVA · MAESTRO Y CATEGORÍAS" : "NATIVE MIX · MASTER AND CATEGORIES";
+            case VIDEO -> es ? "VIDEO VANILLA · EMBEDDIUM CONSERVA SU PROPIA INTERFAZ" : "VANILLA VIDEO · EMBEDDIUM KEEPS ITS OWN INTERFACE";
+            case MOUSE -> es ? "ENTRADA NATIVA · SENSIBILIDAD Y PUNTERO" : "NATIVE INPUT · SENSITIVITY AND POINTER";
+            case ACCESSIBILITY -> es ? "ACCESIBILIDAD NATIVA · NARRADOR, SUBTÍTULOS Y EFECTOS" : "NATIVE ACCESSIBILITY · NARRATOR, SUBTITLES AND EFFECTS";
+            default -> "";
+        };
+    }
+
     public static void decorateWidgets(Screen screen, GuiGraphics g) {
         SiegeMenuPolicy.NativeFamily family = family(screen);
         int accent = accent(family);
         for (var child : screen.children()) {
             if (child instanceof EditBox field && field.visible) {
                 int color = field.isFocused() ? SiegeTheme.FOCUS : 0xFF666B70;
-                frameWithin(screen, g, field.getX() - 1, field.getY() - 1,
-                        field.getWidth() + 2, field.getHeight() + 2, color, field.isFocused());
+                // Decoration stays inside the native widget rectangle; neighbouring
+                // controls therefore cannot be painted over at dense GUI scales.
+                frameWithin(screen, g, field.getX(), field.getY(),
+                        field.getWidth(), field.getHeight(), color, field.isFocused());
 
-                int railLeft = Math.max(0, field.getX() - 1);
+                int railLeft = Math.max(0, field.getX());
                 int railRight = Math.min(screen.width,
-                        field.getX() + Math.min(field.getWidth() + 1, field.isFocused() ? 34 : 12));
-                int railY = Math.min(screen.height - 1, field.getY() + field.getHeight());
+                        field.getX() + Math.min(field.getWidth(), field.isFocused() ? 34 : 12));
+                int railY = Math.min(screen.height - 1, field.getY() + Math.max(0, field.getHeight() - 1));
                 if (railRight > railLeft && railY >= 0 && railY < screen.height)
                     g.fill(railLeft, railY, railRight, railY + 1, field.isFocused() ? accent : 0xFF565B60);
             } else if (child instanceof AbstractSliderButton slider && slider.visible) {
                 int color = slider.isFocused() ? SiegeTheme.FOCUS : accent;
-                frameWithin(screen, g, slider.getX() - 1, slider.getY() - 1,
-                        slider.getWidth() + 2, slider.getHeight() + 2, color, slider.isFocused());
-                int left = Math.max(0, slider.getX() - 1);
+                frameWithin(screen, g, slider.getX(), slider.getY(),
+                        slider.getWidth(), slider.getHeight(), color, slider.isFocused());
+                int left = Math.max(0, slider.getX());
                 int top = Math.max(0, slider.getY() + 2);
                 int bottom = Math.min(screen.height, slider.getY() + slider.getHeight() - 2);
                 if (bottom > top && left < screen.width)
                     g.fill(left, top, Math.min(screen.width, left + 2), bottom, accent);
             } else if (child instanceof AbstractWidget widget && widget.visible && widget.isFocused()
                     && !(widget instanceof SiegeButton)) {
-                frameWithin(screen, g, widget.getX() - 1, widget.getY() - 1,
-                        widget.getWidth() + 2, widget.getHeight() + 2, SiegeTheme.FOCUS, true);
+                frameWithin(screen, g, widget.getX(), widget.getY(),
+                        widget.getWidth(), widget.getHeight(), SiegeTheme.FOCUS, true);
             }
         }
 
-        // Selection lists in 1.20.1 are not AbstractWidgets. Give list-heavy screens
-        // a safe inner rail instead of depending on inaccessible list coordinates.
-        if ((family == SiegeMenuPolicy.NativeFamily.LANGUAGE
-                || family == SiegeMenuPolicy.NativeFamily.PACKS
-                || family == SiegeMenuPolicy.NativeFamily.WORLD
-                || family == SiegeMenuPolicy.NativeFamily.CONTROLS)
+        // Do not draw a broad list rail over ordinary Controls/Mouse screens.
+        // Only actual list screens get this frame.
+        if (SiegeMenuPolicy.listRail(screen.getClass().getName())
                 && screen.width >= 120 && screen.height >= 96) {
             int inset = screen.width < 420 ? 8 : 12;
             int top = 28;
@@ -211,9 +263,11 @@ public final class SiegeVanillaChrome {
         boolean es = spanish();
         return switch (family) {
             case NETWORK -> es ? "ENLACE DE RED" : "NETWORK LINK";
-            case AUDIO -> "AUDIO";
-            case VIDEO -> "VIDEO";
+            case AUDIO -> es ? "MEZCLADOR DE AUDIO" : "AUDIO MIXER";
+            case VIDEO -> es ? "VIDEO / RENDER" : "VIDEO / RENDER";
             case CONTROLS -> es ? "CONTROLES" : "CONTROLS";
+            case MOUSE -> es ? "RATÓN" : "MOUSE INPUT";
+            case ACCESSIBILITY -> es ? "ACCESIBILIDAD" : "ACCESSIBILITY";
             case LANGUAGE -> es ? "IDIOMA" : "LANGUAGE";
             case PACKS -> es ? "PAQUETES" : "PACKS";
             case WORLD -> es ? "OPERACIONES DE MUNDO" : "WORLD OPERATIONS";
