@@ -233,14 +233,56 @@ public final class SiegeConfig {
         save();
     }
 
-    /** Legacy settings entry now delegates to the full 0.50 calm profile. */
+    /** Full 0.50 calm profile kept local so config regression remains standalone. */
     public static void applyCalmPreset() {
-        SiegeClientProfile.apply(SiegeClientProfile.Profile.CALM);
+        intelReadingMode = false;
+        comfortableReading = false;
+        darkIntelPaper = false;
+        graphics = Graphics.BALANCED;
+        reducedMotion = true;
+        reduceFlashes = true;
+        highContrast = true;
+        menuEffects = false;
+        animatedBackgrounds = false;
+        animatedIntel = false;
+        scanlines = false;
+        titleInterference = false;
+        hoverSounds = false;
+        mainMenuIntel = true;
+        autoRotateIntel = false;
+        pauseIntelOnHover = true;
+        showIntelProgress = false;
+        showIntelState = true;
+        trackAnnouncements = false;
+        backgroundDarkness = 42;
+        panelDarkness = 84;
+        save();
     }
 
-    /** Legacy settings entry now delegates to the full 0.50 reading profile. */
+    /** Full 0.50 reading profile kept local so config regression remains standalone. */
     public static void applyReadingPreset() {
-        SiegeClientProfile.apply(SiegeClientProfile.Profile.READING);
+        intelReadingMode = true;
+        comfortableReading = true;
+        darkIntelPaper = true;
+        graphics = Graphics.BALANCED;
+        reducedMotion = true;
+        reduceFlashes = true;
+        highContrast = true;
+        menuEffects = false;
+        animatedBackgrounds = false;
+        animatedIntel = false;
+        scanlines = false;
+        titleInterference = false;
+        hoverSounds = false;
+        mainMenuIntel = false;
+        autoRotateIntel = false;
+        pauseIntelOnHover = true;
+        showIntelProgress = false;
+        showIntelState = true;
+        trackAnnouncements = false;
+        backgroundDarkness = 48;
+        panelDarkness = 88;
+        save();
     }
 
     public static int clampVolume(int value) { return Math.max(0, Math.min(100, value)); }
