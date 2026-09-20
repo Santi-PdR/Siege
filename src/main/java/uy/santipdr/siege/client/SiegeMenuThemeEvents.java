@@ -17,6 +17,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import uy.santipdr.siege.SiegeMod;
 
@@ -28,6 +29,7 @@ public final class SiegeMenuThemeEvents {
     private static long openedAt;
     private static Screen boundScreen;
     private static final List<NativeButton> buttons = new ArrayList<>();
+    private static String cachedVersion;
     private SiegeMenuThemeEvents() { }
 
     private static boolean owned(Screen s) {
@@ -49,21 +51,25 @@ public final class SiegeMenuThemeEvents {
         Screen next = event.getNewScreen();
         boolean fromMenu = themed(event.getCurrentScreen());
         confirmedDialog = next != null && next.getClass() == ConfirmScreen.class && fromMenu ? next : null;
-        boundScreen = null; buttons.clear();
+        boundScreen = null;
+        buttons.clear();
         transitionScreen = next;
         openedAt = System.nanoTime() / 1_000_000L;
         SiegeUiSounds.resetHover();
     }
+
     @SubscribeEvent
     public static void initialized(ScreenEvent.Init.Post event) {
         Screen screen = event.getScreen();
         if (!nativeDialog(screen)) return;
-        boundScreen = screen; buttons.clear();
+        boundScreen = screen;
+        buttons.clear();
         for (var listener : List.copyOf(event.getListenersList())) {
             if (listener instanceof AbstractButton original && !(original instanceof SiegeButton)) {
                 NativeButton replacement = new NativeButton(original);
                 boolean focused = screen.getFocused() == original;
-                event.removeListener(original); event.addListener(replacement);
+                event.removeListener(original);
+                event.addListener(replacement);
                 if (focused) screen.setFocused(replacement);
                 buttons.add(replacement);
             } else if (listener instanceof EditBox field) {
@@ -72,6 +78,7 @@ public final class SiegeMenuThemeEvents {
             }
         }
     }
+
     @SubscribeEvent
     public static void background(ScreenEvent.BackgroundRendered event) {
         Screen screen = event.getScreen();
@@ -87,32 +94,79 @@ public final class SiegeMenuThemeEvents {
                     screen instanceof ConnectScreen ? "connect" : "intel", SiegeTheme.MUTED);
         }
     }
+
     @SubscribeEvent
     public static void beforeRender(ScreenEvent.Render.Pre event) {
         if (!themed(event.getScreen())) return;
         if (boundScreen == event.getScreen()) for (NativeButton button : buttons) button.sync();
         for (var child : event.getScreen().children()) if (child instanceof EditBox field) {
-            field.setTextColor(SiegeTheme.INK); field.setTextColorUneditable(SiegeTheme.MUTED);
+            field.setTextColor(SiegeTheme.INK);
+            field.setTextColorUneditable(SiegeTheme.MUTED);
         }
     }
+
     @SubscribeEvent
     public static void afterRender(ScreenEvent.Render.Post event) {
         Screen screen = event.getScreen();
         if (!themed(screen)) return;
         GuiGraphics g = event.getGuiGraphics();
+
         for (var child : screen.children()) if (child instanceof EditBox field && field.visible) {
-            int color = field.isFocused() ? SiegeTheme.RED : 0xFF656061;
+            int color = field.isFocused() ? SiegeTheme.FOCUS : 0xFF656061;
             SiegeTheme.frame(g, field.getX() - 1, field.getY() - 1, field.getWidth() + 2, field.getHeight() + 2, color);
+            if (field.isFocused())
+                SiegeTheme.focusCorners(g, field.getX() - 1, field.getY() - 1, field.getWidth() + 2, field.getHeight() + 2, color);
         }
+
         if (nativeDialog(screen)) SiegeUiSounds.updateHover(screen.children());
-        if (transitionScreen != screen) { transitionScreen = screen; openedAt = System.nanoTime() / 1_000_000L; }
-        int alpha = SiegeMenuPolicy.entryShade(System.nanoTime() / 1_000_000L - openedAt, SiegeConfig.menuEffects, SiegeConfig.reducedMotion);
+        renderBuildTag(screen, g);
+
+        if (transitionScreen != screen) {
+            transitionScreen = screen;
+            openedAt = System.nanoTime() / 1_000_000L;
+        }
+        int alpha = SiegeMenuPolicy.entryShade(System.nanoTime() / 1_000_000L - openedAt,
+                SiegeConfig.menuEffects, SiegeConfig.reducedMotion);
         if (alpha > 0) {
-            g.pose().pushPose(); g.pose().translate(0, 0, 500);
+            g.pose().pushPose();
+            g.pose().translate(0, 0, 500);
             g.fill(0, 0, screen.width, screen.height, alpha << 24);
             g.pose().popPose();
         }
     }
+
+    private static void renderBuildTag(Screen screen, GuiGraphics g) {
+        // Replace the legacy hard-coded title-screen label with the actual mod
+        // metadata version. It is deliberately tiny and only shown when enabled.
+        if (!(screen instanceof SiegeTitleScreen) || !SiegeConfig.showBuildLabel || screen.width < 300) return;
+        String text = "BUILD " + version();
+        var font = Minecraft.getInstance().font;
+        float scale = 0.68F;
+        int textWidth = Math.round(font.width(text) * scale);
+        int boxW = textWidth + 10;
+        int boxH = 11;
+        int x = 6;
+        int y = screen.height - boxH - 3;
+
+        // Opaque enough to cover the obsolete label that older title code still
+        // draws underneath, but small enough not to become another information panel.
+        g.fill(x, y, x + boxW, y + boxH, 0xC0131315);
+        g.fill(x, y, x + 2, y + boxH, 0xB8E54852);
+        g.pose().pushPose();
+        g.pose().translate(x + 5.0F, y + 2.0F, 0.0F);
+        g.pose().scale(scale, scale, 1.0F);
+        g.drawString(font, text, 0, 0, 0xFF9CA4AA, false);
+        g.pose().popPose();
+    }
+
+    private static String version() {
+        if (cachedVersion != null) return cachedVersion;
+        cachedVersion = ModList.get().getModContainerById(SiegeMod.MOD_ID)
+                .map(container -> container.getModInfo().getVersion().toString())
+                .orElse("DEV");
+        return cachedVersion;
+    }
+
     @SubscribeEvent
     public static void tooltip(RenderTooltipEvent.Color event) {
         if (!themed(Minecraft.getInstance().screen)) return;
@@ -121,29 +175,39 @@ public final class SiegeMenuThemeEvents {
         event.setBorderStart(0xFF9B555A);
         event.setBorderEnd(0xFF494346);
     }
+
     @SubscribeEvent
     public static void nativeClick(net.minecraftforge.client.event.sound.PlaySoundEvent event) {
         if (!nativeDialog(Minecraft.getInstance().screen) || event.getSound() == null) return;
         var location = event.getSound().getLocation();
         if (!location.getNamespace().equals("minecraft") || !location.getPath().equals("ui.button.click")) return;
-        if (!SiegeConfig.uiSounds || SiegeConfig.uiVolume <= 0) { event.setSound(null); return; }
+        if (!SiegeConfig.uiSounds || SiegeConfig.uiVolume <= 0) {
+            event.setSound(null);
+            return;
+        }
         var sound = net.minecraft.sounds.SoundEvent.createVariableRangeEvent(SiegeMod.UI_CLICK.getId());
         event.setSound(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(sound, 1.0F,
                 SiegeConfig.clampVolume(SiegeConfig.uiVolume) / 100.0F));
     }
+
     /** Keeps the original object alive because vanilla screen fields update it after init. */
     private static final class NativeButton extends SiegeButton {
         private final AbstractButton source;
         NativeButton(AbstractButton source) {
             super(source.getX(), source.getY(), source.getWidth(), source.getHeight(), source.getMessage(), b -> {}, SiegeTheme.RED);
             this.source = source;
-            setCompactCenter(true); setFullHoverFrame(true);
+            setCompactCenter(true);
+            setFullHoverFrame(true);
             sync();
         }
         void sync() {
-            active = source.active; visible = source.visible;
-            setX(source.getX()); setY(source.getY()); setWidth(source.getWidth());
-            setMessage(source.getMessage()); setTooltip(source.getTooltip());
+            active = source.active;
+            visible = source.visible;
+            setX(source.getX());
+            setY(source.getY());
+            setWidth(source.getWidth());
+            setMessage(source.getMessage());
+            setTooltip(source.getTooltip());
         }
         @Override public void onPress() {
             sync();
@@ -164,6 +228,9 @@ public final class SiegeMenuThemeEvents {
             sync();
             return active && visible && source.isMouseOver(x, y) && source.mouseScrolled(x, y, delta);
         }
-        @Override public boolean keyPressed(int key, int scan, int modifiers) { sync(); return super.keyPressed(key, scan, modifiers); }
+        @Override public boolean keyPressed(int key, int scan, int modifiers) {
+            sync();
+            return super.keyPressed(key, scan, modifiers);
+        }
     }
 }
