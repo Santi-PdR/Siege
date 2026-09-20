@@ -29,7 +29,6 @@ public final class SiegeMenuPolicy {
     public static NativeFamily nativeFamily(String name) {
         if (name == null) return NativeFamily.NONE;
         return switch (name) {
-            // Multiplayer / connection flow.
             case "net.minecraft.client.gui.screens.ConnectScreen",
                  "net.minecraft.client.gui.screens.DisconnectedScreen",
                  "net.minecraft.client.gui.screens.EditServerScreen",
@@ -38,7 +37,6 @@ public final class SiegeMenuPolicy {
                  "net.minecraft.client.gui.screens.DownloadingTerrainScreen",
                  "net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen" -> NativeFamily.NETWORK;
 
-            // Main vanilla settings shell and small supporting screens.
             case "net.minecraft.client.gui.screens.OptionsScreen",
                  "net.minecraft.client.gui.screens.SkinCustomizationScreen",
                  "net.minecraft.client.gui.screens.OnlineOptionsScreen",
@@ -51,13 +49,18 @@ public final class SiegeMenuPolicy {
             case "net.minecraft.client.gui.screens.VideoSettingsScreen" -> NativeFamily.VIDEO;
             case "net.minecraft.client.gui.screens.controls.ControlsScreen",
                  "net.minecraft.client.gui.screens.controls.KeyBindsScreen" -> NativeFamily.CONTROLS;
-            case "net.minecraft.client.gui.screens.controls.MouseSettingsScreen" -> NativeFamily.MOUSE;
+
+            // Forge 1.20.1 places MouseSettingsScreen directly under gui.screens.
+            // Keep the controls-package alias as a harmless compatibility guard for
+            // mappings/ports so this screen can never silently fall back to vanilla.
+            case "net.minecraft.client.gui.screens.MouseSettingsScreen",
+                 "net.minecraft.client.gui.screens.controls.MouseSettingsScreen" -> NativeFamily.MOUSE;
+
             case "net.minecraft.client.gui.screens.AccessibilityOptionsScreen",
                  "net.minecraft.client.gui.screens.AccessibilityOnboardingScreen" -> NativeFamily.ACCESSIBILITY;
             case "net.minecraft.client.gui.screens.LanguageSelectScreen" -> NativeFamily.LANGUAGE;
             case "net.minecraft.client.gui.screens.packs.PackSelectionScreen" -> NativeFamily.PACKS;
 
-            // Hidden singleplayer route and every vanilla world-setup screen it opens.
             case "net.minecraft.client.gui.screens.worldselection.SelectWorldScreen",
                  "net.minecraft.client.gui.screens.worldselection.CreateWorldScreen",
                  "net.minecraft.client.gui.screens.worldselection.EditWorldScreen",
@@ -68,8 +71,6 @@ public final class SiegeMenuPolicy {
                  "net.minecraft.client.gui.screens.worldselection.PresetFlatWorldScreen",
                  "net.minecraft.client.gui.screens.worldselection.DatapackLoadFailureScreen" -> NativeFamily.WORLD;
 
-            // Confirmation is deliberately scoped to a transition that originated
-            // from an already themed screen. Mods use ConfirmScreen too.
             case "net.minecraft.client.gui.screens.ConfirmScreen" -> NativeFamily.CONFIRM;
             default -> NativeFamily.NONE;
         };
@@ -82,7 +83,6 @@ public final class SiegeMenuPolicy {
         return family != NativeFamily.NONE;
     }
 
-    /** Buttons intentionally removed from the vanilla Options flow. */
     public static boolean hideNativeButton(String screenName, String translationKey) {
         if (screenName == null || translationKey == null) return false;
         if (OPTIONS.equals(screenName)) {
@@ -96,17 +96,11 @@ public final class SiegeMenuPolicy {
         return false;
     }
 
-    /**
-     * Telemetry and Credits share one complete two-column row in the 1.20.1
-     * Options grid. Pull Done up by that row height so removing them leaves no
-     * dead band or collision with the bottom chrome.
-     */
     public static int adjustedButtonY(String screenName, String translationKey, int y) {
         if (OPTIONS.equals(screenName) && "gui.done".equals(translationKey)) return Math.max(0, y - 24);
         return y;
     }
 
-    /** Only screens that actually contain a large selection list get the inner rail. */
     public static boolean listRail(String screenName) {
         if (screenName == null) return false;
         return switch (screenName) {
@@ -120,15 +114,15 @@ public final class SiegeMenuPolicy {
     }
 
     /**
-     * The themed overlay is drawn after the vanilla screen. Vanilla titles can
-     * otherwise remain visible directly underneath the SIEGE header. Mask only
-     * the proven-empty title strip and stop before the first live widget.
+     * Vanilla option screens draw their own title after their background. The
+     * SIEGE overlay is later in the frame, so this returns the maximum safe band
+     * that may be repainted before the custom header/context strip is drawn.
      */
     public static int vanillaTitleMaskBottom(int firstWidgetY, int screenHeight) {
         int safeHeight = Math.max(0, screenHeight);
         if (safeHeight == 0) return 0;
-        int beforeWidgets = firstWidgetY <= 0 ? 20 : Math.max(20, firstWidgetY - 2);
-        return Math.min(safeHeight, Math.min(34, beforeWidgets));
+        int beforeWidgets = firstWidgetY <= 0 ? 36 : Math.max(22, firstWidgetY - 2);
+        return Math.min(safeHeight, Math.min(40, beforeWidgets));
     }
 
     public static int entryShade(long age, boolean effects, boolean reducedMotion) {
