@@ -85,19 +85,24 @@ public final class SiegeVanillaChrome {
         SiegeMenuPolicy.NativeFamily family = family(screen);
         int accent = accent(family);
         SiegeBackgrounds.render(g, screen.width, screen.height, System.currentTimeMillis());
-        g.fill(0, 0, screen.width, screen.height, SiegeConfig.highContrast ? 0xD608090B : 0xB908090B);
+        g.fill(0, 0, screen.width, screen.height, SiegeConfig.highContrast ? 0xE108090B : 0xC708090B);
 
         int margin = screen.width < 380 ? 5 : screen.width < 640 ? 8 : 12;
         int top = 22;
         int bottom = Math.max(top + 8, screen.height - 6);
         int panelWidth = Math.max(6, screen.width - margin * 2);
         int panelHeight = Math.max(6, bottom - top);
+
+        // The vanilla dirt screen remains only as layout logic. SIEGE paints a
+        // complete tactical work surface behind it so Mouse/Audio/Accessibility
+        // and the other allowed screens no longer look like untouched vanilla.
+        g.fill(margin, top, margin + panelWidth, bottom, SiegeConfig.highContrast ? 0xF20B0D10 : 0xDC0D1014);
         SiegeTheme.panel(g, margin, top, panelWidth, panelHeight, accent);
+        g.fill(margin + 3, top + 3, margin + 5, bottom - 3, accent & 0xDFFFFFFF);
+        g.fill(margin + panelWidth - 5, top + 3, margin + panelWidth - 3, bottom - 3, 0x663D444A);
         if (SiegeConfig.highContrast)
             SiegeTheme.frame(g, margin + 1, top + 1, Math.max(2, panelWidth - 2), Math.max(2, panelHeight - 2), 0xFF777D82);
 
-        // Tactical registration marks stay in the empty perimeter and never sit
-        // over option widgets. Each settings family has its own quiet signature.
         int right = margin + panelWidth;
         for (int x = margin + 24; x < right - 16; x += 52) {
             g.fill(x, top + 3, x + 1, top + 6, SiegeConfig.highContrast ? 0x665D646A : 0x553E4348);
@@ -118,6 +123,10 @@ public final class SiegeVanillaChrome {
                 SiegeTheme.icon(g, margin + 6, motifY, "mouse", accent);
             } else if (family == SiegeMenuPolicy.NativeFamily.ACCESSIBILITY) {
                 SiegeTheme.icon(g, margin + 6, motifY, "eye", accent);
+            } else if (family == SiegeMenuPolicy.NativeFamily.PACKS) {
+                SiegeTheme.icon(g, margin + 6, motifY, "package", accent);
+            } else if (family == SiegeMenuPolicy.NativeFamily.LANGUAGE) {
+                SiegeTheme.icon(g, margin + 6, motifY, "globe", accent);
             }
         }
     }
@@ -129,9 +138,22 @@ public final class SiegeVanillaChrome {
         int accent = accent(family);
         int width = screen.width;
 
+        int firstWidgetY = screen.height;
+        for (var child : screen.children()) {
+            if (child instanceof AbstractWidget widget && widget.visible)
+                firstWidgetY = Math.min(firstWidgetY, widget.getY());
+        }
+        int maskBottom = SiegeMenuPolicy.vanillaTitleMaskBottom(firstWidgetY, screen.height);
+
         g.pose().pushPose();
         g.pose().translate(0, 0, 430);
-        g.fill(0, 0, width, 20, SiegeConfig.highContrast ? 0xFF090A0C : 0xF20D0E10);
+
+        // Screen.render() has already drawn the vanilla title. Erase its entire
+        // safe title band first, then paint exactly one SIEGE header over it.
+        if (maskBottom > 20)
+            g.fill(0, 20, width, maskBottom, SiegeConfig.highContrast ? 0xFF090A0C : 0xF20B0D10);
+
+        g.fill(0, 0, width, 20, SiegeConfig.highContrast ? 0xFF090A0C : 0xFC0D0E10);
         g.fill(0, 18, width, 20, SiegeConfig.highContrast ? 0xFF4A5055 : 0xFF25292D);
         g.fill(0, 18, Math.min(width, 72), 20, accent);
         if (width > 92) g.fill(width - Math.min(width / 4, 92), 19, width, 20, accent);
@@ -146,20 +168,25 @@ public final class SiegeVanillaChrome {
             String familyText = "SIEGE // " + familyLabel(family);
             familyText = font.plainSubstrByWidth(familyText, Math.max(70, width / 4));
             g.drawString(font, familyText, 21, 6, accent, false);
-            String clipped = font.plainSubstrByWidth(title, Math.max(70, width / 3));
-            g.drawCenteredString(font, clipped, width / 2, 6, titleColor);
+
+            // Do not repeat the vanilla screen name beside a custom SIEGE family
+            // title. The centre is the one authoritative custom heading.
+            String center = "SIEGE // " + familyLabel(family);
+            center = font.plainSubstrByWidth(center, Math.max(70, width / 3));
+            g.drawCenteredString(font, center, width / 2, 6, titleColor);
+
             if (width >= 620) {
                 String state = SiegeConfig.highContrast
                         ? (spanish() ? "ALTO CONTRASTE" : "HIGH CONTRAST")
-                        : (spanish() ? "INTERFAZ SEGURA" : "SECURE INTERFACE");
+                        : familyStatus(family);
                 g.drawString(font, state, width - 8 - font.width(state), 6, mutedColor, false);
             }
         } else {
-            String clipped = font.plainSubstrByWidth(title, Math.max(1, width - 54));
-            g.drawCenteredString(font, clipped, width / 2 + 7, 6, titleColor);
+            String center = font.plainSubstrByWidth("SIEGE // " + familyLabel(family), Math.max(1, width - 54));
+            g.drawCenteredString(font, center, width / 2 + 7, 6, titleColor);
         }
 
-        renderContextStrip(screen, g, family, accent);
+        renderContextStrip(screen, g, family, accent, firstWidgetY);
 
         if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion && !SiegeConfig.reduceFlashes && width > 80) {
             int span = Math.max(1, width - 36);
@@ -171,14 +198,10 @@ public final class SiegeVanillaChrome {
         g.pose().popPose();
     }
 
-    private static void renderContextStrip(Screen screen, GuiGraphics g, SiegeMenuPolicy.NativeFamily family, int accent) {
+    private static void renderContextStrip(Screen screen, GuiGraphics g, SiegeMenuPolicy.NativeFamily family,
+                                           int accent, int firstWidgetY) {
         String note = contextNote(family);
         if (note.isBlank() || screen.width < 260) return;
-        int firstWidgetY = screen.height;
-        for (var child : screen.children()) {
-            if (child instanceof AbstractWidget widget && widget.visible)
-                firstWidgetY = Math.min(firstWidgetY, widget.getY());
-        }
         int y = 23;
         if (firstWidgetY - y < 12) return;
         var font = Minecraft.getInstance().font;
@@ -186,7 +209,7 @@ public final class SiegeVanillaChrome {
         int max = Math.max(1, screen.width - x * 2 - 6);
         String clipped = font.plainSubstrByWidth(note, max);
         int right = Math.min(screen.width - x, x + font.width(clipped) + 8);
-        g.fill(x, y, right, y + 10, SiegeConfig.highContrast ? 0xFF101214 : 0xD018191B);
+        g.fill(x, y, right, y + 10, SiegeConfig.highContrast ? 0xFF101214 : 0xEF18191B);
         g.fill(x, y, x + 2, y + 10, accent);
         g.drawString(font, clipped, x + 5, y + 1, SiegeConfig.highContrast ? 0xFFF0F2F4 : SiegeTheme.MUTED, false);
     }
@@ -194,11 +217,29 @@ public final class SiegeVanillaChrome {
     private static String contextNote(SiegeMenuPolicy.NativeFamily family) {
         boolean es = spanish();
         return switch (family) {
-            case AUDIO -> es ? "MEZCLA NATIVA · MAESTRO Y CATEGORÍAS" : "NATIVE MIX · MASTER AND CATEGORIES";
+            case AUDIO -> es ? "MEZCLA DE AUDIO · MAESTRO Y CATEGORÍAS" : "AUDIO MIX · MASTER AND CATEGORIES";
             case VIDEO -> es ? "VIDEO VANILLA · EMBEDDIUM CONSERVA SU PROPIA INTERFAZ" : "VANILLA VIDEO · EMBEDDIUM KEEPS ITS OWN INTERFACE";
-            case MOUSE -> es ? "ENTRADA NATIVA · SENSIBILIDAD Y PUNTERO" : "NATIVE INPUT · SENSITIVITY AND POINTER";
-            case ACCESSIBILITY -> es ? "ACCESIBILIDAD NATIVA · NARRADOR, SUBTÍTULOS Y EFECTOS" : "NATIVE ACCESSIBILITY · NARRATOR, SUBTITLES AND EFFECTS";
+            case MOUSE -> es ? "ENTRADA · SENSIBILIDAD, SCROLL Y PUNTERO" : "INPUT · SENSITIVITY, SCROLL AND POINTER";
+            case ACCESSIBILITY -> es ? "ACCESIBILIDAD · NARRACIÓN, SUBTÍTULOS Y EFECTOS" : "ACCESSIBILITY · NARRATION, SUBTITLES AND EFFECTS";
+            case CONTROLS -> es ? "CONTROLES · ASIGNACIÓN Y RESPUESTA" : "CONTROLS · BINDINGS AND RESPONSE";
+            case LANGUAGE -> es ? "IDIOMA · INTERFAZ Y RECURSOS" : "LANGUAGE · INTERFACE AND RESOURCES";
+            case PACKS -> es ? "PAQUETES · RECURSOS DEL CLIENTE" : "PACKS · CLIENT RESOURCES";
+            case SYSTEM -> es ? "SISTEMA · PREFERENCIAS DEL CLIENTE" : "SYSTEM · CLIENT PREFERENCES";
             default -> "";
+        };
+    }
+
+    private static String familyStatus(SiegeMenuPolicy.NativeFamily family) {
+        boolean es = spanish();
+        return switch (family) {
+            case MOUSE -> es ? "ENTRADA CALIBRADA" : "INPUT CALIBRATION";
+            case ACCESSIBILITY -> es ? "PERFIL DE ACCESO" : "ACCESS PROFILE";
+            case AUDIO -> es ? "MEZCLA ACTIVA" : "MIX ACTIVE";
+            case VIDEO -> es ? "RENDER DEL CLIENTE" : "CLIENT RENDER";
+            case CONTROLS -> es ? "MAPEO DE ENTRADA" : "INPUT MAPPING";
+            case PACKS -> es ? "RECURSOS LOCALES" : "LOCAL RESOURCES";
+            case LANGUAGE -> es ? "LOCALIZACIÓN" : "LOCALISATION";
+            default -> es ? "INTERFAZ SIEGE" : "SIEGE INTERFACE";
         };
     }
 
@@ -208,8 +249,7 @@ public final class SiegeVanillaChrome {
         for (var child : screen.children()) {
             if (child instanceof EditBox field && field.visible) {
                 int color = field.isFocused() ? SiegeTheme.FOCUS : SiegeConfig.highContrast ? 0xFFAAB0B5 : 0xFF666B70;
-                frameWithin(screen, g, field.getX(), field.getY(),
-                        field.getWidth(), field.getHeight(), color, field.isFocused());
+                frameWithin(screen, g, field.getX(), field.getY(), field.getWidth(), field.getHeight(), color, field.isFocused());
 
                 int railLeft = Math.max(0, field.getX());
                 int railRight = Math.min(screen.width,
@@ -220,8 +260,7 @@ public final class SiegeVanillaChrome {
                             field.isFocused() ? accent : SiegeConfig.highContrast ? 0xFF858C91 : 0xFF565B60);
             } else if (child instanceof AbstractSliderButton slider && slider.visible) {
                 int color = slider.isFocused() ? SiegeTheme.FOCUS : accent;
-                frameWithin(screen, g, slider.getX(), slider.getY(),
-                        slider.getWidth(), slider.getHeight(), color, slider.isFocused());
+                frameWithin(screen, g, slider.getX(), slider.getY(), slider.getWidth(), slider.getHeight(), color, slider.isFocused());
                 int left = Math.max(0, slider.getX());
                 int top = Math.max(0, slider.getY() + 2);
                 int bottom = Math.min(screen.height, slider.getY() + slider.getHeight() - 2);
@@ -229,8 +268,7 @@ public final class SiegeVanillaChrome {
                     g.fill(left, top, Math.min(screen.width, left + 2), bottom, accent);
             } else if (child instanceof AbstractWidget widget && widget.visible && widget.isFocused()
                     && !(widget instanceof SiegeButton)) {
-                frameWithin(screen, g, widget.getX(), widget.getY(),
-                        widget.getWidth(), widget.getHeight(), SiegeTheme.FOCUS, true);
+                frameWithin(screen, g, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), SiegeTheme.FOCUS, true);
             }
         }
 
@@ -267,10 +305,10 @@ public final class SiegeVanillaChrome {
         boolean es = spanish();
         return switch (family) {
             case NETWORK -> es ? "ENLACE DE RED" : "NETWORK LINK";
-            case AUDIO -> es ? "MEZCLADOR DE AUDIO" : "AUDIO MIXER";
+            case AUDIO -> es ? "AUDIO" : "AUDIO";
             case VIDEO -> "VIDEO / RENDER";
             case CONTROLS -> es ? "CONTROLES" : "CONTROLS";
-            case MOUSE -> es ? "RATÓN" : "MOUSE INPUT";
+            case MOUSE -> es ? "MOUSE" : "MOUSE";
             case ACCESSIBILITY -> es ? "ACCESIBILIDAD" : "ACCESSIBILITY";
             case LANGUAGE -> es ? "IDIOMA" : "LANGUAGE";
             case PACKS -> es ? "PAQUETES" : "PACKS";
