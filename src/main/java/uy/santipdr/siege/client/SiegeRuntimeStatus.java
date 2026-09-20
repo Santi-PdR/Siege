@@ -6,7 +6,7 @@ import net.minecraft.SharedConstants;
 import net.minecraftforge.fml.ModList;
 import uy.santipdr.siege.SiegeMod;
 
-/** Live client diagnostics shared by the 0.60 command and recovery surfaces. */
+/** Live client diagnostics shared by the command, recovery and 0.70 Intel surfaces. */
 public final class SiegeRuntimeStatus {
     public enum Health { READY, ATTENTION, ERROR }
 
@@ -71,7 +71,7 @@ public final class SiegeRuntimeStatus {
         if (active != SiegeClientProfile.Profile.CUSTOM)
             return SiegeClientProfile.label(active, spanish) + " · 100%";
         SiegeClientProfile.Profile nearest = SiegeProfileMetrics.nearest();
-        return (spanish ? "CUSTOM → " : "CUSTOM → ") + SiegeClientProfile.label(nearest, spanish)
+        return "CUSTOM → " + SiegeClientProfile.label(nearest, spanish)
                 + " · " + SiegeProfileMetrics.fitPercent(nearest) + "%";
     }
 
@@ -101,7 +101,8 @@ public final class SiegeRuntimeStatus {
                 + " · T " + IntelCatalog.count("TANK")
                 + " · B " + IntelCatalog.count("BOSS")
                 + " · E " + IntelCatalog.count("ELITE")
-                + " · S " + IntelCatalog.count("SUPER-UNIT");
+                + " · S " + IntelCatalog.count("SUPER-UNIT")
+                + " · ? " + IntelCatalog.count("UNKNOWN");
     }
 
     public static String accessibilityLabel(boolean spanish) {

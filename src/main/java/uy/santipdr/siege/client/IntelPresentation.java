@@ -75,6 +75,7 @@ public final class IntelPresentation {
             case "BOSS" -> "BOS";
             case "ELITE" -> "ELT";
             case "SUPER-UNIT" -> "SUP";
+            case "UNKNOWN" -> "UNK";
             default -> "UNK";
         };
     }
@@ -87,6 +88,7 @@ public final class IntelPresentation {
             case "BOSS" -> 0xFFB5162D;
             case "ELITE" -> 0xFF9B59D0;
             case "SUPER-UNIT" -> 0xFFE0B93F;
+            case "UNKNOWN" -> 0xFF9AA4AB;
             default -> 0xFFB8C0C8;
         };
     }

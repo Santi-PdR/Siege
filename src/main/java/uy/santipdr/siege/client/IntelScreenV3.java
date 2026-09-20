@@ -17,7 +17,7 @@ import java.util.List;
 public final class IntelScreenV3 extends Screen {
     private static final int BOSS_FRAME_COUNT = 6;
     private static final List<String> CATEGORIES = List.of(
-            "UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT"
+            "UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT", "UNKNOWN"
     );
     private static String rememberedCategory = "UNIT";
     private static String rememberedCode;
@@ -445,7 +445,6 @@ public final class IntelScreenV3 extends Screen {
         if (rememberedCode != null) CATEGORY_SELECTIONS.put(category, rememberedCode);
     }
 
-
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (delta == 0) return false;
@@ -523,7 +522,6 @@ public final class IntelScreenV3 extends Screen {
                 renderFile(g, entry, 6, contentTop, width - 12, true);
             } else {
                 renderFile(g, entry, sidebarWidth + 15, contentTop, width - sidebarWidth - 30, false);
-
             }
         }
 
@@ -539,13 +537,8 @@ public final class IntelScreenV3 extends Screen {
         g.fill(sidebarWidth - 2, 43, sidebarWidth, height, accent);
         g.fill(0, 41, width, 43, accent);
 
-        for (int y = 70; y < height; y += 28) {
-            g.fill(0, y, sidebarWidth, y + 1, 0x1219A5BC);
-        }
-
-        if (!ultraCompact) {
-            g.drawString(font, label("CATEGORÍAS", "CATEGORIES"), 12, 51, 0xFF89959D, false);
-        }
+        for (int y = 70; y < height; y += 28) g.fill(0, y, sidebarWidth, y + 1, 0x1219A5BC);
+        if (!ultraCompact) g.drawString(font, label("CATEGORÍAS", "CATEGORIES"), 12, 51, 0xFF89959D, false);
 
         int filesBandTop = listTop - (ultraCompact ? 18 : 28);
         int filesBandBottom = listTop - 4;
@@ -581,6 +574,7 @@ public final class IntelScreenV3 extends Screen {
             case "BOSS" -> 0xFFE1D8D3;
             case "ELITE" -> 0xFFE1DAE3;
             case "SUPER-UNIT" -> 0xFFE4DDC8;
+            case "UNKNOWN" -> 0xFFD9DCDD;
             default -> 0xFFDEDCD3;
         };
         int ink = dark ? 0xFFE5E7E2 : entry.category().equals("ADVANCED") ? 0xFF13232D : 0xFF29261F;
@@ -649,37 +643,37 @@ public final class IntelScreenV3 extends Screen {
         int bodyWidth = Math.max(24, bodyRight - bodyLeft - 8);
         String cacheKey = entry.code() + ":" + bodyWidth + ":" + spanish() + ":" + dark + ":" + readingMode;
         if (!cacheKey.equals(bodyCacheKey)) {
-        DetailLine anchor = bodyCache.isEmpty() ? null : bodyCache.get(Math.min(detailScroll, bodyCache.size() - 1));
-        boolean sameEntry = lastReadingCode != null && lastReadingCode.startsWith(entry.code() + ":");
-        List<DetailLine> lines = new ArrayList<>();
-        appendWrapped(lines, label("AMENAZA", "THREAT") + " " + (entry.threat() > 0 ? stars(entry.threat()) : label("SIN DATOS", "NO DATA")), bodyWidth, warning);
-        String hp = entry.hp();
-        String compactHp = IntelPresentation.compactHp(hp);
-        appendWrapped(lines, "HP " + hp + (compactHp.equals(hp) ? "" : "  [" + compactHp + "]")
-                + ("N/D".equals(entry.defense()) ? "" : "  DEF " + entry.defense()), bodyWidth, ink);
-        appendWrapped(lines, label("ORIGEN: ", "ORIGIN: ") + text.origin(), bodyWidth, muted);
-        appendWrapped(lines, label("ESTADO: ", "STATUS: ") + text.status(), bodyWidth, muted);
-        appendWrapped(lines, label("ARMAMENTO: ", "ARMAMENT: ") + text.armament(), bodyWidth, ink);
-        appendWrapped(lines, label("VARIANTES: ", "VARIANTS: ") + text.variants(), bodyWidth, muted);
-        lines.add(blankLine());
-        appendWrapped(lines, label("PERFIL OPERATIVO", "OPERATIONAL PROFILE"), bodyWidth, accent);
-        if (AgreementReport.applies(entry)) {
-            for (String paragraph : text.description().split("\\n\\n")) {
-                int newline = paragraph.indexOf('\n');
-                if (newline >= 0) {
-                    appendWrapped(lines, paragraph.substring(0, newline), bodyWidth, accent);
-                    appendWrapped(lines, paragraph.substring(newline + 1), bodyWidth, ink);
-                } else appendWrapped(lines, paragraph, bodyWidth, ink);
-                lines.add(blankLine());
+            DetailLine anchor = bodyCache.isEmpty() ? null : bodyCache.get(Math.min(detailScroll, bodyCache.size() - 1));
+            boolean sameEntry = lastReadingCode != null && lastReadingCode.startsWith(entry.code() + ":");
+            List<DetailLine> lines = new ArrayList<>();
+            appendWrapped(lines, label("AMENAZA", "THREAT") + " " + (entry.threat() > 0 ? stars(entry.threat()) : label("SIN DATOS", "NO DATA")), bodyWidth, warning);
+            String hp = entry.hp();
+            String compactHp = IntelPresentation.compactHp(hp);
+            appendWrapped(lines, "HP " + hp + (compactHp.equals(hp) ? "" : "  [" + compactHp + "]")
+                    + ("N/D".equals(entry.defense()) ? "" : "  DEF " + entry.defense()), bodyWidth, ink);
+            appendWrapped(lines, label("ORIGEN: ", "ORIGIN: ") + text.origin(), bodyWidth, muted);
+            appendWrapped(lines, label("ESTADO: ", "STATUS: ") + text.status(), bodyWidth, muted);
+            appendWrapped(lines, label("ARMAMENTO: ", "ARMAMENT: ") + text.armament(), bodyWidth, ink);
+            appendWrapped(lines, label("VARIANTES: ", "VARIANTS: ") + text.variants(), bodyWidth, muted);
+            lines.add(blankLine());
+            appendWrapped(lines, label("PERFIL OPERATIVO", "OPERATIONAL PROFILE"), bodyWidth, accent);
+            if (AgreementReport.applies(entry)) {
+                for (String paragraph : text.description().split("\\n\\n")) {
+                    int newline = paragraph.indexOf('\n');
+                    if (newline >= 0) {
+                        appendWrapped(lines, paragraph.substring(0, newline), bodyWidth, accent);
+                        appendWrapped(lines, paragraph.substring(newline + 1), bodyWidth, ink);
+                    } else appendWrapped(lines, paragraph, bodyWidth, ink);
+                    lines.add(blankLine());
+                }
+            } else appendWrapped(lines, text.description(), bodyWidth, ink);
+            if (sameEntry && anchor != null) {
+                for (int i = 0; i < lines.size(); i++) {
+                    DetailLine line = lines.get(i);
+                    if (line.source().equals(anchor.source()) && line.offset() <= anchor.offset()) detailScroll = i;
+                }
             }
-        } else appendWrapped(lines, text.description(), bodyWidth, ink);
-        if (sameEntry && anchor != null) {
-            for (int i = 0; i < lines.size(); i++) {
-                DetailLine line = lines.get(i);
-                if (line.source().equals(anchor.source()) && line.offset() <= anchor.offset()) detailScroll = i;
-            }
-        }
-        bodyCache = List.copyOf(lines); bodyCacheKey = cacheKey;
+            bodyCache = List.copyOf(lines); bodyCacheKey = cacheKey;
         }
         List<DetailLine> lines = bodyCache;
         int lineHeight = SiegeConfig.comfortableReading ? 14 : 11;
@@ -802,20 +796,24 @@ public final class IntelScreenV3 extends Screen {
         }
         return super.mouseClicked(x, y, button);
     }
+
     private void scrollTo(double y) {
         detailScroll = (int)Math.round(Math.max(0, Math.min(1, (y - detailBodyTop - scrollGrab) / Math.max(1, bodyBottom - detailBodyTop - thumbHeight))) * maxDetailScroll);
     }
+
     private void scrollSummaryTo(double y) {
         int trackBottom = summaryBottom - 20;
         double fraction = (y - summaryTop - summaryGrab) / Math.max(1, trackBottom - summaryTop - summaryThumbHeight);
         summaryScroll = (int)Math.round(Math.max(0, Math.min(1, fraction)) * summaryMax);
     }
+
     @Override
     public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
         if (draggingSummary && button == 0) { scrollSummaryTo(y); return true; }
         if (draggingScroll && button == 0) { scrollTo(y); return true; }
         return super.mouseDragged(x, y, button, dx, dy);
     }
+
     @Override
     public boolean mouseReleased(double x, double y, int button) {
         boolean handled = button == 0 && (draggingScroll || draggingSummary);
@@ -844,6 +842,7 @@ public final class IntelScreenV3 extends Screen {
             case "BOSS" -> 0xFF91253A;
             case "ELITE" -> 0xFF70428E;
             case "SUPER-UNIT" -> 0xFF8A691F;
+            case "UNKNOWN" -> 0xFF59656D;
             default -> 0xFF8C302B;
         };
     }
@@ -868,7 +867,9 @@ public final class IntelScreenV3 extends Screen {
             case "TANK" -> label("TANQUES", "TANKS");
             case "BOSS" -> label("JEFES", "BOSSES");
             case "ELITE" -> label("ÉLITES", "ELITES");
-            default -> label("SUPERUNIDADES", "SUPER-UNITS");
+            case "SUPER-UNIT" -> label("SUPERUNIDADES", "SUPER-UNITS");
+            case "UNKNOWN" -> label("DESCONOCIDO", "UNKNOWN");
+            default -> value;
         };
     }
 
@@ -887,6 +888,7 @@ public final class IntelScreenV3 extends Screen {
             case "BOSS" -> label("JEFES", "BOSSES");
             case "ELITE" -> label("ÉLITES", "ELITES");
             case "SUPER-UNIT" -> label("SUPERUNIDADES", "SUPER-UNITS");
+            case "UNKNOWN" -> label("DESCONOCIDO", "UNKNOWN");
             default -> value;
         };
         return name + "  [" + count + "]";

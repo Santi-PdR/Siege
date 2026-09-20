@@ -139,7 +139,7 @@ jobs:
           fi
       - name: Verify audio state and catalog resources
         run: |
-          javac -d build/runtime-tests src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/IntelPresentation.java src/main/java/uy/santipdr/siege/client/SiegeAudioHealth.java src/main/java/uy/santipdr/siege/client/SiegePreviewClock.java tests/RuntimeRegressionTest.java
+          javac -d build/runtime-tests src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/IntelPresentation.java src/main/java/uy/santipdr/siege/client/SiegeAudioHealth.java src/main/java/uy/santipdr/siege/client/SiegePreviewClock.java tests/RuntimeRegressionTest.java
           java -cp build/runtime-tests uy.santipdr.siege.client.RuntimeRegressionTest
       - name: Compile and verify
         run: gradle --no-daemon reportBuildTools clean build
