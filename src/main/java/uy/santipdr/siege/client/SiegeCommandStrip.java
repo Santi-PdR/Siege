@@ -4,12 +4,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 
-/** Compact operational strip for the title screen. Kept deliberately terse. */
+/** Compact operational strip shared by the title and settings surfaces. */
 public final class SiegeCommandStrip {
     private SiegeCommandStrip() { }
 
     public static void render(Screen screen, GuiGraphics g) {
-        if (!(screen instanceof SiegeTitleScreen) || screen.width < 650 || screen.height < 260) return;
+        boolean title = screen instanceof SiegeTitleScreen;
+        boolean settings = screen instanceof SiegeSettingsScreen;
+        if ((!title && !settings) || screen.width < (title ? 650 : 520) || screen.height < 260) return;
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft == null) return;
 
@@ -19,8 +21,8 @@ public final class SiegeCommandStrip {
         int health = SiegeRuntimeStatus.healthAccent();
         var font = minecraft.font;
 
-        int maxWidth = Math.max(260, screen.width - 320);
-        int width = Math.min(430, maxWidth);
+        int maxWidth = title ? Math.max(260, screen.width - 320) : Math.max(280, screen.width - 80);
+        int width = Math.min(settings ? 520 : 430, maxWidth);
         int x = (screen.width - width) / 2;
         int y = screen.height - 17;
         int h = 13;
@@ -28,6 +30,8 @@ public final class SiegeCommandStrip {
         String profileText = (spanish ? "PERFIL " : "PROFILE ")
                 + SiegeClientProfile.label(profile, spanish);
         String intelText = "INTEL " + IntelCatalog.total();
+        String audioText = !SiegeConfig.music ? (spanish ? "AUDIO OFF" : "AUDIO OFF")
+                : "AUDIO " + SiegeConfig.musicVolume + "%";
         String healthText = SiegeRuntimeStatus.healthLabel(spanish);
 
         g.pose().pushPose();
@@ -41,7 +45,9 @@ public final class SiegeCommandStrip {
         int rightWidth = font.width(healthText);
         int rightX = x + width - 6 - rightWidth;
         int centerSpace = Math.max(1, rightX - leftX - 10);
-        String left = font.plainSubstrByWidth(profileText + "  ·  " + intelText, centerSpace);
+        String detail = profileText + "  ·  " + intelText
+                + (width >= 390 ? "  ·  " + audioText : "");
+        String left = font.plainSubstrByWidth(detail, centerSpace);
         g.drawString(font, left, leftX, y + 3, SiegeConfig.highContrast ? 0xFFFFFFFF : 0xFFC7CDD1, false);
         g.drawString(font, healthText, rightX, y + 3, health, false);
         g.pose().popPose();
