@@ -13,8 +13,8 @@ import com.mojang.logging.LogUtils;
 import java.util.Properties;
 
 public final class SiegeConfig {
-    // Keep the historical migration revision stable. New 0.30 options load their
-    // own defaults and must never re-run the old autoRotateIntel migration.
+    // Keep the historical migration revision stable. 0.50 profiles coordinate
+    // existing fields and therefore do not require a destructive config migration.
     private static final int SETTINGS_REVISION = 801;
 
     public enum Graphics { PERFORMANCE, BALANCED, CINEMATIC;
@@ -233,26 +233,55 @@ public final class SiegeConfig {
         save();
     }
 
+    /** Full 0.50 calm profile kept local so config regression remains standalone. */
     public static void applyCalmPreset() {
+        intelReadingMode = false;
+        comfortableReading = false;
+        darkIntelPaper = false;
+        graphics = Graphics.BALANCED;
         reducedMotion = true;
         reduceFlashes = true;
         highContrast = true;
-        titleInterference = false;
+        menuEffects = false;
+        animatedBackgrounds = false;
+        animatedIntel = false;
         scanlines = false;
+        titleInterference = false;
         hoverSounds = false;
-        graphics = Graphics.BALANCED;
+        mainMenuIntel = true;
+        autoRotateIntel = false;
+        pauseIntelOnHover = true;
+        showIntelProgress = false;
+        showIntelState = true;
+        trackAnnouncements = false;
+        backgroundDarkness = 42;
+        panelDarkness = 84;
         save();
     }
 
+    /** Full 0.50 reading profile kept local so config regression remains standalone. */
     public static void applyReadingPreset() {
         intelReadingMode = true;
         comfortableReading = true;
         darkIntelPaper = true;
-        highContrast = true;
+        graphics = Graphics.BALANCED;
         reducedMotion = true;
         reduceFlashes = true;
-        titleInterference = false;
+        highContrast = true;
+        menuEffects = false;
+        animatedBackgrounds = false;
+        animatedIntel = false;
         scanlines = false;
+        titleInterference = false;
+        hoverSounds = false;
+        mainMenuIntel = false;
+        autoRotateIntel = false;
+        pauseIntelOnHover = true;
+        showIntelProgress = false;
+        showIntelState = true;
+        trackAnnouncements = false;
+        backgroundDarkness = 48;
+        panelDarkness = 88;
         save();
     }
 
