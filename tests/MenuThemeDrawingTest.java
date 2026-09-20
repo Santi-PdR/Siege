@@ -15,7 +15,7 @@ public class MenuThemeDrawingTest {
             g.fills.clear(); SiegeTheme.focusCorners(g, 9, 17, w, h, SiegeTheme.FOCUS); inside(g, 9, 17, w, h);
             g.fills.clear(); SiegeTheme.divider(g, 9, 17, w, SiegeTheme.RED); inside(g, 9, 17, w, 2);
         }
-        for (String icon : new String[] {"connect", "intel", "settings", "music", "pin", "check", "play", "pause", "eye", "image", "shield", "overview", "lock", "search",
+        for (String icon : new String[] {"connect", "intel", "settings", "music", "mouse", "pin", "check", "play", "pause", "eye", "image", "shield", "overview", "lock", "search",
                 "back", "globe", "keyboard", "package", "chat", "user", "world", "warning"}) {
             GuiGraphics g = new GuiGraphics(); SiegeTheme.icon(g, 0, 0, icon, SiegeTheme.RED); inside(g, 0, 0, 9, 9);
             if (g.fills.isEmpty()) throw new AssertionError("Empty icon " + icon);
