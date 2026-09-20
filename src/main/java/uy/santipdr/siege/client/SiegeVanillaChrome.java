@@ -3,7 +3,6 @@ package uy.santipdr.siege.client;
 import java.util.Locale;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
@@ -155,20 +154,28 @@ public final class SiegeVanillaChrome {
                         slider.getY() + slider.getHeight() - 2, accent);
                 if (slider.isFocused()) SiegeTheme.focusCorners(g, slider.getX() - 2, slider.getY() - 2,
                         slider.getWidth() + 4, slider.getHeight() + 4, SiegeTheme.FOCUS);
-            } else if (child instanceof AbstractSelectionList<?> list && list.visible) {
-                int x = list.getX();
-                int y = list.getY();
-                int w = list.getWidth();
-                int h = list.getHeight();
-                SiegeTheme.frame(g, x, y, w, h, 0xFF4D555C);
-                if (h > 12) {
-                    g.fill(x, y, x + 2, Math.min(y + h, y + 18), accent);
-                    g.fill(x + w - 2, Math.max(y, y + h - 18), x + w, y + h, accent);
-                }
             } else if (child instanceof AbstractWidget widget && widget.visible && widget.isFocused()
                     && !(widget instanceof SiegeButton)) {
                 SiegeTheme.focusCorners(g, widget.getX() - 1, widget.getY() - 1,
                         widget.getWidth() + 2, widget.getHeight() + 2, SiegeTheme.FOCUS);
+            }
+        }
+
+        // Selection lists in 1.20.1 are not AbstractWidgets. Give list-heavy screens
+        // a safe inner rail instead of depending on inaccessible list coordinates.
+        SiegeMenuPolicy.NativeFamily family = family(screen);
+        if ((family == SiegeMenuPolicy.NativeFamily.LANGUAGE
+                || family == SiegeMenuPolicy.NativeFamily.PACKS
+                || family == SiegeMenuPolicy.NativeFamily.WORLD
+                || family == SiegeMenuPolicy.NativeFamily.CONTROLS)
+                && screen.width >= 120 && screen.height >= 96) {
+            int inset = screen.width < 420 ? 8 : 12;
+            int top = 28;
+            int bottom = screen.height - 38;
+            if (bottom > top + 8) {
+                SiegeTheme.frame(g, inset, top, screen.width - inset * 2, bottom - top, 0x804D555C);
+                g.fill(inset, top, inset + 2, Math.min(bottom, top + 22), accent);
+                g.fill(screen.width - inset - 2, Math.max(top, bottom - 22), screen.width - inset, bottom, accent);
             }
         }
     }
@@ -177,8 +184,8 @@ public final class SiegeVanillaChrome {
         boolean es = spanish();
         return switch (family(screen)) {
             case NETWORK -> es ? "ENLACE DE RED" : "NETWORK LINK";
-            case AUDIO -> es ? "AUDIO" : "AUDIO";
-            case VIDEO -> es ? "VIDEO" : "VIDEO";
+            case AUDIO -> "AUDIO";
+            case VIDEO -> "VIDEO";
             case CONTROLS -> es ? "CONTROLES" : "CONTROLS";
             case LANGUAGE -> es ? "IDIOMA" : "LANGUAGE";
             case PACKS -> es ? "PAQUETES" : "PACKS";
