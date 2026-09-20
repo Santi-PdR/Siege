@@ -2,7 +2,7 @@ package uy.santipdr.siege.client;
 
 /** Profile-fit metrics kept separate so diagnostics can evolve without changing preset behavior. */
 public final class SiegeProfileMetrics {
-    private static final int FIELDS = 21;
+    private static final int FIELDS = 19;
 
     private SiegeProfileMetrics() { }
 
@@ -38,9 +38,7 @@ public final class SiegeProfileMetrics {
         distance += diff(SiegeConfig.hoverSounds, expected.hoverSounds());
         distance += diff(SiegeConfig.mainMenuIntel, expected.mainMenuIntel());
         distance += diff(SiegeConfig.autoRotateIntel, expected.autoRotateIntel());
-        distance += diff(SiegeConfig.pauseIntelOnHover, true);
         distance += diff(SiegeConfig.showIntelProgress, expected.showIntelProgress());
-        distance += diff(SiegeConfig.showIntelState, true);
         distance += diff(SiegeConfig.trackAnnouncements, expected.trackAnnouncements());
         distance += diff(SiegeConfig.backgroundDarkness, expected.backgroundDarkness());
         distance += diff(SiegeConfig.panelDarkness, expected.panelDarkness());
