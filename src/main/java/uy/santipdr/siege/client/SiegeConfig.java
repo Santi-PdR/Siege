@@ -83,7 +83,7 @@ public final class SiegeConfig {
         inspectorMap = bool(p, "inspectorMap", true);
         inspectorBackground = integer(p, "inspectorBackground", 0, 0, 2);
         selectedTrack = integer(p, "selectedTrack", -1, -1, 3);
-        selectedScene = integer(p, "selectedScene", -1, -1, 8);
+        selectedScene = integer(p, "selectedScene", -1, -1, SiegeSceneSchedule.COUNT - 1);
         uiVolume = integer(p, "uiVolume", 100, 0, 100);
         hoverSounds = bool(p, "hoverSounds", true);
         int loadedRevision = integer(p, "settingsRevision", 0, 0, SETTINGS_REVISION);
@@ -188,7 +188,7 @@ public final class SiegeConfig {
     private static void normalize() {
         inspectorBackground = Math.max(0, Math.min(2, inspectorBackground));
         selectedTrack = Math.max(-1, Math.min(3, selectedTrack));
-        selectedScene = Math.max(-1, Math.min(8, selectedScene));
+        selectedScene = Math.max(-1, Math.min(SiegeSceneSchedule.COUNT - 1, selectedScene));
         uiVolume = clampVolume(uiVolume);
         musicVolume = clampVolume(musicVolume);
         scanlineIntensity = clampVolume(scanlineIntensity);

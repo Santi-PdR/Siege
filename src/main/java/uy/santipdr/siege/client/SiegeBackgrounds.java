@@ -11,7 +11,8 @@ public final class SiegeBackgrounds {
     private static final List<ResourceLocation> SCENES = List.of(
             scene("dummies_assault"), scene("anniversary"), scene("frontline_19"),
             scene("cyborg"), scene("last_stand"), scene("vought_siege"), scene("earth_orbit"),
-            scene("canyon_engagement"), scene("night_battle")
+            scene("canyon_engagement"), scene("night_battle"),
+            scene("night_operation"), scene("urban_rendezvous"), scene("rooftop_squad"), scene("tempest_jutcherson")
     );
 
     private static final long SCENE_MS = 24_000L;
@@ -21,7 +22,19 @@ public final class SiegeBackgrounds {
 
     public static int currentIndex(long now) {
         if (SiegeConfig.selectedScene >= 0) return Math.floorMod(SiegeConfig.selectedScene, SCENES.size());
-        return SiegeConfig.animatedBackgrounds ? (int)Math.floorMod(now / SCENE_MS, SCENES.size()) : 0;
+        return SiegeConfig.animatedBackgrounds ? rotationIndex(Math.floorDiv(now, SCENE_MS)) : 0;
+    }
+
+    private static int rotationIndex(long slot) {
+        return SiegeSceneSchedule.index(slot, !SiegeConfig.reducedMotion && !SiegeConfig.reduceFlashes);
+    }
+
+    private static int sourceWidth(int index) {
+        return switch (Math.floorMod(index, count())) { case 9, 10 -> 735; case 11 -> 680; case 12 -> 720; default -> 960; };
+    }
+
+    private static int sourceHeight(int index) {
+        return switch (Math.floorMod(index, count())) { case 9 -> 490; case 10 -> 414; case 11 -> 510; case 12 -> 405; default -> 540; };
     }
 
     public static long rotationRemainingMs(long now) {
@@ -40,9 +53,9 @@ public final class SiegeBackgrounds {
 
     public static void renderContainedRegion(GuiGraphics g, int x, int y, int w, int h, int index, float alpha) {
         if (w <= 0 || h <= 0) return;
-        double scale = Math.min(w / 960.0, h / 540.0);
-        int drawW = Math.max(1, (int)Math.floor(960 * scale));
-        int drawH = Math.max(1, (int)Math.floor(540 * scale));
+        double scale = Math.min(w / (double)sourceWidth(index), h / (double)sourceHeight(index));
+        int drawW = Math.max(1, (int)Math.floor(sourceWidth(index) * scale));
+        int drawH = Math.max(1, (int)Math.floor(sourceHeight(index) * scale));
         renderRegion(g, x + (w - drawW) / 2, y + (h - drawH) / 2, drawW, drawH, index, alpha);
     }
 
@@ -60,7 +73,11 @@ public final class SiegeBackgrounds {
             case 5 -> spanish ? "Asedio Vought" : "Vought Siege";
             case 6 -> spanish ? "Órbita terrestre" : "Earth Orbit";
             case 7 -> spanish ? "Combate en el cañón" : "Canyon Engagement";
-            default -> spanish ? "Batalla nocturna" : "Night Battle";
+            case 8 -> spanish ? "Batalla nocturna" : "Night Battle";
+            case 9 -> spanish ? "Operación nocturna" : "Night Operation";
+            case 10 -> spanish ? "Encuentro urbano" : "Urban Rendezvous";
+            case 11 -> spanish ? "Escuadrón en azotea · Especial" : "Rooftop Squad · Special";
+            default -> "TEMPEST JUTCHERSON";
         };
     }
 
@@ -125,11 +142,11 @@ public final class SiegeBackgrounds {
         if (width <= 0 || height <= 0) return;
         graphics.fill(0, 0, width, height, 0xFF080A0C);
         boolean animated = SiegeConfig.animatedBackgrounds && SiegeConfig.selectedScene < 0;
-        long slot = animated ? now / SCENE_MS : 0L;
-        long localMs = animated ? now % SCENE_MS : 0L;
+        long slot = animated ? Math.floorDiv(now, SCENE_MS) : 0L;
+        long localMs = animated ? Math.floorMod(now, SCENE_MS) : 0L;
         float local = animated ? localMs / (float)SCENE_MS : 0.0F;
-        int current = SiegeConfig.selectedScene >= 0 ? Math.floorMod(SiegeConfig.selectedScene, SCENES.size()) : (int)(slot % SCENES.size());
-        int next = (current + 1) % SCENES.size();
+        int current = currentIndex(now);
+        int next = rotationIndex(slot + 1);
 
         boolean allowPan = !SiegeConfig.reducedMotion && !SiegeConfig.reduceFlashes
                 && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE;
@@ -177,12 +194,14 @@ public final class SiegeBackgrounds {
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, Math.max(0.0F, Math.min(1.0F, alpha)));
 
-        double scale = cover ? Math.max(w / 960.0D, h / 540.0D) : Math.min(w / 960.0D, h / 540.0D);
-        int drawW = Math.max(1, (int)Math.floor(960 * scale));
-        int drawH = Math.max(1, (int)Math.floor(540 * scale));
+        int sourceW = sourceWidth(sceneIndex), sourceH = sourceHeight(sceneIndex);
+        double scale = cover ? Math.max(w / (double)sourceW, h / (double)sourceH)
+                : Math.min(w / (double)sourceW, h / (double)sourceH);
+        int drawW = Math.max(1, (int)Math.floor(sourceW * scale));
+        int drawH = Math.max(1, (int)Math.floor(sourceH * scale));
         int x = (w - drawW) / 2;
         int y = (h - drawH) / 2;
-        g.blit(texture, x, y, drawW, drawH, 0, 0, 960, 540, 960, 540);
+        g.blit(texture, x, y, drawW, drawH, 0, 0, sourceW, sourceH, sourceW, sourceH);
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }

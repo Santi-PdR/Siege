@@ -48,7 +48,7 @@ assert numbered(CHANGELOG_060) == list(range(1, 61))
 assert numbered(CHANGELOG_070) == list(range(1, 71))
 assert numbered(CHANGELOG_075) == list(range(1, 13))
 assert numbered(CHANGELOG_125) == list(range(1, 81))
-assert "version = '1.25.0'" in BUILD
+assert "version = '1.26.0'" in BUILD
 assert "version = '1.20.0'" not in BUILD
 assert "version = '0.75.0'" not in BUILD
 

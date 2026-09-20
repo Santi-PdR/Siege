@@ -43,6 +43,11 @@ public class ConfigRegressionTest {
                     && !SiegeConfig.hoverSounds && SiegeConfig.autoContrast, "Calm preset");
 
             SiegeConfig.resetDefaults();
+            for (int scene = 9; scene < 13; scene++) {
+                SiegeConfig.selectedScene = scene; SiegeConfig.save();
+                SiegeConfig.selectedScene = -1; SiegeConfig.load();
+                check(SiegeConfig.selectedScene == scene, "New gallery scene survives save/reload");
+            }
             SiegeConfig.applyReadingPreset();
             check(SiegeConfig.intelReadingMode && SiegeConfig.comfortableReading && SiegeConfig.darkIntelPaper
                     && SiegeConfig.highContrast && SiegeConfig.reducedMotion && SiegeConfig.reduceFlashes
