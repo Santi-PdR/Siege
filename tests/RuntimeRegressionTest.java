@@ -21,23 +21,31 @@ public class RuntimeRegressionTest {
     private static void previewClockContract() {
         SiegePreviewClock clock = new SiegePreviewClock();
         check(clock.update(3, 0, false, true, true) == 0, "Initial dossier");
-        check(clock.update(3, 30000, true, true, true) == 0, "Hover pause");
+        check(clock.update(3, 100, true, true, true) == 0, "Hover pause");
+        check(clock.update(3, 30000, true, true, true) == 0, "Long reading pause");
         check(clock.update(3, 31000, false, true, true) == 0 && clock.deadline == 33000, "Fixed exit deadline");
+        check(clock.update(3, 32999, false, true, true) == 0, "Wait two seconds");
         check(clock.update(3, 33000, false, true, true) == 1, "Resume after two seconds");
+        check(clock.update(3, 41500, false, true, true) == 2, "Resume normal cycle");
         clock.step(3, 42000, 1);
-        check(clock.update(3, 56999, false, true, true) == 0, "Manual selection hold");
+        check(clock.update(3, 56999, false, true, true) == 0, "Manual circular selection and hold");
         check(clock.update(3, 57000, false, true, true) == 1, "Manual hold expires");
+        check(clock.update(3, 90000, false, true, false) == 1, "Disabled rotation preserved");
     }
 
     private static void audioRecoveryContract() {
         SiegeAudioHealth health = new SiegeAudioHealth();
         health.begin(0);
         check(!health.recover(4999, false), "Initial grace");
+        check(!health.recover(5000, false), "Start debounce");
         check(!health.recover(7999, false), "Transient backend loss");
         check(health.recover(8000, false), "Recover sustained loss");
         check(!health.recover(9000, true), "Successful activation");
+        check(!health.recover(14000, false), "Second debounce");
         check(health.recover(17000, false), "Second recovery");
         check(!health.recover(50000, false) && health.retries() == 2, "Bounded retries");
+        health.begin(60000);
+        check(!health.recover(65000, false) && !health.recover(65500, true) && !health.recover(68000, false), "Activity resets debounce");
     }
 
     private static void intelCatalogContract() {
