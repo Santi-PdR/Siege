@@ -42,13 +42,11 @@ public class MenuThemePolicyTest {
         check(!SiegeMenuPolicy.nativeDialog(root + "ConfirmScreen", false, false), "Foreign confirmation touched");
         check(SiegeMenuPolicy.nativeDialog(root + "ConfirmScreen", false, true), "Menu confirmation missing");
 
-        // The user's render-mod UI stays third-party: only the exact vanilla fallback is themed.
         check(!SiegeMenuPolicy.nativeDialog("org.embeddedt.embeddium.gui.EmbeddiumVideoOptionsScreen", false, true),
                 "Embeddium video screen must stay untouched");
         check(!SiegeMenuPolicy.nativeDialog("me.jellysquid.mods.sodium.client.gui.SodiumOptionsGUI", false, true),
                 "Sodium/Embeddium legacy video screen must stay untouched");
 
-        // Remove the data/telemetry row and credits entry points without leaving an empty Options row.
         check(SiegeMenuPolicy.hideNativeButton(root + "OptionsScreen", "options.telemetry"), "Telemetry button still exposed");
         check(SiegeMenuPolicy.hideNativeButton(root + "OptionsScreen", "options.credits_and_attribution"), "Credits entry still exposed");
         check(SiegeMenuPolicy.hideNativeButton(root + "CreditsAndAttributionScreen", "credits_and_attribution.button.credits"),
@@ -71,6 +69,14 @@ public class MenuThemePolicyTest {
         check(!SiegeMenuPolicy.listRail(root + "VideoSettingsScreen"), "Video rail can overlap options");
         check(!SiegeMenuPolicy.listRail(root + "SoundOptionsScreen"), "Audio rail can overlap options");
 
+        // A custom title may safely erase the vanilla title strip, but the mask
+        // must never cross the first active widget or grow indefinitely.
+        check(SiegeMenuPolicy.vanillaTitleMaskBottom(40, 240) == 34, "Wide title mask cap changed");
+        check(SiegeMenuPolicy.vanillaTitleMaskBottom(28, 240) == 26, "Title mask must stop before widgets");
+        check(SiegeMenuPolicy.vanillaTitleMaskBottom(18, 240) == 20, "Header minimum changed");
+        check(SiegeMenuPolicy.vanillaTitleMaskBottom(40, 16) == 16, "Mask escaped short viewport");
+        check(SiegeMenuPolicy.vanillaTitleMaskBottom(0, 0) == 0, "Zero-height mask invalid");
+
         for (String name : new String[] {"PauseScreen", "ChatScreen", "inventory.InventoryScreen", "DeathScreen"})
             check(!SiegeMenuPolicy.nativeDialog(root + name, false, true), "Gameplay screen modified: " + name);
         check(!SiegeMenuPolicy.nativeDialog("other.mod.OptionsScreen", false, true), "Third-party class touched");
@@ -84,6 +90,6 @@ public class MenuThemePolicyTest {
             check(SiegeMenuPolicy.entryShade(t, false, false) == 0, "Disabled-effects fade");
             if (t >= 180) check(alpha == 0, "Fade outlived 180ms");
         }
-        System.out.println("Vanilla profiles, removed dead buttons, Embeddium exclusion, list rails and gameplay bounds passed");
+        System.out.println("Vanilla profiles, title masking, removed dead buttons, Embeddium exclusion and layout bounds passed");
     }
 }
