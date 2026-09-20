@@ -6,7 +6,7 @@ import net.minecraft.SharedConstants;
 import net.minecraftforge.fml.ModList;
 import uy.santipdr.siege.SiegeMod;
 
-/** Live, presentation-only diagnostics shared by the 0.50 command surfaces. */
+/** Live client diagnostics shared by the 0.60 command and recovery surfaces. */
 public final class SiegeRuntimeStatus {
     public enum Health { READY, ATTENTION, ERROR }
 
@@ -32,42 +32,22 @@ public final class SiegeRuntimeStatus {
     public static SiegeClientProfile.Profile profile() { return SiegeClientProfile.detect(); }
 
     public static Health health() {
-        if (!SiegeConfig.lastSaveSucceeded) return Health.ERROR;
-        return warnings(false).isEmpty() ? Health.READY : Health.ATTENTION;
+        if (SiegeDiagnosticReport.errors(false) > 0) return Health.ERROR;
+        if (SiegeDiagnosticReport.warnings(false) > 0) return Health.ATTENTION;
+        return Health.READY;
     }
 
-    public static int readiness() {
-        if (!SiegeConfig.lastSaveSucceeded) return 35;
-        int value = 100;
-        if (SiegeConfig.music && SiegeConfig.musicVolume == 0) value -= 12;
-        if (SiegeConfig.uiSounds && SiegeConfig.uiVolume == 0) value -= 8;
-        if (SiegeConfig.reduceFlashes && SiegeConfig.titleInterference) value -= 16;
-        if (SiegeConfig.graphics == SiegeConfig.Graphics.PERFORMANCE && SiegeConfig.animatedBackgrounds) value -= 8;
-        if (SiegeConfig.graphics == SiegeConfig.Graphics.PERFORMANCE && SiegeConfig.animatedIntel) value -= 8;
-        return Math.max(0, Math.min(100, value));
-    }
+    public static int readiness() { return SiegeDiagnosticReport.readiness(); }
 
     public static List<String> warnings(boolean spanish) {
         List<String> warnings = new ArrayList<>();
-        if (!SiegeConfig.lastSaveSucceeded) warnings.add(spanish
-                ? "La configuración no pudo guardarse; los últimos cambios pueden perderse."
-                : "Configuration could not be saved; recent changes may be lost.");
-        if (SiegeConfig.music && SiegeConfig.musicVolume == 0) warnings.add(spanish
-                ? "La música está activada pero su volumen está en 0%."
-                : "Music is enabled but its volume is at 0%.");
-        if (SiegeConfig.uiSounds && SiegeConfig.uiVolume == 0) warnings.add(spanish
-                ? "Los sonidos de interfaz están activados pero silenciados por volumen."
-                : "UI sounds are enabled but muted by their volume setting.");
-        if (SiegeConfig.reduceFlashes && SiegeConfig.titleInterference) warnings.add(spanish
-                ? "Reducir destellos está activo mientras la interferencia del título sigue habilitada."
-                : "Reduce flashes is active while title interference remains enabled.");
-        if (SiegeConfig.graphics == SiegeConfig.Graphics.PERFORMANCE && SiegeConfig.animatedBackgrounds) warnings.add(spanish
-                ? "El perfil gráfico de rendimiento conserva fondos animados."
-                : "The performance graphics profile still has animated backgrounds enabled.");
-        if (SiegeConfig.graphics == SiegeConfig.Graphics.PERFORMANCE && SiegeConfig.animatedIntel) warnings.add(spanish
-                ? "El perfil gráfico de rendimiento conserva Intel animado."
-                : "The performance graphics profile still has animated Intel enabled.");
-        return warnings;
+        for (SiegeDiagnosticReport.Entry entry : SiegeDiagnosticReport.entries(spanish)) {
+            if (entry.severity() == SiegeDiagnosticReport.Severity.ERROR
+                    || entry.severity() == SiegeDiagnosticReport.Severity.WARNING) {
+                warnings.add(entry.detail());
+            }
+        }
+        return List.copyOf(warnings);
     }
 
     public static String healthLabel(boolean spanish) {
@@ -84,6 +64,15 @@ public final class SiegeRuntimeStatus {
             case ATTENTION -> SiegeTheme.GOLD;
             case ERROR -> SiegeTheme.RED;
         };
+    }
+
+    public static String profileFitLabel(boolean spanish) {
+        SiegeClientProfile.Profile active = profile();
+        if (active != SiegeClientProfile.Profile.CUSTOM)
+            return SiegeClientProfile.label(active, spanish) + " · 100%";
+        SiegeClientProfile.Profile nearest = SiegeProfileMetrics.nearest();
+        return (spanish ? "CUSTOM → " : "CUSTOM → ") + SiegeClientProfile.label(nearest, spanish)
+                + " · " + SiegeProfileMetrics.fitPercent(nearest) + "%";
     }
 
     public static String audioLabel(boolean spanish) {

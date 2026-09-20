@@ -9,8 +9,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * SIEGE 0.50 command center. It keeps gameplay knowledge in Intel while exposing
- * client profiles, live diagnostics, compatibility state and accessibility.
+ * SIEGE 0.60 command center. Gameplay knowledge remains in Intel while this
+ * surface controls profiles, diagnostics, recovery, compatibility and accessibility.
  */
 public final class SiegeSystemScreen extends Screen {
     private final Screen parent;
@@ -18,6 +18,7 @@ public final class SiegeSystemScreen extends Screen {
             new EnumMap<>(SiegeClientProfile.Profile.class);
     private SiegeButton contrastButton;
     private SiegeButton flashesButton;
+    private SiegeButton diagnosticsButton;
     private int panelX, panelY, panelW, panelBottom;
     private int contentX, contentW;
     private int cardsTop, cardH, profileTop, profileBottom;
@@ -83,8 +84,18 @@ public final class SiegeSystemScreen extends Screen {
                 "Blocks SIEGE client interference and rapid visual changes."))));
 
         int row2 = controlsTop + rowH + gap;
-        SiegeButton minecraftOptions = addRenderableWidget(new SiegeButton(contentX, row2, contentW, rowH,
-                Component.literal(label("AJUSTES NATIVOS DE MINECRAFT", "MINECRAFT NATIVE OPTIONS")), b -> {
+        diagnosticsButton = addRenderableWidget(new SiegeButton(contentX, row2, half, rowH,
+                Component.literal(label("DIAGNÓSTICO Y RECUPERACIÓN", "DIAGNOSTICS & RECOVERY")), b -> {
+                    SiegeUiSounds.click();
+                    minecraft.setScreen(new SiegeDiagnosticsScreen(this));
+                }, SiegeRuntimeStatus.healthAccent()).withIcon("overview").setCompactCenter(true));
+        diagnosticsButton.setTooltip(Tooltip.create(Component.literal(label(
+                "Analiza subsistemas, coherencia de perfil y problemas recuperables del cliente.",
+                "Analyze client subsystems, profile coherence and recoverable issues."))));
+
+        SiegeButton minecraftOptions = addRenderableWidget(new SiegeButton(contentX + half + gap, row2,
+                contentW - half - gap, rowH,
+                Component.literal(label("AJUSTES DE MINECRAFT", "MINECRAFT OPTIONS")), b -> {
                     SiegeUiSounds.click();
                     minecraft.setScreen(new OptionsScreen(this, minecraft.options));
                 }, SiegeTheme.ORANGE).withIcon("settings").setCompactCenter(true));
@@ -146,6 +157,9 @@ public final class SiegeSystemScreen extends Screen {
             flashesButton.withBadge(label(SiegeConfig.reduceFlashes ? "SÍ" : "NO",
                     SiegeConfig.reduceFlashes ? "ON" : "OFF"));
         }
+        if (diagnosticsButton != null) {
+            diagnosticsButton.withBadge(SiegeRuntimeStatus.readiness() + "%");
+        }
         SiegeClientProfile.Profile active = SiegeRuntimeStatus.profile();
         for (var entry : profileButtons.entrySet()) {
             boolean selected = entry.getKey() == active;
@@ -184,9 +198,7 @@ public final class SiegeSystemScreen extends Screen {
         g.drawString(font, font.plainSubstrByWidth(title, contentW), contentX, panelY + 8,
                 SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
 
-        SiegeClientProfile.Profile profile = SiegeRuntimeStatus.profile();
-        String subtitle = label("PERFIL ACTUAL: ", "CURRENT PROFILE: ")
-                + SiegeClientProfile.label(profile, spanish())
+        String subtitle = label("PERFIL: ", "PROFILE: ") + SiegeRuntimeStatus.profileFitLabel(spanish())
                 + "  ·  " + SiegeRuntimeStatus.healthLabel(spanish());
         g.drawString(font, font.plainSubstrByWidth(subtitle, contentW), contentX, panelY + 21,
                 profileAccent, false);
@@ -232,8 +244,9 @@ public final class SiegeSystemScreen extends Screen {
         g.drawString(font, heading, contentX, profileTop, SiegeClientProfile.accent(profile), false);
 
         if (profile == SiegeClientProfile.Profile.CUSTOM && profileBottom - profileTop > 72) {
-            String custom = label("La mezcla actual es personalizada; elegí un perfil para aplicar un conjunto completo.",
-                    "Current settings are custom; choose a profile to apply a complete preset.");
+            SiegeClientProfile.Profile nearest = SiegeProfileMetrics.nearest();
+            String custom = label("Personalizado · perfil más cercano: ", "Custom · nearest profile: ")
+                    + SiegeClientProfile.label(nearest, spanish()) + " · " + SiegeProfileMetrics.fitPercent(nearest) + "%";
             g.drawString(font, font.plainSubstrByWidth(custom, contentW), contentX,
                     profileBottom - 12, SiegeTheme.MUTED, false);
         }
@@ -267,8 +280,8 @@ public final class SiegeSystemScreen extends Screen {
             g.drawString(font, font.plainSubstrByWidth(warning, contentW), contentX, y,
                     SiegeRuntimeStatus.healthAccent(), false);
         } else if (warnings.isEmpty() && y < diagnosticsBottom - 8) {
-            String ok = label("Diagnóstico: configuración coherente y guardada.",
-                    "Diagnostics: configuration is coherent and saved.");
+            String ok = label("Diagnóstico: subsistemas sin errores ni advertencias.",
+                    "Diagnostics: subsystems have no errors or warnings.");
             g.drawString(font, font.plainSubstrByWidth(ok, contentW), contentX, y, SiegeTheme.GREEN, false);
         }
     }
