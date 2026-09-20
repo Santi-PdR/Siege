@@ -13,10 +13,11 @@ public class MenuThemeDrawingTest {
             for (var fill : g.fills) if (fill.y() >= 21 && fill.x() > 13 && fill.right() < 9 + w - 4)
                 throw new AssertionError("Paper ornament invaded readable area");
         }
-        for (String icon : new String[] {"connect", "intel", "settings", "music", "pin", "check", "play", "pause", "eye", "image", "shield", "overview", "lock", "search"}) {
+        for (String icon : new String[] {"connect", "intel", "settings", "music", "pin", "check", "play", "pause", "eye", "image", "shield", "overview", "lock", "search",
+                "back", "globe", "keyboard", "package", "chat", "user", "world", "warning"}) {
             GuiGraphics g = new GuiGraphics(); SiegeTheme.icon(g, 0, 0, icon, SiegeTheme.RED); inside(g, 0, 0, 9, 9);
             if (g.fills.isEmpty()) throw new AssertionError("Empty icon " + icon);
         }
-        System.out.println("Production panel, paper margins and 9x9 icons stay inside their bounds");
+        System.out.println("Production panel, paper margins and tactical 9x9 icons stay inside their bounds");
     }
 }

@@ -6,6 +6,10 @@ import net.minecraft.client.gui.GuiGraphics;
 public final class SiegeTheme {
     public static final int RED = 0xFFE54852;
     public static final int GOLD = 0xFFD6AE65;
+    public static final int CYAN = 0xFF68C6D8;
+    public static final int BLUE = 0xFF789BFF;
+    public static final int ORANGE = 0xFFE89B59;
+    public static final int GREEN = 0xFF72C98B;
     public static final int INK = 0xFFF0EDEA;
     public static final int MUTED = 0xFFA4A3A1;
     public static final int SURFACE = 0xF018181A;
@@ -117,6 +121,61 @@ public final class SiegeTheme {
             case "overview" -> { frame(g, x, y, 4, 4, color); frame(g, x + 5, y, 4, 4, color); frame(g, x, y + 5, 4, 4, color); frame(g, x + 5, y + 5, 4, 4, color); }
             case "lock" -> { frame(g, x + 2, y, 5, 5, color); frame(g, x + 1, y + 4, 7, 5, color); g.fill(x + 4, y + 6, x + 5, y + 8, color); }
             case "search" -> { frame(g, x, y, 6, 6, color); g.fill(x + 5, y + 5, x + 7, y + 7, color); g.fill(x + 7, y + 7, x + 9, y + 9, color); }
+            case "back" -> {
+                g.fill(x + 1, y + 4, x + 8, y + 5, color);
+                g.fill(x + 1, y + 4, x + 4, y + 5, color);
+                g.fill(x + 2, y + 2, x + 3, y + 7, color);
+                g.fill(x + 3, y + 1, x + 4, y + 3, color);
+                g.fill(x + 3, y + 6, x + 4, y + 8, color);
+            }
+            case "globe" -> {
+                g.fill(x + 3, y, x + 6, y + 1, color);
+                g.fill(x + 1, y + 1, x + 8, y + 2, color);
+                g.fill(x, y + 3, x + 1, y + 6, color);
+                g.fill(x + 8, y + 3, x + 9, y + 6, color);
+                g.fill(x + 1, y + 7, x + 8, y + 8, color);
+                g.fill(x + 3, y + 8, x + 6, y + 9, color);
+                g.fill(x + 4, y + 1, x + 5, y + 8, color);
+                g.fill(x + 1, y + 4, x + 8, y + 5, color);
+            }
+            case "keyboard" -> {
+                frame(g, x, y + 1, 9, 7, color);
+                for (int xx : new int[] {2, 4, 6}) g.fill(x + xx, y + 3, x + xx + 1, y + 4, color);
+                g.fill(x + 2, y + 5, x + 7, y + 6, color);
+            }
+            case "package" -> {
+                frame(g, x, y + 1, 9, 7, color);
+                g.fill(x + 1, y + 3, x + 8, y + 4, color);
+                g.fill(x + 4, y + 1, x + 5, y + 8, color);
+            }
+            case "chat" -> {
+                frame(g, x, y, 9, 7, color);
+                g.fill(x + 2, y + 7, x + 4, y + 8, color);
+                g.fill(x + 1, y + 8, x + 3, y + 9, color);
+                g.fill(x + 2, y + 2, x + 7, y + 3, color);
+                g.fill(x + 2, y + 4, x + 6, y + 5, color);
+            }
+            case "user" -> {
+                frame(g, x + 3, y, 3, 3, color);
+                g.fill(x + 2, y + 4, x + 7, y + 5, color);
+                g.fill(x + 1, y + 5, x + 8, y + 8, color);
+                g.fill(x, y + 8, x + 9, y + 9, color);
+            }
+            case "world" -> {
+                frame(g, x, y, 9, 9, color);
+                g.fill(x + 1, y + 6, x + 8, y + 8, color);
+                g.fill(x + 2, y + 5, x + 4, y + 6, color);
+                g.fill(x + 4, y + 4, x + 6, y + 6, color);
+                g.fill(x + 6, y + 3, x + 8, y + 6, color);
+            }
+            case "warning" -> {
+                g.fill(x + 4, y, x + 5, y + 2, color);
+                g.fill(x + 3, y + 2, x + 6, y + 4, color);
+                g.fill(x + 2, y + 4, x + 7, y + 6, color);
+                g.fill(x + 1, y + 6, x + 8, y + 8, color);
+                g.fill(x, y + 8, x + 9, y + 9, color);
+                g.fill(x + 4, y + 4, x + 5, y + 7, 0xFF18181A);
+            }
             default -> { }
         }
     }
