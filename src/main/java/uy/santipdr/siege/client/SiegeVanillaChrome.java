@@ -158,33 +158,27 @@ public final class SiegeVanillaChrome {
         g.fill(0, 18, Math.min(width, 72), 20, accent);
         if (width > 92) g.fill(width - Math.min(width / 4, 92), 19, width, 20, accent);
 
-        SiegeTheme.icon(g, 7, 5, familyIcon(family), accent);
-        String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
-        if (title.isBlank()) title = familyLabel(family);
+        if (width >= 16) SiegeTheme.icon(g, 7, 5, familyIcon(family), accent);
         int titleColor = SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK;
         int mutedColor = SiegeConfig.highContrast ? 0xFFD7DBDE : SiegeTheme.MUTED;
 
-        if (width >= 420) {
-            String familyText = "SIEGE // " + familyLabel(family);
-            familyText = font.plainSubstrByWidth(familyText, Math.max(70, width / 4));
-            g.drawString(font, familyText, 21, 6, accent, false);
-
-            // Do not repeat the vanilla screen name beside a custom SIEGE family
-            // title. The centre is the one authoritative custom heading.
-            String center = "SIEGE // " + familyLabel(family);
-            center = font.plainSubstrByWidth(center, Math.max(70, width / 3));
-            g.drawCenteredString(font, center, width / 2, 6, titleColor);
-
-            if (width >= 620) {
-                String state = SiegeConfig.highContrast
-                        ? (spanish() ? "ALTO CONTRASTE" : "HIGH CONTRAST")
-                        : familyStatus(family);
-                g.drawString(font, state, width - 8 - font.width(state), 6, mutedColor, false);
-            }
-        } else {
-            String center = font.plainSubstrByWidth("SIEGE // " + familyLabel(family), Math.max(1, width - 54));
-            g.drawCenteredString(font, center, width / 2 + 7, 6, titleColor);
+        String state = "";
+        int sideReserve = 28;
+        if (width >= 620) {
+            state = SiegeConfig.highContrast
+                    ? (spanish() ? "ALTO CONTRASTE" : "HIGH CONTRAST")
+                    : familyStatus(family);
+            sideReserve = Math.max(sideReserve, font.width(state) + 16);
         }
+
+        if (width >= 50) {
+            int titleMax = Math.max(1, width - sideReserve * 2);
+            String center = font.plainSubstrByWidth("SIEGE // " + familyLabel(family), titleMax);
+            g.drawCenteredString(font, center, width / 2, 6, titleColor);
+        }
+
+        if (!state.isBlank())
+            g.drawString(font, state, width - 8 - font.width(state), 6, mutedColor, false);
 
         renderContextStrip(screen, g, family, accent, firstWidgetY);
 

@@ -61,6 +61,14 @@ public final class SiegeMenuThemeEvents {
 
     private static String label(String es, String en) { return spanish() ? es : en; }
 
+    private static String compactVersion(String full) {
+        if (full == null || full.isBlank()) return "DEV";
+        int firstDot = full.indexOf('.');
+        if (firstDot < 0) return full;
+        int secondDot = full.indexOf('.', firstDot + 1);
+        return secondDot < 0 ? full : full.substring(0, secondDot);
+    }
+
     @SubscribeEvent
     public static void opening(ScreenEvent.Opening event) {
         Screen next = event.getNewScreen();
@@ -85,7 +93,9 @@ public final class SiegeMenuThemeEvents {
 
         if (screen instanceof SiegeSettingsScreen) {
             int buttonWidth = screen.width < 360 ? 52 : Math.min(112, Math.max(84, screen.width / 7));
-            String text = screen.width < 360 ? "0.40" : label("SISTEMA 0.40", "SYSTEM 0.40");
+            String currentVersion = version();
+            String text = screen.width < 360 ? compactVersion(currentVersion)
+                    : label("SISTEMA " + currentVersion, "SYSTEM " + currentVersion);
             SiegeButton system = new SiegeButton(Math.max(8, screen.width - buttonWidth - 8), 7, buttonWidth, 19,
                     Component.literal(text), b -> {
                         SiegeUiSounds.click();
@@ -106,8 +116,8 @@ public final class SiegeMenuThemeEvents {
                 Minecraft.getInstance().setScreen(new SiegeArchiveScreen(screen));
             }, SiegeTheme.GOLD).withIcon("overview").setCompactCenter(true);
             archive.setTooltip(Tooltip.create(Component.literal(label(
-                    "Estados de muerte, misiones, equipo, avisos actuales, unidades e historial SIEGE.",
-                    "Death states, missions, equipment, current notices, units and SIEGE history."))));
+                    "Estados de muerte, misiones, equipo, avisos actuales, unidades y protocolos operativos.",
+                    "Death states, missions, equipment, current notices, units and operational protocols."))));
             event.addListener(archive);
         }
 
@@ -175,7 +185,6 @@ public final class SiegeMenuThemeEvents {
             SiegeVanillaChrome.decorateWidgets(screen, g);
             SiegeUiSounds.updateHover(screen.children());
             SiegeVanillaChrome.renderOverlay(screen, g);
-            renderCleanNativeHeader(screen, g);
         } else {
             for (var child : screen.children()) if (child instanceof EditBox field && field.visible) {
                 int color = field.isFocused() ? SiegeTheme.FOCUS
@@ -205,23 +214,6 @@ public final class SiegeMenuThemeEvents {
             g.fill(0, 0, screen.width, screen.height, alpha << 24);
             g.pose().popPose();
         }
-    }
-
-    /** One custom header, never a SIEGE label plus a second vanilla title. */
-    private static void renderCleanNativeHeader(Screen screen, GuiGraphics g) {
-        if (screen.width <= 0 || screen.height <= 0) return;
-        var font = Minecraft.getInstance().font;
-        int accent = SiegeVanillaChrome.accent(screen);
-        String raw = "SIEGE // " + SiegeVanillaChrome.familyLabel(screen);
-        String title = font.plainSubstrByWidth(raw, Math.max(1, screen.width - 48));
-        int color = SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK;
-
-        g.pose().pushPose();
-        g.pose().translate(0, 0, 445);
-        g.fill(0, 0, screen.width, Math.min(18, screen.height), SiegeConfig.highContrast ? 0xFF090A0C : 0xF20D0E10);
-        if (screen.width >= 16) SiegeTheme.icon(g, 7, 5, SiegeVanillaChrome.familyIcon(screen), accent);
-        if (screen.width >= 50) g.drawCenteredString(font, title, screen.width / 2, 6, color);
-        g.pose().popPose();
     }
 
     private static void renderBuildTag(Screen screen, GuiGraphics g) {
