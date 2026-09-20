@@ -2,10 +2,10 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '6.0.54'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
-version = '0.21.1'
+version = '0.6.2'
 group = 'uy.santipdr.siege'
 base { archivesName = 'siege-menu' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -21,9 +21,3 @@ tasks.named('processResources', ProcessResources).configure {
     filesMatching(['META-INF/mods.toml']) { expand props + [project: project] }
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
-
-tasks.register('reportBuildTools') {
-    doLast {
-        println 'SIEGE_FORGEGRADLE=' + plugins.getPlugin('net.minecraftforge.gradle').class.protectionDomain.codeSource.location
-    }
-}
