@@ -22,7 +22,7 @@ public final class IntelPortraitScreen extends Screen {
         super(Component.literal(entry.name()));
         this.parent = parent;
         this.entry = entry;
-        texture = new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/intel/" + entry.image() + ".png");
+        texture = SiegePortraits.resolve(entry.image());
     }
     @Override
     protected void init() {

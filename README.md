@@ -1,3 +1,9 @@
+## SIEGE 1.26.0 — integración visual sobre 1.25
+
+Cuatro fondos nuevos, Tempest Jutcherson como anomalía rara, proporciones nativas, fallback clasificado de Intel y correcciones de portada/accesibilidad sobre la arquitectura 1.25.
+
+[Cambios](docs/CHANGELOG-1.26.0.md)
+
 ## Actualización 0.21.1
 
 La Guía SIEGE queda escrita como un archivo interno de 2044: escala de amenaza militar, crónicas históricas y lore breve de cada inspiración, sin etiquetas externas ni explicaciones técnicas de las capturas.

@@ -118,7 +118,7 @@ public final class SiegeTitleScreen extends Screen {
         if (musicButton != null && !musicButton.getMessage().getString().equals(musicLabel))
             musicButton.setMessage(Component.literal(musicLabel));
 
-        if (width >= 610 && SiegeConfig.showBuildLabel) renderBuildLabel(graphics);
+        // The shared menu chrome owns the single, live build label.
 
         super.render(graphics, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
@@ -142,7 +142,7 @@ public final class SiegeTitleScreen extends Screen {
         g.drawString(font, main, 0, 0, 0xFFF0EDEA, false);
         g.pose().popPose();
 
-        if (SiegeConfig.titleInterference && SiegeConfig.menuEffects && !SiegeConfig.reducedMotion
+        if (SiegeConfig.titleInterference && SiegeConfig.menuEffects && !SiegeConfig.reducedMotion && !SiegeConfig.reduceFlashes
                 && (System.currentTimeMillis() / 110L) % 43 < 3) {
             long phase = System.currentTimeMillis() / 110L;
             int sliceWidth = Math.max(16, mainWidth / 7);
@@ -183,14 +183,12 @@ public final class SiegeTitleScreen extends Screen {
         long noticeDuration = SiegeMusic.trackAnnouncementDurationMs();
         long fadeStart = Math.max(0L, noticeDuration - 1_700L);
         int alpha = age <= fadeStart ? 255 : Math.max(0, 255 - (int) ((age - fadeStart) * 255L / Math.max(1L, noticeDuration - fadeStart)));
-        int boxWidth = SiegeUiLayout.trackNoticeWidth(width, menuX, menuWidth, compact);
-        if (boxWidth == 0) return;
-        int boxHeight = compact ? 29 : 34;
-        int x = width - boxWidth - 9;
-        if (SiegeConfig.menuEffects && !SiegeConfig.reducedMotion && age < 360L) {
-            x += Math.round((1.0F - age / 360.0F) * 18.0F);
-        }
-        int y = compact ? 55 : 57;
+        int boxWidth = menuWidth;
+        int boxHeight = 34;
+        int x = menuX;
+        int y = menuBottom + 8;
+        // Keep music clear of the centered title, right-hand dossiers and footer.
+        if (y + boxHeight + 18 > height) return;
         g.fill(x + 2, y + 2, x + boxWidth + 2, y + boxHeight + 2, (Math.min(150, alpha) << 24));
         g.fill(x, y, x + boxWidth, y + boxHeight, (Math.min(222, alpha) << 24) | 0x00070A0D);
         g.fill(x, y, x + 2, y + boxHeight, (alpha << 24) | 0x00E54852);
@@ -204,14 +202,6 @@ public final class SiegeTitleScreen extends Screen {
                 (int) ((boxWidth - 4L) * age / noticeDuration)));
         g.fill(x + 2, y + boxHeight - 2, x + 2 + progress, y + boxHeight - 1,
                 (Math.min(190, alpha) << 24) | 0x00E54852);
-    }
-
-    private void renderBuildLabel(GuiGraphics g) {
-        g.pose().pushPose();
-        g.pose().translate(10.0F, height - 9.0F, 0.0F);
-        g.pose().scale(0.68F, 0.68F, 1.0F);
-        g.drawString(font, "BUILD 0.13.0", 0, 0, 0xFF747D84, false);
-        g.pose().popPose();
     }
 
     /**

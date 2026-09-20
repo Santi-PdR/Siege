@@ -39,8 +39,10 @@ jobs:
           java -cp build/guide-tests GuideRegressionTest
           javac -d build/archive-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java tests/ArchiveRegressionTest.java
           java -cp build/archive-tests ArchiveRegressionTest
-          javac -d build/config-tests tests/stubs/net/minecraftforge/fml/loading/FMLPaths.java tests/stubs/com/mojang/logging/LogUtils.java src/main/java/uy/santipdr/siege/client/SiegeConfig.java tests/ConfigRegressionTest.java
+          javac -d build/config-tests tests/stubs/net/minecraftforge/fml/loading/FMLPaths.java tests/stubs/com/mojang/logging/LogUtils.java src/main/java/uy/santipdr/siege/client/SiegeConfig.java src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java tests/ConfigRegressionTest.java
           java -cp build/config-tests ConfigRegressionTest
+          javac -d build/scene-tests src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java tests/SceneScheduleTest.java
+          java -cp build/scene-tests SceneScheduleTest
           python3 tests/test_installer.py
           python3 tests/test_release_014.py
       - name: Verify menu theme scope and drawing bounds

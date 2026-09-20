@@ -76,7 +76,7 @@ public class SiegeButton extends Button {
         boolean pointerHot = active && isHovered();
         boolean focused = active && isFocused();
         boolean hot = pointerHot || focused;
-        boolean effects = SiegeConfig.menuEffects && !SiegeConfig.reducedMotion;
+        boolean effects = SiegeConfig.menuEffects && !SiegeConfig.reducedMotion && !SiegeConfig.reduceFlashes;
 
         long nowNanos = System.nanoTime();
         long nowMs = nowNanos / 1_000_000L;
