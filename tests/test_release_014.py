@@ -14,6 +14,7 @@ SYSTEM = (ROOT / "src/main/java/uy/santipdr/siege/client/SiegeSystemScreen.java"
 PROFILE = (ROOT / "src/main/java/uy/santipdr/siege/client/SiegeClientProfile.java").read_text(encoding="utf-8")
 RUNTIME = (ROOT / "src/main/java/uy/santipdr/siege/client/SiegeRuntimeStatus.java").read_text(encoding="utf-8")
 STRIP = (ROOT / "src/main/java/uy/santipdr/siege/client/SiegeCommandStrip.java").read_text(encoding="utf-8")
+CONFIG = (ROOT / "src/main/java/uy/santipdr/siege/client/SiegeConfig.java").read_text(encoding="utf-8")
 BUILD = (ROOT / "build.gradle").read_text(encoding="utf-8")
 
 numbers = [int(value) for value in re.findall(r"(?m)^(\d+)\. ", CHANGELOG)]
@@ -48,8 +49,8 @@ assert "public static void apply(Profile profile)" in PROFILE
 assert "readiness()" in RUNTIME and "warnings(boolean spanish)" in RUNTIME
 assert 'IntelCatalog.count("SUPER-UNIT")' in RUNTIME
 assert 'SiegeCommandStrip.render(screen, g);' in EVENTS
-assert 'instanceof SiegeTitleScreen' in STRIP
-assert "screen.width < 650" in STRIP, "Command strip must stay out of cramped title layouts"
+assert 'instanceof SiegeTitleScreen' in STRIP and 'instanceof SiegeSettingsScreen' in STRIP
+assert 'screen.width < (title ? 650 : 520)' in STRIP, "Command strip must stay out of cramped layouts"
 assert "CENTRO DE COMANDO" in SYSTEM and "COMMAND CENTER" in SYSTEM
 assert "profileButtons" in SYSTEM and "applyProfile" in SYSTEM
 assert "SiegeRuntimeStatus.readiness()" in SYSTEM
@@ -58,6 +59,8 @@ assert "0.40 SYSTEM SETTINGS" not in SYSTEM
 assert '"SISTEMA 0.40"' not in EVENTS and '"SYSTEM 0.40"' not in EVENTS
 assert "historial SIEGE" not in EVENTS
 assert "operational protocols" in EVENTS
+assert "SiegeClientProfile.apply(SiegeClientProfile.Profile.CALM)" in CONFIG
+assert "SiegeClientProfile.apply(SiegeClientProfile.Profile.READING)" in CONFIG
 
 # The release must remain free of newly invented menu hotkeys.
 for source_name, source in (("profile", PROFILE), ("runtime", RUNTIME), ("strip", STRIP), ("system", SYSTEM)):
