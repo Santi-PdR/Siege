@@ -12,12 +12,14 @@ public class MenuThemeDrawingTest {
             g.fills.clear(); SiegeTheme.paper(g, 9, 17, w, h, false); inside(g, 9, 17, w, h);
             for (var fill : g.fills) if (fill.y() >= 21 && fill.x() > 13 && fill.right() < 9 + w - 4)
                 throw new AssertionError("Paper ornament invaded readable area");
+            g.fills.clear(); SiegeTheme.focusCorners(g, 9, 17, w, h, SiegeTheme.FOCUS); inside(g, 9, 17, w, h);
+            g.fills.clear(); SiegeTheme.divider(g, 9, 17, w, SiegeTheme.RED); inside(g, 9, 17, w, 2);
         }
         for (String icon : new String[] {"connect", "intel", "settings", "music", "pin", "check", "play", "pause", "eye", "image", "shield", "overview", "lock", "search",
                 "back", "globe", "keyboard", "package", "chat", "user", "world", "warning"}) {
             GuiGraphics g = new GuiGraphics(); SiegeTheme.icon(g, 0, 0, icon, SiegeTheme.RED); inside(g, 0, 0, 9, 9);
             if (g.fills.isEmpty()) throw new AssertionError("Empty icon " + icon);
         }
-        System.out.println("Production panel, paper margins and tactical 9x9 icons stay inside their bounds");
+        System.out.println("Production panel, paper, focus/divider geometry and tactical 9x9 icons stay inside their bounds");
     }
 }

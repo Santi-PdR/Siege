@@ -93,8 +93,8 @@ public class SiegeButton extends Button {
             hoverAmount = 0.0F;
             pressAmount = 0.0F;
         } else if (effects) {
-            hoverAmount += (hoverTarget - hoverAmount) * (1.0F - (float)Math.exp(-18.0F * elapsed));
-            pressAmount += (pressTarget - pressAmount) * (1.0F - (float)Math.exp(-24.0F * elapsed));
+            hoverAmount = settle(hoverAmount, hoverTarget, 18.0F, elapsed);
+            pressAmount = settle(pressAmount, pressTarget, 24.0F, elapsed);
         } else {
             hoverAmount = hoverTarget;
             pressAmount = pressTarget;
@@ -111,24 +111,30 @@ public class SiegeButton extends Button {
         int edge = !active ? 0xFF41464C : focused ? SiegeTheme.FOCUS
                 : selected || fullHoverFrame && hot ? accent : hot ? accent : 0xFF4C555E;
 
-        // Soft depth stays inside a fixed four-fill budget regardless of button size.
-        g.fill(x + 2, y + 2, x + w + 2, y + h + 2, 0x55000000);
+        // Depth never escapes the widget bounds: compact/high-scale button rows
+        // can sit directly beside each other without one control painting over another.
         g.fill(x, y, x + w, y + h, body);
+        if (w >= 4 && h >= 4) {
+            g.fill(x + w - 2, y + 2, x + w, y + h, 0x42000000);
+            g.fill(x + 2, y + h - 2, x + w, y + h, 0x42000000);
+        }
         SiegeTheme.frame(g, x, y, w, h, selected ? accent : 0xFF454044);
         if (h >= 18 && w >= 48) {
             int sheen = blend(0x185D5859, 0x2A8A8185, hoverAmount);
             g.fill(x + 3, y + 2, x + w - 3, y + 3, sheen);
         }
-        g.fill(x, y, x + 2, y + h, edge);
-        g.fill(x + 2, y, x + w, y + 1, hot ? edge : 0xFF293038);
-        g.fill(x + 2, y + h - 1, x + w, y + h, selected ? edge : 0xFF20262C);
+        g.fill(x, y, x + Math.min(2, w), y + h, edge);
+        if (w > 2) {
+            g.fill(x + 2, y, x + w, y + 1, hot ? edge : 0xFF293038);
+            g.fill(x + 2, y + h - 1, x + w, y + h, selected ? edge : 0xFF20262C);
+        }
 
         if (hoverAmount > 0.02F) {
             int alpha = Math.min(164, Math.max(0, Math.round(hoverAmount * 164.0F)));
             if (icon.isEmpty() && w > 40 && h >= 14)
                 g.fill(x + 5, y + 3, x + 7, y + h - 3, (alpha << 24) | (accent & 0x00FFFFFF));
 
-            if (effects && nowMs - hoverStartedAt < 480L) {
+            if (effects && w > 4 && h > 3 && nowMs - hoverStartedAt < 480L) {
                 // One clipped sweep gives feedback without texture sampling or noise loops.
                 int sweepRange = Math.max(1, w + 48);
                 int sweepX = x - 24 + (int) ((nowMs - hoverStartedAt) * sweepRange / 480L);
@@ -141,10 +147,10 @@ public class SiegeButton extends Button {
             }
 
             int bracket = Math.max(4, Math.min(9, h / 3));
-            g.fill(x + w - bracket, y, x + w, y + 1, edge);
-            g.fill(x + w - 1, y, x + w, y + bracket, edge);
-            g.fill(x + w - bracket, y + h - 1, x + w, y + h, edge);
-            g.fill(x + w - 1, y + h - bracket, x + w, y + h, edge);
+            g.fill(x + Math.max(0, w - bracket), y, x + w, y + 1, edge);
+            g.fill(x + w - 1, y, x + w, y + Math.min(bracket, h), edge);
+            g.fill(x + Math.max(0, w - bracket), y + h - 1, x + w, y + h, edge);
+            g.fill(x + w - 1, y + Math.max(0, h - bracket), x + w, y + h, edge);
         }
 
         if (selected && badge.isEmpty() && w > 40 && h >= 13)
@@ -153,11 +159,12 @@ public class SiegeButton extends Button {
         if (focused) SiegeTheme.focusCorners(g, x, y, w, h, SiegeTheme.FOCUS);
         else if (fullHoverFrame && hot) SiegeTheme.focusCorners(g, x, y, w, h, edge);
 
-        int underlineWidth = Math.round((w - 4) * hoverAmount);
-        if (underlineWidth > 0) g.fill(x + 2, y + h - 2, x + 2 + underlineWidth, y + h - 1, accent);
+        int underlineWidth = Math.round(Math.max(0, w - 4) * hoverAmount);
+        if (underlineWidth > 0 && h >= 2) g.fill(x + 2, y + h - 2, x + 2 + underlineWidth, y + h - 1, accent);
 
-        boolean showIcon = !icon.isEmpty() && w >= 96;
-        SiegeControlLayout positions = SiegeControlLayout.of(w, showIcon, selected, badge.isEmpty() ? 0 : font.width(badge));
+        boolean showIcon = !icon.isEmpty() && w >= 96 && h >= 11;
+        int stateWidth = h >= 8 && !badge.isEmpty() ? font.width(badge) : 0;
+        SiegeControlLayout positions = SiegeControlLayout.of(w, showIcon, selected, stateWidth);
         int left = positions.labelX();
         int badgeWidth = positions.badgeWidth();
         int usable = positions.labelWidth();
@@ -165,16 +172,16 @@ public class SiegeButton extends Button {
         if (badgeWidth > 0) {
             int bx = x + positions.badgeX();
             int badgeEdge = active && selected ? accent : hot ? 0xFF8A8387 : 0xFF777174;
-            SiegeTheme.frame(g, bx, y + 3, badgeWidth, h - 6, badgeEdge);
+            SiegeTheme.frame(g, bx, y + 3, badgeWidth, Math.max(2, h - 6), badgeEdge);
             String state = fit(font, badge, Math.max(1, badgeWidth - 6));
-            g.drawString(font, state, bx + (badgeWidth - font.width(state)) / 2, y + (h - font.lineHeight) / 2,
+            g.drawString(font, state, bx + (badgeWidth - font.width(state)) / 2, y + Math.max(1, (h - font.lineHeight) / 2),
                     active && selected ? SiegeTheme.INK : SiegeTheme.MUTED, false);
         }
         if (w <= 40 || compactCenter)
             left = Math.max(positions.labelX(), positions.labelX() + (positions.labelWidth() - font.width(text)) / 2);
 
         int textColor = !active ? 0xFF6F767D : hot || selected ? 0xFFF5F3EC : 0xFFD8DDE1;
-        if (pressed) {
+        if (pressed && w > 3 && h > 3) {
             int pressedEdge = blend(edge, 0xFFFFFFFF, Math.min(0.35F, pressAmount * 0.35F));
             g.fill(x + 2, y + 1, x + w - 1, y + 2, pressedEdge);
             g.fill(x + 2, y + h - 2, x + w - 1, y + h - 1, 0xFF171417);
@@ -183,7 +190,7 @@ public class SiegeButton extends Button {
         int pressOffset = pressAmount >= 0.45F ? 1 : 0;
         int textY = y + Math.max(1, (h - font.lineHeight) / 2) + textOffsetY;
         if (showIcon)
-            SiegeTheme.icon(g, x + 11, y + (h - 9) / 2 + pressOffset, icon,
+            SiegeTheme.icon(g, x + 11, y + Math.max(0, (h - 9) / 2) + pressOffset, icon,
                     !active ? 0xFF777174 : hot ? blend(accent, 0xFFFFFFFF, 0.18F) : accent);
         g.drawString(font, text, x + left, textY + pressOffset, textColor, false);
     }
@@ -197,28 +204,33 @@ public class SiegeButton extends Button {
         int inset = !active ? 0xFF504D50 : blend(baseInset, 0xFF494246, pressAmount);
         int rim = focused && active ? SiegeTheme.FOCUS : pressed ? accent : hot || selected ? 0xFFF0F0EC : 0xFF9A9C9E;
 
-        // Solid grey plate, deep lower/right shadow and square double rim.
-        g.fill(x + 3, y + 4, x + w + 4, y + h + 4, 0xA0000000);
+        // Solid grey plate with depth contained inside the allocated hit box.
         g.fill(x, y, x + w, y + h, 0xFF26282A);
-        g.fill(x + 2, y + 2, x + w - 2, y + h - 2, face);
-        g.fill(x + 4, y + 4, x + w - 4, y + h - 4, inset);
-        g.fill(x + 2, y + 2, x + w - 2, y + 3, rim);
-        g.fill(x + 2, y + h - 3, x + w - 2, y + h - 2,
-                blend(0xFF4A4C4E, 0xFF393638, pressAmount));
-        g.fill(x + 2, y + 2, x + 3, y + h - 2,
-                blend(0xFF8B8D8F, 0xFFA5A1A3, hoverAmount * 0.25F));
+        if (w >= 4 && h >= 4) {
+            g.fill(x + w - 2, y + 2, x + w, y + h, 0x70000000);
+            g.fill(x + 2, y + h - 2, x + w, y + h, 0x70000000);
+        }
+        if (w >= 5 && h >= 5) g.fill(x + 2, y + 2, x + w - 2, y + h - 2, face);
+        if (w >= 9 && h >= 9) g.fill(x + 4, y + 4, x + w - 4, y + h - 4, inset);
+        if (w > 4 && h > 4) {
+            g.fill(x + 2, y + 2, x + w - 2, y + 3, rim);
+            g.fill(x + 2, y + h - 3, x + w - 2, y + h - 2,
+                    blend(0xFF4A4C4E, 0xFF393638, pressAmount));
+            g.fill(x + 2, y + 2, x + 3, y + h - 2,
+                    blend(0xFF8B8D8F, 0xFFA5A1A3, hoverAmount * 0.25F));
+        }
 
         if (focused && active) SiegeTheme.focusCorners(g, x, y, w, h, SiegeTheme.FOCUS);
         if (hot || selected) {
             int cy = y + h / 2;
             int ax = x + 9;
-            if (icon.isEmpty()) {
+            if (icon.isEmpty() && w >= 20 && h >= 10) {
                 g.fill(ax, cy - 4, ax + 3, cy + 5, accent);
                 g.fill(ax + 3, cy - 3, ax + 6, cy + 4, accent);
                 g.fill(ax + 6, cy - 1, ax + 9, cy + 2, accent);
             }
-            g.fill(x + 2, y + 2, x + 4, y + h - 2, accent);
-            if (effects && hoverAmount > 0.05F && nowMs - hoverStartedAt < 480L) {
+            if (w > 4 && h > 4) g.fill(x + 2, y + 2, x + 4, y + h - 2, accent);
+            if (effects && w > 9 && h > 9 && hoverAmount > 0.05F && nowMs - hoverStartedAt < 480L) {
                 int shineX = x + 5 + (int) ((nowMs - hoverStartedAt) * Math.max(1, w - 12) / 480L);
                 g.enableScissor(x + 4, y + 4, x + w - 4, y + h - 4);
                 g.fill(shineX, y + 4, shineX + 2, y + h - 4, 0x24FFFFFF);
@@ -227,8 +239,8 @@ public class SiegeButton extends Button {
         }
 
         int pressOffset = pressAmount >= 0.45F ? 1 : 0;
-        if (!icon.isEmpty())
-            SiegeTheme.icon(g, x + 10, y + (h - 9) / 2 + pressOffset, icon,
+        if (!icon.isEmpty() && w >= 24 && h >= 11)
+            SiegeTheme.icon(g, x + 10, y + Math.max(0, (h - 9) / 2) + pressOffset, icon,
                     !active ? 0xFF8B8587 : hot ? accent : 0xFFD4CBCD);
 
         String label = getMessage().getString();
@@ -253,6 +265,11 @@ public class SiegeButton extends Button {
         if (!active || !visible) return;
         pressedUntil = System.nanoTime() / 1_000_000L + 145L;
         super.onPress();
+    }
+
+    private static float settle(float current, float target, float speed, float elapsed) {
+        if (Math.abs(target - current) < 0.0015F) return target;
+        return current + (target - current) * (1.0F - (float)Math.exp(-speed * elapsed));
     }
 
     private static int blend(int from, int to, float amount) {

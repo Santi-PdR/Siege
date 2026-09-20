@@ -106,42 +106,46 @@ public final class SiegeSlider extends AbstractSliderButton {
         lastRenderNanos = now;
         float target = hot ? 1.0F : 0.0F;
         if (!active) hoverAmount = 0.0F;
-        else if (effects) hoverAmount += (target - hoverAmount) * (1.0F - (float)Math.exp(-18.0F * elapsed));
+        else if (effects) hoverAmount = settle(hoverAmount, target, 18.0F, elapsed);
         else hoverAmount = target;
 
         int accent = !active ? 0xFF696064 : themeAccent;
         SiegeTheme.panel(g, left, top, getWidth(), getHeight(), accent);
         if (isFocused() && active) SiegeTheme.focusCorners(g, left, top, getWidth(), getHeight(), SiegeTheme.FOCUS);
 
-        g.fill(left, top, right, top + 1, hot ? accent : 0xFF343033);
-        g.fill(left, bottom - 1, right, bottom, 0xFF252123);
-        g.fill(left, top, left + 2, bottom, accent);
+        g.fill(left, top, right, Math.min(bottom, top + 1), hot ? accent : 0xFF343033);
+        if (bottom > top) g.fill(left, bottom - 1, right, bottom, 0xFF252123);
+        g.fill(left, top, Math.min(right, left + 2), bottom, accent);
 
-        int trackLeft = left + 9;
+        int trackLeft = Math.min(right, left + 9);
         int trackRight = Math.max(trackLeft, right - 9);
-        int trackY = bottom - 6;
-        g.fill(trackLeft, trackY, trackRight, trackY + 2, 0xFF343033);
+        int trackY = Math.max(top, bottom - 6);
+        if (trackY + 2 <= bottom) g.fill(trackLeft, trackY, trackRight, trackY + 2, 0xFF343033);
 
         int fillRight = trackLeft + (int)Math.round((trackRight - trackLeft) * value);
-        g.fill(trackLeft, trackY, fillRight, trackY + 2, accent);
-        if (hot && trackRight > trackLeft)
+        if (trackY + 2 <= bottom) g.fill(trackLeft, trackY, fillRight, trackY + 2, accent);
+        if (hot && trackRight > trackLeft && trackY > top)
             g.fill(trackLeft, trackY - 1, fillRight, trackY, (Math.min(72, Math.round(72 * hoverAmount)) << 24) | (accent & 0x00FFFFFF));
 
-        for (int i = 0; i <= 4; i++) {
+        if (getHeight() >= 10) for (int i = 0; i <= 4; i++) {
             int tick = trackLeft + (trackRight - trackLeft) * i / 4;
             int tickColor = tick <= fillRight ? accent : 0xFF71696D;
-            g.fill(tick, trackY - 1, tick + 1, trackY + 3, tickColor);
+            g.fill(tick, Math.max(top, trackY - 1), tick + 1, Math.min(bottom, trackY + 3), tickColor);
         }
 
         int knobX = fillRight - 2;
-        if (active && hot) {
+        if (active && hot && getHeight() >= 10) {
             int glowAlpha = Math.min(90, Math.max(20, Math.round(hoverAmount * 90.0F)));
-            g.fill(knobX - 2, trackY - 5, knobX + 7, trackY + 7,
+            g.fill(Math.max(left, knobX - 2), Math.max(top, trackY - 5), Math.min(right, knobX + 7), Math.min(bottom, trackY + 7),
                     (glowAlpha << 24) | (accent & 0x00FFFFFF));
         }
-        g.fill(knobX, trackY - 3, knobX + 5, trackY + 5, active ? SiegeTheme.INK : SiegeTheme.MUTED);
-        g.fill(knobX + 1, trackY - 2, knobX + 4, trackY + 4, accent);
-        g.fill(knobX + 2, trackY - 1, knobX + 3, trackY + 3, active ? SiegeTheme.INK : SiegeTheme.MUTED);
+        if (getHeight() >= 8) {
+            g.fill(Math.max(left, knobX), Math.max(top, trackY - 3), Math.min(right, knobX + 5), Math.min(bottom, trackY + 5),
+                    active ? SiegeTheme.INK : SiegeTheme.MUTED);
+            g.fill(Math.max(left, knobX + 1), Math.max(top, trackY - 2), Math.min(right, knobX + 4), Math.min(bottom, trackY + 4), accent);
+            g.fill(Math.max(left, knobX + 2), Math.max(top, trackY - 1), Math.min(right, knobX + 3), Math.min(bottom, trackY + 3),
+                    active ? SiegeTheme.INK : SiegeTheme.MUTED);
+        }
 
         var font = Minecraft.getInstance().font;
         String amount = valueText == null ? lastPercent + "%" : valueText.apply(lastPercent);
@@ -158,8 +162,9 @@ public final class SiegeSlider extends AbstractSliderButton {
             clipped = font.plainSubstrByWidth(labelText, textWidth - font.width("…")) + "…";
 
         int textColor = !active ? SiegeTheme.MUTED : hot ? SiegeTheme.INK : 0xFFD8DDE1;
-        g.drawString(font, clipped, left + 9, top + 4, textColor, false);
-        g.drawString(font, amount, right - amountWidth - 9, top + 4, accent, false);
+        int textY = Math.min(Math.max(top, bottom - font.lineHeight), top + 4);
+        g.drawString(font, clipped, Math.min(right, left + 9), textY, textColor, false);
+        g.drawString(font, amount, Math.max(left, right - amountWidth - 9), textY, accent, false);
     }
 
     @Override
@@ -186,6 +191,11 @@ public final class SiegeSlider extends AbstractSliderButton {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    private static float settle(float current, float target, float speed, float elapsed) {
+        if (Math.abs(target - current) < 0.0015F) return target;
+        return current + (target - current) * (1.0F - (float)Math.exp(-speed * elapsed));
     }
 
     private static int clamp(int value) {

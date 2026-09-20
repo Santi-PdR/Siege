@@ -2,8 +2,6 @@ import uy.santipdr.siege.client.SiegeGalleryLayout;
 import uy.santipdr.siege.client.SiegeGalleryLayout.Rect;
 import uy.santipdr.siege.client.SiegeIntelLayout;
 import uy.santipdr.siege.client.IntelSearch;
-import uy.santipdr.siege.client.IntelEntry;
-import java.util.List;
 import uy.santipdr.siege.client.SiegeImageViewport;
 import uy.santipdr.siege.client.SiegeUiLayout;
 import uy.santipdr.siege.client.IntelPresentation;
@@ -18,48 +16,70 @@ public class UiRegressionTest {
         check(r.x() >= 0 && r.y() >= 0 && r.w() > 0 && r.h() > 0 && r.right() <= w && r.bottom() <= h,
                 "Outside viewport " + w + "x" + h + ": " + r);
     }
+
+    private static void validateProductionLayout(int w, int h) {
+        var gallery = SiegeGalleryLayout.of(w, h);
+        Rect[] regions = {gallery.heading(), gallery.preview(), gallery.thumbnails(), gallery.actions()};
+        for (int i = 0; i < regions.length; i++) {
+            inside(regions[i], w, h);
+            for (int j = i + 1; j < regions.length; j++) check(!overlaps(regions[i], regions[j]), "Gallery overlap " + w + "x" + h);
+        }
+        for (int i = 0; i < gallery.capacity(); i++) {
+            Rect tile = gallery.tile(i);
+            inside(tile, w, h);
+            check(tile.h() > 20, "Thumbnail image has no height");
+            check(tile.x() >= gallery.thumbnails().x() && tile.right() <= gallery.thumbnails().right()
+                    && tile.y() >= gallery.thumbnails().y() && tile.bottom() <= gallery.thumbnails().bottom(), "Tile outside rail");
+            for (int j = i + 1; j < gallery.capacity(); j++) check(!overlaps(tile, gallery.tile(j)), "Tile overlap");
+        }
+        for (int i = 0; i < 4; i++) {
+            inside(gallery.action(i), w, h);
+            check(gallery.action(i).w() >= 60, "Action too narrow at " + w + "x" + h);
+        }
+
+        var intel = SiegeIntelLayout.of(w, h, 6);
+        int readingHeight = h - 32 - intel.contentTop() - 34;
+        if (readingHeight >= 150) {
+            int imageW = SiegeIntelLayout.portraitWidth(w - intel.sidebarWidth() - 54, readingHeight);
+            check(imageW * 9 / 16 + 3 + 8 + 52 <= readingHeight, "Portrait must leave readable tactical brief space");
+        }
+        check(intel.wide(), "Dossier must remain on the right at every GUI scale");
+        check(w - intel.sidebarWidth() - 30 >= 178, "Dossier too narrow");
+        check(intel.categoryTop() + 6 * (intel.categoryHeight() + (intel.ultraCompact() ? 2 : 3)) <= intel.listTop() - 18,
+                "Categories overlap navigator");
+        check(intel.contentTop() >= 50 + 22 + 18 + 6, "Tools overlap paper");
+        check(intel.contentTop() + 34 + 55 < h - 24, "Intel reading area lost at " + w + "x" + h);
+        check(intel.listTop() + 44 <= intel.listBottom(), "Wide list cannot fit one entry");
+    }
+
     public static void main(String[] args) {
         int cases = 0;
         for (int w = 320; w <= 2560; w += 17) for (int h = 240; h <= 1440; h += 19) {
-            var gallery = SiegeGalleryLayout.of(w, h);
-            Rect[] regions = {gallery.heading(), gallery.preview(), gallery.thumbnails(), gallery.actions()};
-            for (int i = 0; i < regions.length; i++) {
-                inside(regions[i], w, h);
-                for (int j = i + 1; j < regions.length; j++) check(!overlaps(regions[i], regions[j]), "Gallery overlap");
-            }
-            for (int i = 0; i < gallery.capacity(); i++) {
-                Rect tile = gallery.tile(i);
-                inside(tile, w, h);
-                check(tile.h() > 20, "Thumbnail image has no height");
-                check(tile.x() >= gallery.thumbnails().x() && tile.right() <= gallery.thumbnails().right()
-                        && tile.y() >= gallery.thumbnails().y() && tile.bottom() <= gallery.thumbnails().bottom(), "Tile outside rail");
-                for (int j = i + 1; j < gallery.capacity(); j++) check(!overlaps(tile, gallery.tile(j)), "Tile overlap");
-            }
-            for (int i = 0; i < 4; i++) { inside(gallery.action(i), w, h); check(gallery.action(i).w() >= 60, "Action too narrow"); }
-            var intel = SiegeIntelLayout.of(w, h, 6);
-            int readingHeight = h - 32 - intel.contentTop() - 34;
-            if (readingHeight >= 150) {
-                int imageW = SiegeIntelLayout.portraitWidth(w - intel.sidebarWidth() - 54, readingHeight);
-                check(imageW * 9 / 16 + 3 + 8 + 52 <= readingHeight, "Portrait must leave readable tactical brief space");
-            }
-            check(intel.wide(), "Dossier must remain on the right at every GUI scale");
-            check(w - intel.sidebarWidth() - 30 >= 178, "Dossier too narrow");
-            check(intel.categoryTop() + 6 * (intel.categoryHeight() + (intel.ultraCompact() ? 2 : 3)) <= intel.listTop() - 18, "Categories overlap navigator");
-            check(intel.contentTop() >= 50 + 22 + 18 + 6, "Tools overlap paper");
-            check(intel.contentTop() + 34 + 55 < h - 24, "Intel reading area lost at " + w + "x" + h);
-            if (intel.wide()) check(intel.listTop() + 44 <= intel.listBottom(), "Wide list cannot fit one entry");
-            else check(intel.listTop() - 24 >= intel.categoryTop() + ((6 + intel.columns() - 1) / intel.columns()) * (intel.categoryHeight() + 2), "Search overlaps categories");
+            validateProductionLayout(w, h);
             cases++;
         }
-        int[][] resolutions = {{1280,720},{1366,768},{1920,1080},{2560,1440},{3440,1440}};
-        for (int[] r : resolutions) for (int requested = 1; requested <= 4; requested++) {
+
+        // Exact values around every current responsive breakpoint catch one-pixel
+        // regressions that a stepped sweep can jump over.
+        int[] boundaryWidths = {320, 359, 360, 379, 380, 419, 420, 519, 520, 599, 600, 639, 640, 699, 700, 701, 959, 1280, 1920, 2560, 3440, 5120};
+        int[] boundaryHeights = {240, 269, 289, 290, 299, 300, 329, 330, 349, 350, 354, 355, 356, 480, 720, 1080, 1440, 2160};
+        for (int w : boundaryWidths) for (int h : boundaryHeights) {
+            validateProductionLayout(w, h);
+            cases++;
+        }
+
+        int[][] resolutions = {
+                {800,600}, {1024,768}, {1280,720}, {1366,768}, {1600,900}, {1920,1080},
+                {2560,1080}, {2560,1440}, {3440,1440}, {3840,2160}, {5120,1440}
+        };
+        for (int[] r : resolutions) for (int requested = 1; requested <= 8; requested++) {
             int scale = 1;
             while (scale < requested && r[0] / (scale + 1) >= 320 && r[1] / (scale + 1) >= 240) scale++;
             int w = (r[0] + scale - 1) / scale, h = (r[1] + scale - 1) / scale;
-            var g = SiegeGalleryLayout.of(w, h);
-            inside(g.preview(), w, h);
+            validateProductionLayout(w, h);
             System.out.println(r[0] + "x" + r[1] + " GUI " + requested + " -> " + w + "x" + h + " OK");
         }
+
         check(IntelSearch.matches("canON", "Combate en el cañón"), "Accent/case search");
         check(IntelSearch.matches("  misil   nusia ", "Nusia despliega un misil"), "Multi-token search");
         check(IntelSearch.matches("", "Patriot"), "Empty search");
@@ -81,6 +101,7 @@ public class UiRegressionTest {
         check(IntelSearch.matches("!", "Atlas"), "Empty exclusion ignored");
         check(IntelSearch.matches("atlas atlas", "Atlas"), "Duplicate tokens");
         check(!IntelSearch.matches("!\"super unit", "Atlas super unit"), "Unclosed excluded phrase");
+
         SiegeImageViewport uninitialized = new SiegeImageViewport();
         check(Double.isFinite(uninitialized.visibleLeft()), "Camera valid before resize");
         uninitialized.resize(Double.NaN, Double.POSITIVE_INFINITY);
@@ -94,6 +115,7 @@ public class UiRegressionTest {
         check(IntelPresentation.hpValue("N/D").signum() == 0, "Unknown HP parsing");
         check(java.util.stream.Stream.of("UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT")
                 .map(IntelPresentation::accent).distinct().count() == 6, "Category accents must be distinct");
+
         SiegeImageViewport camera = new SiegeImageViewport();
         camera.resize(640, 360);
         double beforeU = (400 - camera.x()) / camera.imageWidth();
@@ -120,7 +142,8 @@ public class UiRegressionTest {
         camera.reset();
         check(camera.zoom() == 1 && camera.visibleLeft() == 0 && camera.visibleRight() == 1
                 && camera.visibleTop() == 0 && camera.visibleBottom() == 1, "Fit must show full artwork");
-        for (int w = 320; w <= 2560; w += 13) for (int h = 240; h <= 1440; h += 17) {
+
+        for (int w = 320; w <= 5120; w += 13) for (int h = 240; h <= 2160; h += 17) {
             boolean compact = SiegeUiLayout.compactTitle(w, h);
             int menu = Math.min(compact ? 176 : 212, Math.max(138, w / (compact ? 2 : 5)));
             int title = SiegeUiLayout.centeredTitleWidth(w, compact, menu);
@@ -129,15 +152,19 @@ public class UiRegressionTest {
             check(musicY >= 4 && musicY + 20 <= h, "Music control outside viewport");
             int notice = SiegeUiLayout.trackNoticeWidth(w, compact ? 9 : 14, menu, compact);
             check(notice == 0 || notice >= 96, "Unreadable track notice");
-            check(SiegeUiLayout.settingsColumns(Math.max(230, w - 28)) >= 2, "Settings columns");
+            int panelWidth = Math.max(1, Math.min(compact ? 520 : 760, w - (compact ? 14 : 28)));
+            int columns = SiegeUiLayout.settingsColumns(panelWidth);
+            check(columns == 2 || columns == 3, "Settings columns");
             int viewport = Math.max(1, h - 100);
             int thumb = SiegeUiLayout.scrollThumb(viewport, viewport + 400);
-            check(thumb >= 10 && thumb <= viewport, "Invalid scrollbar thumb");
+            check(thumb >= Math.min(10, viewport) && thumb <= viewport, "Invalid scrollbar thumb");
             check(SiegeUiLayout.clampScroll(-20, 100) == 0 && SiegeUiLayout.clampScroll(120, 100) == 100,
                     "Scroll clamp");
         }
-        System.out.println("Pointer zoom, minimap, pan limits and resize passed");
+
+        check(SiegeUiLayout.settingsColumns(359) == 2, "Settings 359px boundary");
+        check(SiegeUiLayout.settingsColumns(360) == 3, "Settings 360px boundary");
+        System.out.println("Pointer zoom, minimap, pan limits, breakpoints and resize passed");
         System.out.println(cases + " viewport layouts and search regressions passed");
     }
 }
-

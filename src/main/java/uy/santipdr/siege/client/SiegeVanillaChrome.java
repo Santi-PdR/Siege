@@ -24,7 +24,11 @@ public final class SiegeVanillaChrome {
     }
 
     public static int accent(Screen screen) {
-        return switch (family(screen)) {
+        return accent(family(screen));
+    }
+
+    private static int accent(SiegeMenuPolicy.NativeFamily family) {
+        return switch (family) {
             case AUDIO, PACKS -> SiegeTheme.GOLD;
             case VIDEO, LANGUAGE -> SiegeTheme.CYAN;
             case CONTROLS -> SiegeTheme.BLUE;
@@ -36,7 +40,11 @@ public final class SiegeVanillaChrome {
     }
 
     public static String familyIcon(Screen screen) {
-        return switch (family(screen)) {
+        return familyIcon(family(screen));
+    }
+
+    private static String familyIcon(SiegeMenuPolicy.NativeFamily family) {
+        return switch (family) {
             case NETWORK -> "connect";
             case AUDIO -> "music";
             case VIDEO -> "image";
@@ -95,7 +103,8 @@ public final class SiegeVanillaChrome {
     public static void renderOverlay(Screen screen, GuiGraphics g) {
         Minecraft minecraft = Minecraft.getInstance();
         var font = minecraft.font;
-        int accent = accent(screen);
+        SiegeMenuPolicy.NativeFamily family = family(screen);
+        int accent = accent(family);
         int width = screen.width;
 
         g.pose().pushPose();
@@ -105,14 +114,14 @@ public final class SiegeVanillaChrome {
         g.fill(0, 18, Math.min(width, 72), 20, accent);
         if (width > 92) g.fill(width - Math.min(width / 4, 92), 19, width, 20, accent);
 
-        SiegeTheme.icon(g, 7, 5, familyIcon(screen), accent);
+        SiegeTheme.icon(g, 7, 5, familyIcon(family), accent);
         String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
-        if (title.isBlank()) title = familyLabel(screen);
+        if (title.isBlank()) title = familyLabel(family);
 
         if (width >= 420) {
-            String family = "SIEGE // " + familyLabel(screen);
-            family = font.plainSubstrByWidth(family, Math.max(70, width / 4));
-            g.drawString(font, family, 21, 6, accent, false);
+            String familyText = "SIEGE // " + familyLabel(family);
+            familyText = font.plainSubstrByWidth(familyText, Math.max(70, width / 4));
+            g.drawString(font, familyText, 21, 6, accent, false);
             String clipped = font.plainSubstrByWidth(title, Math.max(70, width / 3));
             g.drawCenteredString(font, clipped, width / 2, 6, SiegeTheme.INK);
             if (width >= 620) {
@@ -129,41 +138,44 @@ public final class SiegeVanillaChrome {
             int sweepX = 18 + (int)((System.currentTimeMillis() / 9L) % span);
             int sweepRight = Math.min(width - 2, sweepX + 28);
             if (sweepRight > sweepX)
-                g.fill(sweepX, 18, sweepRight, 20, 0x90FFFFFF & (0xFF000000 | (accent & 0x00FFFFFF)));
+                g.fill(sweepX, 18, sweepRight, 20, 0x90000000 | (accent & 0x00FFFFFF));
         }
         g.pose().popPose();
     }
 
     public static void decorateWidgets(Screen screen, GuiGraphics g) {
-        int accent = accent(screen);
+        SiegeMenuPolicy.NativeFamily family = family(screen);
+        int accent = accent(family);
         for (var child : screen.children()) {
             if (child instanceof EditBox field && field.visible) {
                 int color = field.isFocused() ? SiegeTheme.FOCUS : 0xFF666B70;
-                SiegeTheme.frame(g, field.getX() - 1, field.getY() - 1,
-                        field.getWidth() + 2, field.getHeight() + 2, color);
-                g.fill(field.getX() - 1, field.getY() + field.getHeight(),
-                        field.getX() + Math.min(field.getWidth() + 1, field.isFocused() ? 34 : 12),
-                        field.getY() + field.getHeight() + 1, field.isFocused() ? accent : 0xFF565B60);
-                if (field.isFocused()) SiegeTheme.focusCorners(g, field.getX() - 2, field.getY() - 2,
-                        field.getWidth() + 4, field.getHeight() + 4, SiegeTheme.FOCUS);
+                frameWithin(screen, g, field.getX() - 1, field.getY() - 1,
+                        field.getWidth() + 2, field.getHeight() + 2, color, field.isFocused());
+
+                int railLeft = Math.max(0, field.getX() - 1);
+                int railRight = Math.min(screen.width,
+                        field.getX() + Math.min(field.getWidth() + 1, field.isFocused() ? 34 : 12));
+                int railY = Math.min(screen.height - 1, field.getY() + field.getHeight());
+                if (railRight > railLeft && railY >= 0 && railY < screen.height)
+                    g.fill(railLeft, railY, railRight, railY + 1, field.isFocused() ? accent : 0xFF565B60);
             } else if (child instanceof AbstractSliderButton slider && slider.visible) {
                 int color = slider.isFocused() ? SiegeTheme.FOCUS : accent;
-                SiegeTheme.frame(g, slider.getX() - 1, slider.getY() - 1,
-                        slider.getWidth() + 2, slider.getHeight() + 2, color);
-                g.fill(slider.getX() - 1, slider.getY() + 2, slider.getX() + 1,
-                        slider.getY() + slider.getHeight() - 2, accent);
-                if (slider.isFocused()) SiegeTheme.focusCorners(g, slider.getX() - 2, slider.getY() - 2,
-                        slider.getWidth() + 4, slider.getHeight() + 4, SiegeTheme.FOCUS);
+                frameWithin(screen, g, slider.getX() - 1, slider.getY() - 1,
+                        slider.getWidth() + 2, slider.getHeight() + 2, color, slider.isFocused());
+                int left = Math.max(0, slider.getX() - 1);
+                int top = Math.max(0, slider.getY() + 2);
+                int bottom = Math.min(screen.height, slider.getY() + slider.getHeight() - 2);
+                if (bottom > top && left < screen.width)
+                    g.fill(left, top, Math.min(screen.width, left + 2), bottom, accent);
             } else if (child instanceof AbstractWidget widget && widget.visible && widget.isFocused()
                     && !(widget instanceof SiegeButton)) {
-                SiegeTheme.focusCorners(g, widget.getX() - 1, widget.getY() - 1,
-                        widget.getWidth() + 2, widget.getHeight() + 2, SiegeTheme.FOCUS);
+                frameWithin(screen, g, widget.getX() - 1, widget.getY() - 1,
+                        widget.getWidth() + 2, widget.getHeight() + 2, SiegeTheme.FOCUS, true);
             }
         }
 
         // Selection lists in 1.20.1 are not AbstractWidgets. Give list-heavy screens
         // a safe inner rail instead of depending on inaccessible list coordinates.
-        SiegeMenuPolicy.NativeFamily family = family(screen);
         if ((family == SiegeMenuPolicy.NativeFamily.LANGUAGE
                 || family == SiegeMenuPolicy.NativeFamily.PACKS
                 || family == SiegeMenuPolicy.NativeFamily.WORLD
@@ -180,9 +192,24 @@ public final class SiegeVanillaChrome {
         }
     }
 
+    private static void frameWithin(Screen screen, GuiGraphics g, int x, int y, int w, int h,
+                                    int color, boolean focus) {
+        int left = Math.max(0, x);
+        int top = Math.max(0, y);
+        int right = Math.min(screen.width, x + Math.max(0, w));
+        int bottom = Math.min(screen.height, y + Math.max(0, h));
+        if (right - left < 2 || bottom - top < 2) return;
+        SiegeTheme.frame(g, left, top, right - left, bottom - top, color);
+        if (focus) SiegeTheme.focusCorners(g, left, top, right - left, bottom - top, SiegeTheme.FOCUS);
+    }
+
     public static String familyLabel(Screen screen) {
+        return familyLabel(family(screen));
+    }
+
+    private static String familyLabel(SiegeMenuPolicy.NativeFamily family) {
         boolean es = spanish();
-        return switch (family(screen)) {
+        return switch (family) {
             case NETWORK -> es ? "ENLACE DE RED" : "NETWORK LINK";
             case AUDIO -> "AUDIO";
             case VIDEO -> "VIDEO";

@@ -23,7 +23,9 @@ public final class SiegeBackgrounds {
         if (SiegeConfig.selectedScene >= 0) return Math.floorMod(SiegeConfig.selectedScene, SCENES.size());
         return SiegeConfig.animatedBackgrounds ? (int)Math.floorMod(now / SCENE_MS, SCENES.size()) : 0;
     }
+
     public static void renderContainedRegion(GuiGraphics g, int x, int y, int w, int h, int index, float alpha) {
+        if (w <= 0 || h <= 0) return;
         double scale = Math.min(w / 960.0, h / 540.0);
         int drawW = Math.max(1, (int)Math.floor(960 * scale));
         int drawH = Math.max(1, (int)Math.floor(540 * scale));
@@ -51,13 +53,14 @@ public final class SiegeBackgrounds {
     }
 
     public static void renderPreview(GuiGraphics graphics, int width, int height, int index) {
+        if (width <= 0 || height <= 0) return;
         int safeIndex = Math.floorMod(index, SCENES.size());
         drawScene(graphics, SCENES.get(safeIndex), width, height, 1.0F, safeIndex, 0.5F, false);
     }
 
     /** Clipped cover rendering shared by the gallery preview and native thumbnail widgets. */
     public static void renderRegion(GuiGraphics g, int x, int y, int w, int h, int index, float alpha) {
-        if (w <= 0 || h <= 0) return;
+        if (w <= 0 || h <= 0 || alpha <= 0.0F) return;
         g.enableScissor(x, y, x + w, y + h);
         g.pose().pushPose();
         g.pose().translate(x, y, 0);
@@ -67,15 +70,18 @@ public final class SiegeBackgrounds {
     }
 
     public static double panelFraction(int width, int height, double guiScale) {
+        if (width <= 0) return 1.0D;
         boolean compact = width < 520 || height < 290;
         boolean three = guiScale >= 2.75 && guiScale < 3.75 && !compact;
         int margin = compact ? 9 : Math.max(14, width / 55);
         int menu = three ? Math.min(218, Math.max(198, width / 5))
                 : Math.min(compact ? 176 : 212, Math.max(138, width / (compact ? 2 : 5)));
-        menu = Math.min(menu, width - margin * 2);
-        return Math.min(width, margin + menu + (compact ? 12 : 18)) / (double)width;
+        menu = Math.max(0, Math.min(menu, width - margin * 2));
+        return Math.max(0.0D, Math.min(1.0D, Math.min(width, margin + menu + (compact ? 12 : 18)) / (double)width));
     }
+
     public static void renderPanel(GuiGraphics g, int x, int y, int width, int height) {
+        if (width <= 0 || height <= 0) return;
         int alpha = Math.max(0, Math.min(255, SiegeConfig.panelDarkness * 255 / 100));
         g.fill(x, y, x + width, y + height, (alpha << 24) | 0x00050506);
     }
@@ -94,6 +100,7 @@ public final class SiegeBackgrounds {
     }
 
     private static void renderInternal(GuiGraphics graphics, int width, int height, long now, boolean cover) {
+        if (width <= 0 || height <= 0) return;
         graphics.fill(0, 0, width, height, 0xFF080A0C);
         boolean animated = SiegeConfig.animatedBackgrounds && SiegeConfig.selectedScene < 0;
         long slot = animated ? now / SCENE_MS : 0L;
@@ -111,8 +118,10 @@ public final class SiegeBackgrounds {
             if (localMs >= fadeStart) {
                 float raw = (localMs - fadeStart) / (float) CROSSFADE_MS;
                 float alpha = smoother(raw);
-                float incomingProgress = allowPan ? Math.min(0.18F, raw * 0.18F) : 0.5F;
-                drawScene(graphics, SCENES.get(next), width, height, alpha, next, incomingProgress, allowPan, cover);
+                if (alpha > 0.01F) {
+                    float incomingProgress = allowPan ? Math.min(0.18F, raw * 0.18F) : 0.5F;
+                    drawScene(graphics, SCENES.get(next), width, height, alpha, next, incomingProgress, allowPan, cover);
+                }
 
                 // A very small midpoint veil masks large exposure differences between source images
                 // without turning the transition into a visible black flash.
@@ -125,9 +134,12 @@ public final class SiegeBackgrounds {
         graphics.fill(0, 0, width, height, darkness << 24);
 
         if (SiegeConfig.scanlines && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE) {
-            int spacing = SiegeConfig.graphics == SiegeConfig.Graphics.CINEMATIC ? 4 : 7;
+            int baseSpacing = SiegeConfig.graphics == SiegeConfig.Graphics.CINEMATIC ? 4 : 7;
+            // Preserve the same look on normal logical viewports while preventing
+            // very tall scale-1/ultrawide windows from producing hundreds of extra draws.
+            int spacing = Math.max(baseSpacing, (height + 299) / 300);
             for (int y = 0; y < height; y += spacing) {
-                graphics.fill(0, y, width, y + 1, 0x10000000);
+                graphics.fill(0, y, width, Math.min(height, y + 1), 0x10000000);
             }
         }
     }
@@ -139,6 +151,7 @@ public final class SiegeBackgrounds {
 
     private static void drawScene(GuiGraphics g, ResourceLocation texture, int w, int h, float alpha,
                                   int sceneIndex, float progress, boolean allowPan, boolean cover) {
+        if (w <= 0 || h <= 0 || alpha <= 0.0F) return;
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, Math.max(0.0F, Math.min(1.0F, alpha)));
 

@@ -6,8 +6,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderTooltipEvent;
@@ -62,6 +64,15 @@ public final class SiegeMenuThemeEvents {
     @SubscribeEvent
     public static void initialized(ScreenEvent.Init.Post event) {
         Screen screen = event.getScreen();
+        if (!themed(screen)) return;
+
+        // Text colors are screen state, not animation state. Set them once at init
+        // instead of rewriting every EditBox on every rendered frame.
+        for (var listener : event.getListenersList()) if (listener instanceof EditBox field) {
+            field.setTextColor(SiegeTheme.INK);
+            field.setTextColorUneditable(SiegeTheme.MUTED);
+        }
+
         if (!nativeDialog(screen)) return;
         boundScreen = screen;
         buttons.clear();
@@ -74,9 +85,6 @@ public final class SiegeMenuThemeEvents {
                 event.addListener(replacement);
                 if (focused) screen.setFocused(replacement);
                 buttons.add(replacement);
-            } else if (listener instanceof EditBox field) {
-                field.setTextColor(SiegeTheme.INK);
-                field.setTextColorUneditable(SiegeTheme.MUTED);
             }
         }
     }
@@ -92,10 +100,6 @@ public final class SiegeMenuThemeEvents {
     public static void beforeRender(ScreenEvent.Render.Pre event) {
         if (!themed(event.getScreen())) return;
         if (boundScreen == event.getScreen()) for (NativeButton button : buttons) button.sync();
-        for (var child : event.getScreen().children()) if (child instanceof EditBox field) {
-            field.setTextColor(SiegeTheme.INK);
-            field.setTextColorUneditable(SiegeTheme.MUTED);
-        }
     }
 
     @SubscribeEvent
@@ -112,9 +116,14 @@ public final class SiegeMenuThemeEvents {
             // SIEGE-owned screens still get consistent focused text-field treatment.
             for (var child : screen.children()) if (child instanceof EditBox field && field.visible) {
                 int color = field.isFocused() ? SiegeTheme.FOCUS : 0xFF656061;
-                SiegeTheme.frame(g, field.getX() - 1, field.getY() - 1, field.getWidth() + 2, field.getHeight() + 2, color);
-                if (field.isFocused())
-                    SiegeTheme.focusCorners(g, field.getX() - 1, field.getY() - 1, field.getWidth() + 2, field.getHeight() + 2, color);
+                int x = Math.max(0, field.getX() - 1);
+                int y = Math.max(0, field.getY() - 1);
+                int right = Math.min(screen.width, field.getX() + field.getWidth() + 1);
+                int bottom = Math.min(screen.height, field.getY() + field.getHeight() + 1);
+                if (right > x && bottom > y) {
+                    SiegeTheme.frame(g, x, y, right - x, bottom - y, color);
+                    if (field.isFocused()) SiegeTheme.focusCorners(g, x, y, right - x, bottom - y, color);
+                }
             }
         }
 
@@ -190,6 +199,8 @@ public final class SiegeMenuThemeEvents {
     /** Keeps the original object alive because vanilla screen fields update it after init. */
     private static final class NativeButton extends SiegeButton {
         private final AbstractButton source;
+        private String visualKey = "";
+        private Tooltip cachedTooltip;
 
         NativeButton(AbstractButton source, int accent) {
             super(source.getX(), source.getY(), source.getWidth(), source.getHeight(), source.getMessage(), b -> {}, accent);
@@ -204,10 +215,23 @@ public final class SiegeMenuThemeEvents {
             visible = source.visible;
             setX(source.getX());
             setY(source.getY());
-            setWidth(source.getWidth());
-            setMessage(source.getMessage());
-            setTooltip(source.getTooltip());
-            withIcon(SiegeVanillaChrome.buttonIcon(source.getMessage()));
+            setWidth(Math.max(1, source.getWidth()));
+            setHeight(Math.max(1, source.getHeight()));
+
+            Component message = source.getMessage();
+            String key = message.getContents() instanceof TranslatableContents tr
+                    ? tr.getKey() + '\u0000' + message.getString() : message.getString();
+            if (!key.equals(visualKey)) {
+                visualKey = key;
+                setMessage(message);
+                withIcon(SiegeVanillaChrome.buttonIcon(message));
+            }
+
+            Tooltip tooltip = source.getTooltip();
+            if (tooltip != cachedTooltip) {
+                cachedTooltip = tooltip;
+                setTooltip(tooltip);
+            }
         }
 
         @Override public void onPress() {
