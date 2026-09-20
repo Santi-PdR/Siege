@@ -31,10 +31,8 @@ public final class SiegeBackgrounds {
     }
 
     public static String rotationState(boolean spanish, long now) {
-        if (SiegeConfig.selectedScene >= 0)
-            return spanish ? "Fondo fijado" : "Background pinned";
-        if (!SiegeConfig.animatedBackgrounds)
-            return spanish ? "Rotación desactivada" : "Rotation disabled";
+        if (SiegeConfig.selectedScene >= 0) return spanish ? "Fondo fijado" : "Background pinned";
+        if (!SiegeConfig.animatedBackgrounds) return spanish ? "Rotación desactivada" : "Rotation disabled";
         long remaining = rotationRemainingMs(now);
         long seconds = Math.max(0, (remaining + 999L) / 1000L);
         return (spanish ? "Siguiente escena en " : "Next scene in ") + seconds + " s";
@@ -50,9 +48,7 @@ public final class SiegeBackgrounds {
 
     public static int count() { return SCENES.size(); }
 
-    public static String name(int index) {
-        return name(index, false);
-    }
+    public static String name(int index) { return name(index, false); }
 
     public static String name(int index, boolean spanish) {
         return switch (Math.floorMod(index, SCENES.size())) {
@@ -74,7 +70,6 @@ public final class SiegeBackgrounds {
         drawScene(graphics, SCENES.get(safeIndex), width, height, 1.0F, safeIndex, 0.5F, false);
     }
 
-    /** Clipped cover rendering shared by the gallery preview and native thumbnail widgets. */
     public static void renderRegion(GuiGraphics g, int x, int y, int w, int h, int index, float alpha) {
         if (w <= 0 || h <= 0 || alpha <= 0.0F) return;
         g.enableScissor(x, y, x + w, y + h);
@@ -96,10 +91,21 @@ public final class SiegeBackgrounds {
         return Math.max(0.0D, Math.min(1.0D, Math.min(width, margin + menu + (compact ? 12 : 18)) / (double)width));
     }
 
+    public static int effectiveBackgroundDarkness() {
+        int value = SiegeConfig.backgroundDarkness;
+        if (SiegeConfig.autoContrast) value = Math.max(value, SiegeConfig.highContrast ? 40 : 24);
+        return Math.max(0, Math.min(70, value));
+    }
+
+    public static int effectivePanelDarkness() {
+        int value = SiegeConfig.panelDarkness;
+        if (SiegeConfig.autoContrast) value = Math.max(value, SiegeConfig.highContrast ? 78 : 66);
+        return Math.max(20, Math.min(90, value));
+    }
+
     public static void renderPanel(GuiGraphics g, int x, int y, int width, int height) {
         if (width <= 0 || height <= 0) return;
-        int percent = SiegeConfig.highContrast ? Math.max(SiegeConfig.panelDarkness, 72) : SiegeConfig.panelDarkness;
-        int alpha = Math.max(0, Math.min(255, percent * 255 / 100));
+        int alpha = effectivePanelDarkness() * 255 / 100;
         g.fill(x, y, x + width, y + height, (alpha << 24) | 0x00050506);
     }
 
@@ -111,7 +117,6 @@ public final class SiegeBackgrounds {
         renderInternal(graphics, width, height, now, false);
     }
 
-    /** Aspect-preserving fullscreen crop used by Multiplayer. */
     public static void renderCover(GuiGraphics graphics, int width, int height, long now) {
         renderInternal(graphics, width, height, now, true);
     }
@@ -140,9 +145,6 @@ public final class SiegeBackgrounds {
                     float incomingProgress = allowPan ? Math.min(0.18F, raw * 0.18F) : 0.5F;
                     drawScene(graphics, SCENES.get(next), width, height, alpha, next, incomingProgress, allowPan, cover);
                 }
-
-                // The midpoint veil hides large exposure jumps. Flash reduction
-                // disables it entirely and relies on the long crossfade instead.
                 if (!SiegeConfig.reduceFlashes) {
                     int veilAlpha = Math.round((float)Math.sin(alpha * Math.PI) * 20.0F);
                     if (veilAlpha > 0) graphics.fill(0, 0, width, height, veilAlpha << 24);
@@ -150,18 +152,17 @@ public final class SiegeBackgrounds {
             }
         }
 
-        int darknessPercent = SiegeConfig.highContrast
-                ? Math.max(36, SiegeConfig.backgroundDarkness) : SiegeConfig.backgroundDarkness;
-        int darkness = Math.max(0, Math.min(255, darknessPercent * 255 / 100));
+        int darkness = effectiveBackgroundDarkness() * 255 / 100;
         graphics.fill(0, 0, width, height, darkness << 24);
 
-        if (SiegeConfig.scanlines && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE) {
+        if (SiegeConfig.scanlines && SiegeConfig.scanlineIntensity > 0
+                && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE) {
             int baseSpacing = SiegeConfig.graphics == SiegeConfig.Graphics.CINEMATIC ? 4 : 7;
             int spacing = Math.max(baseSpacing, (height + 299) / 300);
-            int lineColor = SiegeConfig.highContrast ? 0x08000000 : 0x10000000;
-            for (int y = 0; y < height; y += spacing) {
-                graphics.fill(0, y, width, Math.min(height, y + 1), lineColor);
-            }
+            int maxAlpha = SiegeConfig.highContrast ? 10 : 24;
+            int alpha = Math.max(1, Math.round(maxAlpha * SiegeConfig.scanlineIntensity / 100.0F));
+            int lineColor = alpha << 24;
+            for (int y = 0; y < height; y += spacing) graphics.fill(0, y, width, Math.min(height, y + 1), lineColor);
         }
     }
 
@@ -176,8 +177,7 @@ public final class SiegeBackgrounds {
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, Math.max(0.0F, Math.min(1.0F, alpha)));
 
-        double scale = cover ? Math.max(w / 960.0D, h / 540.0D)
-                : Math.min(w / 960.0D, h / 540.0D);
+        double scale = cover ? Math.max(w / 960.0D, h / 540.0D) : Math.min(w / 960.0D, h / 540.0D);
         int drawW = Math.max(1, (int)Math.floor(960 * scale));
         int drawH = Math.max(1, (int)Math.floor(540 * scale));
         int x = (w - drawW) / 2;
