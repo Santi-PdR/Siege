@@ -27,12 +27,17 @@ public final class SiegeCommandStrip {
         int y = screen.height - 17;
         int h = 13;
 
-        String profileText = (spanish ? "PERFIL " : "PROFILE ")
-                + SiegeClientProfile.label(profile, spanish);
+        String profileText;
+        if (profile == SiegeClientProfile.Profile.CUSTOM) {
+            SiegeClientProfile.Profile nearest = SiegeProfileMetrics.nearest();
+            profileText = "CUSTOM→" + SiegeClientProfile.shortLabel(nearest, spanish)
+                    + " " + SiegeProfileMetrics.fitPercent(nearest) + "%";
+        } else {
+            profileText = (spanish ? "PERFIL " : "PROFILE ") + SiegeClientProfile.label(profile, spanish);
+        }
         String intelText = "INTEL " + IntelCatalog.total();
-        String audioText = !SiegeConfig.music ? (spanish ? "AUDIO OFF" : "AUDIO OFF")
-                : "AUDIO " + SiegeConfig.musicVolume + "%";
-        String healthText = SiegeRuntimeStatus.healthLabel(spanish);
+        String audioText = !SiegeConfig.music ? "AUDIO OFF" : "AUDIO " + SiegeConfig.musicVolume + "%";
+        String healthText = SiegeRuntimeStatus.healthLabel(spanish) + " " + SiegeRuntimeStatus.readiness() + "%";
 
         g.pose().pushPose();
         g.pose().translate(0, 0, 448);
