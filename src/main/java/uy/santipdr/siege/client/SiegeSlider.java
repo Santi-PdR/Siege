@@ -15,6 +15,7 @@ public final class SiegeSlider extends AbstractSliderButton {
     private final IntConsumer consumer;
     private int lastPercent;
     private boolean dragging;
+    private double dragOffsetX;
     private int themeAccent = SiegeTheme.RED;
     private java.util.function.IntFunction<String> valueText;
     private float hoverAmount;
@@ -59,7 +60,9 @@ public final class SiegeSlider extends AbstractSliderButton {
         boolean handled = active && visible && button == 0 && isMouseOver(mouseX, mouseY);
         if (handled) {
             dragging = true;
-            updateFromPointer(mouseX);
+            dragOffsetX = SiegeSliderGeometry.grabOffset(mouseX, getX(), getWidth(), lastPercent, 6.0D);
+            // Clicking the rail still seeks immediately; grabbing the knob preserves its exact position.
+            if (dragOffsetX == 0.0D) updateFromPointer(mouseX);
             SiegeUiSounds.click();
         }
         return handled;
@@ -67,7 +70,7 @@ public final class SiegeSlider extends AbstractSliderButton {
 
     private void updateFromPointer(double mouseX) {
         if (!Double.isFinite(mouseX)) return;
-        value = SiegeSliderGeometry.percent(mouseX, getX(), getWidth()) / 100.0;
+        value = SiegeSliderGeometry.percent(mouseX, getX(), getWidth(), dragOffsetX) / 100.0;
         applyValue();
         updateMessage();
     }
@@ -86,6 +89,7 @@ public final class SiegeSlider extends AbstractSliderButton {
         boolean handled = button == 0 && dragging;
         if (button == 0) {
             dragging = false;
+            dragOffsetX = 0.0D;
             if (handled) SiegeConfig.save();
         }
         return super.mouseReleased(x, y, button) || handled;
