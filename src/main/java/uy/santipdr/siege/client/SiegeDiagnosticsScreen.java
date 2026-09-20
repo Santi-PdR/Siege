@@ -4,14 +4,16 @@ import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 
-/** Full diagnostic and recovery surface introduced in SIEGE 0.60.0. */
+/** SIEGE 1.25 diagnostics: priority, impact, recommendation and explicit recovery. */
 public final class SiegeDiagnosticsScreen extends Screen {
     private final Screen parent;
     private int panelX, panelY, panelW, panelBottom;
-    private int viewportTop, viewportBottom, scrollOffset, scrollMax;
-    private boolean compact;
-    private SiegeButton alignButton;
+    private int viewportTop, viewportBottom, listX, listW, detailX, detailW;
+    private int scrollOffset, scrollMax, selectedIndex;
+    private boolean compact, split;
+    private SiegeButton repairButton, alignButton;
 
     public SiegeDiagnosticsScreen(Screen parent) {
         super(Component.literal("SIEGE // DIAGNOSTICS"));
@@ -21,166 +23,263 @@ public final class SiegeDiagnosticsScreen extends Screen {
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
-        compact = width < 680 || height < 390;
-        int margin = compact ? 7 : 14;
-        panelW = Math.min(compact ? 620 : 820, Math.max(260, width - margin * 2));
+        compact = SiegeUiLayout.density(width, height) == SiegeUiLayout.Density.ULTRA_COMPACT
+                || SiegeUiLayout.density(width, height) == SiegeUiLayout.Density.COMPACT;
+        split = width >= 760 && height >= 390;
+        int margin = SiegeUiLayout.safeMargin(width, height);
+        panelW = Math.min(920, Math.max(280, width - margin * 2));
         panelX = (width - panelW) / 2;
-        panelY = compact ? 35 : 46;
-        panelBottom = height - (compact ? 8 : 18);
+        panelY = compact ? 32 : 41;
+        panelBottom = height - (compact ? 8 : 16);
 
-        addRenderableWidget(new SiegeButton(8, 7, Math.min(86, Math.max(62, width / 6)), 19,
-                Component.literal(label("VOLVER", "BACK")), b -> onClose(), SiegeTheme.RED).withIcon("back"));
+        int backW = Math.min(88, Math.max(58, width / 7));
+        addRenderableWidget(new SiegeButton(8, 7, backW, 19, Component.literal(label("VOLVER", "BACK")),
+                b -> onClose(), SiegeTheme.RED).withIcon("back").setCompactCenter(true));
 
-        int innerX = panelX + 11;
-        int innerW = panelW - 22;
-        int buttonH = compact ? 18 : 21;
+        int innerX = panelX + 10;
+        int innerW = panelW - 20;
+        int buttonH = compact ? 18 : 20;
         int gap = 5;
         int bottomY = panelBottom - buttonH - 8;
-        int half = (innerW - gap) / 2;
+        int third = Math.max(68, (innerW - gap * 2) / 3);
 
-        alignButton = addRenderableWidget(new SiegeButton(innerX, bottomY, half, buttonH,
-                Component.literal(alignLabel()), b -> alignNearest(), SiegeTheme.CYAN)
+        repairButton = addRenderableWidget(new SiegeButton(innerX, bottomY, third, buttonH,
+                Component.literal(label("REPARAR SELECCIÓN", "REPAIR SELECTED")), b -> repairSelected(), SiegeTheme.GOLD)
                 .withIcon("settings").setCompactCenter(true));
-        addRenderableWidget(new SiegeButton(innerX + half + gap, bottomY, innerW - half - gap, buttonH,
-                Component.literal(label("VOLVER AL CENTRO DE COMANDO", "BACK TO COMMAND CENTER")),
-                b -> onClose(), SiegeTheme.RED).withIcon("overview").setCompactCenter(true));
+        alignButton = addRenderableWidget(new SiegeButton(innerX + third + gap, bottomY, third, buttonH,
+                Component.literal(label("ALINEAR PERFIL", "ALIGN PROFILE")), b -> alignNearest(), SiegeTheme.CYAN)
+                .withIcon("shield").setCompactCenter(true));
+        addRenderableWidget(new SiegeButton(innerX + (third + gap) * 2, bottomY,
+                innerW - (third + gap) * 2, buttonH,
+                Component.literal(label("CENTRO DE COMANDO", "COMMAND CENTER")), b -> onClose(), SiegeTheme.RED)
+                .withIcon("overview").setCompactCenter(true));
 
-        viewportTop = panelY + (compact ? 69 : 78);
+        viewportTop = panelY + (compact ? 66 : 76);
         viewportBottom = bottomY - 8;
-        int rowH = compact ? 31 : 35;
-        scrollMax = Math.max(0, SiegeDiagnosticReport.entries(spanish()).size() * rowH - (viewportBottom - viewportTop));
-        scrollOffset = Math.max(0, Math.min(scrollOffset, scrollMax));
-        refreshAlignButton();
+        listX = innerX;
+        if (split) {
+            listW = Math.max(260, (innerW - 8) * 44 / 100);
+            detailX = listX + listW + 8;
+            detailW = innerW - listW - 8;
+        } else {
+            listW = innerW;
+            detailX = detailW = 0;
+        }
+
+        List<SiegeDiagnosticReport.Entry> entries = SiegeDiagnosticReport.entries(spanish());
+        selectedIndex = Math.max(0, Math.min(selectedIndex, Math.max(0, entries.size() - 1)));
+        int rowH = compact ? 34 : 39;
+        scrollMax = Math.max(0, entries.size() * rowH - Math.max(1, viewportBottom - viewportTop));
+        scrollOffset = SiegeUiLayout.clampScroll(scrollOffset, scrollMax);
+        refreshButtons();
+    }
+
+    private void repairSelected() {
+        SiegeDiagnosticReport.Entry entry = selectedEntry();
+        if (entry == null || !SiegeDiagnosticReport.repair(entry)) {
+            SiegeUiSounds.warning();
+            return;
+        }
+        SiegeUiSounds.confirm();
+        minecraft.setScreen(new SiegeDiagnosticsScreen(parent));
     }
 
     private void alignNearest() {
-        SiegeClientProfile.Profile nearest = SiegeProfileMetrics.nearest();
-        SiegeClientProfile.apply(nearest);
+        if (SiegeClientProfile.detect() != SiegeClientProfile.Profile.CUSTOM) {
+            SiegeUiSounds.warning();
+            return;
+        }
+        SiegeClientProfile.apply(SiegeProfileMetrics.nearest());
         SiegeUiSounds.confirm();
-        scrollOffset = 0;
-        init(minecraft, width, height);
+        minecraft.setScreen(new SiegeDiagnosticsScreen(parent));
     }
 
-    private void refreshAlignButton() {
-        if (alignButton == null) return;
-        alignButton.setMessage(Component.literal(alignLabel()));
-        SiegeClientProfile.Profile active = SiegeClientProfile.detect();
-        alignButton.active = active == SiegeClientProfile.Profile.CUSTOM;
-        alignButton.setSelected(active == SiegeClientProfile.Profile.CUSTOM);
-        alignButton.withBadge(active == SiegeClientProfile.Profile.CUSTOM
-                ? SiegeProfileMetrics.fitPercent(SiegeProfileMetrics.nearest()) + "%" : label("EXACTO", "EXACT"));
+    private SiegeDiagnosticReport.Entry selectedEntry() {
+        List<SiegeDiagnosticReport.Entry> entries = SiegeDiagnosticReport.entries(spanish());
+        return entries.isEmpty() ? null : entries.get(Math.max(0, Math.min(selectedIndex, entries.size() - 1)));
     }
 
-    private String alignLabel() {
-        SiegeClientProfile.Profile active = SiegeClientProfile.detect();
-        if (active != SiegeClientProfile.Profile.CUSTOM)
-            return label("PERFIL YA COHERENTE", "PROFILE ALREADY COHERENT");
-        SiegeClientProfile.Profile nearest = SiegeProfileMetrics.nearest();
-        return label("ALINEAR A ", "ALIGN TO ") + SiegeClientProfile.label(nearest, spanish());
+    private void refreshButtons() {
+        SiegeDiagnosticReport.Entry entry = selectedEntry();
+        boolean canRepair = entry != null && entry.recovery() != SiegeDiagnosticReport.Recovery.NONE;
+        if (repairButton != null) {
+            repairButton.active = canRepair;
+            repairButton.setSelected(canRepair);
+            repairButton.withBadge(canRepair ? label("LISTO", "READY") : label("N/A", "N/A"));
+            repairButton.setMessage(Component.literal(canRepair ? recoveryLabel(entry.recovery())
+                    : label("SIN REPARACIÓN SEGURA", "NO SAFE REPAIR")));
+        }
+        if (alignButton != null) {
+            boolean custom = SiegeClientProfile.detect() == SiegeClientProfile.Profile.CUSTOM;
+            alignButton.active = custom;
+            alignButton.setSelected(custom);
+            alignButton.withBadge(custom ? SiegeProfileMetrics.fitPercent(SiegeProfileMetrics.nearest()) + "%"
+                    : label("EXACTO", "EXACT"));
+        }
     }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
-        g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xD508090B : 0xB608090B);
+        g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xD908090B : 0xB808090B);
 
         int accent = SiegeRuntimeStatus.healthAccent();
         SiegeTheme.panel(g, panelX, panelY, panelW, Math.max(6, panelBottom - panelY), accent);
         renderHeader(g);
         renderEntries(g, mouseX, mouseY);
+        if (split) renderSelectedDetail(g);
 
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
+        refreshButtons();
     }
 
     private void renderHeader(GuiGraphics g) {
         int x = panelX + 11;
         int w = panelW - 22;
-        String title = "SIEGE // " + SiegeRuntimeStatus.version() + " // "
-                + label("DIAGNÓSTICO Y RECUPERACIÓN", "DIAGNOSTICS & RECOVERY");
-        g.drawString(font, font.plainSubstrByWidth(title, w), x, panelY + 8,
-                SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
+        String detail = SiegeDiagnosticReport.priorityLabel(highestSeverity(), spanish()) + " · "
+                + SiegeDiagnosticReport.readiness() + "%";
+        SiegeScreenChrome.renderHeader(g, this, x, panelY + 7, w, detail);
 
-        int errors = SiegeDiagnosticReport.errors(spanish());
-        int warnings = SiegeDiagnosticReport.warnings(spanish());
-        int notices = SiegeDiagnosticReport.notices(spanish());
-        String summary = label("PREPARACIÓN ", "READINESS ") + SiegeDiagnosticReport.readiness() + "%"
-                + "  ·  " + label("ERRORES ", "ERRORS ") + errors
-                + "  ·  " + label("AVISOS ", "WARNINGS ") + warnings
-                + "  ·  " + label("INFO ", "INFO ") + notices;
-        g.drawString(font, font.plainSubstrByWidth(summary, w), x, panelY + 22,
-                SiegeRuntimeStatus.healthAccent(), false);
+        int critical = SiegeDiagnosticReport.errors(spanish());
+        int attention = SiegeDiagnosticReport.warnings(spanish()) + SiegeDiagnosticReport.notices(spanish());
+        int operational = SiegeDiagnosticReport.operational(spanish());
+        String summary = label("CRÍTICO ", "CRITICAL ") + critical
+                + "  ·  " + label("ATENCIÓN ", "ATTENTION ") + attention
+                + "  ·  " + label("OPERATIVO ", "OPERATIONAL ") + operational;
+        g.drawString(font, fit(summary, w), x, panelY + 31, SiegeTheme.MUTED, false);
 
-        SiegeClientProfile.Profile active = SiegeClientProfile.detect();
-        SiegeClientProfile.Profile nearest = SiegeProfileMetrics.nearest();
-        String profile = active == SiegeClientProfile.Profile.CUSTOM
-                ? label("PERSONALIZADO · MÁS CERCANO: ", "CUSTOM · NEAREST: ")
-                    + SiegeClientProfile.label(nearest, spanish()) + " " + SiegeProfileMetrics.fitPercent(nearest) + "%"
-                : label("PERFIL EXACTO: ", "EXACT PROFILE: ") + SiegeClientProfile.label(active, spanish());
-        g.drawString(font, font.plainSubstrByWidth(profile, w), x, panelY + 35,
-                SiegeClientProfile.accent(active), false);
-
-        int barY = panelY + 50;
+        int barY = panelY + 46;
         g.fill(x, barY, x + w, barY + 4, 0xFF252A2E);
         int readyW = Math.round(w * SiegeDiagnosticReport.readiness() / 100.0F);
         if (readyW > 0) g.fill(x, barY, x + readyW, barY + 4, SiegeRuntimeStatus.healthAccent());
-        g.drawString(font, label("SUBSISTEMAS", "SUBSYSTEMS"), x, barY + 9, SiegeTheme.MUTED, false);
+        SiegeClientProfile.Profile profile = SiegeClientProfile.detect();
+        String profileText = profile == SiegeClientProfile.Profile.CUSTOM
+                ? "CUSTOM → " + SiegeClientProfile.label(SiegeProfileMetrics.nearest(), spanish())
+                    + " " + SiegeProfileMetrics.fitPercent(SiegeProfileMetrics.nearest()) + "%"
+                : SiegeClientProfile.label(profile, spanish()) + " · 100%";
+        g.drawString(font, fit(profileText, w), x, barY + 9, SiegeClientProfile.accent(profile), false);
+    }
+
+    private SiegeDiagnosticReport.Severity highestSeverity() {
+        SiegeDiagnosticReport.Severity result = SiegeDiagnosticReport.Severity.OK;
+        for (SiegeDiagnosticReport.Entry entry : SiegeDiagnosticReport.entries(false)) {
+            if (entry.severity() == SiegeDiagnosticReport.Severity.ERROR) return entry.severity();
+            if (entry.severity() == SiegeDiagnosticReport.Severity.WARNING) result = entry.severity();
+            else if (entry.severity() == SiegeDiagnosticReport.Severity.NOTICE && result == SiegeDiagnosticReport.Severity.OK)
+                result = entry.severity();
+        }
+        return result;
     }
 
     private void renderEntries(GuiGraphics g, int mouseX, int mouseY) {
         List<SiegeDiagnosticReport.Entry> entries = SiegeDiagnosticReport.entries(spanish());
-        int x = panelX + 11;
-        int w = panelW - 22;
-        int rowH = compact ? 31 : 35;
-
-        g.enableScissor(x, viewportTop, x + w, viewportBottom);
+        int rowH = compact ? 34 : 39;
+        g.enableScissor(listX, viewportTop, listX + listW, viewportBottom);
         for (int i = 0; i < entries.size(); i++) {
             SiegeDiagnosticReport.Entry entry = entries.get(i);
             int y = viewportTop + i * rowH - scrollOffset;
             if (y + rowH < viewportTop || y >= viewportBottom) continue;
             int accent = SiegeDiagnosticReport.accent(entry.severity());
-            boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + rowH - 3;
-            g.fill(x, y, x + w, y + rowH - 3, hovered ? 0xE5212529 : 0xD8171A1D);
-            g.fill(x, y, x + 3, y + rowH - 3, accent);
-            g.fill(x + 9, y + rowH - 4, x + w - 7, y + rowH - 3, 0xFF2F363B);
+            boolean selected = i == selectedIndex;
+            boolean hovered = mouseX >= listX && mouseX < listX + listW && mouseY >= y && mouseY < y + rowH - 3;
+            g.fill(listX, y, listX + listW, y + rowH - 3,
+                    selected ? 0xF02A2528 : hovered ? 0xE5212529 : 0xD8171A1D);
+            g.fill(listX, y, listX + (selected ? 4 : 3), y + rowH - 3, accent);
+            if (selected) SiegeTheme.focusCorners(g, listX, y, listW, rowH - 3, accent);
 
-            String code = entry.code();
-            g.drawString(font, code, x + 9, y + 6, accent, false);
-            int titleX = x + 9 + Math.max(30, font.width(code) + 9);
-            g.drawString(font, font.plainSubstrByWidth(entry.title(), Math.max(1, w - (titleX - x) - 80)),
+            g.drawString(font, entry.code(), listX + 9, y + 6, accent, false);
+            int titleX = listX + 44;
+            String priority = SiegeDiagnosticReport.priorityLabel(entry.severity(), spanish());
+            int priorityW = font.width(priority);
+            g.drawString(font, fit(entry.title(), Math.max(24, listW - 57 - priorityW)),
                     titleX, y + 6, SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
-            String state = severityLabel(entry.severity());
-            g.drawString(font, state, x + w - 8 - font.width(state), y + 6, accent, false);
-            g.drawString(font, font.plainSubstrByWidth(entry.detail(), Math.max(1, w - 18)),
-                    x + 9, y + 18, SiegeTheme.MUTED, false);
+            g.drawString(font, priority, listX + listW - 8 - priorityW, y + 6, accent, false);
+            g.drawString(font, fit(entry.detail(), Math.max(1, listW - 18)), listX + 9, y + 20, SiegeTheme.MUTED, false);
         }
         g.disableScissor();
 
         if (scrollMax > 0) {
             int trackH = viewportBottom - viewportTop;
-            int thumbH = Math.max(12, trackH * trackH / Math.max(trackH, trackH + scrollMax));
+            int thumbH = SiegeUiLayout.scrollThumb(trackH, trackH + scrollMax);
             int thumbY = viewportTop + (trackH - thumbH) * scrollOffset / Math.max(1, scrollMax);
-            g.fill(x + w - 3, viewportTop, x + w, viewportBottom, 0xFF252A2E);
-            g.fill(x + w - 3, thumbY, x + w, thumbY + thumbH, SiegeRuntimeStatus.healthAccent());
+            g.fill(listX + listW - 3, viewportTop, listX + listW, viewportBottom, 0xFF252A2E);
+            g.fill(listX + listW - 3, thumbY, listX + listW, thumbY + thumbH, SiegeRuntimeStatus.healthAccent());
         }
     }
 
-    private String severityLabel(SiegeDiagnosticReport.Severity severity) {
-        return switch (severity) {
-            case OK -> "OK";
-            case NOTICE -> label("INFO", "INFO");
-            case WARNING -> label("REVISAR", "CHECK");
-            case ERROR -> label("ERROR", "ERROR");
-        };
+    private void renderSelectedDetail(GuiGraphics g) {
+        SiegeDiagnosticReport.Entry entry = selectedEntry();
+        if (entry == null || detailW < 120) return;
+        int accent = SiegeDiagnosticReport.accent(entry.severity());
+        int h = viewportBottom - viewportTop;
+        SiegeTheme.panel(g, detailX, viewportTop, detailW, h, accent);
+        int x = detailX + 11;
+        int y = viewportTop + 10;
+        int w = detailW - 22;
+        g.drawString(font, entry.code() + " // " + fit(entry.title(), Math.max(30, w - 54)), x, y, SiegeTheme.INK, false);
+        String priority = SiegeDiagnosticReport.priorityLabel(entry.severity(), spanish());
+        g.drawString(font, priority, detailX + detailW - 11 - font.width(priority), y, accent, false);
+        y += 15;
+        SiegeTheme.divider(g, x, y, w, accent);
+        y += 8;
+        y = drawBlock(g, label("ESTADO", "STATE"), entry.detail(), x, y, w, viewportBottom - 12, accent);
+        y = drawBlock(g, label("IMPACTO", "IMPACT"), entry.impact(), x, y + 4, w, viewportBottom - 12, SiegeTheme.GOLD);
+        drawBlock(g, label("RECOMENDACIÓN", "RECOMMENDATION"), entry.recommendation(), x, y + 4, w,
+                viewportBottom - 12, SiegeTheme.CYAN);
+    }
+
+    private int drawBlock(GuiGraphics g, String title, String body, int x, int y, int w, int bottom, int accent) {
+        if (y + font.lineHeight > bottom) return y;
+        g.drawString(font, title, x, y, accent, false);
+        y += 12;
+        for (FormattedCharSequence line : font.split(Component.literal(body), Math.max(32, w))) {
+            if (y + font.lineHeight > bottom) break;
+            g.drawString(font, line, x, y, SiegeTheme.MUTED, false);
+            y += font.lineHeight + 2;
+        }
+        return y;
+    }
+
+    @Override
+    public boolean mouseClicked(double x, double y, int button) {
+        if (button == 0 && x >= listX && x < listX + listW && y >= viewportTop && y < viewportBottom) {
+            int rowH = compact ? 34 : 39;
+            int index = ((int)y - viewportTop + scrollOffset) / rowH;
+            if (index >= 0 && index < SiegeDiagnosticReport.entries(spanish()).size()) {
+                if (selectedIndex != index) SiegeUiSounds.selection();
+                selectedIndex = index;
+                refreshButtons();
+                return true;
+            }
+        }
+        return super.mouseClicked(x, y, button);
     }
 
     @Override
     public boolean mouseScrolled(double x, double y, double delta) {
-        if (delta != 0.0D && y >= viewportTop && y < viewportBottom) {
-            scrollOffset = Math.max(0, Math.min(scrollMax, scrollOffset - (int)Math.round(delta * (compact ? 28 : 32))));
+        if (delta != 0.0D && x >= listX && x < listX + listW && y >= viewportTop && y < viewportBottom) {
+            scrollOffset = SiegeUiLayout.clampScroll(scrollOffset - (int)Math.round(delta * (compact ? 30 : 36)), scrollMax);
             return true;
         }
         return super.mouseScrolled(x, y, delta);
+    }
+
+    private String recoveryLabel(SiegeDiagnosticReport.Recovery recovery) {
+        return switch (recovery) {
+            case RESTORE_MUSIC_VOLUME -> label("RESTAURAR MÚSICA", "RESTORE MUSIC");
+            case RESTORE_UI_VOLUME -> label("RESTAURAR EFECTOS", "RESTORE EFFECTS");
+            case DISABLE_INTERFERENCE -> label("PROTEGER DESTELLOS", "PROTECT FLASHES");
+            case PERFORMANCE_SAFE -> label("OPTIMIZAR RENDIMIENTO", "OPTIMIZE PERFORMANCE");
+            case ALIGN_NEAREST_PROFILE -> label("ALINEAR PERFIL", "ALIGN PROFILE");
+            case ENABLE_AUTO_CONTRAST -> label("ACTIVAR CONTRASTE AUTO", "ENABLE AUTO CONTRAST");
+            case NONE -> label("SIN REPARACIÓN", "NO REPAIR");
+        };
+    }
+
+    private String fit(String text, int width) {
+        if (font.width(text) <= width) return text;
+        return font.plainSubstrByWidth(text, Math.max(1, width - font.width("…"))) + "…";
     }
 
     private boolean spanish() {
@@ -195,6 +294,5 @@ public final class SiegeDiagnosticsScreen extends Screen {
         minecraft.setScreen(parent);
     }
 
-    @Override
-    public boolean isPauseScreen() { return false; }
+    @Override public boolean isPauseScreen() { return false; }
 }

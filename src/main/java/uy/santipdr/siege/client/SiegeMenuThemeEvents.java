@@ -20,8 +20,8 @@ import net.minecraftforge.fml.common.Mod;
 import uy.santipdr.siege.SiegeMod;
 
 /**
- * Applies SIEGE visual/audio language to approved vanilla title-menu flows while
- * retaining Minecraft's original validation, option state and navigation logic.
+ * Applies the common 1.25 SIEGE presentation layer to owned and approved native
+ * menu flows while Minecraft retains validation, state and navigation logic.
  */
 @Mod.EventBusSubscriber(modid = SiegeMod.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class SiegeMenuThemeEvents {
@@ -34,9 +34,9 @@ public final class SiegeMenuThemeEvents {
 
     private static boolean owned(Screen s) {
         return s instanceof SiegeTitleScreen || s instanceof SiegeMultiplayerScreen
-                || s instanceof SiegeSettingsScreen || s instanceof SiegeSystemScreen || s instanceof IntelScreenV3
-                || s instanceof SiegeArchiveScreen || s instanceof IntelPortraitScreen || s instanceof SiegeSceneScreen
-                || s instanceof SiegeGuideScreen || s instanceof SiegeGuideImageScreen;
+                || s instanceof SiegeSettingsScreen || s instanceof SiegeSystemScreen || s instanceof SiegeDiagnosticsScreen
+                || s instanceof IntelScreenV3 || s instanceof SiegeArchiveScreen || s instanceof IntelPortraitScreen
+                || s instanceof SiegeSceneScreen || s instanceof SiegeGuideScreen || s instanceof SiegeGuideImageScreen;
     }
 
     private static boolean nativeDialog(Screen s) {
@@ -100,11 +100,10 @@ public final class SiegeMenuThemeEvents {
                         SiegeUiSounds.click();
                         Minecraft.getInstance().setScreen(new SiegeSystemScreen(screen));
                     }, SiegeClientProfile.accent(profile)).withIcon("shield").setCompactCenter(true);
-            if (screen.width >= 430)
-                system.withBadge(SiegeClientProfile.shortLabel(profile, spanish()));
+            if (screen.width >= 430) system.withBadge(SiegeClientProfile.shortLabel(profile, spanish()));
             system.setTooltip(Tooltip.create(Component.literal(label(
-                    "Centro de comando: perfiles completos, diagnóstico, compatibilidad y accesibilidad del cliente.",
-                    "Command center: complete profiles, diagnostics, compatibility and client accessibility."))));
+                    "Centro de comando: perfiles, prioridades, diagnóstico y salud del cliente.",
+                    "Command center: profiles, priorities, diagnostics and client health."))));
             event.addListener(system);
         }
 
@@ -201,8 +200,8 @@ public final class SiegeMenuThemeEvents {
             }
         }
 
-        renderBuildTag(screen, g);
-        SiegeCommandStrip.render(screen, g);
+        SiegeScreenChrome.renderOverlay(screen, g);
+        if (!(screen instanceof SiegeTitleScreen)) SiegeCommandStrip.render(screen, g);
 
         if (transitionScreen != screen) {
             transitionScreen = screen;
@@ -216,28 +215,6 @@ public final class SiegeMenuThemeEvents {
             g.fill(0, 0, screen.width, screen.height, alpha << 24);
             g.pose().popPose();
         }
-    }
-
-    private static void renderBuildTag(Screen screen, GuiGraphics g) {
-        if (!(screen instanceof SiegeTitleScreen) || !SiegeConfig.showBuildLabel || screen.width < 300) return;
-        SiegeClientProfile.Profile profile = SiegeRuntimeStatus.profile();
-        String text = "BUILD " + version() + " // " + SiegeClientProfile.shortLabel(profile, spanish());
-        var font = Minecraft.getInstance().font;
-        float scale = 0.68F;
-        int textWidth = Math.round(font.width(text) * scale);
-        int boxW = textWidth + 11;
-        int boxH = 11;
-        int x = 6;
-        int y = screen.height - boxH - 3;
-        int accent = SiegeClientProfile.accent(profile);
-
-        g.fill(x, y, x + boxW, y + boxH, SiegeConfig.highContrast ? 0xED131315 : 0xD0131315);
-        g.fill(x, y, x + 2, y + boxH, accent);
-        g.pose().pushPose();
-        g.pose().translate(x + 5.0F, y + 2.0F, 0.0F);
-        g.pose().scale(scale, scale, 1.0F);
-        g.drawString(font, text, 0, 0, SiegeConfig.highContrast ? 0xFFDCE1E4 : 0xFF9CA4AA, false);
-        g.pose().popPose();
     }
 
     private static String version() { return SiegeRuntimeStatus.version(); }

@@ -44,7 +44,6 @@ public final class IntelScreenV3 extends Screen {
     private int thumbTop, thumbHeight, scrollGrab;
     private int pointerX, pointerY;
     private String bodyCacheKey, summaryCacheKey;
-    private final java.util.Map<String, ResourceLocation> textures = new java.util.HashMap<>();
     private List<DetailLine> bodyCache = List.of();
     private List<FormattedCharSequence> summaryCache = List.of();
     private int summaryScroll, summaryMax, summaryX, summaryTop, summaryRight, summaryBottom;
@@ -267,7 +266,7 @@ public final class IntelScreenV3 extends Screen {
     private void setCategory(String value) {
         if (category.equals(value)) return;
         entryChangedAt = System.currentTimeMillis();
-        SiegeUiSounds.click();
+        SiegeUiSounds.category();
         rememberSelection();
         category = value;
         selected = 0;
@@ -368,7 +367,7 @@ public final class IntelScreenV3 extends Screen {
 
     private void selectEntry(int index) {
         if (index == selected) return;
-        SiegeUiSounds.click();
+        SiegeUiSounds.selection();
         selected = index;
         entryChangedAt = System.currentTimeMillis();
         detailScroll = 0;
@@ -379,7 +378,7 @@ public final class IntelScreenV3 extends Screen {
     private void stepEntry(int direction) {
         List<IntelEntry> files = filtered();
         if (files.size() < 2) return;
-        SiegeUiSounds.click();
+        SiegeUiSounds.selection();
         selected = Math.floorMod(selected + direction, files.size());
         entryChangedAt = System.currentTimeMillis();
         detailScroll = 0;
@@ -848,16 +847,16 @@ public final class IntelScreenV3 extends Screen {
     }
 
     private int bossFrame(IntelEntry entry) {
-        if (!entry.category().equals("BOSS") || !SiegeConfig.animatedIntel || SiegeConfig.reducedMotion) return 0;
+        if (!entry.category().equals("BOSS") || !SiegeConfig.animatedIntel || SiegeConfig.reducedMotion || SiegeConfig.reduceFlashes) return 0;
         return Math.floorMod((int) (Math.max(0, System.currentTimeMillis() - entryChangedAt) / 450L), BOSS_FRAME_COUNT);
     }
 
     private ResourceLocation portraitTexture(IntelEntry entry, int frame) {
         String image = entry.image();
-        if (entry.category().equals("BOSS")) {
+        if (entry.category().equals("BOSS") && image != null && image.matches(".*[0-9]{2}$")) {
             image = image.substring(0, image.length() - 2) + String.format("%02d", frame);
         }
-        return textures.computeIfAbsent(image, key -> new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/intel/" + key + ".png"));
+        return SiegePortraits.resolve(image);
     }
 
     private String categoryFullName(String value) {

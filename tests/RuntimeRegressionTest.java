@@ -17,7 +17,7 @@ public class RuntimeRegressionTest {
         sourceBackedDvnContract();
         existingIntelContract();
         resourceContract();
-        System.out.println("Audio recovery, SIEGE 1.20 Intel, DVN references and decodable image resources passed");
+        System.out.println("Audio recovery, SIEGE 1.25 Intel, DVN references and decodable 16:9 image resources passed");
     }
 
     private static void previewClockContract() {
@@ -136,8 +136,12 @@ public class RuntimeRegressionTest {
             decodeImage(image);
             if (entry.category().equals("BOSS") && entry.image().endsWith("frame_00")) {
                 String framePrefix = entry.image().substring(0, entry.image().length() - 2);
+                int expectedWidth = -1, expectedHeight = -1;
                 for (int frame = 0; frame < 6; frame++) {
-                    decodeImage(Path.of("src/main/resources/assets/siege/textures/gui/intel/" + framePrefix + String.format("%02d", frame) + ".png"));
+                    int[] size = decodeImage(Path.of("src/main/resources/assets/siege/textures/gui/intel/" + framePrefix + String.format("%02d", frame) + ".png"));
+                    if (frame == 0) { expectedWidth = size[0]; expectedHeight = size[1]; }
+                    else check(size[0] == expectedWidth && size[1] == expectedHeight,
+                            "Boss animation frame dimensions changed inside one dossier: " + entry.code());
                 }
             }
             check(!entry.text(true).advisory().isBlank() && !entry.text(false).advisory().isBlank(), "Missing advisory " + entry.code());
@@ -150,12 +154,18 @@ public class RuntimeRegressionTest {
         } catch (UnsupportedOperationException expected) { }
     }
 
-    private static void decodeImage(Path image) {
+    private static int[] decodeImage(Path image) {
         check(Files.isRegularFile(image), "Missing image " + image);
         try {
             var decoded = ImageIO.read(image.toFile());
             check(decoded != null, "Unreadable image " + image);
-            check(decoded.getWidth() > 0 && decoded.getHeight() > 0, "Invalid image dimensions " + image);
+            int width = decoded.getWidth(), height = decoded.getHeight();
+            check(width >= 320 && height >= 180, "Image below Intel minimum resolution " + image + " -> " + width + "x" + height);
+            check(width <= 4096 && height <= 4096, "Image exceeds safe Intel bounds " + image + " -> " + width + "x" + height);
+            double ratio = width / (double)height;
+            check(Math.abs(ratio - (16.0 / 9.0)) < 0.025,
+                    "Intel image must remain 16:9 " + image + " -> " + width + "x" + height);
+            return new int[]{width, height};
         } catch (IOException error) {
             throw new AssertionError("Corrupt image " + image + ": " + error.getMessage(), error);
         }
