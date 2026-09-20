@@ -3,13 +3,20 @@
 ## Intel
 - Abrir Intel en 1280×720 GUI 2 y 1920×1080 GUI 3.
 - Confirmar categoría **DESCONOCIDO / UNKNOWN** visible sin solapes.
-- Confirmar que contiene Engineer, Informant, Grappler, Tranquilizer, Skydiver y Skyliner.
-- Confirmar que Agitator sigue en Tank.
-- Confirmar que Sparta sigue en Boss.
-- Confirmar Fauna, Cerberus y Proteus en Elite.
-- Confirmar Sauron y Hedalus en Super Unit.
-- Abrir cada una de las tropas anteriores y comprobar que nunca aparece la textura morada/negra de Minecraft.
-- Confirmar placeholder de dossier y texto **SIN REGISTRO VISUAL / NO VISUAL RECORD**.
+- Confirmar que Desconocido contiene únicamente Grappler, Skydiver y Skyliner.
+- Confirmar Engineer, Informant y Tranquilizer dentro de **Advanced**.
+- Confirmar Agitator dentro de Tank.
+- Confirmar Sparta y Proteus dentro de Boss.
+- Confirmar Fauna y Cerberus dentro de Elite.
+- Confirmar Sauron y Hedalus dentro de Super Unit.
+- Revisar Engineer: 150 HP, pistola/llave, Sentry y Teleporter.
+- Revisar Informant: 155 HP, H94 Rifle, granadas y descripción visual DVN.
+- Revisar Tranquilizer: 100 HP, Dart Rifle, máscara de gas y contexto Epilogue/Hell.
+- Revisar Agitator: 300 HP, unidad mecánica/blindada y tanque de combustible vulnerable.
+- Revisar Sparta: Khanblades, jetpack, stomp y cadenas de cortes.
+- Revisar Proteus: Spectral Shotgun, Hivelink, Cloning/Spectral Leap y aviso explícito de desarrollo activo.
+- Abrir todas las tropas nuevas y comprobar que nunca aparece la textura morada/negra de Minecraft.
+- Confirmar placeholder documental válido cuando no exista asset local verificado.
 - Probar AMPLIAR sobre un placeholder y comprobar que sigue siendo un documento válido.
 - Probar búsqueda dentro de Desconocido y contadores `UNK`.
 
@@ -32,3 +39,4 @@
 - No reaparecen Favoritos, Índice, Guardar ni Copiar en Intel.
 - No aparecen nuevos atajos SIEGE.
 - Música, fondos y navegación principal siguen funcionando.
+- Ningún dato de una wiki/fangame se presenta como definitivo cuando la fuente indica que sigue en desarrollo.
