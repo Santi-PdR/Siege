@@ -67,17 +67,17 @@ public final class SiegeProfileMetrics {
     private static Expected expected(SiegeClientProfile.Profile profile) {
         return switch (profile) {
             case CINEMATIC -> new Expected(false, SiegeConfig.Graphics.CINEMATIC, false, false, false,
-                    true, true, true, true, true, true, true, true, true, 18, 58);
+                    true, true, true, true, true, true, true, true, true, true, 18, 58);
             case TACTICAL -> new Expected(false, SiegeConfig.Graphics.BALANCED, false, false, false,
-                    true, true, true, true, false, true, true, true, true, 30, 72);
+                    true, true, true, true, false, true, true, true, true, true, 30, 72);
             case PERFORMANCE -> new Expected(false, SiegeConfig.Graphics.PERFORMANCE, true, true, false,
-                    false, false, false, false, false, false, true, false, false, 38, 78);
+                    false, false, false, false, false, false, true, false, false, false, 38, 78);
             case CALM -> new Expected(false, SiegeConfig.Graphics.BALANCED, true, true, true,
-                    false, false, false, false, false, false, true, false, false, 42, 84);
+                    false, false, false, false, false, false, true, false, false, false, 42, 84);
             case READING -> new Expected(true, SiegeConfig.Graphics.BALANCED, true, true, true,
-                    false, false, false, false, false, false, false, false, false, 48, 88);
+                    false, false, false, false, false, false, false, false, false, false, 48, 88);
             default -> new Expected(false, SiegeConfig.Graphics.BALANCED, false, false, false,
-                    true, true, true, true, false, true, true, true, true, 30, 72);
+                    true, true, true, true, false, true, true, true, true, true, 30, 72);
         };
     }
 
