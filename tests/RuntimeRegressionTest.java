@@ -72,8 +72,8 @@ public class RuntimeRegressionTest {
                 && agreement.text(false).origin().equals("Secure Contain Protect Corporation"), "Agreement affiliation changed");
         check(agreement.text(true).status().contains("OFICIAL") && agreement.text(false).status().contains("OFFICIAL"),
                 "Agreement must be presented as an official partial dossier");
-        check(IntelPresentation.completeness(agreement, agreement.text(true)) == 50, "Agreement official completeness");
-        check(IntelPresentation.coverageGrade(agreement, agreement.text(true)).equals("C"), "Agreement coverage grade");
+        check(IntelPresentation.completeness(agreement, agreement.text(true)) == 67, "Agreement official completeness");
+        check(IntelPresentation.coverageGrade(agreement, agreement.text(true)).equals("B"), "Agreement coverage grade");
         check(!AgreementReport.applies(agreement), "Field report must never apply to an official dossier");
         for (boolean es : new boolean[]{true, false}) {
             var text = agreement.text(es);
