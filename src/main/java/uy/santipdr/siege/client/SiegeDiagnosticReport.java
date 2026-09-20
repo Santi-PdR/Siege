@@ -42,7 +42,7 @@ public final class SiegeDiagnosticReport {
                 "Restaurá un nivel audible o desactivá el canal.", "Restore an audible level or disable the channel.",
                 Severity.WARNING, Recovery.RESTORE_MUSIC_VOLUME));
         else out.add(e("MUS", spanish, "MÚSICA", "MUSIC",
-                SiegeRuntimeStatus.audioLabel(spanish), SiegeRuntimeStatus.audioLabel(spanish),
+                SiegeRuntimeStatus.audioLabel(spanish), SiegeRuntimeStatus.audioLabel(false),
                 "El canal de música responde a la configuración actual.", "The music channel follows the current configuration.",
                 "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
 
@@ -52,7 +52,7 @@ public final class SiegeDiagnosticReport {
                 "Restaurá un nivel audible o desactivá los efectos.", "Restore an audible level or disable effects.",
                 Severity.NOTICE, Recovery.RESTORE_UI_VOLUME));
         else out.add(e("SFX", spanish, "EFECTOS UI", "UI EFFECTS",
-                SiegeConfig.uiSounds ? (spanish ? "CANAL ACTIVO" : "CHANNEL ACTIVE") : (spanish ? "CANAL DESACTIVADO" : "CHANNEL OFF"),
+                SiegeConfig.uiSounds ? "CANAL ACTIVO" : "CANAL DESACTIVADO",
                 SiegeConfig.uiSounds ? "CHANNEL ACTIVE" : "CHANNEL OFF",
                 "El estado coincide con la preferencia actual.", "State matches the current preference.",
                 "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
@@ -66,7 +66,7 @@ public final class SiegeDiagnosticReport {
                 "Desactivá la interferencia y llevá su intensidad a 0%.", "Disable interference and set its intensity to 0%.",
                 Severity.WARNING, Recovery.DISABLE_INTERFERENCE));
         else out.add(e("VIS", spanish, "EFECTOS VISUALES", "VISUAL EFFECTS",
-                spanish ? "EFECTOS COHERENTES" : "EFFECTS COHERENT", "EFFECTS COHERENT",
+                "EFECTOS COHERENTES", "EFFECTS COHERENT",
                 "No hay conflicto entre movimiento, destellos e interferencia.", "Motion, flash and interference settings do not conflict.",
                 "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
 
@@ -83,27 +83,28 @@ public final class SiegeDiagnosticReport {
                 Severity.WARNING, Recovery.PERFORMANCE_SAFE));
         else out.add(e("GPU", spanish, "RENDER", "RENDER",
                 SiegeRuntimeStatus.renderBackend(), SiegeRuntimeStatus.renderBackend(),
-                spanish ? "Backend detectado: " + SiegeRuntimeStatus.renderBackend() : "Detected backend: " + SiegeRuntimeStatus.renderBackend(),
-                "Detected backend: " + SiegeRuntimeStatus.renderBackend(), "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
+                "Backend detectado: " + SiegeRuntimeStatus.renderBackend(),
+                "Detected backend: " + SiegeRuntimeStatus.renderBackend(),
+                "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
 
         SiegeClientProfile.Profile active = SiegeClientProfile.detect();
         if (active == SiegeClientProfile.Profile.CUSTOM) {
             SiegeClientProfile.Profile nearest = SiegeProfileMetrics.nearest();
             int fit = SiegeProfileMetrics.fitPercent(nearest);
+            int distance = SiegeProfileMetrics.distance(nearest);
+            int fields = SiegeProfileMetrics.fieldCount();
             out.add(e("PRF", spanish, "PERFIL", "PROFILE",
-                    (spanish ? "PERSONALIZADO · MÁS CERCANO: " : "CUSTOM · NEAREST: ")
-                            + SiegeClientProfile.label(nearest, spanish) + " " + fit + "%",
+                    "PERSONALIZADO · MÁS CERCANO: " + SiegeClientProfile.label(nearest, true) + " " + fit + "%",
                     "CUSTOM · NEAREST: " + SiegeClientProfile.label(nearest, false) + " " + fit + "%",
-                    spanish ? "La mezcla manual difiere en " + SiegeProfileMetrics.distance(nearest) + " de " + SiegeProfileMetrics.fieldCount() + " campos."
-                            : "The manual mix differs in " + SiegeProfileMetrics.distance(nearest) + " of " + SiegeProfileMetrics.fieldCount() + " fields.",
-                    "The manual mix differs from a complete preset.",
-                    spanish ? "Podés conservarla o alinear explícitamente al perfil más cercano."
-                            : "Keep it or explicitly align to the nearest complete profile.",
+                    "La mezcla manual difiere en " + distance + " de " + fields + " campos.",
+                    "The manual mix differs in " + distance + " of " + fields + " fields.",
+                    "Podés conservarla o alinear explícitamente al perfil más cercano.",
+                    "Keep it or explicitly align to the nearest complete profile.",
                     Severity.NOTICE, Recovery.ALIGN_NEAREST_PROFILE));
         } else out.add(e("PRF", spanish, "PERFIL", "PROFILE",
-                SiegeClientProfile.label(active, spanish) + " · 100%", SiegeClientProfile.label(active, false) + " · 100%",
-                spanish ? "Todos los campos del perfil coinciden con su contrato." : "Every profile field matches its contract.",
-                "Every profile field matches its contract.", "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
+                SiegeClientProfile.label(active, true) + " · 100%", SiegeClientProfile.label(active, false) + " · 100%",
+                "Todos los campos del perfil coinciden con su contrato.", "Every profile field matches its contract.",
+                "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
 
         if (!SiegeConfig.autoContrast && !SiegeConfig.highContrast) out.add(e("CON", spanish,
                 "CONTRASTE", "CONTRAST", "Contraste automático desactivado.", "Automatic contrast is disabled.",
@@ -112,21 +113,21 @@ public final class SiegeDiagnosticReport {
                 "Enable automatic contrast to enforce readability minimums without changing the background.",
                 Severity.NOTICE, Recovery.ENABLE_AUTO_CONTRAST));
         else out.add(e("CON", spanish, "CONTRASTE", "CONTRAST",
-                SiegeConfig.highContrast ? (spanish ? "ALTO CONTRASTE" : "HIGH CONTRAST") : (spanish ? "CONTRASTE AUTOMÁTICO" : "AUTO CONTRAST"),
+                SiegeConfig.highContrast ? "ALTO CONTRASTE" : "CONTRASTE AUTOMÁTICO",
                 SiegeConfig.highContrast ? "HIGH CONTRAST" : "AUTO CONTRAST",
-                spanish ? "La capa de lectura mantiene mínimos de contraste." : "The reading layer maintains contrast minimums.",
-                "The reading layer maintains contrast minimums.", "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
+                "La capa de lectura mantiene mínimos de contraste.", "The reading layer maintains contrast minimums.",
+                "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
 
-        out.add(e("INT", spanish, "INTEL", "INTEL", SiegeRuntimeStatus.intelLabel(spanish), SiegeRuntimeStatus.intelLabel(false),
-                spanish ? "El catálogo y sus categorías están disponibles para consulta." : "The catalog and its categories are available for review.",
-                "The catalog and its categories are available for review.", "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
-        out.add(e("BG", spanish, "FONDOS", "BACKGROUNDS", SiegeRuntimeStatus.backgroundLabel(spanish), SiegeRuntimeStatus.backgroundLabel(false),
-                spanish ? "Oscuridad efectiva: " + SiegeBackgrounds.effectiveBackgroundDarkness() + "% · panel " + SiegeBackgrounds.effectivePanelDarkness() + "%"
-                        : "Effective darkness: " + SiegeBackgrounds.effectiveBackgroundDarkness() + "% · panel " + SiegeBackgrounds.effectivePanelDarkness() + "%",
-                "Effective background and panel darkness are bounded for readability.", "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
-        out.add(e("ACC", spanish, "ACCESIBILIDAD", "ACCESSIBILITY", SiegeRuntimeStatus.accessibilityLabel(spanish), SiegeRuntimeStatus.accessibilityLabel(false),
-                spanish ? "Las garantías de destellos tienen prioridad sobre efectos decorativos." : "Flash safeguards take priority over decorative effects.",
-                "Flash safeguards take priority over decorative effects.", "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
+        out.add(e("INT", spanish, "INTEL", "INTEL", SiegeRuntimeStatus.intelLabel(true), SiegeRuntimeStatus.intelLabel(false),
+                "El catálogo y sus categorías están disponibles para consulta.", "The catalog and its categories are available for review.",
+                "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
+        out.add(e("BG", spanish, "FONDOS", "BACKGROUNDS", SiegeRuntimeStatus.backgroundLabel(true), SiegeRuntimeStatus.backgroundLabel(false),
+                "Oscuridad efectiva: " + SiegeBackgrounds.effectiveBackgroundDarkness() + "% · panel " + SiegeBackgrounds.effectivePanelDarkness() + "%",
+                "Effective darkness: " + SiegeBackgrounds.effectiveBackgroundDarkness() + "% · panel " + SiegeBackgrounds.effectivePanelDarkness() + "%",
+                "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
+        out.add(e("ACC", spanish, "ACCESIBILIDAD", "ACCESSIBILITY", SiegeRuntimeStatus.accessibilityLabel(true), SiegeRuntimeStatus.accessibilityLabel(false),
+                "Las garantías de destellos tienen prioridad sobre efectos decorativos.", "Flash safeguards take priority over decorative effects.",
+                "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
         return List.copyOf(out);
     }
 
