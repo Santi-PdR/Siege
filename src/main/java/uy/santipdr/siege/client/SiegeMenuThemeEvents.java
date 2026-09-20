@@ -6,22 +6,21 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.ConfirmScreen;
-import net.minecraft.client.gui.screens.ConnectScreen;
-import net.minecraft.client.gui.screens.DisconnectedScreen;
-import net.minecraft.client.gui.screens.EditServerScreen;
-import net.minecraft.client.gui.screens.DirectJoinServerScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.event.RenderTooltipEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import uy.santipdr.siege.SiegeMod;
 
-/** Skin native network dialogs in place, retaining their validation, cancellation and text. */
+/**
+ * Applies SIEGE visual/audio language to approved vanilla title-menu flows while
+ * retaining Minecraft's original validation, option state and navigation logic.
+ */
 @Mod.EventBusSubscriber(modid = SiegeMod.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class SiegeMenuThemeEvents {
     private static Screen confirmedDialog;
@@ -38,10 +37,12 @@ public final class SiegeMenuThemeEvents {
                 || s instanceof IntelPortraitScreen || s instanceof SiegeSceneScreen
                 || s instanceof SiegeGuideScreen || s instanceof SiegeGuideImageScreen;
     }
+
     private static boolean nativeDialog(Screen s) {
         if (s == null) return false;
         return SiegeMenuPolicy.nativeDialog(s.getClass().getName(), Minecraft.getInstance().level != null, s == confirmedDialog);
     }
+
     private static boolean themed(Screen s) {
         return Minecraft.getInstance().level == null && (owned(s) || nativeDialog(s));
     }
@@ -64,9 +65,10 @@ public final class SiegeMenuThemeEvents {
         if (!nativeDialog(screen)) return;
         boundScreen = screen;
         buttons.clear();
+        int accent = SiegeVanillaChrome.accent(screen);
         for (var listener : List.copyOf(event.getListenersList())) {
             if (listener instanceof AbstractButton original && !(original instanceof SiegeButton)) {
-                NativeButton replacement = new NativeButton(original);
+                NativeButton replacement = new NativeButton(original, accent);
                 boolean focused = screen.getFocused() == original;
                 event.removeListener(original);
                 event.addListener(replacement);
@@ -83,16 +85,7 @@ public final class SiegeMenuThemeEvents {
     public static void background(ScreenEvent.BackgroundRendered event) {
         Screen screen = event.getScreen();
         if (!nativeDialog(screen)) return;
-        GuiGraphics g = event.getGuiGraphics();
-        SiegeBackgrounds.render(g, screen.width, screen.height, System.currentTimeMillis());
-        g.fill(0, 0, screen.width, screen.height, 0xAD080809);
-        int margin = Math.max(8, (screen.width - 720) / 2);
-        SiegeTheme.panel(g, margin, 8, screen.width - margin * 2, screen.height - 16, SiegeTheme.RED);
-        // Only perimeter ornament: native titles, errors and validation keep all their space.
-        if (screen.width >= 520) {
-            SiegeTheme.icon(g, margin + 10, screen.height - 29,
-                    screen instanceof ConnectScreen ? "connect" : "intel", SiegeTheme.MUTED);
-        }
+        SiegeVanillaChrome.renderBackground(screen, event.getGuiGraphics());
     }
 
     @SubscribeEvent
@@ -111,14 +104,20 @@ public final class SiegeMenuThemeEvents {
         if (!themed(screen)) return;
         GuiGraphics g = event.getGuiGraphics();
 
-        for (var child : screen.children()) if (child instanceof EditBox field && field.visible) {
-            int color = field.isFocused() ? SiegeTheme.FOCUS : 0xFF656061;
-            SiegeTheme.frame(g, field.getX() - 1, field.getY() - 1, field.getWidth() + 2, field.getHeight() + 2, color);
-            if (field.isFocused())
-                SiegeTheme.focusCorners(g, field.getX() - 1, field.getY() - 1, field.getWidth() + 2, field.getHeight() + 2, color);
+        if (nativeDialog(screen)) {
+            SiegeVanillaChrome.decorateWidgets(screen, g);
+            SiegeUiSounds.updateHover(screen.children());
+            SiegeVanillaChrome.renderOverlay(screen, g);
+        } else {
+            // SIEGE-owned screens still get consistent focused text-field treatment.
+            for (var child : screen.children()) if (child instanceof EditBox field && field.visible) {
+                int color = field.isFocused() ? SiegeTheme.FOCUS : 0xFF656061;
+                SiegeTheme.frame(g, field.getX() - 1, field.getY() - 1, field.getWidth() + 2, field.getHeight() + 2, color);
+                if (field.isFocused())
+                    SiegeTheme.focusCorners(g, field.getX() - 1, field.getY() - 1, field.getWidth() + 2, field.getHeight() + 2, color);
+            }
         }
 
-        if (nativeDialog(screen)) SiegeUiSounds.updateHover(screen.children());
         renderBuildTag(screen, g);
 
         if (transitionScreen != screen) {
@@ -136,8 +135,6 @@ public final class SiegeMenuThemeEvents {
     }
 
     private static void renderBuildTag(Screen screen, GuiGraphics g) {
-        // Replace the legacy hard-coded title-screen label with the actual mod
-        // metadata version. It is deliberately tiny and only shown when enabled.
         if (!(screen instanceof SiegeTitleScreen) || !SiegeConfig.showBuildLabel || screen.width < 300) return;
         String text = "BUILD " + version();
         var font = Minecraft.getInstance().font;
@@ -148,8 +145,6 @@ public final class SiegeMenuThemeEvents {
         int x = 6;
         int y = screen.height - boxH - 3;
 
-        // Opaque enough to cover the obsolete label that older title code still
-        // draws underneath, but small enough not to become another information panel.
         g.fill(x, y, x + boxW, y + boxH, 0xC0131315);
         g.fill(x, y, x + 2, y + boxH, 0xB8E54852);
         g.pose().pushPose();
@@ -170,9 +165,11 @@ public final class SiegeMenuThemeEvents {
     @SubscribeEvent
     public static void tooltip(RenderTooltipEvent.Color event) {
         if (!themed(Minecraft.getInstance().screen)) return;
+        int accent = nativeDialog(Minecraft.getInstance().screen)
+                ? SiegeVanillaChrome.accent(Minecraft.getInstance().screen) : SiegeTheme.RED;
         event.setBackgroundStart(0xFA191719);
         event.setBackgroundEnd(0xFA0F1011);
-        event.setBorderStart(0xFF9B555A);
+        event.setBorderStart(accent);
         event.setBorderEnd(0xFF494346);
     }
 
@@ -193,13 +190,15 @@ public final class SiegeMenuThemeEvents {
     /** Keeps the original object alive because vanilla screen fields update it after init. */
     private static final class NativeButton extends SiegeButton {
         private final AbstractButton source;
-        NativeButton(AbstractButton source) {
-            super(source.getX(), source.getY(), source.getWidth(), source.getHeight(), source.getMessage(), b -> {}, SiegeTheme.RED);
+
+        NativeButton(AbstractButton source, int accent) {
+            super(source.getX(), source.getY(), source.getWidth(), source.getHeight(), source.getMessage(), b -> {}, accent);
             this.source = source;
             setCompactCenter(true);
             setFullHoverFrame(true);
             sync();
         }
+
         void sync() {
             active = source.active;
             visible = source.visible;
@@ -208,7 +207,9 @@ public final class SiegeMenuThemeEvents {
             setWidth(source.getWidth());
             setMessage(source.getMessage());
             setTooltip(source.getTooltip());
+            withIcon(SiegeVanillaChrome.buttonIcon(source.getMessage()));
         }
+
         @Override public void onPress() {
             sync();
             if (!active || !visible) return;
@@ -218,16 +219,19 @@ public final class SiegeMenuThemeEvents {
             else SiegeUiSounds.confirm();
             source.onPress();
         }
+
         @Override public boolean mouseClicked(double x, double y, int button) {
             sync();
             // CycleButton supports reverse cycling with the secondary mouse button.
             if (button == 1 && active && visible) return source.mouseClicked(x, y, button);
             return super.mouseClicked(x, y, button);
         }
+
         @Override public boolean mouseScrolled(double x, double y, double delta) {
             sync();
             return active && visible && source.isMouseOver(x, y) && source.mouseScrolled(x, y, delta);
         }
+
         @Override public boolean keyPressed(int key, int scan, int modifiers) {
             sync();
             return super.keyPressed(key, scan, modifiers);
