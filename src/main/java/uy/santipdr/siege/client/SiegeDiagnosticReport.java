@@ -51,13 +51,13 @@ public final class SiegeDiagnosticReport {
                 performanceConflict ? Severity.WARNING : Severity.OK));
 
         SiegeClientProfile.Profile active = SiegeClientProfile.detect();
-        SiegeClientProfile.Profile nearest = SiegeClientProfile.nearest();
-        int drift = SiegeClientProfile.distance(nearest);
-        int fit = SiegeClientProfile.fitPercent(nearest);
+        SiegeClientProfile.Profile nearest = SiegeProfileMetrics.nearest();
+        int drift = SiegeProfileMetrics.distance(nearest);
+        int fit = SiegeProfileMetrics.fitPercent(nearest);
         entries.add(new Entry("PRF", spanish ? "COHERENCIA DE PERFIL" : "PROFILE COHERENCE",
                 active == SiegeClientProfile.Profile.CUSTOM
                         ? (spanish ? "Personalizado: " : "Custom: ")
-                            + drift + "/" + SiegeClientProfile.presetSettingCount()
+                            + drift + "/" + SiegeProfileMetrics.fieldCount()
                             + (spanish ? " ajustes difieren de " : " settings differ from ")
                             + SiegeClientProfile.label(nearest, spanish) + " (" + fit + "%)."
                         : (spanish ? "Coincidencia exacta con " : "Exact match with ")
@@ -74,7 +74,7 @@ public final class SiegeDiagnosticReport {
         entries.add(new Entry("ACC", spanish ? "ACCESIBILIDAD" : "ACCESSIBILITY",
                 SiegeRuntimeStatus.accessibilityLabel(spanish), Severity.OK));
 
-        return entries;
+        return List.copyOf(entries);
     }
 
     public static int errors(boolean spanish) {
