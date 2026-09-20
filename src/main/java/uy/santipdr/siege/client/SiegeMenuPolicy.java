@@ -29,19 +29,25 @@ public final class SiegeMenuPolicy {
                  "net.minecraft.client.gui.screens.EditServerScreen",
                  "net.minecraft.client.gui.screens.DirectJoinServerScreen",
                  "net.minecraft.client.gui.screens.ReceivingLevelScreen",
-                 "net.minecraft.client.gui.screens.DownloadingTerrainScreen" -> NativeFamily.NETWORK;
+                 "net.minecraft.client.gui.screens.DownloadingTerrainScreen",
+                 "net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen" -> NativeFamily.NETWORK;
 
             // Main vanilla settings shell and small supporting screens.
             case "net.minecraft.client.gui.screens.OptionsScreen",
                  "net.minecraft.client.gui.screens.SkinCustomizationScreen",
                  "net.minecraft.client.gui.screens.AccessibilityOptionsScreen",
+                 "net.minecraft.client.gui.screens.AccessibilityOnboardingScreen",
                  "net.minecraft.client.gui.screens.OnlineOptionsScreen",
                  "net.minecraft.client.gui.screens.ChatOptionsScreen",
-                 "net.minecraft.client.gui.screens.GenericDirtMessageScreen" -> NativeFamily.SYSTEM;
+                 "net.minecraft.client.gui.screens.CreditsAndAttributionScreen",
+                 "net.minecraft.client.gui.screens.GenericDirtMessageScreen",
+                 "net.minecraft.client.gui.screens.telemetry.TelemetryInfoScreen" -> NativeFamily.SYSTEM;
 
             case "net.minecraft.client.gui.screens.SoundOptionsScreen" -> NativeFamily.AUDIO;
             case "net.minecraft.client.gui.screens.VideoSettingsScreen" -> NativeFamily.VIDEO;
-            case "net.minecraft.client.gui.screens.controls.ControlsScreen" -> NativeFamily.CONTROLS;
+            case "net.minecraft.client.gui.screens.controls.ControlsScreen",
+                 "net.minecraft.client.gui.screens.controls.KeyBindsScreen",
+                 "net.minecraft.client.gui.screens.controls.MouseSettingsScreen" -> NativeFamily.CONTROLS;
             case "net.minecraft.client.gui.screens.LanguageSelectScreen" -> NativeFamily.LANGUAGE;
             case "net.minecraft.client.gui.screens.packs.PackSelectionScreen" -> NativeFamily.PACKS;
 
