@@ -1,53 +1,66 @@
 package uy.santipdr.siege.client;
 
-import net.minecraft.SharedConstants;
+import java.util.EnumMap;
+import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.OptionsScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.fml.ModList;
-import uy.santipdr.siege.SiegeMod;
 
 /**
- * Client configuration/diagnostic center. Gameplay knowledge intentionally lives
- * under Intel, never under Settings.
+ * SIEGE 0.50 command center. It keeps gameplay knowledge in Intel while exposing
+ * client profiles, live diagnostics, compatibility state and accessibility.
  */
 public final class SiegeSystemScreen extends Screen {
     private final Screen parent;
+    private final EnumMap<SiegeClientProfile.Profile, SiegeButton> profileButtons =
+            new EnumMap<>(SiegeClientProfile.Profile.class);
     private SiegeButton contrastButton;
     private SiegeButton flashesButton;
     private int panelX, panelY, panelW, panelBottom;
+    private int contentX, contentW;
+    private int cardsTop, cardH, profileTop, profileBottom;
     private boolean compact;
 
     public SiegeSystemScreen(Screen parent) {
-        super(Component.literal("SIEGE // SYSTEM"));
+        super(Component.literal("SIEGE // COMMAND CENTER"));
         this.parent = parent;
     }
 
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
-        compact = width < 620 || height < 350;
+        profileButtons.clear();
+        compact = width < 720 || height < 410;
         int margin = compact ? 7 : 14;
-        panelW = Math.max(260, Math.min(780, width - margin * 2));
+        panelW = Math.max(260, Math.min(880, width - margin * 2));
         panelW = Math.min(panelW, Math.max(1, width - margin * 2));
         panelX = (width - panelW) / 2;
-        panelY = compact ? 35 : 48;
-        panelBottom = height - (compact ? 8 : 20);
+        panelY = compact ? 35 : 46;
+        panelBottom = height - (compact ? 8 : 18);
+        contentX = panelX + 11;
+        contentW = Math.max(1, panelW - 22);
 
         addRenderableWidget(new SiegeButton(8, 7, Math.min(86, Math.max(62, width / 6)), 19,
-                Component.literal(label("VOLVER", "BACK")), b -> onClose(), SiegeTheme.RED));
+                Component.literal(label("VOLVER", "BACK")), b -> onClose(), SiegeTheme.RED)
+                .withIcon("back"));
 
-        int controlsHeight = compact ? 69 : 79;
-        int controlsTop = Math.max(panelY + 105, panelBottom - controlsHeight);
+        cardH = compact ? 25 : 34;
+        cardsTop = panelY + (compact ? 49 : 54);
+        int cardRows = compact ? 2 : 1;
+        int cardsBottom = cardsTop + cardRows * cardH + (cardRows - 1) * 5;
+        profileTop = cardsBottom + (compact ? 11 : 14);
+
+        int rowH = compact ? 18 : 21;
         int gap = 5;
-        int rowH = compact ? 17 : 20;
-        int innerX = panelX + 10;
-        int innerW = panelW - 20;
-        int half = (innerW - gap) / 2;
+        int controlsTop = Math.max(profileTop + 58, panelBottom - (rowH * 2 + gap + 10));
+        profileBottom = controlsTop - 8;
 
-        contrastButton = addRenderableWidget(new SiegeButton(innerX, controlsTop, half, rowH,
+        initProfileButtons(rowH);
+
+        int half = (contentW - gap) / 2;
+        contrastButton = addRenderableWidget(new SiegeButton(contentX, controlsTop, half, rowH,
                 contrastLabel(), b -> {
                     SiegeConfig.highContrast = !SiegeConfig.highContrast;
                     SiegeConfig.save();
@@ -55,44 +68,68 @@ public final class SiegeSystemScreen extends Screen {
                     SiegeUiSounds.click();
                 }, SiegeTheme.CYAN).withIcon("eye"));
         contrastButton.setTooltip(Tooltip.create(Component.literal(label(
-                "Aumenta la separación visual y oscurece fondos detrás del texto.",
-                "Increases visual separation and darkens backgrounds behind text."))));
+                "Refuerza texto, marcos y fondos detrás de información importante.",
+                "Strengthens text, frames and backgrounds behind important information."))));
 
-        flashesButton = addRenderableWidget(new SiegeButton(innerX + half + gap, controlsTop, innerW - half - gap, rowH,
-                flashesLabel(), b -> {
+        flashesButton = addRenderableWidget(new SiegeButton(contentX + half + gap, controlsTop,
+                contentW - half - gap, rowH, flashesLabel(), b -> {
                     SiegeConfig.reduceFlashes = !SiegeConfig.reduceFlashes;
                     SiegeConfig.save();
                     refreshButtons();
                     SiegeUiSounds.click();
                 }, SiegeTheme.GREEN).withIcon("eye"));
         flashesButton.setTooltip(Tooltip.create(Component.literal(label(
-                "Desactiva interferencia, paneo y transiciones rápidas de SIEGE.",
-                "Disables SIEGE interference, panning and rapid transitions."))));
+                "Bloquea interferencias y cambios visuales rápidos del cliente SIEGE.",
+                "Blocks SIEGE client interference and rapid visual changes."))));
 
         int row2 = controlsTop + rowH + gap;
-        addRenderableWidget(new SiegeButton(innerX, row2, half, rowH,
-                Component.literal(label("PERFIL TRANQUILO", "CALM PRESET")), b -> {
-                    SiegeConfig.applyCalmPreset();
-                    refreshButtons();
-                    SiegeUiSounds.confirm();
-                }, SiegeTheme.BLUE).withIcon("shield"));
-        addRenderableWidget(new SiegeButton(innerX + half + gap, row2, innerW - half - gap, rowH,
-                Component.literal(label("PERFIL DE LECTURA", "READING PRESET")), b -> {
-                    SiegeConfig.applyReadingPreset();
-                    refreshButtons();
-                    SiegeUiSounds.confirm();
-                }, SiegeTheme.GOLD).withIcon("intel"));
-
-        int row3 = row2 + rowH + gap;
-        SiegeButton minecraftOptions = addRenderableWidget(new SiegeButton(innerX, row3, innerW, rowH,
-                Component.literal(label("AJUSTES DE MINECRAFT", "MINECRAFT OPTIONS")), b -> {
+        SiegeButton minecraftOptions = addRenderableWidget(new SiegeButton(contentX, row2, contentW, rowH,
+                Component.literal(label("AJUSTES NATIVOS DE MINECRAFT", "MINECRAFT NATIVE OPTIONS")), b -> {
                     SiegeUiSounds.click();
                     minecraft.setScreen(new OptionsScreen(this, minecraft.options));
                 }, SiegeTheme.ORANGE).withIcon("settings").setCompactCenter(true));
         minecraftOptions.setTooltip(Tooltip.create(Component.literal(label(
-                "Abre las opciones nativas de Minecraft tematizadas por SIEGE.",
-                "Opens Minecraft's native options themed by SIEGE."))));
+                "Abre las opciones de Minecraft con la capa visual de SIEGE sin reemplazar su lógica.",
+                "Opens Minecraft options with the SIEGE visual layer without replacing native logic."))));
 
+        refreshButtons();
+    }
+
+    private void initProfileButtons(int preferredHeight) {
+        SiegeClientProfile.Profile[] profiles = {
+                SiegeClientProfile.Profile.CINEMATIC,
+                SiegeClientProfile.Profile.TACTICAL,
+                SiegeClientProfile.Profile.PERFORMANCE,
+                SiegeClientProfile.Profile.CALM,
+                SiegeClientProfile.Profile.READING
+        };
+        int gap = 4;
+        int columns = !compact ? 5 : width < 520 ? 2 : 3;
+        int rows = (profiles.length + columns - 1) / columns;
+        int available = Math.max(rows * 15, profileBottom - profileTop - 19);
+        int h = Math.max(15, Math.min(preferredHeight, (available - gap * Math.max(0, rows - 1)) / rows));
+        int cellW = Math.max(48, (contentW - gap * (columns - 1)) / columns);
+
+        for (int i = 0; i < profiles.length; i++) {
+            SiegeClientProfile.Profile profile = profiles[i];
+            int row = i / columns;
+            int col = i % columns;
+            int x = contentX + col * (cellW + gap);
+            int w = col == columns - 1 ? contentX + contentW - x : cellW;
+            int y = profileTop + 18 + row * (h + gap);
+            SiegeButton button = new SiegeButton(x, y, w, h,
+                    Component.literal(SiegeClientProfile.label(profile, spanish())), b -> applyProfile(profile),
+                    SiegeClientProfile.accent(profile))
+                    .withIcon(SiegeClientProfile.icon(profile))
+                    .setCompactCenter(true);
+            button.setTooltip(Tooltip.create(Component.literal(SiegeClientProfile.description(profile, spanish()))));
+            profileButtons.put(profile, addRenderableWidget(button));
+        }
+    }
+
+    private void applyProfile(SiegeClientProfile.Profile profile) {
+        SiegeClientProfile.apply(profile);
+        SiegeUiSounds.confirm();
         refreshButtons();
     }
 
@@ -100,119 +137,158 @@ public final class SiegeSystemScreen extends Screen {
         if (contrastButton != null) {
             contrastButton.setMessage(contrastLabel());
             contrastButton.setSelected(SiegeConfig.highContrast);
+            contrastButton.withBadge(label(SiegeConfig.highContrast ? "SÍ" : "NO",
+                    SiegeConfig.highContrast ? "ON" : "OFF"));
         }
         if (flashesButton != null) {
             flashesButton.setMessage(flashesLabel());
             flashesButton.setSelected(SiegeConfig.reduceFlashes);
+            flashesButton.withBadge(label(SiegeConfig.reduceFlashes ? "SÍ" : "NO",
+                    SiegeConfig.reduceFlashes ? "ON" : "OFF"));
+        }
+        SiegeClientProfile.Profile active = SiegeRuntimeStatus.profile();
+        for (var entry : profileButtons.entrySet()) {
+            boolean selected = entry.getKey() == active;
+            entry.getValue().setSelected(selected);
+            entry.getValue().withBadge(selected ? label("ACTIVO", "ACTIVE") : "");
         }
     }
 
     private Component contrastLabel() {
-        return Component.literal(label("ALTO CONTRASTE: ", "HIGH CONTRAST: ")
-                + label(SiegeConfig.highContrast ? "SÍ" : "NO", SiegeConfig.highContrast ? "ON" : "OFF"));
+        return Component.literal(label("ALTO CONTRASTE", "HIGH CONTRAST"));
     }
 
     private Component flashesLabel() {
-        return Component.literal(label("REDUCIR DESTELLOS: ", "REDUCE FLASHES: ")
-                + label(SiegeConfig.reduceFlashes ? "SÍ" : "NO", SiegeConfig.reduceFlashes ? "ON" : "OFF"));
+        return Component.literal(label("REDUCIR DESTELLOS", "REDUCE FLASHES"));
     }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
-        g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xC708090B : 0xA808090B);
-        SiegeTheme.panel(g, panelX, panelY, panelW, Math.max(6, panelBottom - panelY), SiegeTheme.CYAN);
+        g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xCF08090B : 0xAD08090B);
+        int profileAccent = SiegeClientProfile.accent(SiegeRuntimeStatus.profile());
+        SiegeTheme.panel(g, panelX, panelY, panelW, Math.max(6, panelBottom - panelY), profileAccent);
 
-        int textX = panelX + 12;
-        int innerW = panelW - 24;
-        g.drawString(font, "SIEGE // 0.40 SYSTEM SETTINGS", textX, panelY + 10, SiegeTheme.CYAN, false);
-        String subtitle = label("Configuración avanzada, compatibilidad y accesibilidad del cliente.",
-                "Advanced client configuration, compatibility and accessibility.");
-        g.drawString(font, font.plainSubstrByWidth(subtitle, innerW), textX, panelY + 24, SiegeTheme.MUTED, false);
-        SiegeTheme.divider(g, textX, panelY + 38, innerW, SiegeTheme.CYAN);
-
-        int cardsTop = panelY + 48;
-        int gap = 6;
-        int cardW = compact ? innerW : (innerW - gap) / 2;
-        int cardH = compact ? 24 : 30;
-        int x2 = textX + cardW + gap;
-
-        card(g, textX, cardsTop, cardW, cardH, "BUILD", version(SiegeMod.MOD_ID), SiegeTheme.RED);
-        if (!compact) card(g, x2, cardsTop, innerW - cardW - gap, cardH,
-                "MINECRAFT / FORGE", SharedConstants.getCurrentVersion().getName() + " / " + version("forge"), SiegeTheme.ORANGE);
-
-        int row2 = cardsTop + cardH + gap;
-        card(g, textX, row2, cardW, cardH, label("RENDER", "RENDER"), renderBackend(), SiegeTheme.CYAN);
-        if (!compact) card(g, x2, row2, innerW - cardW - gap, cardH,
-                label("PERFIL GRÁFICO", "GRAPHICS PROFILE"), SiegeConfig.graphics.name(), SiegeTheme.GOLD);
-
-        int stateY = compact ? row2 + cardH + 7 : row2 + cardH + 9;
-        String config = SiegeConfig.lastSaveSucceeded ? label("CONFIG GUARDADA", "CONFIG SAVED")
-                : label("ERROR AL GUARDAR CONFIG", "CONFIG SAVE ERROR");
-        g.drawString(font, config, textX, stateY,
-                SiegeConfig.lastSaveSucceeded ? SiegeTheme.GREEN : 0xFFFF8B91, false);
-
-        int sceneY = stateY + 13;
-        String scene = label("FONDO: ", "BACKGROUND: ")
-                + SiegeBackgrounds.name(SiegeBackgrounds.currentIndex(System.currentTimeMillis()), spanish())
-                + " · " + SiegeBackgrounds.rotationState(spanish(), System.currentTimeMillis());
-        g.drawString(font, font.plainSubstrByWidth(scene, innerW), textX, sceneY, SiegeTheme.MUTED, false);
-
-        int musicY = sceneY + 12;
-        String music = label("AUDIO: ", "AUDIO: ") + (!SiegeConfig.music ? label("desactivado", "off")
-                : SiegeMusic.currentTrackName() + " · " + SiegeConfig.musicVolume + "%");
-        g.drawString(font, font.plainSubstrByWidth(music, innerW), textX, musicY, SiegeTheme.MUTED, false);
-
-        int noteY = musicY + 16;
-        if (noteY < panelBottom - 82) {
-            g.fill(textX, noteY, panelX + panelW - 12, noteY + 1, 0xFF31373C);
-            String note = label(
-                    "La información de unidades, misiones, equipo y estados de muerte se consulta desde Intel, no desde Configuración.",
-                    "Units, missions, equipment and death-state information is accessed from Intel, not Settings.");
-            int y = noteY + 6;
-            for (var line : font.split(Component.literal(note), Math.max(60, innerW))) {
-                if (y + font.lineHeight >= panelBottom - 78) break;
-                g.drawString(font, line, textX, y, SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
-                y += font.lineHeight + 2;
-            }
-        }
+        renderHeader(g, profileAccent);
+        renderStatusCards(g);
+        renderProfiles(g);
+        renderDiagnostics(g);
 
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
     }
 
-    private void card(GuiGraphics g, int x, int y, int w, int h, String title, String value, int accent) {
-        SiegeTheme.panel(g, x, y, Math.max(1, w), Math.max(6, h), accent);
-        g.drawString(font, font.plainSubstrByWidth(title, Math.max(1, w - 10)), x + 5, y + 4, SiegeTheme.MUTED, false);
-        if (h >= 28)
-            g.drawString(font, font.plainSubstrByWidth(value, Math.max(1, w - 10)), x + 5, y + 17,
-                    SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
-        else
-            g.drawString(font, font.plainSubstrByWidth(title + " · " + value, Math.max(1, w - 10)), x + 5, y + 13,
-                    SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
+    private void renderHeader(GuiGraphics g, int profileAccent) {
+        String title = "SIEGE // " + SiegeRuntimeStatus.version() + " // "
+                + label("CENTRO DE COMANDO", "COMMAND CENTER");
+        g.drawString(font, font.plainSubstrByWidth(title, contentW), contentX, panelY + 8,
+                SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
+
+        SiegeClientProfile.Profile profile = SiegeRuntimeStatus.profile();
+        String subtitle = label("PERFIL ACTUAL: ", "CURRENT PROFILE: ")
+                + SiegeClientProfile.label(profile, spanish())
+                + "  ·  " + SiegeRuntimeStatus.healthLabel(spanish());
+        g.drawString(font, font.plainSubstrByWidth(subtitle, contentW), contentX, panelY + 21,
+                profileAccent, false);
+
+        int barY = panelY + 36;
+        int barW = contentW;
+        int readyW = Math.round(barW * SiegeRuntimeStatus.readiness() / 100.0F);
+        g.fill(contentX, barY, contentX + barW, barY + 4, 0xFF272C30);
+        if (readyW > 0) g.fill(contentX, barY, contentX + readyW, barY + 4, SiegeRuntimeStatus.healthAccent());
+        String score = SiegeRuntimeStatus.readiness() + "%";
+        if (!compact && contentW > 180)
+            g.drawString(font, score, contentX + contentW - font.width(score), barY - 10,
+                    SiegeRuntimeStatus.healthAccent(), false);
     }
 
-    private String renderBackend() {
-        ModList mods = ModList.get();
-        if (mods.isLoaded("embeddium")) return "Embeddium " + version("embeddium");
-        if (mods.isLoaded("rubidium")) return "Rubidium " + version("rubidium");
-        if (mods.isLoaded("sodium")) return "Sodium " + version("sodium");
-        return label("Minecraft vanilla", "Vanilla Minecraft");
+    private void renderStatusCards(GuiGraphics g) {
+        int gap = 5;
+        if (!compact) {
+            int w = (contentW - gap * 3) / 4;
+            statusCard(g, contentX, cardsTop, w, cardH, "BUILD", SiegeRuntimeStatus.version(), SiegeTheme.RED);
+            statusCard(g, contentX + (w + gap), cardsTop, w, cardH,
+                    label("CLIENTE", "CLIENT"), SiegeRuntimeStatus.minecraftVersion() + " / Forge " + SiegeRuntimeStatus.forgeVersion(), SiegeTheme.ORANGE);
+            statusCard(g, contentX + (w + gap) * 2, cardsTop, w, cardH,
+                    label("RENDER", "RENDER"), SiegeRuntimeStatus.renderBackend(), SiegeTheme.CYAN);
+            statusCard(g, contentX + (w + gap) * 3, cardsTop,
+                    contentX + contentW - (contentX + (w + gap) * 3), cardH,
+                    "INTEL", IntelCatalog.total() + " " + label("ARCHIVOS", "FILES"), SiegeTheme.GOLD);
+        } else {
+            int w = (contentW - gap) / 2;
+            statusCard(g, contentX, cardsTop, w, cardH, "BUILD", SiegeRuntimeStatus.version(), SiegeTheme.RED);
+            statusCard(g, contentX + w + gap, cardsTop, contentW - w - gap, cardH,
+                    label("RENDER", "RENDER"), SiegeRuntimeStatus.renderBackend(), SiegeTheme.CYAN);
+            int row2 = cardsTop + cardH + gap;
+            statusCard(g, contentX, row2, w, cardH, "INTEL", IntelCatalog.total() + " " + label("ARCHIVOS", "FILES"), SiegeTheme.GOLD);
+            statusCard(g, contentX + w + gap, row2, contentW - w - gap, cardH,
+                    label("CLIENTE", "CLIENT"), SiegeRuntimeStatus.minecraftVersion() + " / Forge " + SiegeRuntimeStatus.forgeVersion(), SiegeTheme.ORANGE);
+        }
     }
 
-    private String version(String modId) {
-        return ModList.get().getModContainerById(modId)
-                .map(c -> c.getModInfo().getVersion().toString())
-                .orElse(label("no detectado", "not detected"));
+    private void renderProfiles(GuiGraphics g) {
+        SiegeClientProfile.Profile profile = SiegeRuntimeStatus.profile();
+        String heading = label("// PERFILES DEL CLIENTE", "// CLIENT PROFILES");
+        g.drawString(font, heading, contentX, profileTop, SiegeClientProfile.accent(profile), false);
+
+        if (profile == SiegeClientProfile.Profile.CUSTOM && profileBottom - profileTop > 72) {
+            String custom = label("La mezcla actual es personalizada; elegí un perfil para aplicar un conjunto completo.",
+                    "Current settings are custom; choose a profile to apply a complete preset.");
+            g.drawString(font, font.plainSubstrByWidth(custom, contentW), contentX,
+                    profileBottom - 12, SiegeTheme.MUTED, false);
+        }
+    }
+
+    private void renderDiagnostics(GuiGraphics g) {
+        int controlsReserve = compact ? 52 : 58;
+        int diagnosticsBottom = panelBottom - controlsReserve;
+        int y = profileBottom + 1;
+        if (y >= diagnosticsBottom - 12) return;
+
+        g.fill(contentX, y, contentX + contentW, y + 1, 0xFF31373C);
+        y += 5;
+        String audio = label("AUDIO: ", "AUDIO: ") + SiegeRuntimeStatus.audioLabel(spanish());
+        String background = label("FONDO: ", "BACKGROUND: ") + SiegeRuntimeStatus.backgroundLabel(spanish());
+        String access = label("ACCESIBILIDAD: ", "ACCESSIBILITY: ") + SiegeRuntimeStatus.accessibilityLabel(spanish());
+        g.drawString(font, font.plainSubstrByWidth(audio, contentW), contentX, y, SiegeTheme.MUTED, false);
+        y += 11;
+        if (y < diagnosticsBottom - 8) {
+            g.drawString(font, font.plainSubstrByWidth(background, contentW), contentX, y, SiegeTheme.MUTED, false);
+            y += 11;
+        }
+        if (!compact && y < diagnosticsBottom - 8) {
+            g.drawString(font, font.plainSubstrByWidth(access, contentW), contentX, y, SiegeTheme.MUTED, false);
+            y += 12;
+        }
+
+        List<String> warnings = SiegeRuntimeStatus.warnings(spanish());
+        if (!warnings.isEmpty() && y < diagnosticsBottom - 8) {
+            String warning = "! " + warnings.get(0);
+            g.drawString(font, font.plainSubstrByWidth(warning, contentW), contentX, y,
+                    SiegeRuntimeStatus.healthAccent(), false);
+        } else if (warnings.isEmpty() && y < diagnosticsBottom - 8) {
+            String ok = label("Diagnóstico: configuración coherente y guardada.",
+                    "Diagnostics: configuration is coherent and saved.");
+            g.drawString(font, font.plainSubstrByWidth(ok, contentW), contentX, y, SiegeTheme.GREEN, false);
+        }
+    }
+
+    private void statusCard(GuiGraphics g, int x, int y, int w, int h, String title, String value, int accent) {
+        if (w <= 0 || h <= 0) return;
+        SiegeTheme.panel(g, x, y, w, h, accent);
+        g.fill(x, y, x + Math.min(2, w), y + h, accent);
+        g.drawString(font, font.plainSubstrByWidth(title, Math.max(1, w - 10)), x + 6, y + 4,
+                SiegeTheme.MUTED, false);
+        int valueY = h >= 30 ? y + 18 : y + 14;
+        g.drawString(font, font.plainSubstrByWidth(value, Math.max(1, w - 10)), x + 6, valueY,
+                SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
     }
 
     private boolean spanish() {
         return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_");
     }
 
-    private String label(String es, String en) {
-        return spanish() ? es : en;
-    }
+    private String label(String es, String en) { return spanish() ? es : en; }
 
     @Override
     public void onClose() {
