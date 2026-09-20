@@ -11,13 +11,10 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
-/**
- * Intel field/archive view. It belongs to Intel, not Settings: current notices,
- * missions, equipment, units, casualty states and older records live here.
- */
+/** Intel field manual for missions, casualty states and operational protocols. */
 public final class SiegeArchiveScreen extends Screen {
     private final Screen parent;
-    private SiegeArchiveData.Category category = SiegeArchiveData.Category.CURRENT;
+    private SiegeArchiveData.Category category = SiegeArchiveData.Category.MISSIONS;
     private SiegeArchiveData.Entry entry;
     private List<SiegeArchiveData.Entry> entries = List.of();
     private final List<SiegeButton> rows = new ArrayList<>();
@@ -35,7 +32,7 @@ public final class SiegeArchiveScreen extends Screen {
     private record Line(int y, FormattedCharSequence text, int color, int spacing) { }
 
     public SiegeArchiveScreen(Screen parent) {
-        super(Component.literal("SIEGE // INTEL ARCHIVE"));
+        super(Component.literal("SIEGE // FIELD MANUAL"));
         this.parent = parent;
     }
 
@@ -60,12 +57,9 @@ public final class SiegeArchiveScreen extends Screen {
         for (var value : SiegeArchiveData.Category.values()) {
             int slot = i++;
             int color = switch (value) {
-                case CURRENT -> SiegeTheme.CYAN;
-                case CASUALTY -> SiegeTheme.GREEN;
                 case MISSIONS -> SiegeTheme.GOLD;
-                case EQUIPMENT -> SiegeTheme.ORANGE;
-                case UNITS -> SiegeTheme.RED;
-                case HISTORY -> SiegeTheme.BLUE;
+                case CONDITIONS -> SiegeTheme.GREEN;
+                case PROTOCOLS -> SiegeTheme.CYAN;
             };
             SiegeButton tab = new SiegeButton(
                     8 + slot % layout.columns() * (layout.tabWidth() + 4),
@@ -89,7 +83,7 @@ public final class SiegeArchiveScreen extends Screen {
         int searchWidth = Math.max(50, width - 48);
         search = new EditBox(font, 8, layout.searchY(), searchWidth, 18,
                 text("Buscar Intel", "Search Intel"));
-        search.setHint(text("Buscar estado, misión, unidad, equipo…", "Search state, mission, unit, equipment…"));
+        search.setHint(text("Buscar misión, estado o protocolo…", "Search mission, condition or protocol…"));
         search.setMaxLength(100);
         search.setValue(query);
         search.setResponder(value -> {
@@ -164,9 +158,9 @@ public final class SiegeArchiveScreen extends Screen {
 
     private int sourceColor(SiegeArchiveData.Source source) {
         return switch (source) {
-            case CURRENT_SIEGE -> SiegeTheme.CYAN;
-            case SIEGE_ARCHIVE -> SiegeTheme.GOLD;
+            case SIEGE -> SiegeTheme.GOLD;
             case DVN_REFERENCE -> SiegeTheme.GREEN;
+            case MEDICAL -> SiegeTheme.CYAN;
         };
     }
 
@@ -181,9 +175,7 @@ public final class SiegeArchiveScreen extends Screen {
         }
 
         addLine(entry.title(es()), SiegeTheme.GOLD, 14);
-        addLine(entry.source().label(es()) + "  //  PRIORITY " + entry.rank(), sourceColor(entry.source()), 17);
-        addLine(label("INTEL 0.40: avisos más recientes prevalecen sobre avisos antiguos.",
-                "INTEL 0.40: newer notices override older notices."), SiegeTheme.MUTED, 20);
+        addLine(entry.source().label(es()), sourceColor(entry.source()), 18);
 
         for (String paragraph : entry.body(es()).split("\n\n")) {
             int split = paragraph.indexOf('\n');
@@ -238,8 +230,8 @@ public final class SiegeArchiveScreen extends Screen {
         int titleLeft = 80;
         int titleRight = Math.max(titleLeft + 1, width - 8);
         int titleSpace = Math.max(1, titleRight - titleLeft);
-        String rawTitle = width < 460 ? label("INTEL // ARCHIVO", "INTEL // ARCHIVE")
-                : label("INTEL // ARCHIVO OPERATIVO · 0.40", "INTEL // OPERATIONAL ARCHIVE · 0.40");
+        String rawTitle = width < 460 ? label("INTEL // MANUAL", "INTEL // MANUAL")
+                : label("INTEL // MANUAL DE CAMPO", "INTEL // FIELD MANUAL");
         String title = font.plainSubstrByWidth(rawTitle, titleSpace);
         g.drawCenteredString(font, title, titleLeft + titleSpace / 2, 12,
                 SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK);

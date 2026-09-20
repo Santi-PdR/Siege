@@ -91,7 +91,9 @@ public final class SiegeGuideScreen extends Screen {
     private boolean locked() { return entry != null && entry.spoiler() && !revealed.contains(entry.id()); }
     private void remember() { if (entry != null) positions.put(entry.id(), scroll); }
     private void refreshEntries() {
-        entries = SiegeGuideData.entries(category, query, es());
+        List<SiegeGuideData.Entry> merged = new ArrayList<>(SiegeGuideSupplemental.entries(category, query, es()));
+        merged.addAll(SiegeGuideData.entries(category, query, es()));
+        entries = List.copyOf(merged);
         if (entry == null || !entries.contains(entry)) entry = entries.isEmpty() ? null : entries.get(0);
         if (entry != null) page = entries.indexOf(entry) / layout.capacity();
         scroll = entry == null ? 0 : positions.getOrDefault(entry.id(), 0);
