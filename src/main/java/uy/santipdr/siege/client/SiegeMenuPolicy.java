@@ -12,11 +12,17 @@ public final class SiegeMenuPolicy {
         AUDIO,
         VIDEO,
         CONTROLS,
+        MOUSE,
+        ACCESSIBILITY,
         LANGUAGE,
         PACKS,
         WORLD,
         CONFIRM
     }
+
+    private static final String ROOT = "net.minecraft.client.gui.screens.";
+    private static final String OPTIONS = ROOT + "OptionsScreen";
+    private static final String CREDITS = ROOT + "CreditsAndAttributionScreen";
 
     private SiegeMenuPolicy() { }
 
@@ -35,8 +41,6 @@ public final class SiegeMenuPolicy {
             // Main vanilla settings shell and small supporting screens.
             case "net.minecraft.client.gui.screens.OptionsScreen",
                  "net.minecraft.client.gui.screens.SkinCustomizationScreen",
-                 "net.minecraft.client.gui.screens.AccessibilityOptionsScreen",
-                 "net.minecraft.client.gui.screens.AccessibilityOnboardingScreen",
                  "net.minecraft.client.gui.screens.OnlineOptionsScreen",
                  "net.minecraft.client.gui.screens.ChatOptionsScreen",
                  "net.minecraft.client.gui.screens.CreditsAndAttributionScreen",
@@ -46,8 +50,10 @@ public final class SiegeMenuPolicy {
             case "net.minecraft.client.gui.screens.SoundOptionsScreen" -> NativeFamily.AUDIO;
             case "net.minecraft.client.gui.screens.VideoSettingsScreen" -> NativeFamily.VIDEO;
             case "net.minecraft.client.gui.screens.controls.ControlsScreen",
-                 "net.minecraft.client.gui.screens.controls.KeyBindsScreen",
-                 "net.minecraft.client.gui.screens.controls.MouseSettingsScreen" -> NativeFamily.CONTROLS;
+                 "net.minecraft.client.gui.screens.controls.KeyBindsScreen" -> NativeFamily.CONTROLS;
+            case "net.minecraft.client.gui.screens.controls.MouseSettingsScreen" -> NativeFamily.MOUSE;
+            case "net.minecraft.client.gui.screens.AccessibilityOptionsScreen",
+                 "net.minecraft.client.gui.screens.AccessibilityOnboardingScreen" -> NativeFamily.ACCESSIBILITY;
             case "net.minecraft.client.gui.screens.LanguageSelectScreen" -> NativeFamily.LANGUAGE;
             case "net.minecraft.client.gui.screens.packs.PackSelectionScreen" -> NativeFamily.PACKS;
 
@@ -74,6 +80,43 @@ public final class SiegeMenuPolicy {
         NativeFamily family = nativeFamily(name);
         if (family == NativeFamily.CONFIRM) return ownedConfirmation;
         return family != NativeFamily.NONE;
+    }
+
+    /** Buttons intentionally removed from the vanilla Options flow. */
+    public static boolean hideNativeButton(String screenName, String translationKey) {
+        if (screenName == null || translationKey == null) return false;
+        if (OPTIONS.equals(screenName)) {
+            return translationKey.equals("options.telemetry")
+                    || translationKey.equals("options.credits_and_attribution");
+        }
+        if (CREDITS.equals(screenName)) {
+            return translationKey.equals("credits_and_attribution.button.credits")
+                    || translationKey.equals("credits_and_attribution.button.attribution");
+        }
+        return false;
+    }
+
+    /**
+     * Telemetry and Credits share one complete two-column row in the 1.20.1
+     * Options grid. Pull Done up by that row height so removing them leaves no
+     * dead band or collision with the bottom chrome.
+     */
+    public static int adjustedButtonY(String screenName, String translationKey, int y) {
+        if (OPTIONS.equals(screenName) && "gui.done".equals(translationKey)) return Math.max(0, y - 24);
+        return y;
+    }
+
+    /** Only screens that actually contain a large selection list get the inner rail. */
+    public static boolean listRail(String screenName) {
+        if (screenName == null) return false;
+        return switch (screenName) {
+            case "net.minecraft.client.gui.screens.LanguageSelectScreen",
+                 "net.minecraft.client.gui.screens.packs.PackSelectionScreen",
+                 "net.minecraft.client.gui.screens.controls.KeyBindsScreen",
+                 "net.minecraft.client.gui.screens.worldselection.SelectWorldScreen",
+                 "net.minecraft.client.gui.screens.worldselection.PresetFlatWorldScreen" -> true;
+            default -> false;
+        };
     }
 
     public static int entryShade(long age, boolean effects, boolean reducedMotion) {
