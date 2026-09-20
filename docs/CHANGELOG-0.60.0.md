@@ -37,7 +37,7 @@
 31. Un error resta más preparación que una advertencia.
 32. Una mezcla personalizada genera INFO, no un falso error.
 33. Se añade análisis de distancia entre ajustes y perfiles.
-34. El análisis compara 21 campos de configuración.
+34. El análisis compara los 19 campos que determinan actualmente la identidad de un perfil.
 35. Se calcula el perfil predefinido más cercano.
 36. Se calcula un porcentaje de coincidencia con ese perfil.
 37. La pantalla muestra ese porcentaje cuando el perfil es personalizado.
