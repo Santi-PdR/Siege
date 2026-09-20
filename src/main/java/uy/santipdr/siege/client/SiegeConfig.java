@@ -11,16 +11,18 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.AtomicMoveNotSupportedException;
 import com.mojang.logging.LogUtils;
 import java.util.Properties;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 public final class SiegeConfig {
+    // Keep the historical migration revision stable. New 0.30 options load their
+    // own defaults and must never re-run the old autoRotateIntel migration.
     private static final int SETTINGS_REVISION = 801;
+
     public enum Graphics { PERFORMANCE, BALANCED, CINEMATIC;
         public Graphics next() { return values()[(ordinal() + 1) % values().length]; }
     }
 
     private static final Path FILE = FMLPaths.CONFIGDIR.get().resolve("siege-client.properties");
+
     public static boolean intelReadingMode = false;
     public static boolean comfortableReading = false;
     public static boolean darkIntelPaper = false;
@@ -40,6 +42,8 @@ public final class SiegeConfig {
     public static boolean mainMenuIntel = true;
     public static boolean scanlines = true;
     public static boolean reducedMotion = false;
+    public static boolean reduceFlashes = false;
+    public static boolean highContrast = false;
     public static boolean titleInterference = true;
     public static boolean trackAnnouncements = true;
     public static boolean pauseIntelOnHover = true;
@@ -55,6 +59,7 @@ public final class SiegeConfig {
     private static Properties lastSaved;
     private static boolean loadedSuccessfully = true;
     public static boolean lastSaveSucceeded = true;
+
     private SiegeConfig() {}
 
     public static synchronized void load() {
@@ -68,6 +73,7 @@ public final class SiegeConfig {
                 return;
             }
         }
+
         intelReadingMode = bool(p, "intelReadingMode", false);
         comfortableReading = bool(p, "comfortableReading", false);
         darkIntelPaper = bool(p, "darkIntelPaper", false);
@@ -88,6 +94,8 @@ public final class SiegeConfig {
         mainMenuIntel = bool(p, "mainMenuIntel", true);
         scanlines = bool(p, "scanlines", true);
         reducedMotion = bool(p, "reducedMotion", false);
+        reduceFlashes = bool(p, "reduceFlashes", false);
+        highContrast = bool(p, "highContrast", false);
         titleInterference = bool(p, "titleInterference", true);
         trackAnnouncements = bool(p, "trackAnnouncements", true);
         pauseIntelOnHover = bool(p, "pauseIntelOnHover", true);
@@ -100,19 +108,15 @@ public final class SiegeConfig {
         trackNoticeSeconds = integer(p, "trackNoticeSeconds", 8, 3, 15);
         try { graphics = Graphics.valueOf(p.getProperty("graphics", Graphics.CINEMATIC.name()).trim().toUpperCase(java.util.Locale.ROOT)); }
         catch (IllegalArgumentException ignored) { graphics = Graphics.CINEMATIC; }
+
+        normalize();
         if (loadedRevision < SETTINGS_REVISION) save();
     }
 
     public static synchronized void save() {
         if (!loadedSuccessfully) { lastSaveSucceeded = false; return; }
-        inspectorBackground = Math.max(0, Math.min(2, inspectorBackground));
-        selectedTrack = Math.max(-1, Math.min(3, selectedTrack));
-        selectedScene = Math.max(-1, Math.min(8, selectedScene));
-        uiVolume = clampVolume(uiVolume); musicVolume = clampVolume(musicVolume);
-        backgroundDarkness = Math.max(0, Math.min(70, backgroundDarkness));
-        panelDarkness = Math.max(20, Math.min(90, panelDarkness));
-        trackNoticeSeconds = Math.max(3, Math.min(15, trackNoticeSeconds));
-        if (graphics == null) graphics = Graphics.CINEMATIC;
+        normalize();
+
         Properties p = new Properties();
         p.setProperty("intelReadingMode", Boolean.toString(intelReadingMode));
         p.setProperty("comfortableReading", Boolean.toString(comfortableReading));
@@ -134,6 +138,8 @@ public final class SiegeConfig {
         p.setProperty("mainMenuIntel", Boolean.toString(mainMenuIntel));
         p.setProperty("scanlines", Boolean.toString(scanlines));
         p.setProperty("reducedMotion", Boolean.toString(reducedMotion));
+        p.setProperty("reduceFlashes", Boolean.toString(reduceFlashes));
+        p.setProperty("highContrast", Boolean.toString(highContrast));
         p.setProperty("titleInterference", Boolean.toString(titleInterference));
         p.setProperty("trackAnnouncements", Boolean.toString(trackAnnouncements));
         p.setProperty("pauseIntelOnHover", Boolean.toString(pauseIntelOnHover));
@@ -145,6 +151,7 @@ public final class SiegeConfig {
         p.setProperty("panelDarkness", Integer.toString(panelDarkness));
         p.setProperty("trackNoticeSeconds", Integer.toString(trackNoticeSeconds));
         p.setProperty("graphics", graphics.name());
+
         if (p.equals(lastSaved) && Files.isRegularFile(FILE)) { lastSaveSucceeded = true; return; }
         Path temporary = null;
         try {
@@ -169,6 +176,21 @@ public final class SiegeConfig {
         }
     }
 
+    private static void normalize() {
+        inspectorBackground = Math.max(0, Math.min(2, inspectorBackground));
+        selectedTrack = Math.max(-1, Math.min(3, selectedTrack));
+        selectedScene = Math.max(-1, Math.min(8, selectedScene));
+        uiVolume = clampVolume(uiVolume);
+        musicVolume = clampVolume(musicVolume);
+        backgroundDarkness = Math.max(0, Math.min(70, backgroundDarkness));
+        panelDarkness = Math.max(20, Math.min(90, panelDarkness));
+        trackNoticeSeconds = Math.max(3, Math.min(15, trackNoticeSeconds));
+        if (graphics == null) graphics = Graphics.CINEMATIC;
+
+        // Flash reduction is a hard accessibility guarantee, not merely a label.
+        if (reduceFlashes) titleInterference = false;
+    }
+
     public static void resetDefaults() {
         if (!loadedSuccessfully && Files.exists(FILE)) {
             try { Files.copy(FILE, FILE.resolveSibling("siege-client-corrupt-" + System.currentTimeMillis() + ".properties")); }
@@ -181,7 +203,6 @@ public final class SiegeConfig {
         darkIntelPaper = false;
         inspectorMap = true;
         inspectorBackground = 0;
-
         selectedTrack = -1;
         selectedScene = -1;
         uiVolume = 100;
@@ -196,6 +217,8 @@ public final class SiegeConfig {
         mainMenuIntel = true;
         scanlines = true;
         reducedMotion = false;
+        reduceFlashes = false;
+        highContrast = false;
         titleInterference = true;
         trackAnnouncements = true;
         pauseIntelOnHover = true;
@@ -212,10 +235,24 @@ public final class SiegeConfig {
 
     public static void applyCalmPreset() {
         reducedMotion = true;
+        reduceFlashes = true;
+        highContrast = true;
         titleInterference = false;
         scanlines = false;
         hoverSounds = false;
         graphics = Graphics.BALANCED;
+        save();
+    }
+
+    public static void applyReadingPreset() {
+        intelReadingMode = true;
+        comfortableReading = true;
+        darkIntelPaper = true;
+        highContrast = true;
+        reducedMotion = true;
+        reduceFlashes = true;
+        titleInterference = false;
+        scanlines = false;
         save();
     }
 
@@ -234,4 +271,3 @@ public final class SiegeConfig {
         catch (NumberFormatException ignored) { return fallback; }
     }
 }
-
