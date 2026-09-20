@@ -117,12 +117,14 @@ public final class SiegeMenuPolicy {
      * Vanilla option screens draw their own title after their background. The
      * SIEGE overlay is later in the frame, so this returns the maximum safe band
      * that may be repainted before the custom header/context strip is drawn.
+     * The 34px cap fully covers vanilla's title row while staying above ordinary
+     * option controls; cramped layouts stop two pixels before their first widget.
      */
     public static int vanillaTitleMaskBottom(int firstWidgetY, int screenHeight) {
         int safeHeight = Math.max(0, screenHeight);
         if (safeHeight == 0) return 0;
-        int beforeWidgets = firstWidgetY <= 0 ? 36 : Math.max(22, firstWidgetY - 2);
-        return Math.min(safeHeight, Math.min(40, beforeWidgets));
+        int beforeWidgets = firstWidgetY <= 0 ? 34 : Math.max(20, firstWidgetY - 2);
+        return Math.min(safeHeight, Math.min(34, beforeWidgets));
     }
 
     public static int entryShade(long age, boolean effects, boolean reducedMotion) {
