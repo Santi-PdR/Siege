@@ -5,6 +5,7 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmScreen;
@@ -36,7 +37,7 @@ public final class SiegeMenuThemeEvents {
     private static boolean owned(Screen s) {
         return s instanceof SiegeTitleScreen || s instanceof SiegeMultiplayerScreen
                 || s instanceof SiegeSettingsScreen || s instanceof SiegeSystemScreen || s instanceof IntelScreenV3
-                || s instanceof IntelPortraitScreen || s instanceof SiegeSceneScreen
+                || s instanceof SiegeArchiveScreen || s instanceof IntelPortraitScreen || s instanceof SiegeSceneScreen
                 || s instanceof SiegeGuideScreen || s instanceof SiegeGuideImageScreen;
     }
 
@@ -77,28 +78,42 @@ public final class SiegeMenuThemeEvents {
         Screen screen = event.getScreen();
         if (!themed(screen)) return;
 
-        // Text colors are screen state, not animation state. Set them once at init
-        // instead of rewriting every EditBox on every rendered frame.
         for (var listener : event.getListenersList()) if (listener instanceof EditBox field) {
             field.setTextColor(SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK);
             field.setTextColorUneditable(SiegeConfig.highContrast ? 0xFFD5D7D8 : SiegeTheme.MUTED);
         }
 
-        // 0.30 adds a real system/diagnostics center without inflating the existing
-        // settings navigation. It lives in the top-right title-bar space and adapts
-        // its label rather than overlapping compact screens.
+        // Settings remains a settings area. The top-right entry opens only client
+        // configuration/diagnostics; gameplay knowledge is no longer routed here.
         if (screen instanceof SiegeSettingsScreen) {
             int buttonWidth = screen.width < 360 ? 52 : Math.min(112, Math.max(84, screen.width / 7));
-            String text = screen.width < 360 ? "0.30" : label("SISTEMA 0.30", "SYSTEM 0.30");
+            String text = screen.width < 360 ? "0.40" : label("SISTEMA 0.40", "SYSTEM 0.40");
             SiegeButton system = new SiegeButton(Math.max(8, screen.width - buttonWidth - 8), 7, buttonWidth, 19,
                     Component.literal(text), b -> {
                         SiegeUiSounds.click();
                         Minecraft.getInstance().setScreen(new SiegeSystemScreen(screen));
                     }, SiegeTheme.CYAN).withIcon("settings").setCompactCenter(true);
             system.setTooltip(Tooltip.create(Component.literal(label(
-                    "Diagnóstico, compatibilidad, accesibilidad y estado real del cliente.",
-                    "Diagnostics, compatibility, accessibility and live client state."))));
+                    "Configuración avanzada, compatibilidad y accesibilidad del cliente.",
+                    "Advanced client configuration, compatibility and accessibility."))));
             event.addListener(system);
+        }
+
+        // All operational knowledge now lives under Intel. This top-right button
+        // opens the chronological field archive from Intel itself, including death
+        // states, missions, equipment, current notices and historical records.
+        if (screen instanceof IntelScreenV3) {
+            int buttonWidth = screen.width < 420 ? 58 : Math.min(118, Math.max(82, screen.width / 8));
+            String text = screen.width < 420 ? label("ARCH.", "ARCH.") : label("ARCHIVO INTEL", "INTEL ARCHIVE");
+            SiegeButton archive = new SiegeButton(Math.max(84, screen.width - buttonWidth - 8), 7,
+                    buttonWidth, 19, Component.literal(text), b -> {
+                SiegeUiSounds.confirm();
+                Minecraft.getInstance().setScreen(new SiegeArchiveScreen(screen));
+            }, SiegeTheme.GOLD).withIcon("overview").setCompactCenter(true);
+            archive.setTooltip(Tooltip.create(Component.literal(label(
+                    "Estados de muerte, misiones, equipo, avisos actuales, unidades e historial SIEGE.",
+                    "Death states, missions, equipment, current notices, units and SIEGE history."))));
+            event.addListener(archive);
         }
 
         if (!nativeDialog(screen)) return;
@@ -110,8 +125,6 @@ public final class SiegeMenuThemeEvents {
             if (listener instanceof AbstractButton original && !(original instanceof SiegeButton)) {
                 String key = translationKey(original.getMessage());
 
-                // Remove telemetry/data and credits entry points from the Options
-                // flow without replacing Minecraft's whole OptionsScreen.
                 if (SiegeMenuPolicy.hideNativeButton(screenName, key)) {
                     original.active = false;
                     original.visible = false;
@@ -153,12 +166,24 @@ public final class SiegeMenuThemeEvents {
         GuiGraphics g = event.getGuiGraphics();
 
         if (nativeDialog(screen)) {
+            // Vanilla screens have already rendered their own title by this point.
+            // Clear only the empty title strip before drawing the custom SIEGE header,
+            // so two titles can never remain stacked on top of each other.
+            int firstWidgetY = screen.height;
+            for (var child : screen.children()) if (child instanceof AbstractWidget widget && widget.visible)
+                firstWidgetY = Math.min(firstWidgetY, widget.getY());
+            int maskBottom = SiegeMenuPolicy.vanillaTitleMaskBottom(firstWidgetY, screen.height);
+            if (maskBottom > 0) {
+                g.pose().pushPose();
+                g.pose().translate(0, 0, 425);
+                g.fill(0, 0, screen.width, maskBottom, SiegeConfig.highContrast ? 0xFF090A0C : 0xF20D0E10);
+                g.pose().popPose();
+            }
+
             SiegeVanillaChrome.decorateWidgets(screen, g);
             SiegeUiSounds.updateHover(screen.children());
             SiegeVanillaChrome.renderOverlay(screen, g);
         } else {
-            // SIEGE-owned screens keep focus decoration strictly inside the field
-            // bounds so dense layouts cannot paint over adjacent controls.
             for (var child : screen.children()) if (child instanceof EditBox field && field.visible) {
                 int color = field.isFocused() ? SiegeTheme.FOCUS
                         : SiegeConfig.highContrast ? 0xFF9AA1A6 : 0xFF656061;
@@ -171,18 +196,6 @@ public final class SiegeMenuThemeEvents {
                     if (field.isFocused()) SiegeTheme.focusCorners(g, x, y, right - x, bottom - y, color);
                 }
             }
-        }
-
-        // A restrained source badge makes the 0.30 Intel rule visible without
-        // changing dossier contents or occupying compact layouts.
-        if (screen instanceof IntelScreenV3 && screen.width >= 780) {
-            var font = Minecraft.getInstance().font;
-            String text = label("DOSSIERS OFICIALES", "OFFICIAL DOSSIERS");
-            int w = font.width(text) + 12;
-            int x = screen.width - w - 8;
-            g.fill(x, 7, x + w, 19, SiegeConfig.highContrast ? 0xF20C1114 : 0xC90C1114);
-            g.fill(x, 7, x + 2, 19, SiegeTheme.CYAN);
-            g.drawString(font, text, x + 6, 9, SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
         }
 
         renderBuildTag(screen, g);
@@ -254,7 +267,6 @@ public final class SiegeMenuThemeEvents {
                 SiegeConfig.clampVolume(SiegeConfig.uiVolume) / 100.0F));
     }
 
-    /** Keeps the original object alive because vanilla screen fields update it after init. */
     private static final class NativeButton extends SiegeButton {
         private final AbstractButton source;
         private String visualKey = "";
@@ -304,7 +316,6 @@ public final class SiegeMenuThemeEvents {
 
         @Override public boolean mouseClicked(double x, double y, int button) {
             sync();
-            // CycleButton supports reverse cycling with the secondary mouse button.
             if (button == 1 && active && visible) return source.mouseClicked(x, y, button);
             return super.mouseClicked(x, y, button);
         }
