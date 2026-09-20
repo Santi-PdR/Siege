@@ -3,7 +3,7 @@ package uy.santipdr.siege.client;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.multiplayer.ServerData;
 
-/** Shared deployment-state presentation for SIEGE 0.70.0. Networking remains vanilla-owned. */
+/** Shared 1.25 deployment-state presentation. Networking remains vanilla-owned. */
 public final class SiegeDeploymentStatus {
     public enum State { QUERYING, OFFLINE, NO_RESPONSE, INCOMPATIBLE, ONLINE }
 
@@ -36,14 +36,38 @@ public final class SiegeDeploymentStatus {
         };
     }
 
+    public static String routeStep(ServerData server, boolean spanish) {
+        return switch (state(server)) {
+            case QUERYING -> spanish ? "DESTINO → VERIFICANDO" : "DESTINATION → CHECKING";
+            case ONLINE -> spanish ? "DESTINO → ESTADO → CONECTAR" : "DESTINATION → STATUS → CONNECT";
+            case INCOMPATIBLE -> spanish ? "DESTINO → VERSIÓN → BLOQUEADO" : "DESTINATION → VERSION → BLOCKED";
+            case OFFLINE, NO_RESPONSE -> spanish ? "DESTINO → SIN RESPUESTA → ESPERAR" : "DESTINATION → NO RESPONSE → WAIT";
+        };
+    }
+
+    public static String compatibilityLabel(ServerData server, boolean spanish) {
+        if (server == null || !server.pinged) return spanish ? "COMPATIBILIDAD —" : "COMPATIBILITY —";
+        if (state(server) == State.INCOMPATIBLE) {
+            String version = server.version == null ? "" : server.version.getString().trim();
+            return (spanish ? "INCOMPATIBLE" : "INCOMPATIBLE") + (version.isEmpty() ? "" : " · " + version);
+        }
+        if (state(server) == State.ONLINE) return spanish ? "CLIENTE COMPATIBLE" : "CLIENT COMPATIBLE";
+        return spanish ? "COMPATIBILIDAD SIN CONFIRMAR" : "COMPATIBILITY UNCONFIRMED";
+    }
+
     public static String latencyLabel(ServerData server, boolean spanish) {
         if (state(server) != State.ONLINE) return spanish ? "LATENCIA —" : "LATENCY —";
         long ping = Math.max(0, server.ping);
-        String band = ping <= 80 ? (spanish ? "BAJA" : "LOW")
+        return (spanish ? "LATENCIA " : "LATENCY ") + latencyBand(server, spanish) + " · " + ping + " ms";
+    }
+
+    public static String latencyBand(ServerData server, boolean spanish) {
+        if (state(server) != State.ONLINE) return "—";
+        long ping = Math.max(0, server.ping);
+        return ping <= 80 ? (spanish ? "BAJA" : "LOW")
                 : ping <= 160 ? (spanish ? "MEDIA" : "MEDIUM")
                 : ping <= 300 ? (spanish ? "ALTA" : "HIGH")
                 : (spanish ? "MUY ALTA" : "VERY HIGH");
-        return (spanish ? "LATENCIA " : "LATENCY ") + band + " · " + ping + " ms";
     }
 
     public static int latencyFill(ServerData server, int width) {
