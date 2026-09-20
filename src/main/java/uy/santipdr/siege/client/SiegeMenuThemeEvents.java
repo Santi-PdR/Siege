@@ -83,8 +83,6 @@ public final class SiegeMenuThemeEvents {
             field.setTextColorUneditable(SiegeConfig.highContrast ? 0xFFD5D7D8 : SiegeTheme.MUTED);
         }
 
-        // Settings remains a settings area. The top-right entry opens only client
-        // configuration/diagnostics; gameplay knowledge is no longer routed here.
         if (screen instanceof SiegeSettingsScreen) {
             int buttonWidth = screen.width < 360 ? 52 : Math.min(112, Math.max(84, screen.width / 7));
             String text = screen.width < 360 ? "0.40" : label("SISTEMA 0.40", "SYSTEM 0.40");
@@ -99,12 +97,9 @@ public final class SiegeMenuThemeEvents {
             event.addListener(system);
         }
 
-        // All operational knowledge now lives under Intel. This top-right button
-        // opens the chronological field archive from Intel itself, including death
-        // states, missions, equipment, current notices and historical records.
         if (screen instanceof IntelScreenV3) {
             int buttonWidth = screen.width < 420 ? 58 : Math.min(118, Math.max(82, screen.width / 8));
-            String text = screen.width < 420 ? label("ARCH.", "ARCH.") : label("ARCHIVO INTEL", "INTEL ARCHIVE");
+            String text = screen.width < 420 ? "ARCH." : label("ARCHIVO INTEL", "INTEL ARCHIVE");
             SiegeButton archive = new SiegeButton(Math.max(84, screen.width - buttonWidth - 8), 7,
                     buttonWidth, 19, Component.literal(text), b -> {
                 SiegeUiSounds.confirm();
@@ -166,9 +161,6 @@ public final class SiegeMenuThemeEvents {
         GuiGraphics g = event.getGuiGraphics();
 
         if (nativeDialog(screen)) {
-            // Vanilla screens have already rendered their own title by this point.
-            // Clear only the empty title strip before drawing the custom SIEGE header,
-            // so two titles can never remain stacked on top of each other.
             int firstWidgetY = screen.height;
             for (var child : screen.children()) if (child instanceof AbstractWidget widget && widget.visible)
                 firstWidgetY = Math.min(firstWidgetY, widget.getY());
@@ -183,6 +175,7 @@ public final class SiegeMenuThemeEvents {
             SiegeVanillaChrome.decorateWidgets(screen, g);
             SiegeUiSounds.updateHover(screen.children());
             SiegeVanillaChrome.renderOverlay(screen, g);
+            renderCleanNativeHeader(screen, g);
         } else {
             for (var child : screen.children()) if (child instanceof EditBox field && field.visible) {
                 int color = field.isFocused() ? SiegeTheme.FOCUS
@@ -212,6 +205,23 @@ public final class SiegeMenuThemeEvents {
             g.fill(0, 0, screen.width, screen.height, alpha << 24);
             g.pose().popPose();
         }
+    }
+
+    /** One custom header, never a SIEGE label plus a second vanilla title. */
+    private static void renderCleanNativeHeader(Screen screen, GuiGraphics g) {
+        if (screen.width <= 0 || screen.height <= 0) return;
+        var font = Minecraft.getInstance().font;
+        int accent = SiegeVanillaChrome.accent(screen);
+        String raw = "SIEGE // " + SiegeVanillaChrome.familyLabel(screen);
+        String title = font.plainSubstrByWidth(raw, Math.max(1, screen.width - 48));
+        int color = SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK;
+
+        g.pose().pushPose();
+        g.pose().translate(0, 0, 445);
+        g.fill(0, 0, screen.width, Math.min(18, screen.height), SiegeConfig.highContrast ? 0xFF090A0C : 0xF20D0E10);
+        if (screen.width >= 16) SiegeTheme.icon(g, 7, 5, SiegeVanillaChrome.familyIcon(screen), accent);
+        if (screen.width >= 50) g.drawCenteredString(font, title, screen.width / 2, 6, color);
+        g.pose().popPose();
     }
 
     private static void renderBuildTag(Screen screen, GuiGraphics g) {
