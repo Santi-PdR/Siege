@@ -16,7 +16,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import uy.santipdr.siege.SiegeMod;
 
@@ -31,7 +30,6 @@ public final class SiegeMenuThemeEvents {
     private static long openedAt;
     private static Screen boundScreen;
     private static final List<NativeButton> buttons = new ArrayList<>();
-    private static String cachedVersion;
     private SiegeMenuThemeEvents() { }
 
     private static boolean owned(Screen s) {
@@ -92,18 +90,21 @@ public final class SiegeMenuThemeEvents {
         }
 
         if (screen instanceof SiegeSettingsScreen) {
-            int buttonWidth = screen.width < 360 ? 52 : Math.min(112, Math.max(84, screen.width / 7));
+            int buttonWidth = screen.width < 360 ? 54 : Math.min(132, Math.max(96, screen.width / 6));
             String currentVersion = version();
-            String text = screen.width < 360 ? compactVersion(currentVersion)
-                    : label("SISTEMA " + currentVersion, "SYSTEM " + currentVersion);
+            String shortVersion = compactVersion(currentVersion);
+            String text = screen.width < 360 ? shortVersion : label("COMANDO " + shortVersion, "COMMAND " + shortVersion);
+            SiegeClientProfile.Profile profile = SiegeRuntimeStatus.profile();
             SiegeButton system = new SiegeButton(Math.max(8, screen.width - buttonWidth - 8), 7, buttonWidth, 19,
                     Component.literal(text), b -> {
                         SiegeUiSounds.click();
                         Minecraft.getInstance().setScreen(new SiegeSystemScreen(screen));
-                    }, SiegeTheme.CYAN).withIcon("settings").setCompactCenter(true);
+                    }, SiegeClientProfile.accent(profile)).withIcon("shield").setCompactCenter(true);
+            if (screen.width >= 430)
+                system.withBadge(SiegeClientProfile.shortLabel(profile, spanish()));
             system.setTooltip(Tooltip.create(Component.literal(label(
-                    "Configuración avanzada, compatibilidad y accesibilidad del cliente.",
-                    "Advanced client configuration, compatibility and accessibility."))));
+                    "Centro de comando: perfiles completos, diagnóstico, compatibilidad y accesibilidad del cliente.",
+                    "Command center: complete profiles, diagnostics, compatibility and client accessibility."))));
             event.addListener(system);
         }
 
@@ -201,6 +202,7 @@ public final class SiegeMenuThemeEvents {
         }
 
         renderBuildTag(screen, g);
+        SiegeCommandStrip.render(screen, g);
 
         if (transitionScreen != screen) {
             transitionScreen = screen;
@@ -218,17 +220,19 @@ public final class SiegeMenuThemeEvents {
 
     private static void renderBuildTag(Screen screen, GuiGraphics g) {
         if (!(screen instanceof SiegeTitleScreen) || !SiegeConfig.showBuildLabel || screen.width < 300) return;
-        String text = "BUILD " + version();
+        SiegeClientProfile.Profile profile = SiegeRuntimeStatus.profile();
+        String text = "BUILD " + version() + " // " + SiegeClientProfile.shortLabel(profile, spanish());
         var font = Minecraft.getInstance().font;
         float scale = 0.68F;
         int textWidth = Math.round(font.width(text) * scale);
-        int boxW = textWidth + 10;
+        int boxW = textWidth + 11;
         int boxH = 11;
         int x = 6;
         int y = screen.height - boxH - 3;
+        int accent = SiegeClientProfile.accent(profile);
 
-        g.fill(x, y, x + boxW, y + boxH, SiegeConfig.highContrast ? 0xED131315 : 0xC0131315);
-        g.fill(x, y, x + 2, y + boxH, 0xB8E54852);
+        g.fill(x, y, x + boxW, y + boxH, SiegeConfig.highContrast ? 0xED131315 : 0xD0131315);
+        g.fill(x, y, x + 2, y + boxH, accent);
         g.pose().pushPose();
         g.pose().translate(x + 5.0F, y + 2.0F, 0.0F);
         g.pose().scale(scale, scale, 1.0F);
@@ -236,19 +240,14 @@ public final class SiegeMenuThemeEvents {
         g.pose().popPose();
     }
 
-    private static String version() {
-        if (cachedVersion != null) return cachedVersion;
-        cachedVersion = ModList.get().getModContainerById(SiegeMod.MOD_ID)
-                .map(container -> container.getModInfo().getVersion().toString())
-                .orElse("DEV");
-        return cachedVersion;
-    }
+    private static String version() { return SiegeRuntimeStatus.version(); }
 
     @SubscribeEvent
     public static void tooltip(RenderTooltipEvent.Color event) {
         if (!themed(Minecraft.getInstance().screen)) return;
         int accent = nativeDialog(Minecraft.getInstance().screen)
-                ? SiegeVanillaChrome.accent(Minecraft.getInstance().screen) : SiegeTheme.RED;
+                ? SiegeVanillaChrome.accent(Minecraft.getInstance().screen)
+                : SiegeClientProfile.accent(SiegeRuntimeStatus.profile());
         event.setBackgroundStart(SiegeConfig.highContrast ? 0xFF08090A : 0xFA191719);
         event.setBackgroundEnd(SiegeConfig.highContrast ? 0xFF08090A : 0xFA0F1011);
         event.setBorderStart(accent);
