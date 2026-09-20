@@ -28,22 +28,17 @@ public final class SiegeTheme {
         if (w < 6 || h < 6) return;
         g.fill(x, y, x + w, y + h, SURFACE);
         frame(g, x, y, w, h, 0xFF424044);
-
-        // Layered one-pixel highlights add depth without introducing textures or
-        // expensive per-frame effects. Geometry stays identical for every screen.
         g.fill(x + 1, y + 1, x + w - 1, y + 2, 0xFF666166);
         g.fill(x + 2, y + 2, x + w - 2, y + 3, 0x185F5B5F);
         g.fill(x + 1, y + h - 3, x + w - 1, y + h - 2, 0x26000000);
         g.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, 0xFF0B0B0C);
         g.fill(x + 1, y + 3, x + 2, y + h - 3, 0x205F5B5F);
         g.fill(x + w - 2, y + 3, x + w - 1, y + h - 3, 0x24000000);
-
         int corner = Math.min(18, Math.min(w, h) / 4);
         g.fill(x, y, x + corner, y + 2, accent);
         g.fill(x + w - corner, y + h - 2, x + w, y + h, accent);
     }
 
-    /** Small focus brackets used by controls without changing their hit boxes. */
     public static void focusCorners(GuiGraphics g, int x, int y, int w, int h, int color) {
         if (w < 4 || h < 4) return;
         int arm = Math.min(6, Math.max(3, Math.min(w, h) / 3));
@@ -57,14 +52,12 @@ public final class SiegeTheme {
         g.fill(x + w - 1, y + h - arm, x + w, y + h, color);
     }
 
-    /** Compact section divider shared by screens that need a quiet tactical accent. */
     public static void divider(GuiGraphics g, int x, int y, int w, int accent) {
         if (w <= 0) return;
         g.fill(x, y, x + w, y + 1, 0xFF2A2D30);
         g.fill(x, y, x + Math.min(56, w), y + 2, accent);
     }
 
-    /** Texture stays in the empty perimeter, never across the reading columns or portrait. */
     public static void paper(GuiGraphics g, int x, int y, int w, int h, boolean dark) {
         if (w < 40 || h < 40) return;
         int grain = dark ? 0x224B4843 : 0x224C4130;
@@ -106,6 +99,11 @@ public final class SiegeTheme {
                 g.fill(x + 7, y, x + 8, y + 7, color);
                 g.fill(x + 1, y + 6, x + 4, y + 8, color);
                 g.fill(x + 5, y + 6, x + 8, y + 8, color);
+            }
+            case "mouse" -> {
+                frame(g, x + 2, y, 5, 9, color);
+                g.fill(x + 4, y + 1, x + 5, y + 4, color);
+                g.fill(x + 2, y + 4, x + 7, y + 5, color);
             }
             case "pin" -> {
                 frame(g, x + 2, y, 5, 4, color);
