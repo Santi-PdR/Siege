@@ -35,7 +35,7 @@ public final class SiegeMenuThemeEvents {
 
     private static boolean owned(Screen s) {
         return s instanceof SiegeTitleScreen || s instanceof SiegeMultiplayerScreen
-                || s instanceof SiegeSettingsScreen || s instanceof IntelScreenV3
+                || s instanceof SiegeSettingsScreen || s instanceof SiegeSystemScreen || s instanceof IntelScreenV3
                 || s instanceof IntelPortraitScreen || s instanceof SiegeSceneScreen
                 || s instanceof SiegeGuideScreen || s instanceof SiegeGuideImageScreen;
     }
@@ -52,6 +52,13 @@ public final class SiegeMenuThemeEvents {
     private static String translationKey(Component component) {
         return component != null && component.getContents() instanceof TranslatableContents tr ? tr.getKey() : "";
     }
+
+    private static boolean spanish() {
+        Minecraft minecraft = Minecraft.getInstance();
+        return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_");
+    }
+
+    private static String label(String es, String en) { return spanish() ? es : en; }
 
     @SubscribeEvent
     public static void opening(ScreenEvent.Opening event) {
@@ -73,8 +80,25 @@ public final class SiegeMenuThemeEvents {
         // Text colors are screen state, not animation state. Set them once at init
         // instead of rewriting every EditBox on every rendered frame.
         for (var listener : event.getListenersList()) if (listener instanceof EditBox field) {
-            field.setTextColor(SiegeTheme.INK);
-            field.setTextColorUneditable(SiegeTheme.MUTED);
+            field.setTextColor(SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK);
+            field.setTextColorUneditable(SiegeConfig.highContrast ? 0xFFD5D7D8 : SiegeTheme.MUTED);
+        }
+
+        // 0.30 adds a real system/diagnostics center without inflating the existing
+        // settings navigation. It lives in the top-right title-bar space and adapts
+        // its label rather than overlapping compact screens.
+        if (screen instanceof SiegeSettingsScreen) {
+            int buttonWidth = screen.width < 360 ? 52 : Math.min(112, Math.max(84, screen.width / 7));
+            String text = screen.width < 360 ? "0.30" : label("SISTEMA 0.30", "SYSTEM 0.30");
+            SiegeButton system = new SiegeButton(Math.max(8, screen.width - buttonWidth - 8), 7, buttonWidth, 19,
+                    Component.literal(text), b -> {
+                        SiegeUiSounds.click();
+                        Minecraft.getInstance().setScreen(new SiegeSystemScreen(screen));
+                    }, SiegeTheme.CYAN).withIcon("settings").setCompactCenter(true);
+            system.setTooltip(Tooltip.create(Component.literal(label(
+                    "Diagnóstico, compatibilidad, accesibilidad y estado real del cliente.",
+                    "Diagnostics, compatibility, accessibility and live client state."))));
+            event.addListener(system);
         }
 
         if (!nativeDialog(screen)) return;
@@ -136,7 +160,8 @@ public final class SiegeMenuThemeEvents {
             // SIEGE-owned screens keep focus decoration strictly inside the field
             // bounds so dense layouts cannot paint over adjacent controls.
             for (var child : screen.children()) if (child instanceof EditBox field && field.visible) {
-                int color = field.isFocused() ? SiegeTheme.FOCUS : 0xFF656061;
+                int color = field.isFocused() ? SiegeTheme.FOCUS
+                        : SiegeConfig.highContrast ? 0xFF9AA1A6 : 0xFF656061;
                 int x = Math.max(0, field.getX());
                 int y = Math.max(0, field.getY());
                 int right = Math.min(screen.width, field.getX() + field.getWidth());
@@ -148,6 +173,18 @@ public final class SiegeMenuThemeEvents {
             }
         }
 
+        // A restrained source badge makes the 0.30 Intel rule visible without
+        // changing dossier contents or occupying compact layouts.
+        if (screen instanceof IntelScreenV3 && screen.width >= 780) {
+            var font = Minecraft.getInstance().font;
+            String text = label("DOSSIERS OFICIALES", "OFFICIAL DOSSIERS");
+            int w = font.width(text) + 12;
+            int x = screen.width - w - 8;
+            g.fill(x, 7, x + w, 19, SiegeConfig.highContrast ? 0xF20C1114 : 0xC90C1114);
+            g.fill(x, 7, x + 2, 19, SiegeTheme.CYAN);
+            g.drawString(font, text, x + 6, 9, SiegeConfig.highContrast ? 0xFFFFFFFF : SiegeTheme.INK, false);
+        }
+
         renderBuildTag(screen, g);
 
         if (transitionScreen != screen) {
@@ -155,7 +192,7 @@ public final class SiegeMenuThemeEvents {
             openedAt = System.nanoTime() / 1_000_000L;
         }
         int alpha = SiegeMenuPolicy.entryShade(System.nanoTime() / 1_000_000L - openedAt,
-                SiegeConfig.menuEffects, SiegeConfig.reducedMotion);
+                SiegeConfig.menuEffects && !SiegeConfig.reduceFlashes, SiegeConfig.reducedMotion);
         if (alpha > 0) {
             g.pose().pushPose();
             g.pose().translate(0, 0, 500);
@@ -175,12 +212,12 @@ public final class SiegeMenuThemeEvents {
         int x = 6;
         int y = screen.height - boxH - 3;
 
-        g.fill(x, y, x + boxW, y + boxH, 0xC0131315);
+        g.fill(x, y, x + boxW, y + boxH, SiegeConfig.highContrast ? 0xED131315 : 0xC0131315);
         g.fill(x, y, x + 2, y + boxH, 0xB8E54852);
         g.pose().pushPose();
         g.pose().translate(x + 5.0F, y + 2.0F, 0.0F);
         g.pose().scale(scale, scale, 1.0F);
-        g.drawString(font, text, 0, 0, 0xFF9CA4AA, false);
+        g.drawString(font, text, 0, 0, SiegeConfig.highContrast ? 0xFFDCE1E4 : 0xFF9CA4AA, false);
         g.pose().popPose();
     }
 
@@ -197,10 +234,10 @@ public final class SiegeMenuThemeEvents {
         if (!themed(Minecraft.getInstance().screen)) return;
         int accent = nativeDialog(Minecraft.getInstance().screen)
                 ? SiegeVanillaChrome.accent(Minecraft.getInstance().screen) : SiegeTheme.RED;
-        event.setBackgroundStart(0xFA191719);
-        event.setBackgroundEnd(0xFA0F1011);
+        event.setBackgroundStart(SiegeConfig.highContrast ? 0xFF08090A : 0xFA191719);
+        event.setBackgroundEnd(SiegeConfig.highContrast ? 0xFF08090A : 0xFA0F1011);
         event.setBorderStart(accent);
-        event.setBorderEnd(0xFF494346);
+        event.setBorderEnd(SiegeConfig.highContrast ? SiegeTheme.INK : 0xFF494346);
     }
 
     @SubscribeEvent
