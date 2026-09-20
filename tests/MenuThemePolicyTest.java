@@ -14,14 +14,18 @@ public class MenuThemePolicyTest {
         for (String name : new String[] {"ConnectScreen", "DisconnectedScreen", "EditServerScreen", "DirectJoinServerScreen",
                 "ReceivingLevelScreen", "DownloadingTerrainScreen"})
             themed(root + name, SiegeMenuPolicy.NativeFamily.NETWORK);
+        themed(root + "multiplayer.JoinMultiplayerScreen", SiegeMenuPolicy.NativeFamily.NETWORK);
 
         for (String name : new String[] {"OptionsScreen", "SkinCustomizationScreen", "AccessibilityOptionsScreen",
-                "OnlineOptionsScreen", "ChatOptionsScreen", "GenericDirtMessageScreen"})
+                "AccessibilityOnboardingScreen", "OnlineOptionsScreen", "ChatOptionsScreen", "CreditsAndAttributionScreen",
+                "GenericDirtMessageScreen"})
             themed(root + name, SiegeMenuPolicy.NativeFamily.SYSTEM);
+        themed(root + "telemetry.TelemetryInfoScreen", SiegeMenuPolicy.NativeFamily.SYSTEM);
 
         themed(root + "SoundOptionsScreen", SiegeMenuPolicy.NativeFamily.AUDIO);
         themed(root + "VideoSettingsScreen", SiegeMenuPolicy.NativeFamily.VIDEO);
-        themed(root + "controls.ControlsScreen", SiegeMenuPolicy.NativeFamily.CONTROLS);
+        for (String name : new String[] {"ControlsScreen", "KeyBindsScreen", "MouseSettingsScreen"})
+            themed(root + "controls." + name, SiegeMenuPolicy.NativeFamily.CONTROLS);
         themed(root + "LanguageSelectScreen", SiegeMenuPolicy.NativeFamily.LANGUAGE);
         themed(root + "packs.PackSelectionScreen", SiegeMenuPolicy.NativeFamily.PACKS);
 
