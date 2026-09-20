@@ -15,30 +15,49 @@ public class ConfigRegressionTest {
             SiegeConfig.comfortableReading = true;
             SiegeConfig.inspectorMap = false;
             SiegeConfig.inspectorBackground = 2;
+            SiegeConfig.highContrast = true;
+            SiegeConfig.reduceFlashes = true;
+            SiegeConfig.titleInterference = true;
             SiegeConfig.save();
             SiegeConfig.load();
             check(!SiegeConfig.autoRotateIntel, "New settings must not rerun the legacy auto-rotate migration");
             check(SiegeConfig.intelReadingMode && SiegeConfig.darkIntelPaper && SiegeConfig.comfortableReading, "Reader settings round trip");
             check(!SiegeConfig.inspectorMap && SiegeConfig.inspectorBackground == 2, "Inspector settings round trip");
+            check(SiegeConfig.highContrast && SiegeConfig.reduceFlashes, "0.30 accessibility settings round trip");
+            check(!SiegeConfig.titleInterference, "Flash reduction must suppress title interference");
+
             SiegeConfig.resetDefaults();
             SiegeConfig.load();
             SiegeConfig.applyCalmPreset();
-            check(SiegeConfig.reducedMotion && !SiegeConfig.scanlines && !SiegeConfig.titleInterference && !SiegeConfig.hoverSounds, "Calm preset");
+            check(SiegeConfig.reducedMotion && SiegeConfig.reduceFlashes && SiegeConfig.highContrast
+                    && !SiegeConfig.scanlines && !SiegeConfig.titleInterference && !SiegeConfig.hoverSounds, "Calm preset");
+
+            SiegeConfig.resetDefaults();
+            SiegeConfig.applyReadingPreset();
+            check(SiegeConfig.intelReadingMode && SiegeConfig.comfortableReading && SiegeConfig.darkIntelPaper
+                    && SiegeConfig.highContrast && SiegeConfig.reducedMotion && SiegeConfig.reduceFlashes
+                    && !SiegeConfig.scanlines && !SiegeConfig.titleInterference, "Reading preset");
+
             Files.writeString(folder.resolve("siege-client.properties"), "settingsRevision=801\nindexOrder=99\ninspectorBackground=-9\nautoRotateIntel=false\n");
             SiegeConfig.load();
             check(!SiegeConfig.autoRotateIntel, "Existing rotation preference retained");
             check(SiegeConfig.inspectorBackground == 0, "Invalid numeric value clamped");
+            check(!SiegeConfig.highContrast && !SiegeConfig.reduceFlashes, "New options use independent defaults");
+
             Path config = folder.resolve("siege-client.properties");
-            Files.writeString(config, "settingsRevision=801\nuiVolume= 44 \nmusic= false \ngraphics= balanced \n");
+            Files.writeString(config, "settingsRevision=801\nuiVolume= 44 \nmusic= false \ngraphics= balanced \nhighContrast= true \nreduceFlashes= true \ntitleInterference=true\n");
             SiegeConfig.load();
             check(SiegeConfig.uiVolume == 44 && !SiegeConfig.music, "Trimmed settings");
             check(SiegeConfig.graphics == SiegeConfig.Graphics.BALANCED, "Case-insensitive graphics");
+            check(SiegeConfig.highContrast && SiegeConfig.reduceFlashes && !SiegeConfig.titleInterference,
+                    "Accessibility normalization on load");
             SiegeConfig.save();
             var savedTime = Files.getLastModifiedTime(config);
             SiegeConfig.save();
             check(savedTime.equals(Files.getLastModifiedTime(config)), "Unchanged save must not write");
             SiegeConfig.uiVolume = 999; SiegeConfig.save();
             check(SiegeConfig.uiVolume == 100, "Save clamps public settings");
+
             Files.writeString(config, "music=\\uBROKEN");
             SiegeConfig.load(); SiegeConfig.save();
             check(!SiegeConfig.lastSaveSucceeded, "Corrupt file blocks implicit overwrite");
@@ -54,4 +73,3 @@ public class ConfigRegressionTest {
         }
     }
 }
-
