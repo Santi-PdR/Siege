@@ -63,7 +63,7 @@ assert CHROME.count('g.drawCenteredString(font, center, width / 2, 6, titleColor
 assert "class SiegeDeploymentStatus" in DEPLOYMENT
 for state in ("QUERYING", "OFFLINE", "NO_RESPONSE", "INCOMPATIBLE", "ONLINE"):
     assert state in DEPLOYMENT, f"Missing deployment state {state}"
-assert "SiegeDeploymentStatus.evaluate" in MULTIPLAYER
+assert "SiegeDeploymentStatus.state" in MULTIPLAYER
 assert "CONTROL DE DESPLIEGUE" in MULTIPLAYER and "DEPLOYMENT CONTROL" in MULTIPLAYER
 assert "DESTINO → ESTADO → CONECTAR" in MULTIPLAYER
 assert "SiegeLacontinuacion.exaroton.me:18736" in MULTIPLAYER
