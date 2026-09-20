@@ -49,6 +49,10 @@ public final class SiegeMenuThemeEvents {
         return Minecraft.getInstance().level == null && (owned(s) || nativeDialog(s));
     }
 
+    private static String translationKey(Component component) {
+        return component != null && component.getContents() instanceof TranslatableContents tr ? tr.getKey() : "";
+    }
+
     @SubscribeEvent
     public static void opening(ScreenEvent.Opening event) {
         Screen next = event.getNewScreen();
@@ -77,8 +81,24 @@ public final class SiegeMenuThemeEvents {
         boundScreen = screen;
         buttons.clear();
         int accent = SiegeVanillaChrome.accent(screen);
+        String screenName = screen.getClass().getName();
         for (var listener : List.copyOf(event.getListenersList())) {
             if (listener instanceof AbstractButton original && !(original instanceof SiegeButton)) {
+                String key = translationKey(original.getMessage());
+
+                // Remove telemetry/data and credits entry points from the Options
+                // flow without replacing Minecraft's whole OptionsScreen.
+                if (SiegeMenuPolicy.hideNativeButton(screenName, key)) {
+                    original.active = false;
+                    original.visible = false;
+                    if (screen.getFocused() == original) screen.setFocused(null);
+                    event.removeListener(original);
+                    continue;
+                }
+
+                int adjustedY = SiegeMenuPolicy.adjustedButtonY(screenName, key, original.getY());
+                if (adjustedY != original.getY()) original.setY(adjustedY);
+
                 NativeButton replacement = new NativeButton(original, accent);
                 boolean focused = screen.getFocused() == original;
                 event.removeListener(original);
@@ -113,14 +133,15 @@ public final class SiegeMenuThemeEvents {
             SiegeUiSounds.updateHover(screen.children());
             SiegeVanillaChrome.renderOverlay(screen, g);
         } else {
-            // SIEGE-owned screens still get consistent focused text-field treatment.
+            // SIEGE-owned screens keep focus decoration strictly inside the field
+            // bounds so dense layouts cannot paint over adjacent controls.
             for (var child : screen.children()) if (child instanceof EditBox field && field.visible) {
                 int color = field.isFocused() ? SiegeTheme.FOCUS : 0xFF656061;
-                int x = Math.max(0, field.getX() - 1);
-                int y = Math.max(0, field.getY() - 1);
-                int right = Math.min(screen.width, field.getX() + field.getWidth() + 1);
-                int bottom = Math.min(screen.height, field.getY() + field.getHeight() + 1);
-                if (right > x && bottom > y) {
+                int x = Math.max(0, field.getX());
+                int y = Math.max(0, field.getY());
+                int right = Math.min(screen.width, field.getX() + field.getWidth());
+                int bottom = Math.min(screen.height, field.getY() + field.getHeight());
+                if (right - x >= 2 && bottom - y >= 2) {
                     SiegeTheme.frame(g, x, y, right - x, bottom - y, color);
                     if (field.isFocused()) SiegeTheme.focusCorners(g, x, y, right - x, bottom - y, color);
                 }
@@ -238,7 +259,7 @@ public final class SiegeMenuThemeEvents {
             sync();
             if (!active || !visible) return;
             super.onPress();
-            String key = source.getMessage().getContents() instanceof TranslatableContents tr ? tr.getKey() : "";
+            String key = translationKey(source.getMessage());
             if (key.equals("gui.cancel") || key.equals("gui.back") || key.equals("gui.no")) SiegeUiSounds.back();
             else SiegeUiSounds.confirm();
             source.onPress();
