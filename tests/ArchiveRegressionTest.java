@@ -30,8 +30,11 @@ public final class ArchiveRegressionTest {
                 && e.body(true).contains("tres clones")), "Fauna current record incomplete");
         check(current.stream().anyMatch(e -> e.id().equals("current-trident") && e.body(true).contains("40%")
                 && e.body(true).contains("10%") && e.body(true).contains("cortar cuerda")), "Trident current record incomplete");
-        check(current.stream().anyMatch(e -> e.id().equals("current-fusilier") && e.body(true).contains("seis segundos")
-                && e.body(true).contains("Modo Mortero") && e.body(true).contains("BLOX DRINK")), "Fusilier current record incomplete");
+        check(current.stream().anyMatch(e -> {
+            String body = e.body(true).toUpperCase(java.util.Locale.ROOT);
+            return e.id().equals("current-fusilier") && body.contains("SEIS SEGUNDOS")
+                    && body.contains("MODO MORTERO") && body.contains("BLOX DRINK");
+        }), "Fusilier current record incomplete");
 
         var missions = SiegeArchiveData.entries(SiegeArchiveData.Category.MISSIONS, "", true);
         check(missions.stream().anyMatch(e -> e.id().equals("operation-exodus") && e.body(true).contains("23.400.000")
