@@ -15,7 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 
 /**
- * Presentation-only Multiplayer screen. Vanilla owns server persistence, pings,
+ * SIEGE 0.70 deployment console. Vanilla still owns server persistence, pings,
  * LAN discovery, entry input, confirmation dialogs and the connection lifecycle.
  */
 public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
@@ -48,6 +48,7 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         serverSelectionList.setRenderBackground(false);
         serverSelectionList.setRenderTopAndBottom(false);
         serverSelectionList.setScrollAmount(serverSelectionList.getScrollAmount());
+
         // Retain vanilla button objects for onSelectedChange and their original callbacks.
         // Only their registered visual/input widgets are replaced.
         for (var child : List.copyOf(children())) {
@@ -92,32 +93,37 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
             button.active = original.active;
             button.setTooltip(Tooltip.create(Component.literal(switch (slot) {
                 case 0 -> label("Conectar al servidor seleccionado.", "Connect to the selected server.");
+                case 1 -> label("Desplegarse una vez sin guardar el destino.", "Deploy once without saving the destination.");
+                case 2 -> label("Agregar un destino a la lista guardada.", "Add a destination to the saved list.");
                 case 3 -> label("Editar el servidor seleccionado.", "Edit the selected server.");
                 case 4 -> label("Eliminar el servidor seleccionado.", "Delete the selected server.");
-                case 5 -> label("Volver a consultar los servidores.", "Query the servers again.");
+                case 5 -> label("Volver a consultar los servidores manteniendo selección y desplazamiento.",
+                        "Query servers again while preserving selection and scroll.");
                 default -> message.getString();
             })));
             removeWidget(original);
             addRenderableWidget(button);
             controls.add(new Control(slot, original, button));
         }
+
         SiegeUiSounds.resetHover();
         for (var entry : serverSelectionList.children()) {
             if (entry instanceof ServerSelectionList.OnlineServerEntry online
                     && sameAddress(online.getServerData().ip, restoreAddress)) {
-                serverSelectionList.setSelected(entry); break;
+                serverSelectionList.setSelected(entry);
+                break;
             }
         }
         if (restoreAddress != null) serverSelectionList.setScrollAmount(restoreScroll);
         lastSelection = serverSelectionList.getSelected();
-        initialSync = true; syncControls();
+        initialSync = true;
+        syncControls();
         setInitialFocus(serverSelectionList);
     }
 
     @Override
     protected void onSelectedChange() {
-        // The LAN scanner is a status row, never a destination. Vanilla can select
-        // it when the list receives focus or is clicked, producing a large white frame.
+        // The LAN scanner is a status row, never a deployment destination.
         if (serverSelectionList.getSelected() instanceof ServerSelectionList.LANHeader) {
             serverSelectionList.setSelected(null);
             return;
@@ -131,10 +137,16 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         boolean locked = selectedServerIsOfficial();
         var selection = serverSelectionList.getSelected();
         boolean updateTips = initialSync || tooltipSelection != selection;
-        tooltipSelection = selection; initialSync = false;
+        tooltipSelection = selection;
+        initialSync = false;
+
         for (Control control : controls) {
             boolean protectedAction = locked && (control.slot == 3 || control.slot == 4);
             control.view.active = control.original.active && !protectedAction;
+            if (control.slot == 0) {
+                ServerData server = selectedServer();
+                control.view.withBadge(server == null ? "" : shortState(server));
+            }
             if (updateTips && (control.slot == 3 || control.slot == 4)) {
                 String explanation = protectedAction
                         ? control.slot == 3
@@ -150,9 +162,15 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         }
     }
 
+    private ServerData selectedServer() {
+        var selected = serverSelectionList.getSelected();
+        return selected instanceof ServerSelectionList.OnlineServerEntry online ? online.getServerData() : null;
+    }
+
     private static boolean sameAddress(String a, String b) {
         return a != null && b != null && a.trim().equalsIgnoreCase(b.trim());
     }
+
     private void ensureOfficialServer() {
         String name = label("Servidor oficial de SIEGE", "SIEGE Official Server");
         ServerData official = null;
@@ -161,16 +179,23 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
             ServerData data = getServers().get(i);
             if (sameAddress(data.ip, OFFICIAL_ADDRESS)) {
                 if (official == null) official = data;
-                else { getServers().remove(data); changed = true; continue; }
+                else {
+                    getServers().remove(data);
+                    changed = true;
+                    continue;
+                }
             }
             i++;
         }
         if (official == null) {
             official = new ServerData(name, OFFICIAL_ADDRESS, false);
-            getServers().add(official, false); changed = true;
+            getServers().add(official, false);
+            changed = true;
         }
         if (!name.equals(official.name) || !OFFICIAL_ADDRESS.equals(official.ip)) {
-            official.name = name; official.ip = OFFICIAL_ADDRESS; changed = true;
+            official.name = name;
+            official.ip = OFFICIAL_ADDRESS;
+            changed = true;
         }
         int found = 0;
         while (found < getServers().size() && getServers().get(found) != official) found++;
@@ -182,27 +207,25 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
     }
 
     private boolean selectedServerIsOfficial() {
-        var selected = serverSelectionList.getSelected();
-        return selected instanceof ServerSelectionList.OnlineServerEntry online
-                && sameAddress(online.getServerData().ip, OFFICIAL_ADDRESS);
+        ServerData selected = selectedServer();
+        return selected != null && sameAddress(selected.ip, OFFICIAL_ADDRESS);
     }
 
     private void refresh() {
         long now = System.nanoTime() / 1_000_000L;
         if (now - refreshedAt < 750) return;
         SiegeMultiplayerScreen next = new SiegeMultiplayerScreen(parent);
-        var selected = serverSelectionList.getSelected();
-        if (selected instanceof ServerSelectionList.OnlineServerEntry online) next.restoreAddress = online.getServerData().ip;
+        ServerData selected = selectedServer();
+        if (selected != null) next.restoreAddress = selected.ip;
         next.restoreScroll = serverSelectionList.getScrollAmount();
         next.refreshedAt = now;
         minecraft.setScreen(next);
     }
+
     @Override
     public void tick() {
         super.tick();
-        if (getServers().size() > 0 && !sameAddress(getServers().get(0).ip, OFFICIAL_ADDRESS)) {
-            ensureOfficialServer();
-        }
+        if (getServers().size() > 0 && !sameAddress(getServers().get(0).ip, OFFICIAL_ADDRESS)) ensureOfficialServer();
     }
 
     @Override
@@ -213,8 +236,12 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
 
     @Override
     public boolean keyPressed(int key, int scan, int modifiers) {
-        // Preserve vanilla F5 without constructing a vanilla screen or nesting parents.
-        if (key == 294) { SiegeUiSounds.click(); refresh(); return true; }
+        // Preserve vanilla F5 without adding SIEGE-specific keyboard shortcuts.
+        if (key == 294) {
+            SiegeUiSounds.click();
+            refresh();
+            return true;
+        }
         return super.keyPressed(key, scan, modifiers);
     }
 
@@ -232,32 +259,42 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         renderBackground(g);
         syncControls();
         entryTooltip = null;
-        int x = layout.x(), right = x + layout.width();
+        int x = layout.x();
+        int right = x + layout.width();
         g.fill(x, 8, right, layout.top() - 5, 0xEB101113);
         g.fill(x, 8, x + 3, layout.top() - 5, RED);
-        g.drawString(font, fit("SIEGE / " + label("DESPLIEGUE", "DEPLOYMENT"), layout.width() - 24), x + 12, 15, 0xFFF0EDEA, false);
+        g.drawString(font, fit("SIEGE / " + label("DESPLIEGUE 0.70", "DEPLOYMENT 0.70"), layout.width() - 24),
+                x + 12, 15, 0xFFF0EDEA, false);
+
         int saved = getServers().size();
+        ServerData selectedServer = selectedServer();
         String count = saved + " " + label(saved == 1 ? "SERVIDOR" : "SERVIDORES",
                 saved == 1 ? "SERVER" : "SERVERS");
-        g.drawString(font, fit(count, layout.width() - 24), x + 12, 29, 0xFFADB1B5, false);
+        String headerStatus = selectedServer == null
+                ? count
+                : count + "  ·  " + SiegeDeploymentStatus.deploymentLabel(selectedServer, spanish());
+        g.drawString(font, fit(headerStatus, layout.width() - 24), x + 12, 29,
+                selectedServer == null ? 0xFFADB1B5 : SiegeDeploymentStatus.accent(selectedServer), false);
+
         panel(g, x, layout.top(), layout.listWidth(), layout.bottom() - layout.top());
         renderRowPlates(g);
-        // JoinMultiplayerScreen draws its own title and dirt background. Render its
-        // registered children once instead, preserving entry behavior and tooltips.
         for (var child : children()) if (child instanceof Renderable renderable)
             renderable.render(g, mouseX, mouseY, partialTick);
-        // LANHeader centers itself against the whole Minecraft screen. Cover that
-        // vanilla row and redraw it inside the SIEGE list column.
+
         g.enableScissor(layout.x(), layout.top(), layout.x() + layout.listWidth(), layout.bottom());
         renderLanScanner(g);
         g.disableScissor();
         renderEmptyState(g);
-        if (layout.detailWidth() > 0) g.enableScissor(layout.detailX(), layout.top(), layout.detailX() + layout.detailWidth(), layout.bottom());
+
+        if (layout.detailWidth() > 0)
+            g.enableScissor(layout.detailX(), layout.top(), layout.detailX() + layout.detailWidth(), layout.bottom());
         renderSelectionSummary(g, mouseX, mouseY);
         if (layout.detailWidth() > 0) g.disableScissor();
+
         renderLockedActionTooltip(mouseX, mouseY);
         if (entryTooltip != null) g.renderComponentTooltip(font, entryTooltip, mouseX, mouseY);
         SiegeUiSounds.updateHover(children());
+
         var selected = serverSelectionList.getSelected();
         if (selected != lastSelection) {
             if (selected != null) SiegeUiSounds.click();
@@ -278,10 +315,11 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
                     selected ? 0xD52F2226 : (i % 2 == 0 ? 0xA21F1D20 : 0xA218181B));
             if (selected) {
                 int rowRight = left + serverSelectionList.getRowWidth();
-                g.fill(left - 3, y, rowRight, y + 1, RED);
-                g.fill(left - 3, y + 33, rowRight, y + 34, RED);
-                g.fill(left - 3, y, left - 2, y + 34, RED);
-                g.fill(rowRight - 1, y, rowRight, y + 34, RED);
+                int accent = selectedServer() == null ? RED : SiegeDeploymentStatus.accent(selectedServer());
+                g.fill(left - 3, y, rowRight, y + 1, accent);
+                g.fill(left - 3, y + 33, rowRight, y + 34, accent);
+                g.fill(left - 3, y, left - 2, y + 34, accent);
+                g.fill(rowRight - 1, y, rowRight, y + 34, accent);
             }
         }
         g.disableScissor();
@@ -331,18 +369,19 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
 
     private void renderSelectionSummary(GuiGraphics g, int mouseX, int mouseY) {
         var selected = serverSelectionList.getSelected();
-        ServerData server = selected instanceof ServerSelectionList.OnlineServerEntry online
-                ? online.getServerData() : null;
+        ServerData server = selectedServer();
         String status = server == null
                 ? selected instanceof ServerSelectionList.NetworkServerEntry ? label("RED LOCAL", "LOCAL NETWORK")
                     : label("Sin servidor seleccionado", "No server selected")
-                : status(server);
-        int color = server == null ? 0xFFADB1B5 : statusColor(server);
+                : SiegeDeploymentStatus.label(server, spanish());
+        int color = server == null ? 0xFFADB1B5 : SiegeDeploymentStatus.accent(server);
 
-        // Compact layouts have no detail panel, so they receive one concise footer.
+        // Compact layouts have no detail panel, so they receive a concise operational footer.
         if (layout.detailWidth() <= 0) {
             int footerY = layout.bottom() + 5;
-            String summary = server == null ? status : server.name + " · " + status;
+            String summary = server == null ? status
+                    : server.name + " · " + status + (SiegeDeploymentStatus.state(server) == SiegeDeploymentStatus.State.ONLINE
+                        ? " · " + SiegeDeploymentStatus.latencyLabel(server, spanish()) : "");
             g.fill(layout.x(), layout.bottom() + 2, layout.x() + layout.width(),
                     layout.firstRow() - 4, 0xF2101113);
             g.drawString(font, fit(summary, layout.width() - 16), layout.x() + 8, footerY, color, false);
@@ -353,13 +392,19 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
             return;
         }
 
-        int x = layout.detailX(), y = layout.top(), w = layout.detailWidth();
+        int x = layout.detailX();
+        int y = layout.top();
+        int w = layout.detailWidth();
         panel(g, x, y, w, layout.bottom() - y);
-        g.drawString(font, label("DETALLES", "DETAILS"), x + 10, y + 10, 0xFFAAAEB3, false);
+        g.drawString(font, label("CONTROL DE DESPLIEGUE", "DEPLOYMENT CONTROL"), x + 10, y + 10, 0xFFAAAEB3, false);
         g.fill(x + 10, y + 24, x + w - 10, y + 25, 0xFF5C363B);
         if (server == null) {
-            g.drawString(font, fit(label("Sin servidor seleccionado.", "No server selected."), w - 20),
+            g.drawString(font, fit(label("Seleccioná un destino para ver su estado operativo.",
+                    "Select a destination to view its operational state."), w - 20),
                     x + 10, y + 36, 0xFFADB1B5, false);
+            g.drawString(font, fit(label("La conexión, ping y lista siguen siendo gestionados por Minecraft.",
+                    "Connection, ping and server list remain managed by Minecraft."), w - 20),
+                    x + 10, y + 52, 0xFF777F85, false);
             return;
         }
 
@@ -367,30 +412,59 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         boolean official = sameAddress(server.ip, OFFICIAL_ADDRESS);
         if (official) {
             SiegeTheme.icon(g, x + 10, next + 3, "pin", SiegeTheme.GOLD);
-            g.drawString(font, label("OFICIAL", "OFFICIAL"), x + 24, next + 3, SiegeTheme.GOLD, false);
-            next += 14;
+            g.drawString(font, label("DESTINO OFICIAL FIJADO", "PINNED OFFICIAL DESTINATION"),
+                    x + 24, next + 3, SiegeTheme.GOLD, false);
+            next += 15;
         }
-        g.drawString(font, fit(status, w - 20), x + 10, next + 5, color, false);
-        next += 20;
+
+        String deployment = SiegeDeploymentStatus.deploymentLabel(server, spanish());
+        g.drawString(font, fit(deployment, w - 20), x + 10, next + 4, color, false);
+        next += 14;
+        g.drawString(font, fit(status, w - 20), x + 10, next + 2, color, false);
+        next += 16;
+
+        int meterW = Math.max(1, w - 20);
+        g.fill(x + 10, next, x + 10 + meterW, next + 3, 0xFF292D31);
+        int fill = SiegeDeploymentStatus.latencyFill(server, meterW);
+        if (fill > 0) g.fill(x + 10, next, x + 10 + fill, next + 3, color);
+        next += 7;
+        g.drawString(font, fit(SiegeDeploymentStatus.latencyLabel(server, spanish()), w - 20),
+                x + 10, next, 0xFF92979C, false);
+        next += 15;
 
         if (official) {
             g.drawString(font, fit(OFFICIAL_ADDRESS, w - 20), x + 10, next, 0xFF92979C, false);
             if (mouseX >= x + 10 && mouseX < x + w - 10 && mouseY >= next && mouseY < next + font.lineHeight)
                 entryTooltip = List.of(Component.literal(OFFICIAL_ADDRESS));
-            next += 17;
+            next += 16;
         }
 
-        if (server.pinged && server.ping >= 0 && !isOfflineState(server)
+        if (server.pinged && server.ping >= 0 && !SiegeDeploymentStatus.offlineMarker(server)
                 && server.protocol != SharedConstants.getCurrentVersion().getProtocolVersion()) {
             String version = server.version.getString().trim();
-            if (!version.isEmpty())
-                g.drawString(font, fit(version, w - 20), x + 10, next, 0xFFFFA0A5, false);
-            next += 17;
+            if (!version.isEmpty()) {
+                g.drawString(font, fit(label("SERVIDOR: ", "SERVER: ") + version, w - 20),
+                        x + 10, next, 0xFFFFA0A5, false);
+                next += 15;
+            }
+            String client = label("CLIENTE: ", "CLIENT: ") + SharedConstants.getCurrentVersion().getName();
+            g.drawString(font, fit(client, w - 20), x + 10, next, 0xFFFFA0A5, false);
+            next += 16;
+        }
+
+        int routeY = Math.max(next + 3, layout.bottom() - 42);
+        if (routeY + 24 < layout.bottom()) {
+            g.fill(x + 10, routeY, x + w - 10, routeY + 1, 0xFF353A3E);
+            String route = label("DESTINO → ESTADO → CONECTAR", "DESTINATION → STATUS → CONNECT");
+            g.drawString(font, fit(route, w - 20), x + 10, routeY + 6, color, false);
+            String source = label("Red y conexión: Minecraft / Forge", "Network and connection: Minecraft / Forge");
+            g.drawString(font, fit(source, w - 20), x + 10, routeY + 18, 0xFF777F85, false);
         }
 
         String motd = server.motd.getString().trim();
-        if (isUsefulMotd(server, motd) && next + font.lineHeight < layout.bottom() - 10)
-            drawWrapped(g, motd, x + 10, next, w - 20, layout.bottom() - 10, 0xFFC4C6C9);
+        int motdBottom = Math.min(layout.bottom() - 48, routeY - 4);
+        if (SiegeDeploymentStatus.usefulMotd(server, motd) && next + font.lineHeight < motdBottom)
+            drawWrapped(g, motd, x + 10, next, w - 20, motdBottom, 0xFFC4C6C9);
     }
 
     private void renderLockedActionTooltip(int mouseX, int mouseY) {
@@ -410,33 +484,14 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         }
     }
 
-    private boolean isOfflineState(ServerData server) {
-        String version = server.version.getString().trim();
-        String motd = server.motd.getString().trim();
-        return version.equalsIgnoreCase("Offline") || motd.equalsIgnoreCase("Offline");
-    }
-
-    private boolean isUsefulMotd(ServerData server, String motd) {
-        return !motd.isEmpty()
-                && !motd.equalsIgnoreCase("SIEGE")
-                && !motd.equalsIgnoreCase("Offline")
-                && !motd.equalsIgnoreCase(server.name);
-    }
-
-    private String status(ServerData s) {
-        if (!s.pinged || s.ping < -1) return label("CONSULTANDO…", "QUERYING…");
-        if (isOfflineState(s)) return label("SERVIDOR APAGADO", "SERVER OFFLINE");
-        if (s.ping < 0) return label("SIN RESPUESTA", "NO RESPONSE");
-        if (s.protocol != SharedConstants.getCurrentVersion().getProtocolVersion())
-            return label("VERSIÓN INCOMPATIBLE", "INCOMPATIBLE VERSION");
-        return label("EN LÍNEA", "ONLINE") + " · " + s.ping + " ms";
-    }
-
-    private int statusColor(ServerData s) {
-        if (!s.pinged || s.ping < -1) return 0xFFE1C579;
-        if (isOfflineState(s) || s.ping < 0
-                || s.protocol != SharedConstants.getCurrentVersion().getProtocolVersion()) return 0xFFFF8B91;
-        return 0xFF9DCEAB;
+    private String shortState(ServerData server) {
+        return switch (SiegeDeploymentStatus.state(server)) {
+            case ONLINE -> label("LISTO", "READY");
+            case QUERYING -> label("PING", "PING");
+            case OFFLINE -> label("OFF", "OFF");
+            case NO_RESPONSE -> label("SIN RED", "NO NET");
+            case INCOMPATIBLE -> label("VERSIÓN", "VERSION");
+        };
     }
 
     private int drawWrapped(GuiGraphics g, String value, int x, int y, int w, int bottom, int color) {
@@ -459,8 +514,12 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         SiegeTheme.panel(g, x, y, w, h, 0xFF865055);
     }
 
+    private boolean spanish() {
+        return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_");
+    }
+
     private String label(String es, String en) {
-        return minecraft.getLanguageManager().getSelected().startsWith("es_") ? es : en;
+        return spanish() ? es : en;
     }
 
     private record Control(int slot, Button original, SiegeButton view) {}
