@@ -55,6 +55,8 @@ jobs:
           java -cp build/theme-tests ControlLayoutTest
           javac -d build/theme-tests src/main/java/uy/santipdr/siege/client/SiegeScreenRouter.java tests/ScreenRouterTest.java
           java -cp build/theme-tests ScreenRouterTest
+          javac -d build/navigation-tests src/main/java/uy/santipdr/siege/client/SiegeUiLayout.java src/main/java/uy/santipdr/siege/client/SiegeNavigationModel.java tests/NavigationIdentityTest.java
+          java -cp build/navigation-tests NavigationIdentityTest
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
       - name: Verify dossier navigation
