@@ -51,9 +51,9 @@ public final class SiegeScreenChrome {
         var font = Minecraft.getInstance().font;
         SiegeClientProfile.Profile profile = SiegeRuntimeStatus.profile();
         String build = "BUILD " + SiegeRuntimeStatus.version() + " // " + SiegeClientProfile.shortLabel(profile, spanish);
-        String state = SiegeRuntimeStatus.healthLabel(spanish) + " " + SiegeRuntimeStatus.readiness() + "%";
+        String state = SiegeRuntimeStatus.healthLabel(spanish);
         int accent = SiegeClientProfile.accent(profile);
-        int w = Math.min(screen.width - 12, Math.max(162, font.width(build) + font.width(state) + 29));
+        int w = Math.min(screen.width - 12, Math.max(152, font.width(build) + font.width(state) + 29));
         int h = 15;
         int x = 6;
         int y = screen.height - h - 3;
@@ -101,12 +101,11 @@ public final class SiegeScreenChrome {
 
     private static void renderSectionTag(Screen screen, GuiGraphics g, SiegeNavigationModel.Descriptor descriptor, boolean spanish) {
         if (screen.width < 360 || screen.height < 250) return;
-        // Intel and inspectors already devote the full lower edge to reading progress.
         if (screen instanceof IntelScreenV3 || screen instanceof IntelPortraitScreen) return;
         var font = Minecraft.getInstance().font;
         String text = descriptor.code() + " // " + SiegeRuntimeStatus.version();
-        String health = SiegeRuntimeStatus.healthLabel(spanish) + " " + SiegeRuntimeStatus.readiness() + "%";
-        int w = Math.min(screen.width / 3, Math.max(132, font.width(text) + font.width(health) + 21));
+        String health = SiegeRuntimeStatus.healthLabel(spanish);
+        int w = Math.min(screen.width / 3, Math.max(122, font.width(text) + font.width(health) + 21));
         int h = 12;
         int x = screen.width - w - 5;
         int y = screen.height - h - 3;
