@@ -6,7 +6,8 @@ package uy.santipdr.siege.client;
  */
 public final class SiegeNavigationModel {
     public enum Section {
-        HOME, DEPLOYMENT, INTEL, GUIDE, SETTINGS, COMMAND, DIAGNOSTICS, BACKGROUNDS, INSPECTOR, NATIVE
+        HOME, DEPLOYMENT, INTEL, REFERENCE, FIELD_MANUAL, SETTINGS, COMMAND,
+        DIAGNOSTICS, BACKGROUNDS, INSPECTOR, MEDIA, NATIVE
     }
 
     public record Descriptor(Section section, String es, String en, String code, int accent) {
@@ -22,16 +23,17 @@ public final class SiegeNavigationModel {
             case "SiegeMultiplayerScreen", "JoinMultiplayerScreen", "DirectJoinServerScreen", "EditServerScreen",
                  "ConnectScreen", "DisconnectedScreen" ->
                     d(Section.DEPLOYMENT, "DESPLIEGUE", "DEPLOYMENT", "DEP", 0xFFE54852);
-            case "IntelScreenV3", "SiegeArchiveScreen" -> d(Section.INTEL, "INTEL", "INTEL", "INT", 0xFFD6AE65);
-            case "SiegeGuideScreen", "SiegeGuideImageScreen" -> d(Section.GUIDE, "GUÍA", "GUIDE", "GDE", 0xFFD6AE65);
+            case "IntelScreenV3" -> d(Section.INTEL, "DOSSIERS INTEL", "INTEL DOSSIERS", "INT", 0xFFD6AE65);
+            case "SiegeArchiveScreen" -> d(Section.FIELD_MANUAL, "MANUAL DE CAMPO", "FIELD MANUAL", "FLD", 0xFFE89B59);
+            case "SiegeGuideScreen", "SiegeGuideImageScreen" ->
+                    d(Section.REFERENCE, "ARCHIVO / ARSENAL", "ARCHIVE / ARMORY", "REF", 0xFFD6AE65);
+            case "SiegeEvidenceReelScreen" -> d(Section.MEDIA, "EVIDENCIA", "EVIDENCE", "MED", 0xFF68C6D8);
             case "SiegeSettingsScreen" -> d(Section.SETTINGS, "CONFIGURACIÓN", "SETTINGS", "CFG", 0xFFE54852);
             case "SiegeSystemScreen" -> d(Section.COMMAND, "CENTRO DE COMANDO", "COMMAND CENTER", "CMD", 0xFF68C6D8);
             case "SiegeDiagnosticsScreen" -> d(Section.DIAGNOSTICS, "DIAGNÓSTICO", "DIAGNOSTICS", "DIA", 0xFFE89B59);
             case "SiegeSceneScreen" -> d(Section.BACKGROUNDS, "FONDOS", "BACKGROUNDS", "BG", 0xFF789BFF);
             case "IntelPortraitScreen" -> d(Section.INSPECTOR, "INSPECTOR INTEL", "INTEL INSPECTOR", "VIEW", 0xFFD6AE65);
 
-            // Native title-menu surfaces keep vanilla state/logic but no longer collapse
-            // into one generic SYS identity in the shared SIEGE chrome.
             case "SoundOptionsScreen" -> d(Section.NATIVE, "MEZCLA DE AUDIO", "AUDIO MIX", "AUD", 0xFFD6AE65);
             case "VideoSettingsScreen" -> d(Section.NATIVE, "VIDEO", "VIDEO", "VID", 0xFF68C6D8);
             case "ControlsScreen", "KeyBindsScreen" -> d(Section.NATIVE, "CONTROLES", "CONTROLS", "CTL", 0xFF789BFF);
