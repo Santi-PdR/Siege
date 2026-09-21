@@ -39,9 +39,9 @@ jobs:
           java -cp build/guide-tests GuideRegressionTest
           javac -d build/archive-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java tests/ArchiveRegressionTest.java
           java -cp build/archive-tests ArchiveRegressionTest
-          javac -d build/config-tests tests/stubs/net/minecraftforge/fml/loading/FMLPaths.java tests/stubs/com/mojang/logging/LogUtils.java src/main/java/uy/santipdr/siege/client/SiegeConfig.java src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java tests/ConfigRegressionTest.java
+          javac -d build/config-tests tests/stubs/net/minecraftforge/fml/loading/FMLPaths.java tests/stubs/com/mojang/logging/LogUtils.java src/main/java/uy/santipdr/siege/client/SiegeConfig.java src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java tests/ConfigRegressionTest.java
           java -cp build/config-tests ConfigRegressionTest
-          javac -d build/scene-tests src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java tests/SceneScheduleTest.java
+          javac -d build/scene-tests src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java tests/SceneScheduleTest.java
           java -cp build/scene-tests SceneScheduleTest
           python3 tests/test_installer.py
           python3 tests/test_release_014.py
@@ -143,6 +143,8 @@ jobs:
         run: |
           javac -d build/runtime-tests src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/IntelPresentation.java src/main/java/uy/santipdr/siege/client/SiegeAudioHealth.java src/main/java/uy/santipdr/siege/client/SiegePreviewClock.java tests/RuntimeRegressionTest.java
           java -cp build/runtime-tests uy.santipdr.siege.client.RuntimeRegressionTest
+          javac -d build/gui-resource-tests src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java tests/GuiResourceRegressionTest.java
+          java -cp build/gui-resource-tests GuiResourceRegressionTest
       - name: Compile and verify
         run: gradle --no-daemon reportBuildTools clean build
       - uses: actions/upload-artifact@v4
