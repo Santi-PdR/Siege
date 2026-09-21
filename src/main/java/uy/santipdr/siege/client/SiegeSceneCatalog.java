@@ -5,6 +5,8 @@ import java.util.List;
 /**
  * Authoritative metadata for every SIEGE menu scene.
  * Rendering, gallery labels, contrast bias, scheduling and CI all read the same table.
+ * 2.0 ships one 1920x1080 prepared master for every scene so the runtime never
+ * has to magnify a sub-HD texture differently from the rest of the gallery.
  */
 public final class SiegeSceneCatalog {
     public enum Kind { STANDARD, FEATURED, ANOMALY }
@@ -19,28 +21,31 @@ public final class SiegeSceneCatalog {
         public String label(boolean spanish) { return spanish ? es : en; }
     }
 
+    private static final int HD_W = 1920;
+    private static final int HD_H = 1080;
+
     private static final List<Scene> SCENES = List.of(
-            scene("dummies_assault", "Asalto de Dummies", "Dummies Assault", 960, 540, 2),
-            scene("anniversary", "Aniversario", "Anniversary", 960, 540, 0),
-            scene("frontline_19", "Frente 19", "Frontline 19", 960, 540, 3),
-            scene("cyborg", "Cíborg", "Cyborg", 960, 540, 4),
-            scene("last_stand", "Última resistencia", "Last Stand", 960, 540, 1),
-            scene("vought_siege", "Asedio Vought", "Vought Siege", 960, 540, 5),
-            scene("earth_orbit", "Órbita terrestre", "Earth Orbit", 960, 540, 6),
-            scene("canyon_engagement", "Combate en el cañón", "Canyon Engagement", 960, 540, 4),
-            scene("night_battle", "Batalla nocturna", "Night Battle", 960, 540, 0),
-            scene("night_operation", "Operación nocturna", "Night Operation", 735, 490, 0),
-            scene("urban_rendezvous", "Encuentro urbano", "Urban Rendezvous", 735, 414, 2),
+            scene("dummies_assault", "Asalto de Dummies", "Dummies Assault", 2),
+            scene("anniversary", "Aniversario", "Anniversary", 0),
+            scene("frontline_19", "Frente 19", "Frontline 19", 3),
+            scene("cyborg", "Cíborg", "Cyborg", 4),
+            scene("last_stand", "Última resistencia", "Last Stand", 1),
+            scene("vought_siege", "Asedio Vought", "Vought Siege", 5),
+            scene("earth_orbit", "Órbita terrestre", "Earth Orbit", 6),
+            scene("canyon_engagement", "Combate en el cañón", "Canyon Engagement", 4),
+            scene("night_battle", "Batalla nocturna", "Night Battle", 0),
+            scene("night_operation", "Operación nocturna", "Night Operation", 0),
+            scene("urban_rendezvous", "Encuentro urbano", "Urban Rendezvous", 2),
             new Scene("rooftop_squad", "Escuadrón en azotea · Especial", "Rooftop Squad · Special",
-                    680, 510, 3, Kind.FEATURED, true),
+                    HD_W, HD_H, 3, Kind.FEATURED, true),
             new Scene("tempest_jutcherson", "TEMPEST JUTCHERSON", "TEMPEST JUTCHERSON",
-                    720, 405, 6, Kind.ANOMALY, false)
+                    HD_W, HD_H, 6, Kind.ANOMALY, false)
     );
 
     private SiegeSceneCatalog() { }
 
-    private static Scene scene(String id, String es, String en, int width, int height, int darknessBias) {
-        return new Scene(id, es, en, width, height, darknessBias, Kind.STANDARD, true);
+    private static Scene scene(String id, String es, String en, int darknessBias) {
+        return new Scene(id, es, en, HD_W, HD_H, darknessBias, Kind.STANDARD, true);
     }
 
     public static int count() { return SCENES.size(); }
