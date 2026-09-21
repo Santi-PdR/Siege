@@ -1,6 +1,7 @@
 import java.nio.file.Files;
 import java.nio.file.Path;
 import uy.santipdr.siege.client.SiegeConfig;
+import uy.santipdr.siege.client.SiegeSceneCatalog;
 
 public class ConfigRegressionTest {
     private static void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
@@ -30,12 +31,12 @@ public class ConfigRegressionTest {
             check(!SiegeConfig.titleInterference && SiegeConfig.interferenceIntensity == 0,
                     "Flash reduction must suppress title interference and its intensity");
             check(!SiegeConfig.autoContrast && SiegeConfig.scanlineIntensity == 37,
-                    "1.25 visual controls round trip independently");
+                    "Visual controls round trip independently");
 
             SiegeConfig.resetDefaults();
             SiegeConfig.load();
             check(SiegeConfig.autoContrast && SiegeConfig.scanlineIntensity == 55 && SiegeConfig.interferenceIntensity == 55,
-                    "1.25 visual defaults");
+                    "Visual defaults");
             SiegeConfig.applyCalmPreset();
             check(SiegeConfig.reducedMotion && SiegeConfig.reduceFlashes && SiegeConfig.highContrast
                     && !SiegeConfig.scanlines && SiegeConfig.scanlineIntensity == 0
@@ -43,10 +44,10 @@ public class ConfigRegressionTest {
                     && !SiegeConfig.hoverSounds && SiegeConfig.autoContrast, "Calm preset");
 
             SiegeConfig.resetDefaults();
-            for (int scene = 9; scene < 13; scene++) {
+            for (int scene = 0; scene < SiegeSceneCatalog.count(); scene++) {
                 SiegeConfig.selectedScene = scene; SiegeConfig.save();
                 SiegeConfig.selectedScene = -1; SiegeConfig.load();
-                check(SiegeConfig.selectedScene == scene, "New gallery scene survives save/reload");
+                check(SiegeConfig.selectedScene == scene, "Gallery scene survives save/reload: " + scene);
             }
             SiegeConfig.applyReadingPreset();
             check(SiegeConfig.intelReadingMode && SiegeConfig.comfortableReading && SiegeConfig.darkIntelPaper
@@ -60,7 +61,7 @@ public class ConfigRegressionTest {
             check(SiegeConfig.inspectorBackground == 0, "Invalid numeric value clamped");
             check(!SiegeConfig.highContrast && !SiegeConfig.reduceFlashes, "New options use independent defaults");
             check(SiegeConfig.autoContrast && SiegeConfig.scanlineIntensity == 55 && SiegeConfig.interferenceIntensity == 55,
-                    "1.25 options load independent defaults without a migration revision");
+                    "Visual options load independent defaults without a migration revision");
 
             Path config = folder.resolve("siege-client.properties");
             Files.writeString(config, "settingsRevision=801\nuiVolume= 44 \nmusic= false \ngraphics= balanced \nhighContrast= true \nreduceFlashes= true \ntitleInterference=true\nscanlineIntensity=250\ninterferenceIntensity=-9\n");
@@ -70,7 +71,7 @@ public class ConfigRegressionTest {
             check(SiegeConfig.highContrast && SiegeConfig.reduceFlashes && !SiegeConfig.titleInterference,
                     "Accessibility normalization on load");
             check(SiegeConfig.scanlineIntensity == 100 && SiegeConfig.interferenceIntensity == 0,
-                    "1.25 intensity values clamp safely");
+                    "Intensity values clamp safely");
             SiegeConfig.save();
             var savedTime = Files.getLastModifiedTime(config);
             SiegeConfig.save();
