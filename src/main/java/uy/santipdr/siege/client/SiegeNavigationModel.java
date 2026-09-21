@@ -1,8 +1,8 @@
 package uy.santipdr.siege.client;
 
 /**
- * Minecraft-independent map of SIEGE surfaces. It gives every owned screen the
- * same section identity, accent family and responsive chrome reservation.
+ * Minecraft-independent map of SIEGE surfaces. It gives owned and approved
+ * title-menu screens one section identity, accent family and responsive chrome reservation.
  */
 public final class SiegeNavigationModel {
     public enum Section {
@@ -19,7 +19,8 @@ public final class SiegeNavigationModel {
         String simple = className == null ? "" : className.substring(className.lastIndexOf('.') + 1);
         return switch (simple) {
             case "SiegeTitleScreen" -> d(Section.HOME, "PORTADA", "HOME", "HOME", 0xFFE54852);
-            case "SiegeMultiplayerScreen", "JoinMultiplayerScreen", "DirectJoinServerScreen", "EditServerScreen" ->
+            case "SiegeMultiplayerScreen", "JoinMultiplayerScreen", "DirectJoinServerScreen", "EditServerScreen",
+                 "ConnectScreen", "DisconnectedScreen" ->
                     d(Section.DEPLOYMENT, "DESPLIEGUE", "DEPLOYMENT", "DEP", 0xFFE54852);
             case "IntelScreenV3", "SiegeArchiveScreen" -> d(Section.INTEL, "INTEL", "INTEL", "INT", 0xFFD6AE65);
             case "SiegeGuideScreen", "SiegeGuideImageScreen" -> d(Section.GUIDE, "GUÍA", "GUIDE", "GDE", 0xFFD6AE65);
@@ -28,6 +29,22 @@ public final class SiegeNavigationModel {
             case "SiegeDiagnosticsScreen" -> d(Section.DIAGNOSTICS, "DIAGNÓSTICO", "DIAGNOSTICS", "DIA", 0xFFE89B59);
             case "SiegeSceneScreen" -> d(Section.BACKGROUNDS, "FONDOS", "BACKGROUNDS", "BG", 0xFF789BFF);
             case "IntelPortraitScreen" -> d(Section.INSPECTOR, "INSPECTOR INTEL", "INTEL INSPECTOR", "VIEW", 0xFFD6AE65);
+
+            // Native title-menu surfaces keep vanilla state/logic but no longer collapse
+            // into one generic SYS identity in the shared SIEGE chrome.
+            case "SoundOptionsScreen" -> d(Section.NATIVE, "MEZCLA DE AUDIO", "AUDIO MIX", "AUD", 0xFFD6AE65);
+            case "VideoSettingsScreen" -> d(Section.NATIVE, "VIDEO", "VIDEO", "VID", 0xFF68C6D8);
+            case "ControlsScreen", "KeyBindsScreen" -> d(Section.NATIVE, "CONTROLES", "CONTROLS", "CTL", 0xFF789BFF);
+            case "MouseSettingsScreen" -> d(Section.NATIVE, "MOUSE", "MOUSE", "MSE", 0xFF789BFF);
+            case "AccessibilityOptionsScreen", "AccessibilityOnboardingScreen" ->
+                    d(Section.NATIVE, "ACCESIBILIDAD", "ACCESSIBILITY", "ACC", 0xFF72C58A);
+            case "LanguageSelectScreen" -> d(Section.NATIVE, "IDIOMA", "LANGUAGE", "LNG", 0xFF68C6D8);
+            case "PackSelectionScreen" -> d(Section.NATIVE, "RECURSOS", "RESOURCES", "PAK", 0xFFD6AE65);
+            case "SelectWorldScreen", "CreateWorldScreen", "EditWorldScreen", "ExperimentsScreen",
+                 "OptimizeWorldScreen", "BackupConfirmScreen", "CreateFlatWorldScreen", "PresetFlatWorldScreen" ->
+                    d(Section.NATIVE, "ARCHIVOS DE MUNDO", "WORLD FILES", "WRD", 0xFF72C58A);
+            case "OptionsScreen", "SkinCustomizationScreen", "OnlineOptionsScreen", "ChatOptionsScreen" ->
+                    d(Section.NATIVE, "SISTEMA", "SYSTEM", "SYS", 0xFFE89B59);
             default -> d(Section.NATIVE, "SISTEMA", "SYSTEM", "SYS", 0xFF68C6D8);
         };
     }
