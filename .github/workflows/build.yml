@@ -27,7 +27,14 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.8'
-      - name: Verify responsive layouts and Intel search
+
+      - name: Prepare SIEGE 2.0 visual masters
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet pillow
+          python3 scripts/prepare-backgrounds-hd.py
+
+      - name: Verify responsive layouts, reference architecture and Intel search
         shell: bash
         run: |
           mkdir -p build/layout-tests
@@ -37,6 +44,8 @@ jobs:
           java -cp build/layout-tests MultiplayerLayoutTest
           javac -d build/guide-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/SiegeGuideLayout.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java tests/GuideRegressionTest.java
           java -cp build/guide-tests GuideRegressionTest
+          javac -d build/guide-media-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java tests/GuideMediaRegressionTest.java
+          java -cp build/guide-media-tests GuideMediaRegressionTest
           javac -d build/archive-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java tests/ArchiveRegressionTest.java
           java -cp build/archive-tests ArchiveRegressionTest
           javac -d build/config-tests tests/stubs/net/minecraftforge/fml/loading/FMLPaths.java tests/stubs/com/mojang/logging/LogUtils.java src/main/java/uy/santipdr/siege/client/SiegeConfig.java src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java tests/ConfigRegressionTest.java
@@ -45,6 +54,7 @@ jobs:
           java -cp build/scene-tests SceneScheduleTest
           python3 tests/test_installer.py
           python3 tests/test_release_014.py
+
       - name: Verify menu theme scope and drawing bounds
         run: |
           javac -d build/theme-tests src/main/java/uy/santipdr/siege/client/SiegeMenuPolicy.java tests/MenuThemePolicyTest.java
@@ -59,9 +69,11 @@ jobs:
           java -cp build/navigation-tests NavigationIdentityTest
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
-      - name: Verify dossier navigation
+
+      - name: Verify SIEGE 2.0 navigation contracts
         shell: bash
         run: |
+          grep -q "version = '2.0.0'" build.gradle
           grep -q 'GLFW_KEY_LEFT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'GLFW_KEY_RIGHT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'Math.floorMod(selected + direction, files.size())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
@@ -75,19 +87,34 @@ jobs:
           grep -q 'IntelScreenV3(Screen parent, IntelEntry requestedEntry)' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'targetCode.equals(files.get(i).code())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'new IntelScreenV3(this, entry)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
-          grep -q 'new SiegeArchiveScreen(screen)' src/main/java/uy/santipdr/siege/client/SiegeMenuThemeEvents.java
+
+          grep -q 'SiegeGuideScreen.Mode.ARCHIVE' src/main/java/uy/santipdr/siege/client/SiegeMenuThemeEvents.java
+          grep -q 'SiegeGuideScreen.Mode.ARMORY' src/main/java/uy/santipdr/siege/client/SiegeMenuThemeEvents.java
+          grep -q 'new SiegeArchiveScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeGuideScreen.java
+          grep -q 'new SiegeEvidenceReelScreen' src/main/java/uy/santipdr/siege/client/SiegeGuideScreen.java
           if grep -q 'new SiegeArchiveScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeSystemScreen.java; then
-            echo "Gameplay knowledge must be opened from Intel, not Settings/System."
+            echo "Gameplay knowledge must not live in Settings/System."
+            exit 1
+          fi
+          if grep -q 'readiness()' src/main/java/uy/santipdr/siege/client/SiegeScreenChrome.java; then
+            echo "Ordinary navigation must not expose a cryptic readiness percentage."
             exit 1
           fi
           grep -q 'SHELLSHOCK' src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java
           grep -q 'MUTILATED' src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java
+          grep -q 'third-justice' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
+          grep -q 'third_justice_reel_03.png' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
+
           if grep -nE 'FAVORITES|toggleFavoriteIntel|favoriteButton|addIndexButton|copyText|GUARDAR' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
             echo "Removed Intel controls must not return"
             exit 1
           fi
           grep -q 'trackAnnouncementDurationMs' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
           grep -q 'backgroundDarkness' src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
+          if grep -R -n '1\.50\.0' src/main/java; then
+            echo "Stale 1.50.0 string found in live Java sources."
+            exit 1
+          fi
           if grep -qE 'GLFW_KEY_(I|P|G|M|R|HOME|END)([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java; then
             echo "The title screen contains an unrequested keyboard shortcut."
             exit 1
@@ -100,6 +127,7 @@ jobs:
             echo "Intel contains an unrequested keyboard shortcut."
             exit 1
           fi
+
       - uses: actions/cache@v4
         id: intel-cache
         with:
@@ -111,6 +139,7 @@ jobs:
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow numpy
           python3 scripts/prepare-intel-assets.py
+
       - uses: actions/cache@v4
         id: music-cache
         with:
@@ -130,6 +159,7 @@ jobs:
             sudo apt-get install -y --no-install-recommends ffmpeg
           fi
           bash scripts/prepare-music.sh
+
       - name: Verify clean boss frames
         shell: bash
         run: |
@@ -141,12 +171,14 @@ jobs:
             echo "Generated Boss dossier art must not contain a per-frame counter."
             exit 1
           fi
-      - name: Verify audio state and catalog resources
+
+      - name: Verify audio, Intel and all GUI resources
         run: |
           javac -d build/runtime-tests src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/IntelPresentation.java src/main/java/uy/santipdr/siege/client/SiegeAudioHealth.java src/main/java/uy/santipdr/siege/client/SiegePreviewClock.java tests/RuntimeRegressionTest.java
           java -cp build/runtime-tests uy.santipdr.siege.client.RuntimeRegressionTest
           javac -d build/gui-resource-tests src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java tests/GuiResourceRegressionTest.java
           java -cp build/gui-resource-tests GuiResourceRegressionTest
+
       - name: Compile and verify
         run: gradle --no-daemon reportBuildTools clean build
       - uses: actions/upload-artifact@v4
