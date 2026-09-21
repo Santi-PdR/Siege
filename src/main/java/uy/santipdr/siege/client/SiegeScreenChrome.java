@@ -5,9 +5,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 
 /**
- * Shared operational chrome for SIEGE 1.25. It deliberately stays thin: screen
- * content remains authoritative while section, build, profile and health are
- * presented with one visual grammar.
+ * Shared operational chrome for SIEGE surfaces. Screen content remains
+ * authoritative while section, build, profile, scene and health share one grammar.
  */
 public final class SiegeScreenChrome {
     private SiegeScreenChrome() { }
@@ -18,6 +17,7 @@ public final class SiegeScreenChrome {
         boolean spanish = spanish();
         if (screen instanceof SiegeTitleScreen) {
             renderHomeTag(screen, g, descriptor, spanish);
+            renderSceneTag(screen, g, spanish);
             return;
         }
         if (screen instanceof SiegeMultiplayerScreen) {
@@ -51,14 +51,12 @@ public final class SiegeScreenChrome {
         var font = Minecraft.getInstance().font;
         SiegeClientProfile.Profile profile = SiegeRuntimeStatus.profile();
         String build = "BUILD " + SiegeRuntimeStatus.version() + " // " + SiegeClientProfile.shortLabel(profile, spanish);
-        String state = SiegeRuntimeStatus.healthLabel(spanish);
+        String state = SiegeRuntimeStatus.healthLabel(spanish) + " " + SiegeRuntimeStatus.readiness() + "%";
         int accent = SiegeClientProfile.accent(profile);
-        int w = Math.min(screen.width - 12, Math.max(142, font.width(build) + font.width(state) + 29));
+        int w = Math.min(screen.width - 12, Math.max(162, font.width(build) + font.width(state) + 29));
         int h = 15;
         int x = 6;
         int y = screen.height - h - 3;
-        // Opaque plate intentionally covers the obsolete pre-1.25 hardcoded build
-        // text still drawn by the legacy title body until that body is retired.
         g.fill(x, y, x + w, y + h, SiegeConfig.highContrast ? 0xFA08090A : 0xF00B0D10);
         g.fill(x, y, x + 3, y + h, accent);
         g.fill(x + 6, y + h - 2, x + w - 4, y + h - 1, 0xFF30373C);
@@ -67,14 +65,31 @@ public final class SiegeScreenChrome {
         g.drawString(font, state, x + w - 7 - font.width(state), y + 3, SiegeRuntimeStatus.healthAccent(), false);
     }
 
+    private static void renderSceneTag(Screen screen, GuiGraphics g, boolean spanish) {
+        if (screen.width < 520 || screen.height < 300) return;
+        long now = System.currentTimeMillis();
+        int index = SiegeBackgrounds.currentIndex(now);
+        var font = Minecraft.getInstance().font;
+        String kind = SiegeBackgrounds.sceneTag(index, spanish);
+        String name = SiegeBackgrounds.name(index, spanish);
+        String text = kind + " // " + name;
+        int accent = SiegeBackgrounds.isAnomaly(index) ? SiegeTheme.GOLD
+                : SiegeBackgrounds.isFeatured(index) ? SiegeTheme.CYAN : SiegeTheme.MUTED;
+        int w = Math.min(screen.width / 3, Math.max(128, font.width(text) + 14));
+        int x = screen.width - w - 7;
+        int y = 34;
+        g.fill(x, y, x + w, y + 13, SiegeConfig.highContrast ? 0xF708090B : 0xD90B0D10);
+        g.fill(x, y, x + 2, y + 13, accent);
+        g.drawString(font, fit(text, w - 10), x + 6, y + 2,
+                SiegeBackgrounds.isAnomaly(index) ? SiegeTheme.GOLD : SiegeTheme.MUTED, false);
+    }
+
     private static void renderDeploymentHeader(Screen screen, GuiGraphics g, SiegeNavigationModel.Descriptor descriptor, boolean spanish) {
         if (screen.width < 180 || screen.height < 80) return;
         var font = Minecraft.getInstance().font;
         int x = Math.max(6, (screen.width - Math.min(620, screen.width - 12)) / 2);
         int w = Math.min(620, screen.width - x * 2);
         int y = 8;
-        // Covers the historical "DESPLIEGUE 0.70" title while retaining the
-        // selected-server status line below it.
         g.fill(x, y, x + w, y + 18, 0xF20B0D10);
         g.fill(x, y, x + 3, y + 18, descriptor.accent());
         String title = "SIEGE // " + descriptor.label(spanish) + " " + SiegeRuntimeStatus.version();
@@ -86,13 +101,12 @@ public final class SiegeScreenChrome {
 
     private static void renderSectionTag(Screen screen, GuiGraphics g, SiegeNavigationModel.Descriptor descriptor, boolean spanish) {
         if (screen.width < 360 || screen.height < 250) return;
-        // Intel and inspectors already devote the full lower edge to reading
-        // progress; do not steal that space.
+        // Intel and inspectors already devote the full lower edge to reading progress.
         if (screen instanceof IntelScreenV3 || screen instanceof IntelPortraitScreen) return;
         var font = Minecraft.getInstance().font;
         String text = descriptor.code() + " // " + SiegeRuntimeStatus.version();
-        String health = SiegeRuntimeStatus.healthLabel(spanish);
-        int w = Math.min(screen.width / 3, Math.max(112, font.width(text) + font.width(health) + 21));
+        String health = SiegeRuntimeStatus.healthLabel(spanish) + " " + SiegeRuntimeStatus.readiness() + "%";
+        int w = Math.min(screen.width / 3, Math.max(132, font.width(text) + font.width(health) + 21));
         int h = 12;
         int x = screen.width - w - 5;
         int y = screen.height - h - 3;
