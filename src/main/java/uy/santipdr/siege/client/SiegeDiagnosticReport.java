@@ -121,10 +121,22 @@ public final class SiegeDiagnosticReport {
         out.add(e("INT", spanish, "INTEL", "INTEL", SiegeRuntimeStatus.intelLabel(true), SiegeRuntimeStatus.intelLabel(false),
                 "El catálogo y sus categorías están disponibles para consulta.", "The catalog and its categories are available for review.",
                 "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
-        out.add(e("BG", spanish, "FONDOS", "BACKGROUNDS", SiegeRuntimeStatus.backgroundLabel(true), SiegeRuntimeStatus.backgroundLabel(false),
-                "Oscuridad efectiva: " + SiegeBackgrounds.effectiveBackgroundDarkness() + "% · panel " + SiegeBackgrounds.effectivePanelDarkness() + "%",
-                "Effective darkness: " + SiegeBackgrounds.effectiveBackgroundDarkness() + "% · panel " + SiegeBackgrounds.effectivePanelDarkness() + "%",
+
+        int sceneIndex = SiegeBackgrounds.currentIndex(System.currentTimeMillis());
+        boolean comfortPinnedAnomaly = SiegeConfig.selectedScene >= 0 && SiegeBackgrounds.isAnomaly(sceneIndex)
+                && (SiegeConfig.reducedMotion || SiegeConfig.reduceFlashes);
+        if (comfortPinnedAnomaly) out.add(e("BG", spanish, "FONDOS", "BACKGROUNDS",
+                SiegeRuntimeStatus.backgroundLabel(true), SiegeRuntimeStatus.backgroundLabel(false),
+                "La anomalía está fijada manualmente; los modos de confort solo la excluyen de la rotación automática.",
+                "The anomaly is manually pinned; comfort modes only exclude it from automatic rotation.",
+                "Elegí otra escena o reanudá la rotación si querés que el perfil de confort la evite.",
+                "Choose another scene or resume rotation if you want the comfort profile to avoid it.",
+                Severity.NOTICE, Recovery.NONE));
+        else out.add(e("BG", spanish, "FONDOS", "BACKGROUNDS", SiegeRuntimeStatus.backgroundLabel(true), SiegeRuntimeStatus.backgroundLabel(false),
+                "Oscuridad efectiva: " + SiegeBackgrounds.effectiveBackgroundDarkness(sceneIndex) + "% · panel " + SiegeBackgrounds.effectivePanelDarkness() + "%",
+                "Effective darkness: " + SiegeBackgrounds.effectiveBackgroundDarkness(sceneIndex) + "% · panel " + SiegeBackgrounds.effectivePanelDarkness() + "%",
                 "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
+
         out.add(e("ACC", spanish, "ACCESIBILIDAD", "ACCESSIBILITY", SiegeRuntimeStatus.accessibilityLabel(true), SiegeRuntimeStatus.accessibilityLabel(false),
                 "Las garantías de destellos tienen prioridad sobre efectos decorativos.", "Flash safeguards take priority over decorative effects.",
                 "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
