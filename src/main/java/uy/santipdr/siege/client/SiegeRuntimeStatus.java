@@ -79,9 +79,10 @@ public final class SiegeRuntimeStatus {
     }
 
     public static String backgroundLabel(boolean spanish) {
+        int index = SiegeBackgrounds.currentIndex(System.currentTimeMillis());
         String state = SiegeConfig.selectedScene >= 0 ? (spanish ? "FIJO" : "PINNED")
                 : SiegeConfig.animatedBackgrounds ? (spanish ? "ROTACIÓN" : "ROTATING") : (spanish ? "ESTÁTICO" : "STATIC");
-        return state + " · " + SiegeBackgrounds.name(SiegeBackgrounds.currentIndex(System.currentTimeMillis()), spanish);
+        return state + " · " + SiegeBackgrounds.sceneTag(index, spanish) + " · " + SiegeBackgrounds.name(index, spanish);
     }
 
     public static String intelLabel(boolean spanish) {
