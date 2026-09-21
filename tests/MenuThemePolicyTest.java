@@ -25,6 +25,8 @@ public class MenuThemePolicyTest {
         themed(root + "VideoSettingsScreen", SiegeMenuPolicy.NativeFamily.VIDEO);
         for (String name : new String[] {"ControlsScreen", "KeyBindsScreen"})
             themed(root + "controls." + name, SiegeMenuPolicy.NativeFamily.CONTROLS);
+        // Forge 1.20.1 uses the root package; the controls alias remains a compatibility guard.
+        themed(root + "MouseSettingsScreen", SiegeMenuPolicy.NativeFamily.MOUSE);
         themed(root + "controls.MouseSettingsScreen", SiegeMenuPolicy.NativeFamily.MOUSE);
         themed(root + "AccessibilityOptionsScreen", SiegeMenuPolicy.NativeFamily.ACCESSIBILITY);
         themed(root + "AccessibilityOnboardingScreen", SiegeMenuPolicy.NativeFamily.ACCESSIBILITY);
@@ -64,7 +66,7 @@ public class MenuThemePolicyTest {
         check(SiegeMenuPolicy.listRail(root + "controls.KeyBindsScreen"), "Keybind list rail missing");
         check(SiegeMenuPolicy.listRail(root + "LanguageSelectScreen"), "Language list rail missing");
         check(!SiegeMenuPolicy.listRail(root + "controls.ControlsScreen"), "Controls rail can overlap buttons");
-        check(!SiegeMenuPolicy.listRail(root + "controls.MouseSettingsScreen"), "Mouse rail can overlap sliders");
+        check(!SiegeMenuPolicy.listRail(root + "MouseSettingsScreen"), "Mouse rail can overlap sliders");
         check(!SiegeMenuPolicy.listRail(root + "AccessibilityOptionsScreen"), "Accessibility rail can overlap options");
         check(!SiegeMenuPolicy.listRail(root + "VideoSettingsScreen"), "Video rail can overlap options");
         check(!SiegeMenuPolicy.listRail(root + "SoundOptionsScreen"), "Audio rail can overlap options");
@@ -90,6 +92,6 @@ public class MenuThemePolicyTest {
             check(SiegeMenuPolicy.entryShade(t, false, false) == 0, "Disabled-effects fade");
             if (t >= 180) check(alpha == 0, "Fade outlived 180ms");
         }
-        System.out.println("Vanilla profiles, title masking, removed dead buttons, Embeddium exclusion and layout bounds passed");
+        System.out.println("Vanilla profiles, Mouse root mapping, title masking, dead-button removal, Embeddium exclusion and layout bounds passed");
     }
 }

@@ -15,7 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 
 /**
- * SIEGE 0.70 deployment console. Vanilla still owns server persistence, pings,
+ * SIEGE deployment console. Vanilla still owns server persistence, pings,
  * LAN discovery, entry input, confirmation dialogs and the connection lifecycle.
  */
 public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
@@ -263,8 +263,9 @@ public final class SiegeMultiplayerScreen extends JoinMultiplayerScreen {
         int right = x + layout.width();
         g.fill(x, 8, right, layout.top() - 5, 0xEB101113);
         g.fill(x, 8, x + 3, layout.top() - 5, RED);
-        g.drawString(font, fit("SIEGE / " + label("DESPLIEGUE 0.70", "DEPLOYMENT 0.70"), layout.width() - 24),
-                x + 12, 15, 0xFFF0EDEA, false);
+        String consoleTitle = "SIEGE / " + label("CONTROL DE DESPLIEGUE", "DEPLOYMENT CONTROL")
+                + " // " + SiegeRuntimeStatus.version();
+        g.drawString(font, fit(consoleTitle, layout.width() - 24), x + 12, 15, 0xFFF0EDEA, false);
 
         int saved = getServers().size();
         ServerData selectedServer = selectedServer();

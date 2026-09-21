@@ -6,14 +6,11 @@ import net.minecraft.resources.ResourceLocation;
 import uy.santipdr.siege.SiegeMod;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 public final class SiegeBackgrounds {
-    private static final List<ResourceLocation> SCENES = List.of(
-            scene("dummies_assault"), scene("anniversary"), scene("frontline_19"),
-            scene("cyborg"), scene("last_stand"), scene("vought_siege"), scene("earth_orbit"),
-            scene("canyon_engagement"), scene("night_battle"),
-            scene("night_operation"), scene("urban_rendezvous"), scene("rooftop_squad"), scene("tempest_jutcherson")
-    );
+    private static final List<ResourceLocation> SCENES = IntStream.range(0, SiegeSceneCatalog.count())
+            .mapToObj(index -> scene(SiegeSceneCatalog.id(index))).toList();
 
     private static final long SCENE_MS = 24_000L;
     private static final long CROSSFADE_MS = 4_800L;
@@ -29,13 +26,8 @@ public final class SiegeBackgrounds {
         return SiegeSceneSchedule.index(slot, !SiegeConfig.reducedMotion && !SiegeConfig.reduceFlashes);
     }
 
-    private static int sourceWidth(int index) {
-        return switch (Math.floorMod(index, count())) { case 9, 10 -> 735; case 11 -> 680; case 12 -> 720; default -> 960; };
-    }
-
-    private static int sourceHeight(int index) {
-        return switch (Math.floorMod(index, count())) { case 9 -> 490; case 10 -> 414; case 11 -> 510; case 12 -> 405; default -> 540; };
-    }
+    private static int sourceWidth(int index) { return SiegeSceneCatalog.width(index); }
+    private static int sourceHeight(int index) { return SiegeSceneCatalog.height(index); }
 
     public static long rotationRemainingMs(long now) {
         if (SiegeConfig.selectedScene >= 0 || !SiegeConfig.animatedBackgrounds) return -1L;
@@ -60,24 +52,16 @@ public final class SiegeBackgrounds {
     }
 
     public static int count() { return SCENES.size(); }
-
     public static String name(int index) { return name(index, false); }
+    public static String name(int index, boolean spanish) { return SiegeSceneCatalog.label(index, spanish); }
+    public static boolean isAnomaly(int index) { return SiegeSceneCatalog.kind(index) == SiegeSceneCatalog.Kind.ANOMALY; }
+    public static boolean isFeatured(int index) { return SiegeSceneCatalog.kind(index) == SiegeSceneCatalog.Kind.FEATURED; }
 
-    public static String name(int index, boolean spanish) {
-        return switch (Math.floorMod(index, SCENES.size())) {
-            case 0 -> spanish ? "Asalto de Dummies" : "Dummies Assault";
-            case 1 -> spanish ? "Aniversario" : "Anniversary";
-            case 2 -> spanish ? "Frente 19" : "Frontline 19";
-            case 3 -> spanish ? "Cíborg" : "Cyborg";
-            case 4 -> spanish ? "Última resistencia" : "Last Stand";
-            case 5 -> spanish ? "Asedio Vought" : "Vought Siege";
-            case 6 -> spanish ? "Órbita terrestre" : "Earth Orbit";
-            case 7 -> spanish ? "Combate en el cañón" : "Canyon Engagement";
-            case 8 -> spanish ? "Batalla nocturna" : "Night Battle";
-            case 9 -> spanish ? "Operación nocturna" : "Night Operation";
-            case 10 -> spanish ? "Encuentro urbano" : "Urban Rendezvous";
-            case 11 -> spanish ? "Escuadrón en azotea · Especial" : "Rooftop Squad · Special";
-            default -> "TEMPEST JUTCHERSON";
+    public static String sceneTag(int index, boolean spanish) {
+        return switch (SiegeSceneCatalog.kind(index)) {
+            case STANDARD -> spanish ? "ESCENA" : "SCENE";
+            case FEATURED -> spanish ? "DESTACADO" : "FEATURED";
+            case ANOMALY -> spanish ? "ANOMALÍA VISUAL" : "VISUAL ANOMALY";
         };
     }
 
@@ -109,9 +93,13 @@ public final class SiegeBackgrounds {
     }
 
     public static int effectiveBackgroundDarkness() {
-        int value = SiegeConfig.backgroundDarkness;
+        return effectiveBackgroundDarkness(currentIndex(System.currentTimeMillis()));
+    }
+
+    public static int effectiveBackgroundDarkness(int sceneIndex) {
+        int value = SiegeConfig.backgroundDarkness + SiegeSceneCatalog.darknessBias(sceneIndex);
         if (SiegeConfig.autoContrast) value = Math.max(value, SiegeConfig.highContrast ? 40 : 24);
-        return Math.max(0, Math.min(70, value));
+        return Math.max(0, Math.min(76, value));
     }
 
     public static int effectivePanelDarkness() {
@@ -153,6 +141,7 @@ public final class SiegeBackgrounds {
         float currentProgress = allowPan ? local : 0.5F;
         drawScene(graphics, SCENES.get(current), width, height, 1.0F, current, currentProgress, allowPan, cover);
 
+        int darknessBias = SiegeSceneCatalog.darknessBias(current);
         if (animated) {
             long fadeStart = SCENE_MS - CROSSFADE_MS;
             if (localMs >= fadeStart) {
@@ -161,6 +150,7 @@ public final class SiegeBackgrounds {
                 if (alpha > 0.01F) {
                     float incomingProgress = allowPan ? Math.min(0.18F, raw * 0.18F) : 0.5F;
                     drawScene(graphics, SCENES.get(next), width, height, alpha, next, incomingProgress, allowPan, cover);
+                    darknessBias = Math.max(darknessBias, Math.round(SiegeSceneCatalog.darknessBias(next) * alpha));
                 }
                 if (!SiegeConfig.reduceFlashes) {
                     int veilAlpha = Math.round((float)Math.sin(alpha * Math.PI) * 20.0F);
@@ -169,7 +159,9 @@ public final class SiegeBackgrounds {
             }
         }
 
-        int darkness = effectiveBackgroundDarkness() * 255 / 100;
+        int base = SiegeConfig.backgroundDarkness + darknessBias;
+        if (SiegeConfig.autoContrast) base = Math.max(base, SiegeConfig.highContrast ? 40 : 24);
+        int darkness = Math.max(0, Math.min(76, base)) * 255 / 100;
         graphics.fill(0, 0, width, height, darkness << 24);
 
         if (SiegeConfig.scanlines && SiegeConfig.scanlineIntensity > 0
