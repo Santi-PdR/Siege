@@ -34,7 +34,7 @@ jobs:
           python3 -m pip install --disable-pip-version-check --quiet pillow
           python3 scripts/prepare-backgrounds-hd.py
 
-      - name: Verify responsive layouts, knowledge architecture and Operations search
+      - name: Verify responsive layouts, server encyclopedia and Operations search
         shell: bash
         run: |
           mkdir -p build/layout-tests
@@ -74,7 +74,7 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify SIEGE 3.00 knowledge, navigation and easter-egg contracts
+      - name: Verify SIEGE 3.00 encyclopedia, navigation and easter-egg contracts
         shell: bash
         run: |
           grep -q "version = '3.00.0'" build.gradle
@@ -85,12 +85,23 @@ jobs:
           grep -q 'new SiegeKnowledgeScreen(this, entry.knowledgeId())' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
           grep -q 'new SiegeOperationsHubScreen(screen)' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
           grep -q 'case "SiegeKnowledgeScreen"' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
-          grep -q 'CURRENT, ENCYCLOPEDIA' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'ALEX_CONFIRMED' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q 'enum Zone { SERVER, HISTORY }' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q 'STAFF_CONFIRMED' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
           grep -q 'HISTORICAL' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
           grep -q 'UNCONFIRMED' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'REVELAR ARCHIVO' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
+          grep -q 'CONTRADICTION' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q 'Mode { START, RACES, SYSTEMS, HISTORY }' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
+          grep -q 'ENCICLOPEDIA DEL SERVIDOR' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
+          grep -q 'race-catalog' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q 'rarity-order' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q 'Obsainan' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q 'Fabled' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
           grep -q '251.065' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          if grep -nEi 'current-rust-guard|current-deteriorer-snapshot|current-meditation|CURRENT_CONFIRMED|PLAYER_EXPERIENCE|SIEGE current notebook|player notebook|Mi partida actual|mi inventario|mi personaje' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java; then
+            echo "Server Encyclopedia must not contain personal player-state records."
+            exit 1
+          fi
+
           grep -q 'TEMPEST_JUTCHERSON' src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java
           if grep -q 'tempest_jutcherson' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java; then
             echo "Tempest Jutcherson must not be a normal menu/gallery scene."
