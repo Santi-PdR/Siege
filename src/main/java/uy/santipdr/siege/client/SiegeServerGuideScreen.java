@@ -8,11 +8,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
-/**
- * Simple category-first server guide for newcomers and quick reference.
- * It deliberately hides maintenance/source metadata and shows only player-facing
- * server information already present in the encyclopedia registry.
- */
+/** Simple category-first server guide for newcomers and quick reference. */
 public final class SiegeServerGuideScreen extends Screen {
     private final Screen parent;
     private final List<SiegeButton> categoryButtons = new ArrayList<>();
@@ -26,6 +22,7 @@ public final class SiegeServerGuideScreen extends Screen {
     private int categoryTop, categoryRows;
     private int listX, listY, listW, detailX, detailY, detailW, detailH;
     private boolean compact;
+    private boolean shortView;
 
     public SiegeServerGuideScreen(Screen parent) {
         super(Component.literal("SIEGE // SERVER GUIDE"));
@@ -38,6 +35,7 @@ public final class SiegeServerGuideScreen extends Screen {
         categoryButtons.clear();
         entryButtons.clear();
         compact = width < 660 || height < 390;
+        shortView = height < 280;
         int margin = compact ? 7 : Math.max(12, width / 80);
         panelX = margin;
         panelY = compact ? 31 : 38;
@@ -53,11 +51,11 @@ public final class SiegeServerGuideScreen extends Screen {
                 b -> minecraft.setScreen(new SiegeKnowledgeScreen(this)), SiegeTheme.GREEN)
                 .withIcon("overview").setCompactCenter(true));
 
-        categoryTop = panelY + 40;
+        categoryTop = panelY + (shortView ? 35 : 40);
         int gap = 3;
-        int cols = panelW < 420 ? 2 : (compact ? 3 : 4);
+        int cols = compact ? (panelW < 250 ? 3 : 4) : 4;
         int availableW = panelW - 20;
-        int cellW = Math.max(40, (availableW - gap * (cols - 1)) / cols);
+        int cellW = Math.max(32, (availableW - gap * (cols - 1)) / cols);
         SiegeServerGuideData.Category[] categories = SiegeServerGuideData.Category.values();
         for (int i = 0; i < categories.length; i++) {
             SiegeServerGuideData.Category value = categories[i];
@@ -74,15 +72,20 @@ public final class SiegeServerGuideScreen extends Screen {
         }
         categoryRows = (categories.length + cols - 1) / cols;
 
-        int bodyTop = categoryTop + categoryRows * 22 + 11;
-        if (compact) {
+        int bodyTop = categoryTop + categoryRows * 22 + (shortView ? 7 : 11);
+        if (shortView) {
+            listX = panelX + 10;
+            listY = bodyTop;
+            listW = panelW - 20;
+            detailX = detailY = detailW = detailH = 0;
+        } else if (compact) {
             listX = panelX + 10;
             listY = bodyTop;
             listW = panelW - 20;
             detailX = listX;
             detailY = bodyTop + 3 * 22 + 8;
             detailW = listW;
-            detailH = Math.max(48, panelY + panelH - detailY - 10);
+            detailH = Math.max(34, panelY + panelH - detailY - 10);
         } else {
             listX = panelX + 10;
             listY = bodyTop;
@@ -93,7 +96,12 @@ public final class SiegeServerGuideScreen extends Screen {
             detailH = Math.max(90, panelY + panelH - detailY - 10);
         }
 
-        int rowCount = compact ? 3 : Math.max(4, Math.min(9, detailH / 22));
+        int rowCount;
+        if (shortView) {
+            rowCount = Math.max(2, Math.min(5, Math.max(2, (panelY + panelH - listY - 9) / 22)));
+        } else {
+            rowCount = compact ? 3 : Math.max(4, Math.min(9, detailH / 22));
+        }
         for (int i = 0; i < rowCount; i++) {
             int slot = i;
             SiegeButton row = new SiegeButton(listX, listY + i * 22, listW, 19,
@@ -141,7 +149,7 @@ public final class SiegeServerGuideScreen extends Screen {
             String marker = entry.zone() == SiegeKnowledgeData.Zone.HISTORY
                     ? label("ANTIGUO", "OLD") : entry.domain().label(spanish());
             button.setMessage(Component.literal(fit(marker + " · " + entry.title(spanish()), Math.max(20, listW - 28))));
-            button.setSelected(selected != null && selected.id().equals(entry.id()));
+            button.setSelected(!shortView && selected != null && selected.id().equals(entry.id()));
         }
     }
 
@@ -151,6 +159,10 @@ public final class SiegeServerGuideScreen extends Screen {
         selected = entries.get(index);
         detailOffset = 0;
         SiegeUiSounds.selection();
+        if (shortView) {
+            minecraft.setScreen(new SiegeKnowledgeFileScreen(this, selected));
+            return;
+        }
         refreshRows();
     }
 
@@ -162,7 +174,7 @@ public final class SiegeServerGuideScreen extends Screen {
             refreshRows();
             return true;
         }
-        if (mouseX >= detailX && mouseX < detailX + detailW && mouseY >= detailY && mouseY < detailY + detailH) {
+        if (!shortView && mouseX >= detailX && mouseX < detailX + detailW && mouseY >= detailY && mouseY < detailY + detailH) {
             detailOffset = Math.max(0, detailOffset - (int)Math.signum(delta) * 2);
             return true;
         }
@@ -179,17 +191,24 @@ public final class SiegeServerGuideScreen extends Screen {
 
         g.drawString(font, fit(label("GUÍA DEL SERVIDOR", "SERVER GUIDE") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
                 panelX + 12, panelY + 9, SiegeTheme.INK, false);
-        g.drawString(font, fit(label(
-                "Elegí un tema: la guía muestra primero lo importante y deja el archivo completo para después.",
-                "Choose a topic: the guide shows the important parts first and leaves the full archive for later."), panelW - 24),
-                panelX + 12, panelY + 21, SiegeTheme.MUTED, false);
+        if (!shortView) {
+            g.drawString(font, fit(label(
+                    "Elegí un tema: primero lo importante, después el detalle.",
+                    "Choose a topic: important information first, details second."), panelW - 24),
+                    panelX + 12, panelY + 21, SiegeTheme.MUTED, false);
+        }
 
         int descY = categoryTop + categoryRows * 22 + 1;
-        g.drawString(font, fit(category.description(spanish()), panelW - 24), panelX + 12, descY, accent, false);
+        g.drawString(font, fit(shortView
+                        ? label("Elegí una ficha para abrirla.", "Choose an entry to open it.")
+                        : category.description(spanish()), panelW - 24),
+                panelX + 12, descY, accent, false);
 
         SiegeTheme.panel(g, listX - 3, listY - 3, listW + 6, entryButtons.size() * 22 + 6, SiegeTheme.CYAN);
-        SiegeTheme.panel(g, detailX - 3, detailY - 3, detailW + 6, detailH + 6, accent);
-        renderDetail(g, accent);
+        if (!shortView) {
+            SiegeTheme.panel(g, detailX - 3, detailY - 3, detailW + 6, detailH + 6, accent);
+            renderDetail(g, accent);
+        }
 
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
@@ -249,9 +268,9 @@ public final class SiegeServerGuideScreen extends Screen {
             case START -> label("INICIO", "START");
             case RACES -> label("RAZAS", "RACES");
             case PROGRESSION -> label("PROG.", "PROG.");
-            case THREATS -> label("AMENAZAS", "THREATS");
+            case THREATS -> label("AMEN.", "THREAT");
             case SYSTEMS -> label("SIST.", "SYSTEMS");
-            case SURVIVAL -> label("SUPERV.", "SURVIVAL");
+            case SURVIVAL -> label("SUPERV.", "SURV.");
             case HISTORY -> label("ANTIGUO", "HISTORY");
         };
     }
