@@ -35,6 +35,7 @@ public final class SiegeKnowledgeScreen extends Screen {
     private int panelX, panelY, panelW, panelH;
     private int listX, listY, listW, detailX, detailY, detailW, detailH;
     private boolean compact;
+    private boolean requestedApplied;
 
     public SiegeKnowledgeScreen(Screen parent) { this(parent, null); }
 
@@ -120,7 +121,10 @@ public final class SiegeKnowledgeScreen extends Screen {
         addRenderableWidget(revealButton);
 
         refresh();
-        if (requestedId != null) selectById(requestedId);
+        if (!requestedApplied && requestedId != null) {
+            requestedApplied = true;
+            selectById(requestedId);
+        }
     }
 
     private void switchMode(Mode next) {
@@ -279,18 +283,19 @@ public final class SiegeKnowledgeScreen extends Screen {
                 : selected.body(spanish());
 
         List<FormattedCharSequence> lines = new ArrayList<>();
+        FormattedCharSequence blank = Component.empty().getVisualOrderText();
         for (String paragraph : text.split("\\n", -1)) {
-            if (paragraph.isEmpty()) lines.add(FormattedCharSequence.EMPTY);
+            if (paragraph.isEmpty()) lines.add(blank);
             else lines.addAll(font.split(Component.literal(paragraph), textW));
         }
 
         if (!locked && !selected.related().isEmpty()) {
-            lines.add(FormattedCharSequence.EMPTY);
+            lines.add(blank);
             lines.addAll(font.split(Component.literal(label("RELACIONADO: ", "RELATED: ")
                     + String.join(" · ", selected.related())), textW));
         }
         if (!locked && !selected.sources().isEmpty()) {
-            lines.add(FormattedCharSequence.EMPTY);
+            lines.add(blank);
             lines.addAll(font.split(Component.literal(label("FUENTES", "SOURCES")), textW));
             for (SiegeKnowledgeData.Source source : selected.sources()) {
                 String sourceText = "• " + source.confidence().label(spanish())
