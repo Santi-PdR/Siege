@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SIEGE 4.00 durable release contracts."""
+"""SIEGE 4.00 durable release contracts preserved by later major releases."""
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +35,7 @@ EASTER = read("src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java")
 CHANGELOG = read("docs/CHANGELOG-4.0.0.md")
 MEDIA = read("docs/DVN-MEDIA-CANDIDATES-4.0.md")
 
-assert "version = '4.00.0'" in BUILD
+assert "version = '5.00.0'" in BUILD
 assert "SIEGE 4.00" in CHANGELOG
 for cls in ("SiegeAtlasScreen", "SiegeBriefingScreen", "SiegeThreatBoardScreen", "SiegeKnowledgeFileScreen",
             "SiegeRaceAtlasScreen", "SiegeProgressionMapScreen", "SiegeMediaRoomScreen"):
@@ -112,7 +112,7 @@ assert "selectedScene = -1" in MEDIA_ROOM
 for technical in ("NO INCLUIDAS", "NOT BUNDLED", "redistribuyen", "redistributed", "derechos claros", "clear rights"):
     assert technical.lower() not in MEDIA_ROOM.lower()
 
-# 4.00 adds presentation profiles without removing accessibility/reading presets.
+# 4.00 profiles remain available after later major releases.
 for profile in ("CINEMATIC", "TACTICAL", "PERFORMANCE", "CALM", "READING", "CLASSIC", "HIGH_CONTRAST", "IMMERSIVE"):
     assert profile in PROFILES and profile in PROFILE_SPEC
 assert "SiegeClientProfile.Profile.HIGH_CONTRAST" in PROFILE_SPEC
@@ -141,9 +141,9 @@ assert "768x432" in MEDIA
 assert "no se incorpora" in MEDIA.lower() or "no se incluyen" in MEDIA.lower()
 assert "permiso" in MEDIA.lower()
 
-# CI must validate the completed 4.00 systems and publish only after successful build.
+# CI must keep validating the completed 4.00 systems while the current major version advances.
 for test_name in ("AtlasRegressionTest", "RaceAtlasRegressionTest", "ProgressionMapRegressionTest", "MediaReferenceRegressionTest"):
     assert test_name in WORKFLOW
-assert "version = '4.00.0'" in WORKFLOW
+assert "version = '5.00.0'" in WORKFLOW
 assert "Publish validated jar for installer" in WORKFLOW
-print("SIEGE 4.00 completed readability/content contracts passed")
+print("SIEGE 4.00 durable contracts preserved under 5.00")
