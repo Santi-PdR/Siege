@@ -26,8 +26,8 @@ public final class SiegeMediaReferenceData {
 
     private static final List<Track> DVN_TRACKS = List.of(
             new Track("Convenience Store", Use.LOBBY,
-                    "Ideal para una entrada tranquila antes del briefing o despliegue.",
-                    "Fits a calm entry before briefing or deployment."),
+                    "Ideal para una entrada tranquila antes de la guía o el despliegue.",
+                    "Fits a calm entry before the guide or deployment."),
             new Track("Music Box", Use.LOBBY,
                     "El estilo más cercano a la calma inquietante del lobby; SIEGE ya usa su recorte preparado.",
                     "Closest to the lobby's uneasy calm; SIEGE already uses its prepared cut."),
@@ -46,18 +46,27 @@ public final class SiegeMediaReferenceData {
     );
 
     private static final List<Visual> VISUALS = List.of(
-            new Visual("Stronghold / última fortaleza", "Stronghold / last stronghold",
-                    "Defensa de fortaleza, escuadra y armamento moderno/futurista. Muy buen fondo de portada.",
-                    "Stronghold defense, squad and modern/future weaponry. Strong fit for the main menu."),
+            new Visual("Última fortaleza de Dummykind", "Dummykind's last stronghold",
+                    "La referencia más directa para portada: fortaleza, defensa, humo y espacio oscuro para los botones.",
+                    "The most direct main-menu reference: stronghold, defense, smoke and dark space for buttons."),
+            new Visual("Escuadra de 8 contra horda Noob", "8-player squad vs Noob horde",
+                    "Una composición de escuadra defendiendo una línea frente a una horda comunica DVN de inmediato.",
+                    "A squad defending a line against a horde communicates DVN immediately."),
+            new Visual("Armamento moderno / casi futurista", "Modern / near-future weaponry",
+                    "Soldados, rifles, ópticas, equipo técnico y vehículos; buena base para Intel, Arsenal y Operaciones.",
+                    "Soldiers, rifles, optics, technical gear and vehicles; strong for Intel, Armory and Operations."),
+            new Visual("Operación ártica", "Arctic operation",
+                    "Nieve, equipamiento invernal y visibilidad reducida; da variedad sin salir de la identidad militar DVN.",
+                    "Snow, winter gear and reduced visibility; adds variety while staying inside DVN's military identity."),
             new Visual("Operación urbana nocturna", "Night urban operation",
                     "Siluetas tácticas, calles oscuras, focos y señalética militar. Ideal para Operaciones o Despliegue.",
                     "Tactical silhouettes, dark streets, spotlights and military signage. Ideal for Operations or Deployment."),
             new Visual("Hangar / briefing", "Hangar / briefing",
-                    "Escuadra preparando equipo, interiores militares y luz controlada. Ideal para Briefing y Arsenal.",
-                    "Squad preparing equipment, military interiors and controlled lighting. Ideal for Briefing and Armory."),
+                    "Escuadra preparando equipo, interiores militares y luz controlada. Ideal para Guía y Arsenal.",
+                    "Squad preparing equipment, military interiors and controlled lighting. Ideal for Guide and Armory."),
             new Visual("Defensa de oleada", "Wave defense",
-                    "Una escena con presión y escala, pero con espacio oscuro suficiente para que el menú siga siendo legible.",
-                    "A scene with pressure and scale while leaving enough dark space for the menu to remain readable.")
+                    "Presión, escala y enemigos al fondo, con espacio limpio suficiente para que la interfaz siga siendo legible.",
+                    "Pressure, scale and distant enemies, with enough clean space for the interface to remain readable.")
     );
 
     public static List<Track> dvnTracks() { return DVN_TRACKS; }
