@@ -14,6 +14,7 @@ race_screen = read("src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasScreen.
 progression = read("src/main/java/uy/santipdr/siege/client/SiegeProgressionData.java")
 progression_screen = read("src/main/java/uy/santipdr/siege/client/SiegeProgressionMapScreen.java")
 threat = read("src/main/java/uy/santipdr/siege/client/SiegeThreatBoardScreen.java")
+threat_data = read("src/main/java/uy/santipdr/siege/client/SiegeThreatBoardData.java")
 media = read("src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java")
 media_data = read("src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java")
 menu_events = read("src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java")
@@ -33,9 +34,12 @@ for cls in (
     "SiegeThreatBoardScreen", "SiegeMediaRoomScreen", "SiegeKnowledgeScreen"):
     assert f"class {cls}" in read(f"src/main/java/uy/santipdr/siege/client/{cls}.java")
 
-# Main menu enters the simple briefing, not the dense search/control screen.
+# Main menu enters the simple briefing and the split button must measure actual labels.
 assert "new SiegeRecruitBriefingScreen(screen)" in menu_events
 assert "Briefing, razas, progresión, amenazas" in menu_events
+assert "buttonLabel(" in menu_events
+assert "minecraft.font.width(full)" in menu_events
+assert '"OPS"' in menu_events and 'label("AJ.", "CFG")' in menu_events
 
 # Player-facing encyclopedia is category-driven and hides provenance plumbing.
 assert "Mode { START, RACES, PROGRESSION, SYSTEMS, HISTORY }" in knowledge
@@ -53,7 +57,7 @@ for forbidden in (
     "PLAYER_EXPERIENCE", "Mi partida actual", "mi inventario", "mi personaje"):
     assert forbidden not in knowledge_data
 
-# Race atlas: complete documented rarity ladder and broad race catalog.
+# Race atlas: complete documented rarity ladder, broad catalog and readable full details.
 for rarity in ("COMMON", "UNCOMMON", "RARE", "ULTRA_RARE", "LEGENDARY", "OBSAINAN",
                "MYTHIC", "GODLY", "ETERNAL", "FABLED"):
     assert rarity in races
@@ -63,7 +67,17 @@ for race in ("Human", "Hacker", "Shark", "Saiyan", "Deteriorer", "Faraón", "Apo
     assert f'"{race}"' in races
 assert "rarityOrder()" in races
 assert "ATLAS DE RAZAS" in race_screen
-assert "ABRIR FICHA DE ENCICLOPEDIA" in race_screen
+assert "rarityRows(" in race_screen
+assert "VER EN ENCICLOPEDIA" in race_screen
+assert "knowledge.body(spanish())" in race_screen
+assert 'label("RESUMEN — ", "SUMMARY — ")' in race_screen
+assert '"TAGS"' not in race_screen
+
+# Recruit briefing must remain usable at high GUI scale instead of making four tall rows.
+assert "int cols = panelW < 280 ? 2 : 4" in recruit
+assert "topicButtonLabel(" in recruit
+assert "detailOffset" in recruit and "mouseScrolled" in recruit
+assert "Math.max(34, panelY + panelH - detailY - 9)" in recruit
 
 # Progression is richer than a single V1→V4 line.
 for track in ("RUTA GENERAL", "V1 → V4", "TRIALS", "RUTAS ESPECIALES", "SISTEMAS AVANZADOS"):
@@ -73,10 +87,12 @@ for topic in ("Perish Staff V2", "Trial Spire", "Saiyan", "Cyborg", "Hacker", "A
 assert "ABRIR FUENTE" not in progression_screen
 assert "VER INFORMACIÓN" in progression_screen
 
-# Threat board supports compact scrolling rather than silently dropping entries.
+# Threat board supports compact scrolling and uses player-facing wording.
 assert "mouseScrolled" in threat and "offset" in threat
 assert "VER INFORMACIÓN" in threat
 assert "ABRIR FUENTE" not in threat
+assert "reliable sourcing" not in threat_data.lower()
+assert "fuente fiable" not in threat_data.lower()
 
 # Media Room is player-facing, with soundtrack and DVN visual direction.
 for track in ("Convenience Store", "Music Box", "New Store", "Jazz Music", "From the Ashes", "Sad Choir"):
