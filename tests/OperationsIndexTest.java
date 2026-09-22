@@ -20,6 +20,15 @@ public final class OperationsIndexTest {
         check(SiegeOperationsIndex.search("threat board", false, 8).stream()
                         .anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.ROUTE && e.route() == SiegeOperationsIndex.Route.THREATS),
                 "Threat Board route missing");
+        check(SiegeOperationsIndex.search("Obsainan race", false, 12).stream()
+                        .anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.ROUTE && e.route() == SiegeOperationsIndex.Route.RACES),
+                "Race Atlas route missing");
+        check(SiegeOperationsIndex.search("V1 V4 progression", false, 12).stream()
+                        .anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.ROUTE && e.route() == SiegeOperationsIndex.Route.PROGRESSION),
+                "Progression Map route missing");
+        check(SiegeOperationsIndex.search("soundtrack dummies noobs", false, 12).stream()
+                        .anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.ROUTE && e.route() == SiegeOperationsIndex.Route.MEDIA),
+                "Media Room route missing");
 
         var justice = SiegeOperationsIndex.search("third justice", false, 8);
         check(justice.stream().anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.ARMORY && e.id().equals("third-justice")),
@@ -45,15 +54,15 @@ public final class OperationsIndexTest {
 
         Method clear = SiegeRouteHistory.class.getDeclaredMethod("clearForTests");
         clear.setAccessible(true); clear.invoke(null);
-        SiegeRouteHistory.record(SiegeOperationsIndex.Route.ATLAS);
-        SiegeRouteHistory.record(SiegeOperationsIndex.Route.THREATS);
+        SiegeRouteHistory.record(SiegeOperationsIndex.Route.RACES);
+        SiegeRouteHistory.record(SiegeOperationsIndex.Route.MEDIA);
         SiegeRouteHistory.record(SiegeOperationsIndex.Route.DEPLOYMENT);
-        SiegeRouteHistory.record(SiegeOperationsIndex.Route.ATLAS);
+        SiegeRouteHistory.record(SiegeOperationsIndex.Route.RACES);
         List<SiegeOperationsIndex.Route> recent = SiegeRouteHistory.snapshot();
         check(recent.size() == 3, "Recent route history must deduplicate");
-        check(recent.get(0) == SiegeOperationsIndex.Route.ATLAS
+        check(recent.get(0) == SiegeOperationsIndex.Route.RACES
                         && recent.get(1) == SiegeOperationsIndex.Route.DEPLOYMENT
-                        && recent.get(2) == SiegeOperationsIndex.Route.THREATS, "Recent route ordering");
-        System.out.println("SIEGE 4.00 War Room index, new routes, expansion knowledge and deep-links passed");
+                        && recent.get(2) == SiegeOperationsIndex.Route.MEDIA, "Recent route ordering");
+        System.out.println("SIEGE 4.00 War Room index, Race/Progression/Media routes and deep-links passed");
     }
 }
