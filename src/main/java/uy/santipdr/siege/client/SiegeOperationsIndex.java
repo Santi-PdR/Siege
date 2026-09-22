@@ -6,11 +6,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-/** Cross-domain index for the SIEGE 4.00 War Room. */
+/** Cross-domain index for the completed SIEGE 4.00 War Room. */
 public final class SiegeOperationsIndex {
     public enum Kind { ROUTE, INTEL, ARMORY, KNOWLEDGE }
     public enum Route {
-        BRIEFING, ATLAS, THREATS,
+        BRIEFING, ATLAS, RACES, PROGRESSION, THREATS, MEDIA,
         DEPLOYMENT, INTEL, KNOWLEDGE, ARCHIVE, ARMORY, FIELD_MANUAL,
         COMMAND, DIAGNOSTICS, SETTINGS, BACKGROUNDS
     }
@@ -87,15 +87,24 @@ public final class SiegeOperationsIndex {
     }
 
     private static void addRoutes(List<Entry> out, boolean es) {
-        route(out, Route.BRIEFING, es ? "BRIEFING" : "BRIEFING",
+        route(out, Route.BRIEFING, "BRIEFING",
                 es ? "Ruta rápida para nuevos jugadores" : "Fast route for new players",
                 "start empezar newcomer nuevo new player briefing beginner principiante basics básico supervivencia survival");
         route(out, Route.ATLAS, es ? "ATLAS TÁCTICO" : "TACTICAL ATLAS",
-                es ? "Razas, sistemas, investigación e histórico" : "Races, systems, research and history",
-                "atlas knowledge conocimiento wiki encyclopedia enciclopedia races razas rarity rareza progression progresion trials executors ejecutores structures estructuras relics reliquias research investigar history histórico");
+                es ? "Sistemas, investigación e histórico" : "Systems, research and history",
+                "atlas knowledge conocimiento wiki encyclopedia enciclopedia systems sistemas trials executors ejecutores structures estructuras relics reliquias research investigar history histórico");
+        route(out, Route.RACES, es ? "ATLAS DE RAZAS" : "RACE ATLAS",
+                es ? "Razas, rarezas, rutas de progresión y fuentes" : "Races, rarities, progression routes and sources",
+                "race races raza razas rarity rareza obsainan fabled eternal saiyan deteriorer hacker cyborg human progression progresion");
+        route(out, Route.PROGRESSION, es ? "PROGRESIÓN" : "PROGRESSION MAP",
+                es ? "V1→V4, rutas especiales, Trials y sistemas avanzados" : "V1→V4, special routes, Trials and advanced systems",
+                "progression progresion v1 v2 v3 v4 trials trial steps pasos special routes ruta assembling relics dimensions raids");
         route(out, Route.THREATS, es ? "AMENAZAS" : "THREAT BOARD",
                 es ? "Dossiers, Executores, bosses y eventos" : "Dossiers, Executors, bosses and events",
                 "threat threats amenaza amenazas board dossier unit unidad boss bosses executor ejecutor raid event evento intel");
+        route(out, Route.MEDIA, es ? "SALA MULTIMEDIA" : "MEDIA ROOM",
+                es ? "Fondos, soundtrack, controles y referencias DVN" : "Backgrounds, soundtrack, controls and DVN references",
+                "media multimedia music musica soundtrack background fondo backgrounds dvn dummies noobs gallery galeria playlist track pista");
         route(out, Route.DEPLOYMENT, es ? "DESPLIEGUE" : "DEPLOYMENT",
                 es ? "Servidor oficial, estado y conexión" : "Official server, status and connection",
                 "server servidor online offline ping latency latencia connect conectar destino compatibility compatibilidad");
@@ -113,7 +122,7 @@ public final class SiegeOperationsIndex {
                 es ? "Estados de muerte, trauma, misiones y protocolos" : "Death states, trauma, missions and protocols",
                 "downed mangled mutilated dismembered disfigured bleeding burned erased shellshock death muerte trauma states estados protocol protocolo mission mision");
         route(out, Route.COMMAND, es ? "CENTRO DE COMANDO" : "COMMAND CENTER", es ? "Perfil visual y estado del cliente" : "Visual profile and client state",
-                "client cliente profile perfil health salud command command center technical tecnico");
+                "client cliente profile perfil health salud command command center technical tecnico immersive inmersivo contrast contraste classic clasico");
         route(out, Route.DIAGNOSTICS, es ? "DIAGNÓSTICO" : "DIAGNOSTICS", es ? "Problemas detectados y recuperación segura" : "Detected problems and safe recovery",
                 "diagnostic diagnostico recovery recuperacion repair reparar error warning aviso technical tecnico");
         route(out, Route.SETTINGS, es ? "AJUSTES" : "SETTINGS", es ? "Apariencia, movimiento, audio, Intel y accesibilidad" : "Appearance, motion, audio, Intel and accessibility",
