@@ -40,8 +40,8 @@ public final class Siege250MenuEvents {
                 Minecraft.getInstance().setScreen(new SiegeOperationsHubScreen(screen));
             }, SiegeTheme.CYAN).setMainMenuStyle(true).withIcon("overview").setCompactCenter(true);
             operations.setTooltip(Tooltip.create(Component.literal(label(
-                    "Rutas, estado, búsqueda global y Archivo de Conocimiento de Eternal Craft.",
-                    "Routes, status, global search and the Eternal Craft Knowledge Vault."))));
+                    "Rutas, estado, búsqueda global y Enciclopedia del Servidor.",
+                    "Routes, status, global search and the Server Encyclopedia."))));
 
             SiegeButton settings = new SiegeButton(x + opsW + gap, y, settingsW, h,
                     Component.literal(full < 165 ? label("AJ.", "CFG") : label("AJUSTES", "SETTINGS")), b -> {
