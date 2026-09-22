@@ -5,6 +5,7 @@ public final class SiegeClientProfile {
     public enum Profile {
         CINEMATIC,
         TACTICAL,
+        STRONGHOLD,
         PERFORMANCE,
         CALM,
         READING,
@@ -33,6 +34,7 @@ public final class SiegeClientProfile {
         return switch (profile) {
             case CINEMATIC -> spanish ? "CINEMÁTICO" : "CINEMATIC";
             case TACTICAL -> spanish ? "TÁCTICO" : "TACTICAL";
+            case STRONGHOLD -> "STRONGHOLD";
             case PERFORMANCE -> spanish ? "RENDIMIENTO" : "PERFORMANCE";
             case CALM -> spanish ? "TRANQUILO" : "CALM";
             case READING -> spanish ? "LECTURA" : "READING";
@@ -47,6 +49,7 @@ public final class SiegeClientProfile {
         return switch (profile) {
             case CINEMATIC -> "CINE";
             case TACTICAL -> spanish ? "TÁCT" : "TACT";
+            case STRONGHOLD -> "SH-5";
             case PERFORMANCE -> spanish ? "REND" : "PERF";
             case CALM -> spanish ? "CALMA" : "CALM";
             case READING -> spanish ? "LEER" : "READ";
@@ -65,6 +68,9 @@ public final class SiegeClientProfile {
             case TACTICAL -> spanish
                     ? "Equilibrio operativo: información visible, animación moderada y contraste automático."
                     : "Operational balance: visible information, moderate animation and automatic contrast.";
+            case STRONGHOLD -> spanish
+                    ? "Perfil 5.0 inspirado en Stronghold/DVN: fondos activos, lectura oscura, scanlines suaves y destellos reducidos."
+                    : "5.0 Stronghold/DVN-inspired profile: active scenes, dark readability, soft scanlines and reduced flashes.";
             case PERFORMANCE -> spanish
                     ? "Reduce trabajo visual por frame: sin animaciones ambientales, scanlines ni interferencia."
                     : "Reduces per-frame visual work: no ambient animation, scanlines or interference.";
@@ -93,9 +99,9 @@ public final class SiegeClientProfile {
         return switch (profile) {
             case CINEMATIC, CLASSIC -> SiegeTheme.GOLD;
             case TACTICAL -> SiegeTheme.RED;
+            case STRONGHOLD, READING, IMMERSIVE -> SiegeTheme.CYAN;
             case PERFORMANCE, HIGH_CONTRAST -> SiegeTheme.GREEN;
             case CALM -> SiegeTheme.BLUE;
-            case READING, IMMERSIVE -> SiegeTheme.CYAN;
             case CUSTOM -> SiegeTheme.ORANGE;
         };
     }
@@ -103,7 +109,7 @@ public final class SiegeClientProfile {
     public static String icon(Profile profile) {
         return switch (profile) {
             case CINEMATIC, IMMERSIVE -> "image";
-            case TACTICAL, HIGH_CONTRAST -> "shield";
+            case TACTICAL, STRONGHOLD, HIGH_CONTRAST -> "shield";
             case PERFORMANCE, CLASSIC, CUSTOM -> "settings";
             case CALM -> "eye";
             case READING -> "intel";
