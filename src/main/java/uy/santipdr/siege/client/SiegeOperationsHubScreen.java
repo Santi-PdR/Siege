@@ -9,9 +9,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * SIEGE 3.00 operational front door. Navigation, search and live status are
- * unified without collapsing information domains: Intel, world Archive, Armory,
- * Field Manual and the source-aware Eternal Craft Knowledge Vault remain distinct.
+ * SIEGE 3.00 operational front door. Navigation, search and live client status
+ * are unified without collapsing information domains: Intel, Archive, Armory,
+ * Field Manual and the non-personal Eternal Craft Server Encyclopedia remain distinct.
  */
 public final class SiegeOperationsHubScreen extends Screen {
     private final Screen parent;
@@ -72,8 +72,8 @@ public final class SiegeOperationsHubScreen extends Screen {
         searchBox = new EditBox(font, searchX, searchY, searchW, 20,
                 Component.literal(label("Búsqueda operacional", "Operational search")));
         searchBox.setHint(Component.literal(label(
-                "Buscar dossier, objeto, consejo, RE, reliquia o ruta…",
-                "Search dossier, item, advice, RE, relic or route…")));
+                "Buscar dossier, raza, rareza, Trial, reliquia, objeto o ruta…",
+                "Search dossier, race, rarity, Trial, relic, item or route…")));
         searchBox.setResponder(value -> refreshResults());
         addRenderableWidget(searchBox);
 
@@ -111,7 +111,7 @@ public final class SiegeOperationsHubScreen extends Screen {
                 case ROUTE -> label("RUTA", "ROUTE");
                 case INTEL -> "INTEL";
                 case ARMORY -> label("ARSENAL", "ARMORY");
-                case KNOWLEDGE -> label("ARCHIVO", "KNOWLEDGE");
+                case KNOWLEDGE -> label("ENCICLOPEDIA", "ENCYCLOPEDIA");
             };
             button.setMessage(Component.literal(prefix + " · " + entry.title() + "  //  " + entry.subtitle()));
         }
@@ -164,8 +164,8 @@ public final class SiegeOperationsHubScreen extends Screen {
         String title = label("CENTRO DE OPERACIONES", "OPERATIONS HUB") + " // " + SiegeRuntimeStatus.version();
         g.drawString(font, fit(title, panelW - 24), tx, ty, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Buscar, verificar y abrir cada dominio sin mezclar información actual, histórica o incierta.",
-                "Search, verify and open each domain without mixing current, historical or uncertain information."), panelW - 24),
+                "Buscar y abrir dossiers, guía del servidor, archivo, arsenal y herramientas técnicas desde un solo lugar.",
+                "Search and open dossiers, server guide, archive, armory and technical tools from one place."), panelW - 24),
                 tx, ty + 12, SiegeTheme.MUTED, false);
 
         int statusY = ty + 30;
@@ -180,9 +180,9 @@ public final class SiegeOperationsHubScreen extends Screen {
             String line = SiegeBackgrounds.sceneTag(scene, spanish()) + " · " + SiegeBackgrounds.name(scene, spanish())
                     + "   |   " + SiegeRuntimeStatus.audioLabel(spanish());
             g.drawString(font, fit(line, panelW - 24), tx, statusY + 22, SiegeTheme.CYAN, false);
-            String knowledge = (spanish() ? "CONOCIMIENTO " : "KNOWLEDGE ") + SiegeKnowledgeData.entries().size()
-                    + " · " + (spanish() ? "SUPERVIVENCIA " : "SURVIVAL ") + SiegeKnowledgeData.survival().size()
-                    + " · " + (spanish() ? "FUENTES ACTIVAS" : "SOURCE-AWARE");
+            String knowledge = (spanish() ? "ENCICLOPEDIA " : "ENCYCLOPEDIA ") + SiegeKnowledgeData.entries().size()
+                    + " · " + (spanish() ? "TEMAS CRÍTICOS " : "CRITICAL TOPICS ") + SiegeKnowledgeData.critical().size()
+                    + " · " + (spanish() ? "FUENTES FECHADAS" : "DATED SOURCES");
             g.drawString(font, fit(knowledge, panelW - 24), tx, statusY + 33, SiegeTheme.GREEN, false);
         }
 
@@ -221,7 +221,7 @@ public final class SiegeOperationsHubScreen extends Screen {
         return switch (route) {
             case DEPLOYMENT -> label("DESPLIEGUE", "DEPLOYMENT");
             case INTEL -> "INTEL";
-            case KNOWLEDGE -> label("CONOCIMIENTO", "KNOWLEDGE");
+            case KNOWLEDGE -> label("ENCICLOPEDIA", "ENCYCLOPEDIA");
             case ARCHIVE -> label("ARCHIVO", "ARCHIVE");
             case ARMORY -> label("ARSENAL", "ARMORY");
             case FIELD_MANUAL -> label("MANUAL", "MANUAL");
@@ -236,7 +236,7 @@ public final class SiegeOperationsHubScreen extends Screen {
         return switch (route) {
             case DEPLOYMENT -> "DEP";
             case INTEL -> "INT";
-            case KNOWLEDGE -> "KNW";
+            case KNOWLEDGE -> "ENC";
             case ARCHIVE -> "ARC";
             case ARMORY -> "ARS";
             case FIELD_MANUAL -> "FLD";
@@ -251,11 +251,13 @@ public final class SiegeOperationsHubScreen extends Screen {
         return switch (route) {
             case DEPLOYMENT -> label("Servidor oficial, compatibilidad y conexión.", "Official server, compatibility and connection.");
             case INTEL -> label("Dossiers actuales de unidades y amenazas.", "Current unit and threat dossiers.");
-            case KNOWLEDGE -> label("SIEGE actual, enciclopedia del Discord, supervivencia, fuentes y datos históricos.", "Current SIEGE, Discord encyclopedia, survival, sources and historical data.");
+            case KNOWLEDGE -> label(
+                    "Guía general del servidor: razas, rarezas, progresión, Trials, Executores, sistemas y cambios históricos.",
+                    "General server guide: races, rarities, progression, Trials, Executors, systems and historical changes.");
             case ARCHIVE -> label("SIEGE, 2044, facciones, Núcleo, Gates/Rifts e inspiraciones.", "SIEGE, 2044, factions, Core, Gates/Rifts and inspirations.");
             case ARMORY -> label("Equipamiento, objetos y evidencia multimedia.", "Equipment, items and multimedia evidence.");
             case FIELD_MANUAL -> label("Estados de muerte/heridas, misiones y protocolos.", "Death/injury states, missions and protocols.");
-            case COMMAND -> label("Perfil, prioridades y estado del cliente.", "Profile, priorities and client state.");
+            case COMMAND -> label("Perfil visual y estado del cliente.", "Visual profile and client state.");
             case DIAGNOSTICS -> label("Problemas técnicos y recuperación explícita.", "Technical problems and explicit recovery.");
             case SETTINGS -> label("Configuración visual, audio, Intel y accesibilidad.", "Visual, audio, Intel and accessibility configuration.");
             case BACKGROUNDS -> label("Galería y rotación de escenas del menú.", "Menu scene gallery and rotation.");
