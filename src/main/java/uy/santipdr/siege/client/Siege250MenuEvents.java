@@ -34,8 +34,11 @@ public final class Siege250MenuEvents {
             int settingsW = Math.max(1, full - gap - opsW);
             event.removeListener(original);
 
+            String operationsLabel = buttonLabel(label("OPERACIONES", "OPERATIONS"), "OPS", opsW);
+            String settingsLabel = buttonLabel(label("AJUSTES", "SETTINGS"), label("AJ.", "CFG"), settingsW);
+
             SiegeButton operations = new SiegeButton(x, y, opsW, h,
-                    Component.literal(full < 165 ? "OPS" : label("OPERACIONES", "OPERATIONS")), b -> {
+                    Component.literal(operationsLabel), b -> {
                 SiegeUiSounds.confirm();
                 Minecraft.getInstance().setScreen(new SiegeRecruitBriefingScreen(screen));
             }, SiegeTheme.CYAN).setMainMenuStyle(true).withIcon("overview").setCompactCenter(true);
@@ -44,7 +47,7 @@ public final class Siege250MenuEvents {
                     "Briefing, races, progression, threats, armory, deployment and media."))));
 
             SiegeButton settings = new SiegeButton(x + opsW + gap, y, settingsW, h,
-                    Component.literal(full < 165 ? label("AJ.", "CFG") : label("AJUSTES", "SETTINGS")), b -> {
+                    Component.literal(settingsLabel), b -> {
                 SiegeUiSounds.confirm();
                 Minecraft.getInstance().setScreen(new SiegeSettingsScreen(screen));
             }, SiegeTheme.RED).setMainMenuStyle(true).withIcon("settings").setCompactCenter(true);
@@ -64,6 +67,15 @@ public final class Siege250MenuEvents {
         if (next == null) return;
         SiegeOperationsIndex.Route route = routeFor(next.getClass().getSimpleName());
         if (route != null) SiegeRouteHistory.record(route);
+    }
+
+    private static String buttonLabel(String full, String shortLabel, int width) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null) return shortLabel;
+        // Reserve icon + internal button padding. The previous width-only check
+        // could let OPERACIONES/AJUSTES collide at GUI scale 3-4.
+        int usable = Math.max(1, width - 30);
+        return minecraft.font.width(full) <= usable ? full : shortLabel;
     }
 
     private static SiegeOperationsIndex.Route routeFor(String simple) {
