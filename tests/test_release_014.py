@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Durable release contracts from Atlas through SIEGE 2.0."""
+"""Durable release contracts from Atlas through SIEGE 2.25."""
 from pathlib import Path
 import re
 
@@ -15,6 +15,7 @@ CHANGELOG_125 = read("docs/CHANGELOG-1.25.0.md")
 CHANGELOG_126 = read("docs/CHANGELOG-1.26.0.md")
 CHANGELOG_150 = read("docs/CHANGELOG-1.50.0.md")
 CHANGELOG_200 = read("docs/CHANGELOG-2.0.0.md")
+CHANGELOG_225 = read("docs/CHANGELOG-2.25.0.md")
 ARCHITECTURE_200 = read("docs/INFORMATION-ARCHITECTURE-2.0.md")
 INTEL_DATA = read("src/main/java/uy/santipdr/siege/client/IntelData.java")
 INTEL_CURRENT = read("src/main/java/uy/santipdr/siege/client/IntelCurrentData.java")
@@ -32,6 +33,7 @@ DIAGNOSTIC = read("src/main/java/uy/santipdr/siege/client/SiegeDiagnosticReport.
 DIAGNOSTICS_SCREEN = read("src/main/java/uy/santipdr/siege/client/SiegeDiagnosticsScreen.java")
 NAVIGATION = read("src/main/java/uy/santipdr/siege/client/SiegeNavigationModel.java")
 SCREEN_CHROME = read("src/main/java/uy/santipdr/siege/client/SiegeScreenChrome.java")
+COMMAND_STRIP = read("src/main/java/uy/santipdr/siege/client/SiegeCommandStrip.java")
 UI_LAYOUT = read("src/main/java/uy/santipdr/siege/client/SiegeUiLayout.java")
 UI_SOUNDS = read("src/main/java/uy/santipdr/siege/client/SiegeUiSounds.java")
 BACKGROUND = read("src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java")
@@ -56,7 +58,7 @@ def numbered(changelog: str):
     return [int(v) for v in re.findall(r"(?m)^(\d+)\. ", changelog)]
 
 
-# Historical milestones stay real and the active build is exactly 2.0.0.
+# Historical milestones stay real and the active build is exactly 2.25.0.
 assert numbered(CHANGELOG_014) == list(range(1, 51))
 assert numbered(CHANGELOG_050) == list(range(1, 51))
 assert numbered(CHANGELOG_060) == list(range(1, 61))
@@ -66,8 +68,9 @@ assert numbered(CHANGELOG_125) == list(range(1, 81))
 assert numbered(CHANGELOG_126) == list(range(1, 35))
 assert numbered(CHANGELOG_150) == list(range(1, 51))
 assert numbered(CHANGELOG_200) == list(range(1, 81))
-assert "version = '2.0.0'" in BUILD
-for stale in ("version = '1.50.0'", "version = '1.26.0'", "version = '1.20.0'", "version = '0.75.0'"):
+assert numbered(CHANGELOG_225) == list(range(1, 26))
+assert "version = '2.25.0'" in BUILD
+for stale in ("version = '2.0.0'", "version = '1.50.0'", "version = '1.26.0'", "version = '1.20.0'", "version = '0.75.0'"):
     assert stale not in BUILD, f"Stale active version returned: {stale}"
 
 # Atlas and Intel contracts remain intact.
@@ -127,6 +130,10 @@ assert "readiness() + \"%\"" not in SCREEN_CHROME
 assert "SiegeRuntimeStatus.healthLabel" in SCREEN_CHROME
 assert "SiegeRuntimeStatus.version()" in SCREEN_CHROME
 assert "renderSceneTag" in SCREEN_CHROME
+assert "SiegeCommandStrip.render(screen, g);" in SCREEN_CHROME
+assert "rotationRemainingMs" in SCREEN_CHROME
+assert "screen.height - 33" in COMMAND_STRIP
+assert "SiegeBackgrounds.sceneTag" in COMMAND_STRIP and "SiegeBackgrounds.name" in COMMAND_STRIP
 # Readiness may remain an internal diagnostic metric, but it must not leak into normal navigation.
 assert "public static int readiness()" in DIAGNOSTIC
 assert "porcentajes crípticos" in ARCHITECTURE_200
@@ -172,14 +179,16 @@ assert "impact" in DIAGNOSTIC and "recommendation" in DIAGNOSTIC
 assert "REPAIR SELECTED" in DIAGNOSTICS_SCREEN and "renderSelectedDetail" in DIAGNOSTICS_SCREEN
 assert "Conocimiento del mundo" in ARCHITECTURE_200
 
-# Scene metadata, anomaly rarity and resource QA remain authoritative.
+# Scene metadata, anomaly rarity, shuffled bags and resource QA remain authoritative.
 assert "class SiegeSceneCatalog" in SCENE_CATALOG and "record Scene" in SCENE_CATALOG
 assert "STANDARD, FEATURED, ANOMALY" in SCENE_CATALOG
 assert '"tempest_jutcherson"' in SCENE_CATALOG and "comfortEligible" in SCENE_CATALOG
 assert '"rooftop_squad"' in SCENE_CATALOG
+assert "STANDARD_INDICES" in SCENE_CATALOG and "standardCount()" in SCENE_CATALOG and "standardIndex(int ordinal)" in SCENE_CATALOG
 assert "SiegeSceneCatalog.count()" in SCENE_SCHEDULE
 assert "SiegeSceneCatalog.anomalyIndex()" in SCENE_SCHEDULE
 assert "SiegeSceneCatalog.featuredIndex()" in SCENE_SCHEDULE
+assert "standardIndex(long slot)" in SCENE_SCHEDULE and "permutationStep" in SCENE_SCHEDULE
 assert "SiegeSceneCatalog.darknessBias" in BACKGROUND
 assert "SiegeSceneCatalog.label" in BACKGROUND
 assert "sceneTag" in BACKGROUND and "isAnomaly" in BACKGROUND and "isFeatured" in BACKGROUND
@@ -229,4 +238,4 @@ for source_name, source in (("profile", PROFILE), ("profile_spec", PROFILE_SPEC)
                             ("settings", SETTINGS), ("navigation", NAVIGATION), ("scene_catalog", SCENE_CATALOG)):
     assert "GLFW_KEY_" not in source, f"Unrequested keyboard shortcut added in {source_name}"
 
-print("SIEGE durable release contracts through 2.0 generational rebuild passed")
+print("SIEGE durable release contracts through 2.25 command and scene overhaul passed")

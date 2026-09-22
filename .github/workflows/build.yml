@@ -28,7 +28,7 @@ jobs:
         with:
           gradle-version: '8.8'
 
-      - name: Prepare SIEGE 2.0 visual masters
+      - name: Prepare SIEGE 2.25 visual masters
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow
@@ -70,10 +70,10 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify SIEGE 2.0 navigation contracts
+      - name: Verify SIEGE 2.25 navigation contracts
         shell: bash
         run: |
-          grep -q "version = '2.0.0'" build.gradle
+          grep -q "version = '2.25.0'" build.gradle
           grep -q 'GLFW_KEY_LEFT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'GLFW_KEY_RIGHT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'Math.floorMod(selected + direction, files.size())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
@@ -104,6 +104,10 @@ jobs:
           grep -q 'MUTILATED' src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java
           grep -q 'third-justice' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
           grep -q 'third_justice_reel_03.png' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
+          grep -q 'standardIndex(long slot)' src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java
+          grep -q 'STANDARD_INDICES' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
+          grep -q 'SiegeCommandStrip.render(screen, g);' src/main/java/uy/santipdr/siege/client/SiegeScreenChrome.java
+          grep -q 'rotationRemainingMs' src/main/java/uy/santipdr/siege/client/SiegeScreenChrome.java
 
           if grep -nE 'FAVORITES|toggleFavoriteIntel|favoriteButton|addIndexButton|copyText|GUARDAR' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
             echo "Removed Intel controls must not return"

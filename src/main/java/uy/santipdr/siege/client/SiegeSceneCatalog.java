@@ -1,11 +1,12 @@
 package uy.santipdr.siege.client;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 /**
  * Authoritative metadata for every SIEGE menu scene.
  * Rendering, gallery labels, contrast bias, scheduling and CI all read the same table.
- * 2.0 ships one 1920x1080 prepared master for every scene so the runtime never
+ * 2.0+ ships one 1920x1080 prepared master for every scene so the runtime never
  * has to magnify a sub-HD texture differently from the rest of the gallery.
  */
 public final class SiegeSceneCatalog {
@@ -42,6 +43,10 @@ public final class SiegeSceneCatalog {
                     HD_W, HD_H, 6, Kind.ANOMALY, false)
     );
 
+    private static final List<Integer> STANDARD_INDICES = IntStream.range(0, SCENES.size())
+            .filter(i -> SCENES.get(i).kind() == Kind.STANDARD)
+            .boxed().toList();
+
     private SiegeSceneCatalog() { }
 
     private static Scene scene(String id, String es, String en, int darknessBias) {
@@ -59,6 +64,11 @@ public final class SiegeSceneCatalog {
     public static boolean comfortEligible(int index) { return get(index).comfortEligible(); }
     public static int anomalyIndex() { return indexOf(Kind.ANOMALY); }
     public static int featuredIndex() { return indexOf(Kind.FEATURED); }
+    public static int standardCount() { return STANDARD_INDICES.size(); }
+    public static int standardIndex(int ordinal) {
+        if (STANDARD_INDICES.isEmpty()) return 0;
+        return STANDARD_INDICES.get(Math.floorMod(ordinal, STANDARD_INDICES.size()));
+    }
 
     private static int indexOf(Kind kind) {
         for (int i = 0; i < SCENES.size(); i++) if (SCENES.get(i).kind() == kind) return i;

@@ -18,6 +18,7 @@ public final class SiegeScreenChrome {
         if (screen instanceof SiegeTitleScreen) {
             renderHomeTag(screen, g, descriptor, spanish);
             renderSceneTag(screen, g, spanish);
+            SiegeCommandStrip.render(screen, g);
             return;
         }
         if (screen instanceof SiegeMultiplayerScreen) {
@@ -72,7 +73,9 @@ public final class SiegeScreenChrome {
         var font = Minecraft.getInstance().font;
         String kind = SiegeBackgrounds.sceneTag(index, spanish);
         String name = SiegeBackgrounds.name(index, spanish);
-        String text = kind + " // " + name;
+        long remaining = SiegeBackgrounds.rotationRemainingMs(now);
+        String countdown = remaining < 0L ? "" : " · " + Math.max(0L, (remaining + 999L) / 1_000L) + "s";
+        String text = kind + " // " + name + countdown;
         int accent = SiegeBackgrounds.isAnomaly(index) ? SiegeTheme.GOLD
                 : SiegeBackgrounds.isFeatured(index) ? SiegeTheme.CYAN : SiegeTheme.MUTED;
         int w = Math.min(screen.width / 3, Math.max(128, font.width(text) + 14));

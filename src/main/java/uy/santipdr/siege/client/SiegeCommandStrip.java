@@ -24,7 +24,7 @@ public final class SiegeCommandStrip {
         int maxWidth = title ? Math.max(260, screen.width - 320) : Math.max(280, screen.width - 80);
         int width = Math.min(settings ? 520 : 430, maxWidth);
         int x = (screen.width - width) / 2;
-        int y = screen.height - 17;
+        int y = title ? screen.height - 33 : screen.height - 17;
         int h = 13;
 
         String profileText;
@@ -37,10 +37,19 @@ public final class SiegeCommandStrip {
         }
         String intelText = "INTEL " + IntelCatalog.total();
         String audioText = !SiegeConfig.music ? "AUDIO OFF" : "AUDIO " + SiegeConfig.musicVolume + "%";
-        // 2.0 keeps health qualitative in navigation chrome. The diagnostic engine
-        // still computes readiness internally, but an unexplained percentage no
-        // longer leaks into ordinary menu surfaces.
         String healthText = SiegeRuntimeStatus.healthLabel(spanish);
+
+        String detail;
+        if (title) {
+            long now = System.currentTimeMillis();
+            int scene = SiegeBackgrounds.currentIndex(now);
+            String sceneText = SiegeBackgrounds.sceneTag(scene, spanish) + " " + SiegeBackgrounds.name(scene, spanish);
+            detail = profileText + "  ·  " + sceneText;
+            if (width >= 390) detail += "  ·  " + audioText;
+        } else {
+            detail = profileText + "  ·  " + intelText;
+            if (width >= 390) detail += "  ·  " + audioText;
+        }
 
         g.pose().pushPose();
         g.pose().translate(0, 0, 448);
@@ -53,8 +62,6 @@ public final class SiegeCommandStrip {
         int rightWidth = font.width(healthText);
         int rightX = x + width - 6 - rightWidth;
         int centerSpace = Math.max(1, rightX - leftX - 10);
-        String detail = profileText + "  ·  " + intelText
-                + (width >= 390 ? "  ·  " + audioText : "");
         String left = font.plainSubstrByWidth(detail, centerSpace);
         g.drawString(font, left, leftX, y + 3, SiegeConfig.highContrast ? 0xFFFFFFFF : 0xFFC7CDD1, false);
         g.drawString(font, healthText, rightX, y + 3, health, false);
