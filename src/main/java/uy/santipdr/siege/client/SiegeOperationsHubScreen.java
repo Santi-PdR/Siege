@@ -123,7 +123,7 @@ public final class SiegeOperationsHubScreen extends Screen {
         if (entry.kind() == SiegeOperationsIndex.Kind.KNOWLEDGE && !entry.knowledgeId().isBlank()) {
             SiegeKnowledgeData.Entry knowledge = SiegeKnowledgeRegistry.get(entry.knowledgeId());
             if (knowledge != null) {
-                SiegeRouteHistory.record(SiegeOperationsIndex.Route.ATLAS);
+                SiegeRouteHistory.record(SiegeOperationsIndex.Route.KNOWLEDGE);
                 minecraft.setScreen(new SiegeKnowledgeFileScreen(this, knowledge));
                 return;
             }
@@ -144,7 +144,7 @@ public final class SiegeOperationsHubScreen extends Screen {
             case MEDIA -> minecraft.setScreen(new SiegeMediaRoomScreen(this));
             case DEPLOYMENT -> minecraft.setScreen(new SiegeMultiplayerScreen(this));
             case INTEL -> minecraft.setScreen(new IntelScreenV3(this));
-            case KNOWLEDGE -> minecraft.setScreen(new SiegeKnowledgeScreen(this));
+            case KNOWLEDGE -> minecraft.setScreen(new SiegeServerGuideScreen(this));
             case ARCHIVE -> minecraft.setScreen(new SiegeGuideScreen(this, SiegeGuideScreen.Mode.ARCHIVE));
             case ARMORY -> minecraft.setScreen(new SiegeGuideScreen(this, SiegeGuideScreen.Mode.ARMORY));
             case FIELD_MANUAL -> minecraft.setScreen(new SiegeArchiveScreen(this));
@@ -166,8 +166,8 @@ public final class SiegeOperationsHubScreen extends Screen {
         String title = label("SALA DE OPERACIONES", "WAR ROOM") + " // " + SiegeRuntimeStatus.version();
         g.drawString(font, fit(title, panelW - 24), tx, ty, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Entrá directo a razas, progresión, amenazas, multimedia, Intel, despliegue o configuración.",
-                "Open races, progression, threats, media, Intel, deployment or settings directly."), panelW - 24),
+                "Entrá directo a guía, razas, progresión, amenazas, multimedia, Intel, despliegue o configuración.",
+                "Open guide, races, progression, threats, media, Intel, deployment or settings directly."), panelW - 24),
                 tx, ty + 12, SiegeTheme.MUTED, false);
 
         int statusY = ty + 30;
@@ -214,7 +214,7 @@ public final class SiegeOperationsHubScreen extends Screen {
         case BRIEFING -> "BRIEFING"; case ATLAS -> "ATLAS"; case RACES -> label("RAZAS", "RACES");
         case PROGRESSION -> label("PROGRESIÓN", "PROGRESSION"); case THREATS -> label("AMENAZAS", "THREATS");
         case MEDIA -> label("MULTIMEDIA", "MEDIA"); case DEPLOYMENT -> label("DESPLIEGUE", "DEPLOYMENT");
-        case INTEL -> "INTEL"; case KNOWLEDGE -> label("ENCICLOPEDIA", "ENCYCLOPEDIA");
+        case INTEL -> "INTEL"; case KNOWLEDGE -> label("GUÍA", "GUIDE");
         case ARCHIVE -> label("ARCHIVO", "ARCHIVE"); case ARMORY -> label("ARSENAL", "ARMORY");
         case FIELD_MANUAL -> label("MANUAL", "MANUAL"); case COMMAND -> label("COMANDO", "COMMAND");
         case DIAGNOSTICS -> label("DIAGNÓSTICO", "DIAGNOSTICS"); case SETTINGS -> label("AJUSTES", "SETTINGS");
@@ -223,7 +223,7 @@ public final class SiegeOperationsHubScreen extends Screen {
     private String routeShort(SiegeOperationsIndex.Route route) { return switch (route) {
         case BRIEFING -> "BRF"; case ATLAS -> "ATL"; case RACES -> "RAC"; case PROGRESSION -> "PRG";
         case THREATS -> "THR"; case MEDIA -> "MED"; case DEPLOYMENT -> "DEP"; case INTEL -> "INT";
-        case KNOWLEDGE -> "ENC"; case ARCHIVE -> "ARC"; case ARMORY -> "ARS"; case FIELD_MANUAL -> "FLD";
+        case KNOWLEDGE -> "GUI"; case ARCHIVE -> "ARC"; case ARMORY -> "ARS"; case FIELD_MANUAL -> "FLD";
         case COMMAND -> "CMD"; case DIAGNOSTICS -> "DIA"; case SETTINGS -> "CFG"; case BACKGROUNDS -> "BG"; }; }
 
     private String routeDescription(SiegeOperationsIndex.Route route) { return switch (route) {
@@ -235,7 +235,8 @@ public final class SiegeOperationsHubScreen extends Screen {
         case MEDIA -> label("Música, fondos, galería y referencias DVN.", "Music, backgrounds, gallery and DVN references.");
         case DEPLOYMENT -> label("Servidor oficial, compatibilidad y conexión.", "Official server, compatibility and connection.");
         case INTEL -> label("Dossiers de unidades y amenazas.", "Unit and threat dossiers.");
-        case KNOWLEDGE -> label("Enciclopedia general del servidor.", "General server encyclopedia.");
+        case KNOWLEDGE -> label("Razas, progresión, Trials, amenazas, revive, reliquias y sistemas por categorías.",
+                "Races, progression, Trials, threats, revival, relics and systems by category.");
         case ARCHIVE -> label("SIEGE, 2044, facciones, Núcleo, Gates/Rifts e inspiraciones.", "SIEGE, 2044, factions, Core, Gates/Rifts and inspirations.");
         case ARMORY -> label("Equipamiento, objetos y material de Arsenal.", "Equipment, items and Armory material.");
         case FIELD_MANUAL -> label("Estados de muerte/heridas, misiones y protocolos.", "Death/injury states, missions and protocols.");
@@ -247,13 +248,13 @@ public final class SiegeOperationsHubScreen extends Screen {
     private int routeAccent(SiegeOperationsIndex.Route route) { return switch (route) {
         case BRIEFING -> SiegeTheme.ORANGE; case ATLAS, RACES -> SiegeTheme.GREEN; case PROGRESSION -> SiegeTheme.GOLD;
         case THREATS -> SiegeTheme.RED; case MEDIA -> SiegeTheme.CYAN; case DEPLOYMENT -> SiegeTheme.RED;
-        case INTEL, ARCHIVE, ARMORY, FIELD_MANUAL -> SiegeTheme.GOLD; case KNOWLEDGE -> SiegeTheme.GREEN;
+        case INTEL, ARCHIVE, ARMORY, FIELD_MANUAL -> SiegeTheme.GOLD; case KNOWLEDGE -> SiegeTheme.ORANGE;
         case COMMAND -> SiegeTheme.CYAN; case DIAGNOSTICS -> SiegeTheme.ORANGE; case SETTINGS -> SiegeTheme.RED;
         case BACKGROUNDS -> SiegeTheme.BLUE; }; }
 
     private String routeIcon(SiegeOperationsIndex.Route route) { return switch (route) {
         case BRIEFING -> "shield"; case ATLAS, PROGRESSION -> "overview"; case RACES, THREATS, INTEL -> "intel";
-        case MEDIA, BACKGROUNDS -> "image"; case DEPLOYMENT -> "connect"; case KNOWLEDGE -> "search";
+        case MEDIA, BACKGROUNDS -> "image"; case DEPLOYMENT -> "connect"; case KNOWLEDGE -> "overview";
         case ARCHIVE, FIELD_MANUAL -> "overview"; case ARMORY -> "package"; case COMMAND, DIAGNOSTICS -> "shield";
         case SETTINGS -> "settings"; }; }
 
