@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Durable release contracts from Atlas through SIEGE 2.50."""
+"""Durable release contracts from Atlas through SIEGE 3.00."""
 from pathlib import Path
 import re
 
@@ -18,6 +18,7 @@ CHANGELOGS = {
     "200": read("docs/CHANGELOG-2.0.0.md"),
     "225": read("docs/CHANGELOG-2.25.0.md"),
     "250": read("docs/CHANGELOG-2.50.0.md"),
+    "300": read("docs/CHANGELOG-3.0.0.md"),
 }
 
 BUILD = read("build.gradle")
@@ -45,6 +46,10 @@ OPS_INDEX = read("src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.ja
 OPS_HUB = read("src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java")
 OPS_EVENTS = read("src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java")
 ROUTE_HISTORY = read("src/main/java/uy/santipdr/siege/client/SiegeRouteHistory.java")
+KNOWLEDGE = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java")
+KNOWLEDGE_SCREEN = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java")
+KNOWLEDGE_ARCH = read("docs/KNOWLEDGE-ARCHITECTURE-3.0.md")
+QA_300 = read("docs/QA-3.0.0.md")
 WORKFLOW = read(".github/workflows/build.yml")
 
 
@@ -52,7 +57,7 @@ def numbered(text: str):
     return [int(v) for v in re.findall(r"(?m)^(\d+)\. ", text)]
 
 
-# Historical release documentation remains intact and 2.50 is the active build.
+# Historical release documentation remains intact and 3.00 is the active build.
 assert numbered(CHANGELOGS["014"]) == list(range(1, 51))
 assert numbered(CHANGELOGS["050"]) == list(range(1, 51))
 assert numbered(CHANGELOGS["060"]) == list(range(1, 61))
@@ -64,8 +69,9 @@ assert numbered(CHANGELOGS["150"]) == list(range(1, 51))
 assert numbered(CHANGELOGS["200"]) == list(range(1, 81))
 assert numbered(CHANGELOGS["225"]) == list(range(1, 26))
 assert numbered(CHANGELOGS["250"]) == list(range(1, 51))
-assert "version = '2.50.0'" in BUILD
-for stale in ("version = '2.25.0'", "version = '2.0.0'", "version = '1.50.0'", "version = '1.26.0'"):
+assert numbered(CHANGELOGS["300"]) == list(range(1, 101))
+assert "version = '3.00.0'" in BUILD
+for stale in ("version = '2.50.0'", "version = '2.25.0'", "version = '2.0.0'", "version = '1.50.0'", "version = '1.26.0'"):
     assert stale not in BUILD, f"Stale active version returned: {stale}"
 
 # Intel remains conservative, categorized and free of removed controls.
@@ -92,11 +98,12 @@ for fragment in (
     assert fragment in INTEL_CURRENT, f"Missing unresolved UNKNOWN record: {fragment}"
 assert "No se encontró una referencia suficientemente fiable" in INTEL_CURRENT
 
-# Information domains stay separate while Operations becomes a navigation layer.
-for section in ("HOME", "OPERATIONS", "DEPLOYMENT", "INTEL", "REFERENCE", "FIELD_MANUAL", "SETTINGS",
+# Information domains remain separate; Knowledge is a new source-aware domain.
+for section in ("HOME", "OPERATIONS", "KNOWLEDGE", "DEPLOYMENT", "INTEL", "REFERENCE", "FIELD_MANUAL", "SETTINGS",
                 "COMMAND", "DIAGNOSTICS", "BACKGROUNDS", "INSPECTOR", "MEDIA", "NATIVE"):
     assert section in NAVIGATION, f"Missing navigation section {section}"
 assert '"OPERATIONS HUB"' in NAVIGATION and '"OPS"' in NAVIGATION
+assert '"KNOWLEDGE VAULT"' in NAVIGATION and '"KNW"' in NAVIGATION
 assert "enum Mode { ARCHIVE, ARMORY }" in GUIDE
 assert "new SiegeArchiveScreen(this)" in GUIDE
 assert '"third-justice"' in GUIDE_SUPPLEMENTAL
@@ -111,23 +118,61 @@ assert "readiness() + \"%\"" not in SCREEN_CHROME
 assert "SiegeRuntimeStatus.healthLabel" in SCREEN_CHROME
 assert "public static int readiness()" in DIAGNOSTIC
 
+# 3.00 Knowledge contracts: current state, history, uncertainty, provenance and spoiler separation.
+assert "class SiegeKnowledgeData" in KNOWLEDGE
+assert "enum Zone { CURRENT, ENCYCLOPEDIA }" in KNOWLEDGE
+for confidence in ("CURRENT_CONFIRMED", "ALEX_CONFIRMED", "SYSTEM_OBSERVED", "PLAYER_EXPERIENCE", "HISTORICAL", "UNCONFIRMED", "CONTRADICTION"):
+    assert confidence in KNOWLEDGE, f"Missing knowledge confidence {confidence}"
+for domain in ("PROGRESSION", "EXECUTORS", "TRIALS", "STRUCTURES", "BOSSES", "MISSIONS", "NPCS", "RACES", "PETS",
+               "ABILITIES", "ENERGIES", "MEDITATION", "MAGIC", "ITEMS", "CRAFTING", "ASSEMBLING", "RELICS",
+               "DIMENSIONS", "RITUALS", "HACKING", "DEATH_REVIVE", "RAIDS_EVENTS", "FACTIONS", "ECONOMY",
+               "PROMPTS", "CONSEQUENCES", "HIDDEN", "MISTAKES", "ALEX", "HISTORY", "MYSTERIES", "CONTRADICTIONS", "SOURCES"):
+    assert domain in KNOWLEDGE, f"Missing knowledge domain {domain}"
+for audit_value in ("251.065", "72.384", "29.605", "37.435", "153 prompts", "35 documentos"):
+    assert audit_value in KNOWLEDGE, f"Knowledge audit lost: {audit_value}"
+for current_id in ("current-deteriorer-snapshot", "current-oxidation", "current-rust-guard", "current-meditation", "current-next-actions"):
+    assert current_id in KNOWLEDGE, f"Missing current player record {current_id}"
+for sourced_id in ("alex-raid-oxidation", "alex-adaptation", "alex-meditation-overload", "item-geography-table",
+                   "relic-fallen-angel-halo", "item-daemonium-kit", "progression-v1-v4", "assembling-chips",
+                   "respawn-cards", "prompt-precision", "prompt-vague-failure", "command-ver-barra"):
+    assert sourced_id in KNOWLEDGE, f"Missing sourced knowledge record {sourced_id}"
+for uncertain_id in ("alex-meditation-rate", "mystery-filter-rod", "progression-reset-v4", "repeat-revive-penalty", "mystery-halo-risk"):
+    assert uncertain_id in KNOWLEDGE, f"Missing uncertainty record {uncertain_id}"
+assert '"history-deteriorer-duration", Zone.ENCYCLOPEDIA, Domain.HISTORY' in KNOWLEDGE
+assert "Confidence.HISTORICAL" in KNOWLEDGE
+assert "class SiegeKnowledgeScreen" in KNOWLEDGE_SCREEN
+assert "Mode { CURRENT, ENCYCLOPEDIA, SURVIVAL, SOURCES }" in KNOWLEDGE_SCREEN
+assert "REVELAR ARCHIVO" in KNOWLEDGE_SCREEN and "spoiler()" in KNOWLEDGE_SCREEN
+assert "requestedApplied" in KNOWLEDGE_SCREEN
+assert "SIEGE ACTUAL permanece separado" in KNOWLEDGE_SCREEN
+assert "SIEGE ACTUAL != ETERNAL CRAFT — ENCICLOPEDIA" in KNOWLEDGE_ARCH
+assert "no se presenta como comprobación en vivo" in KNOWLEDGE or "no se presenta" in KNOWLEDGE
+assert "KnowledgeDataRegressionTest" in WORKFLOW
+assert "verificación in-game" in QA_300.lower()
+
 # Operations Hub is additive: search + deep links + live state + session history.
 assert "class SiegeOperationsIndex" in OPS_INDEX
-for kind in ("ROUTE", "INTEL", "ARMORY"):
+for kind in ("ROUTE", "INTEL", "ARMORY", "KNOWLEDGE"):
     assert kind in OPS_INDEX
-for route in ("DEPLOYMENT", "INTEL", "ARCHIVE", "ARMORY", "FIELD_MANUAL", "COMMAND", "DIAGNOSTICS", "SETTINGS", "BACKGROUNDS"):
+for route in ("DEPLOYMENT", "INTEL", "KNOWLEDGE", "ARCHIVE", "ARMORY", "FIELD_MANUAL", "COMMAND", "DIAGNOSTICS", "SETTINGS", "BACKGROUNDS"):
     assert route in OPS_INDEX
 assert "Normalizer.normalize" in OPS_INDEX
 assert "IntelCatalog.files()" in OPS_INDEX
 assert "SiegeGuideSupplemental.entries" in OPS_INDEX
+assert "SiegeKnowledgeData.entries()" in OPS_INDEX
+assert "knowledgeId" in OPS_INDEX
 assert "class SiegeOperationsHubScreen" in OPS_HUB
 assert "SiegeOperationsIndex.search" in OPS_HUB
 assert "new IntelScreenV3(this, entry.intel())" in OPS_HUB
+assert "new SiegeKnowledgeScreen(this, entry.knowledgeId())" in OPS_HUB
+assert "new SiegeKnowledgeScreen(this)" in OPS_HUB
 assert "SiegeRuntimeStatus.intelLabel" in OPS_HUB
 assert "SiegeRuntimeStatus.audioLabel" in OPS_HUB
+assert "SiegeKnowledgeData.survival" in OPS_HUB
 assert "SiegeRouteHistory.snapshot" in OPS_HUB
 assert "siege.menu.settings" in OPS_EVENTS
 assert "new SiegeOperationsHubScreen(screen)" in OPS_EVENTS
+assert 'case "SiegeKnowledgeScreen"' in OPS_EVENTS
 assert "class SiegeRouteHistory" in ROUTE_HISTORY and "RECENT.remove(route)" in ROUTE_HISTORY
 
 # Tempest Jutcherson remains an easter egg and is not a normal menu photo.
@@ -150,13 +195,16 @@ for forbidden_key in ("GLFW_KEY_I", "GLFW_KEY_P", "GLFW_KEY_G", "GLFW_KEY_M", "G
     assert re.search(rf"(?<![A-Z0-9_]){re.escape(forbidden_key)}(?![A-Z0-9_])", TITLE) is None, \
         f"Unrequested title shortcut returned: {forbidden_key}"
 
-# CI must validate the new systems rather than merely compiling them.
+# CI validates the new systems rather than merely compiling them.
 assert "OperationsIndexTest" in WORKFLOW
+assert "KnowledgeDataRegressionTest" in WORKFLOW
 assert "GuiResourceRegressionTest" in WORKFLOW
 assert "SceneScheduleTest" in WORKFLOW
 assert "NavigationIdentityTest" in WORKFLOW
-assert "version = '2.50.0'" in WORKFLOW
+assert "version = '3.00.0'" in WORKFLOW
 assert "tempest_jutcherson" in WORKFLOW
 assert "SiegeEasterEggVault.java" in WORKFLOW
+assert "SiegeKnowledgeData.java" in WORKFLOW
+assert "SiegeKnowledgeScreen" in WORKFLOW
 
-print("SIEGE durable release contracts through 2.50 advanced Operations overhaul passed")
+print("SIEGE durable release contracts through 3.00 source-aware Knowledge overhaul passed")
