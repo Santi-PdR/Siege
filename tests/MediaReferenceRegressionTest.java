@@ -9,17 +9,16 @@ public final class MediaReferenceRegressionTest {
         for (String title : new String[] {"Convenience Store", "Music Box", "New Store", "Jazz Music", "From the Ashes", "Sad Choir"})
             check(tracks.stream().anyMatch(t -> t.title().equals(title)), "Missing DVN media reference: " + title);
         check(tracks.stream().allMatch(t -> !t.title().isBlank() && !t.note(false).isBlank()),
-                "Every external soundtrack reference needs a title and policy note");
+                "Every soundtrack recommendation needs a title and player-facing description");
 
-        String policy = tracks.stream().map(t -> t.note(false).toLowerCase()).reduce("", (a, b) -> a + " " + b);
-        check(policy.contains("not automatically bundled") || policy.contains("not bundled"),
-                "Reference catalog must explicitly say external audio is not bundled automatically");
-        check(policy.contains("requires a clear source/license") || policy.contains("without verifying audio rights"),
-                "Reference catalog must preserve the licensing/rights boundary");
+        check(SiegeMediaReferenceData.externalBundlingRequiresPermission(),
+                "External media must remain blocked from automatic redistribution");
+        check(SiegeMediaReferenceData.preferredBackgroundWidth() >= 1920
+                        && SiegeMediaReferenceData.preferredBackgroundHeight() >= 1080,
+                "DVN background target must remain Full HD or better");
 
-        check(SiegeMediaReferenceData.visualReferences().size() >= 4, "Visual direction list unexpectedly small");
-        check(SiegeMediaReferenceData.visualReferences().stream().anyMatch(v -> v.note(false).contains("16:9")),
-                "Visual references must retain HD/aspect-ratio direction");
-        System.out.println("SIEGE 4.00 media references: DVN soundtrack names and no-auto-bundle policy passed");
+        check(SiegeMediaReferenceData.visualReferences().size() >= 6,
+                "Visual direction list unexpectedly small");
+        System.out.println("SIEGE 4.00 media recommendations and internal distribution policy passed");
     }
 }
