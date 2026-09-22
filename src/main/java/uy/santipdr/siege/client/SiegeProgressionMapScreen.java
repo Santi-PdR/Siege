@@ -8,7 +8,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
-/** Visual progression map that deep-links every node to its sourced encyclopedia record. */
+/** Visual progression map linked to the server encyclopedia. */
 public final class SiegeProgressionMapScreen extends Screen {
     private final Screen parent;
     private final List<SiegeButton> nodeButtons = new ArrayList<>();
@@ -42,17 +42,18 @@ public final class SiegeProgressionMapScreen extends Screen {
                 .withIcon("intel").setCompactCenter(true));
 
         int tabY = panelY + 42;
-        int gap = 4;
+        int gap = 3;
         int tabX = panelX + 10;
         int tabW = panelW - 20;
         int count = SiegeProgressionData.tracks().size();
-        int cellW = Math.max(55, (tabW - gap * (count - 1)) / count);
+        int cellW = Math.max(38, (tabW - gap * (count - 1)) / count);
         for (int i = 0; i < count; i++) {
             SiegeProgressionData.Track t = SiegeProgressionData.tracks().get(i);
             int x = tabX + i * (cellW + gap);
             int w = i == count - 1 ? panelX + panelW - 10 - x : cellW;
-            SiegeButton tab = new SiegeButton(x, tabY, w, 19, Component.literal(t.title(spanish())),
-                    b -> selectTrack(t), SiegeTheme.GOLD).setCompactCenter(true).setSelected(t.id().equals(track.id()));
+            SiegeButton tab = new SiegeButton(x, tabY, w, 19,
+                    Component.literal(trackButtonLabel(t, w)), b -> selectTrack(t), SiegeTheme.GOLD)
+                    .setCompactCenter(true).setSelected(t.id().equals(track.id()));
             tab.setTooltip(Tooltip.create(Component.literal(t.description(spanish()))));
             addRenderableWidget(tab);
         }
@@ -63,7 +64,7 @@ public final class SiegeProgressionMapScreen extends Screen {
             mapY = bodyTop;
             mapW = panelW - 20;
             detailX = mapX;
-            detailY = bodyTop + Math.min(5, track.nodes().size()) * 24 + 10;
+            detailY = bodyTop + track.nodes().size() * 24 + 10;
             detailW = mapW;
             detailH = Math.max(55, panelY + panelH - detailY - 10);
         } else {
@@ -95,14 +96,14 @@ public final class SiegeProgressionMapScreen extends Screen {
                 SiegeProgressionData.Node node = nodes.get(i);
                 int y = mapY + i * (h + gap);
                 SiegeButton button = new SiegeButton(mapX, y, mapW, h,
-                        Component.literal((i + 1) + " // " + node.title(spanish())), b -> choose(node), node.status().accent())
-                        .withIcon("overview");
+                        Component.literal((i + 1) + " // " + fit(node.title(spanish()), Math.max(20, mapW - 70))),
+                        b -> choose(node), node.status().accent()).withIcon("overview");
                 button.withBadge(node.status().label(spanish()));
                 nodeButtons.add(addRenderableWidget(button));
             }
         } else {
             int count = Math.max(1, nodes.size());
-            int w = Math.max(96, Math.min(190, (mapW - gap * Math.max(0, count - 1)) / count));
+            int w = Math.max(82, Math.min(190, (mapW - gap * Math.max(0, count - 1)) / count));
             int total = count * w + Math.max(0, count - 1) * gap;
             int x0 = mapX + Math.max(0, (mapW - total) / 2);
             int y = mapY + Math.max(22, detailH / 3);
@@ -110,8 +111,8 @@ public final class SiegeProgressionMapScreen extends Screen {
                 SiegeProgressionData.Node node = nodes.get(i);
                 int x = x0 + i * (w + gap);
                 SiegeButton button = new SiegeButton(x, y, w, h,
-                        Component.literal((i + 1) + " // " + node.title(spanish())), b -> choose(node), node.status().accent())
-                        .withIcon("overview").setCompactCenter(true);
+                        Component.literal((i + 1) + " // " + fit(node.title(spanish()), Math.max(20, w - 38))),
+                        b -> choose(node), node.status().accent()).withIcon("overview").setCompactCenter(true);
                 button.withBadge(node.status().label(spanish()));
                 nodeButtons.add(addRenderableWidget(button));
             }
@@ -122,18 +123,18 @@ public final class SiegeProgressionMapScreen extends Screen {
     private void choose(SiegeProgressionData.Node node) {
         selected = node;
         SiegeUiSounds.selection();
-        for (SiegeButton button : nodeButtons)
-            button.setSelected(button.getMessage().getString().contains(node.title(spanish())));
+        for (int i = 0; i < nodeButtons.size(); i++)
+            nodeButtons.get(i).setSelected(i < track.nodes().size() && track.nodes().get(i).id().equals(node.id()));
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && selected != null && mouseX >= detailX && mouseX <= detailX + detailW
                 && mouseY >= detailY + detailH - 24 && mouseY <= detailY + detailH) {
-            SiegeKnowledgeData.Entry source = SiegeKnowledgeRegistry.get(selected.knowledgeId());
-            if (source != null) {
+            SiegeKnowledgeData.Entry info = SiegeKnowledgeRegistry.get(selected.knowledgeId());
+            if (info != null) {
                 SiegeUiSounds.confirm();
-                minecraft.setScreen(new SiegeKnowledgeFileScreen(this, source));
+                minecraft.setScreen(new SiegeKnowledgeFileScreen(this, info));
                 return true;
             }
         }
@@ -146,7 +147,7 @@ public final class SiegeProgressionMapScreen extends Screen {
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xC9000000 : 0xA3000000);
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.GOLD);
-        g.drawString(font, label("MAPA DE PROGRESIÓN", "PROGRESSION MAP") + " // " + SiegeRuntimeStatus.version(),
+        g.drawString(font, fit(label("MAPA DE PROGRESIÓN", "PROGRESSION MAP") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
                 panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(track.description(spanish()), panelW - 24), panelX + 12, panelY + 22,
                 SiegeTheme.MUTED, false);
@@ -178,7 +179,7 @@ public final class SiegeProgressionMapScreen extends Screen {
         if (selected == null) return;
         int x = detailX + 8;
         int y = detailY + 8;
-        int w = detailW - 16;
+        int w = Math.max(40, detailW - 16);
         int accent = selected.status().accent();
         g.drawString(font, fit(selected.title(spanish()), w), x, y, SiegeTheme.INK, false);
         y += 13;
@@ -195,8 +196,20 @@ public final class SiegeProgressionMapScreen extends Screen {
         boolean hot = mouseX >= x && mouseX < x + w && mouseY >= by && mouseY < by + 16;
         g.fill(x, by, x + w, by + 16, hot ? 0xCC314B59 : 0xB51A252B);
         g.fill(x, by, x + 2, by + 16, accent);
-        g.drawCenteredString(font, fit(label("ABRIR FUENTE", "OPEN SOURCE"), w - 8), x + w / 2, by + 4,
+        g.drawCenteredString(font, fit(label("VER INFORMACIÓN", "OPEN INFO"), w - 8), x + w / 2, by + 4,
                 hot ? SiegeTheme.INK : SiegeTheme.MUTED);
+    }
+
+    private String trackButtonLabel(SiegeProgressionData.Track value, int width) {
+        String full = value.title(spanish());
+        if (font.width(full) <= Math.max(8, width - 12)) return full;
+        return switch (value.id()) {
+            case "core" -> label("GENERAL", "GENERAL");
+            case "v1v4" -> "V1→V4";
+            case "special" -> label("ESPECIAL", "SPECIAL");
+            case "advanced" -> label("AVANZ.", "ADVANCED");
+            default -> fit(full, Math.max(8, width - 12));
+        };
     }
 
     private String fit(String text, int px) {

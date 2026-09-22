@@ -46,22 +46,22 @@ public final class Siege250MenuEvents {
         event.removeListener(original);
 
         SiegeButton briefing = new SiegeButton(x, y, briefingW, h,
-                Component.literal(full < 165 ? "BRF" : "BRIEFING"), b -> {
+                Component.literal(buttonLabel("BRIEFING", "BRF", briefingW)), b -> {
             SiegeUiSounds.confirm();
             Minecraft.getInstance().setScreen(new SiegeBriefingScreen(screen));
         }, SiegeTheme.ORANGE).setMainMenuStyle(true).withIcon("shield").setCompactCenter(true);
         briefing.setTooltip(Tooltip.create(Component.literal(label(
-                "Entrada rápida: qué saber antes de gastar recursos o entrar a sistemas peligrosos.",
-                "Fast entry: what to know before spending resources or entering dangerous systems."))));
+                "Lo esencial del servidor antes de entrar a sistemas peligrosos.",
+                "Server essentials before entering dangerous systems."))));
 
         SiegeButton deployment = new SiegeButton(x + briefingW + gap, y, deploymentW, h,
-                Component.literal(full < 165 ? "DEP" : label("DESPLIEGUE", "DEPLOYMENT")), b -> {
+                Component.literal(buttonLabel(label("DESPLIEGUE", "DEPLOYMENT"), "DEP", deploymentW)), b -> {
             SiegeUiSounds.confirm();
             Minecraft.getInstance().setScreen(new SiegeMultiplayerScreen(screen));
         }, SiegeTheme.RED).setMainMenuStyle(true).withIcon("connect").setCompactCenter(true);
         deployment.setTooltip(Tooltip.create(Component.literal(label(
-                "Servidor oficial, compatibilidad, estado y conexión.",
-                "Official server, compatibility, status and connection."))));
+                "Servidor oficial, estado y conexión.",
+                "Official server, status and connection."))));
 
         event.addListener(briefing);
         event.addListener(deployment);
@@ -70,29 +70,37 @@ public final class Siege250MenuEvents {
     private static void splitSettingsRow(ScreenEvent.Init.Post event, SiegeTitleScreen screen, SiegeButton original) {
         int x = original.getX(), y = original.getY(), full = original.getWidth(), h = original.getHeight();
         int gap = full >= 150 ? 4 : 2;
-        int opsW = Math.max(1, Math.round((full - gap) * 0.58F));
+        int opsW = Math.max(1, Math.round((full - gap) * 0.60F));
         int settingsW = Math.max(1, full - gap - opsW);
         event.removeListener(original);
 
         SiegeButton operations = new SiegeButton(x, y, opsW, h,
-                Component.literal(full < 165 ? "OPS" : label("OPERACIONES", "OPERATIONS")), b -> {
+                Component.literal(buttonLabel(label("OPERACIONES", "OPERATIONS"), "OPS", opsW)), b -> {
             SiegeUiSounds.confirm();
             Minecraft.getInstance().setScreen(new SiegeOperationsHubScreen(screen));
         }, SiegeTheme.CYAN).setMainMenuStyle(true).withIcon("overview").setCompactCenter(true);
         operations.setTooltip(Tooltip.create(Component.literal(label(
-                "Sala de Operaciones 4.00: Atlas, razas, progresión, amenazas, multimedia, búsqueda global y herramientas.",
-                "4.00 War Room: Atlas, races, progression, threats, media, global search and tools."))));
+                "Atlas, razas, progresión, amenazas, multimedia, búsqueda y herramientas.",
+                "Atlas, races, progression, threats, media, search and tools."))));
 
         SiegeButton settings = new SiegeButton(x + opsW + gap, y, settingsW, h,
-                Component.literal(full < 165 ? label("AJ.", "CFG") : label("AJUSTES", "SETTINGS")), b -> {
+                Component.literal(buttonLabel(label("AJUSTES", "SETTINGS"), label("AJ.", "CFG"), settingsW)), b -> {
             SiegeUiSounds.confirm();
             Minecraft.getInstance().setScreen(new SiegeSettingsScreen(screen));
         }, SiegeTheme.RED).setMainMenuStyle(true).withIcon("settings").setCompactCenter(true);
         settings.setTooltip(Tooltip.create(Component.literal(label(
-                "Configuración visual, audio, Intel y accesibilidad.",
-                "Visual, audio, Intel and accessibility configuration."))));
+                "Apariencia, movimiento, audio, Intel y accesibilidad.",
+                "Appearance, motion, audio, Intel and accessibility."))));
         event.addListener(operations);
         event.addListener(settings);
+    }
+
+    /** Measures the rendered label instead of guessing from the full row width. */
+    private static String buttonLabel(String full, String shortLabel, int width) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null) return shortLabel;
+        int usable = Math.max(1, width - 30); // icon + padding
+        return minecraft.font.width(full) <= usable ? full : shortLabel;
     }
 
     @SubscribeEvent
@@ -126,6 +134,7 @@ public final class Siege250MenuEvents {
     private static String translationKey(Component component) {
         return component != null && component.getContents() instanceof TranslatableContents tr ? tr.getKey() : "";
     }
+
     private static String label(String es, String en) {
         Minecraft minecraft = Minecraft.getInstance();
         return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_") ? es : en;

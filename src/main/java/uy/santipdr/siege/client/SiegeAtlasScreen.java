@@ -59,7 +59,7 @@ public final class SiegeAtlasScreen extends Screen {
             int x = tabX + i * (tabW + gap);
             int w = i == values.length - 1 ? panelX + panelW - 10 - x : tabW;
             SiegeButton button = new SiegeButton(x, tabY, w, 19,
-                    Component.literal(tabLabel(next)), b -> switchView(next), tabAccent(next))
+                    Component.literal(tabButtonLabel(next, w)), b -> switchView(next), tabAccent(next))
                     .setCompactCenter(true).setSelected(next == view);
             button.setTooltip(Tooltip.create(Component.literal(SiegeAtlasIndex.description(next, spanish()))));
             addRenderableWidget(button);
@@ -68,8 +68,8 @@ public final class SiegeAtlasScreen extends Screen {
         search = new EditBox(font, panelX + 10, tabY + 25, panelW - 20, 20,
                 Component.literal(label("Buscar en Atlas", "Search Atlas")));
         search.setHint(Component.literal(label(
-                "Buscar raza, Trial, Executor, reliquia, estructura, revive, prompt…",
-                "Search race, Trial, Executor, relic, structure, revive, prompt…")));
+                "Raza, Trial, Executor, reliquia, estructura, revive, objeto…",
+                "Race, Trial, Executor, relic, structure, revive, item…")));
         search.setResponder(value -> { listOffset = 0; detailOffset = 0; refresh(); });
         addRenderableWidget(search);
 
@@ -104,7 +104,7 @@ public final class SiegeAtlasScreen extends Screen {
 
         openButton = new SiegeButton(detailX + Math.max(0, detailW - (compact ? 108 : 144)),
                 detailY + Math.max(0, detailH - 22), Math.min(compact ? 108 : 144, detailW), 18,
-                Component.literal(label("ABRIR FICHA", "OPEN FILE")), b -> openSelected(), SiegeTheme.CYAN)
+                Component.literal(label("VER INFORMACIÓN", "OPEN INFO")), b -> openSelected(), SiegeTheme.CYAN)
                 .withIcon("search").setCompactCenter(true);
         openButton.visible = false;
         addRenderableWidget(openButton);
@@ -143,8 +143,8 @@ public final class SiegeAtlasScreen extends Screen {
             if (!present) continue;
             SiegeKnowledgeData.Entry entry = visible.get(index);
             String status = entry.zone() == SiegeKnowledgeData.Zone.HISTORY
-                    ? label("HIST", "HIST") : entry.domain().label(spanish());
-            button.setMessage(Component.literal(status + " · " + entry.title(spanish())));
+                    ? label("ANTIGUO", "OLD") : entry.domain().label(spanish());
+            button.setMessage(Component.literal(fit(status + " · " + entry.title(spanish()), Math.max(20, listW - 28))));
             button.setSelected(selected != null && selected.id().equals(entry.id()));
         }
         if (openButton != null) {
@@ -195,15 +195,14 @@ public final class SiegeAtlasScreen extends Screen {
         g.drawString(font, fit(title, panelW - 24), x, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(SiegeAtlasIndex.description(view, spanish()), panelW - 24),
                 x, panelY + 21, SiegeTheme.MUTED, false);
-        String metrics = SiegeAtlasIndex.label(view, spanish()) + " " + visible.size()
-                + " / " + SiegeAtlasIndex.count(view) + "   ·   "
-                + label("CORPUS ", "CORPUS ") + SiegeKnowledgeRegistry.entries().size();
+        String metrics = SiegeAtlasIndex.label(view, spanish()) + " · " + visible.size()
+                + label(" TEMAS", " TOPICS");
         g.drawString(font, fit(metrics, panelW - 24), x, panelY + 32, tabAccent(view), false);
 
         SiegeTheme.panel(g, listX - 3, listY - 3, listW + 6, rows.size() * 22 + 6, SiegeTheme.GOLD);
         SiegeTheme.panel(g, detailX - 3, detailY - 3, detailW + 6, detailH + 6, tabAccent(view));
         if (visible.isEmpty()) {
-            g.drawString(font, label("No hay registros que coincidan.", "No matching records."),
+            g.drawString(font, label("No hay temas que coincidan.", "No matching topics."),
                     listX + 7, listY + 7, SiegeTheme.MUTED, false);
         }
         renderDetail(g);
@@ -220,18 +219,20 @@ public final class SiegeAtlasScreen extends Screen {
 
     private void renderDetail(GuiGraphics g) {
         if (selected == null) {
-            g.drawString(font, label("Seleccioná un registro del Atlas.", "Select an Atlas record."),
+            g.drawString(font, label("Seleccioná un tema del Atlas.", "Select an Atlas topic."),
                     detailX + 8, detailY + 8, SiegeTheme.MUTED, false);
             return;
         }
         int x = detailX + 8;
         int y = detailY + 7;
         int textW = Math.max(40, detailW - 16);
-        int confidence = SiegeKnowledgeData.confidenceAccent(selected.confidence());
+        int accent = selected.zone() == SiegeKnowledgeData.Zone.HISTORY ? SiegeTheme.ORANGE : tabAccent(view);
         g.drawString(font, fit(selected.title(spanish()), textW), x, y, SiegeTheme.INK, false);
-        g.drawString(font, fit(selected.domain().label(spanish()) + " · "
-                + SiegeKnowledgeData.sourceLine(selected, spanish()), textW), x, y + 12, confidence, false);
-        SiegeTheme.divider(g, x, y + 24, textW, confidence);
+        String meta = selected.domain().label(spanish())
+                + (selected.zone() == SiegeKnowledgeData.Zone.HISTORY
+                ? label(" · PUEDE HABER CAMBIADO", " · MAY HAVE CHANGED") : "");
+        g.drawString(font, fit(meta, textW), x, y + 12, accent, false);
+        SiegeTheme.divider(g, x, y + 24, textW, accent);
 
         String text = selected.summary(spanish()) + "\n\n" + selected.body(spanish());
         List<FormattedCharSequence> lines = new ArrayList<>();
@@ -240,10 +241,14 @@ public final class SiegeAtlasScreen extends Screen {
             if (paragraph.isEmpty()) lines.add(blank);
             else lines.addAll(font.split(Component.literal(paragraph), textW));
         }
-        if (!selected.related().isEmpty()) {
+        List<String> relatedTitles = selected.related().stream()
+                .map(SiegeKnowledgeRegistry::get)
+                .filter(java.util.Objects::nonNull)
+                .map(e -> e.title(spanish())).distinct().limit(6).toList();
+        if (!relatedTitles.isEmpty()) {
             lines.add(blank);
-            lines.addAll(font.split(Component.literal(label("RELACIONADO: ", "RELATED: ")
-                    + String.join(" · ", selected.related())), textW));
+            lines.addAll(font.split(Component.literal(label("TAMBIÉN VER: ", "SEE ALSO: ")
+                    + String.join(" · ", relatedTitles)), textW));
         }
         int maxY = detailY + detailH - (openButton != null && openButton.visible ? 28 : 8);
         int first = Math.max(0, Math.min(detailOffset, Math.max(0, lines.size() - 1)));
@@ -254,6 +259,17 @@ public final class SiegeAtlasScreen extends Screen {
             yy += font.lineHeight + 2;
         }
         g.disableScissor();
+    }
+
+    private String tabButtonLabel(SiegeAtlasIndex.View value, int width) {
+        String full = tabLabel(value);
+        if (font.width(full) <= Math.max(8, width - 12)) return full;
+        return switch (value) {
+            case BRIEFING -> label("INICIO", "START");
+            case RACES -> label("RAZAS", "RACES");
+            case SYSTEMS -> label("SIST.", "SYSTEMS");
+            case RESEARCH -> label("BUSCAR", "RESEARCH");
+        };
     }
 
     private String tabLabel(SiegeAtlasIndex.View value) {
@@ -280,13 +296,7 @@ public final class SiegeAtlasScreen extends Screen {
         if (pixels <= font.width("…")) return font.plainSubstrByWidth(value, pixels);
         return font.plainSubstrByWidth(value, pixels - font.width("…")) + "…";
     }
-
-    private boolean spanish() {
-        return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_");
-    }
-
+    private boolean spanish() { return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_"); }
     private String label(String es, String en) { return spanish() ? es : en; }
-
-    @Override
-    public void onClose() { minecraft.setScreen(parent); }
+    @Override public void onClose() { minecraft.setScreen(parent); }
 }
