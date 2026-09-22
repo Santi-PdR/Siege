@@ -6,6 +6,9 @@ single high-quality resampling/compositing path so low-resolution source art is
 not repeatedly stretched by the runtime. Recent non-16:9 art is handled without
 geometric distortion: Night Operation drops its captured letterbox, while
 Rooftop Squad keeps the full illustration over a softened 16:9 extension.
+
+Tempest Jutcherson is intentionally excluded: as of SIEGE 2.50 it is reserved as
+an easter-egg asset, not a normal menu background/gallery entry.
 """
 from pathlib import Path
 from PIL import Image, ImageFilter
@@ -15,7 +18,7 @@ TARGET = (1920, 1080)
 SCENES = [
     "dummies_assault", "anniversary", "frontline_19", "cyborg", "last_stand",
     "vought_siege", "earth_orbit", "canyon_engagement", "night_battle",
-    "night_operation", "urban_rendezvous", "rooftop_squad", "tempest_jutcherson",
+    "night_operation", "urban_rendezvous", "rooftop_squad",
 ]
 
 
@@ -36,17 +39,12 @@ def crop_cover(image: Image.Image, target_ratio: float) -> Image.Image:
 def upscale_16_9(image: Image.Image) -> Image.Image:
     image = crop_cover(image, 16 / 9)
     image = image.resize(TARGET, Image.Resampling.LANCZOS)
-    # Mild deconvolution-style sharpening after one controlled resample. Avoid
-    # aggressive halos/pixel-art artefacts on photographic and illustrated art.
     return image.filter(ImageFilter.UnsharpMask(radius=0.8, percent=55, threshold=3))
 
 
 def rooftop_composite(image: Image.Image) -> Image.Image:
-    # The supplied rooftop illustration is 4:3. Preserve all of it instead of
-    # cropping characters out just to satisfy 16:9.
     bg = crop_cover(image, 16 / 9).resize(TARGET, Image.Resampling.LANCZOS)
     bg = bg.filter(ImageFilter.GaussianBlur(radius=18))
-    # Slightly darken the extension so the complete foreground remains dominant.
     shade = Image.new("RGBA", TARGET, (0, 0, 0, 72))
     bg = Image.alpha_composite(bg.convert("RGBA"), shade)
 
@@ -65,8 +63,6 @@ def prepare(name: str) -> None:
     with Image.open(path) as source:
         image = source.convert("RGB")
 
-    # The supplied Night Operation image contains black capture bars above/below
-    # the actual 16:9 scene. Remove only those bars before the single upscale.
     if name == "night_operation" and image.size == (735, 490):
         image = image.crop((0, 38, 735, 452))
 
