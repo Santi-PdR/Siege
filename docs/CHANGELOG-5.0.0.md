@@ -4,7 +4,15 @@ Estado: desarrollo activo en `chatgpt/siege-5.00.0-nextgen`.
 
 5.00 no se plantea como una suma de parches sobre 4.00. La base es convertir las pantallas ya separadas de SIEGE en una experiencia más coherente, rápida de leer y mucho más audiovisual, manteniendo Forge 1.20.1 / Java 17 y los contratos de privacidad, Intel, Deployment y accesibilidad existentes.
 
-## Primer bloque ya implementado
+## Bloques ya implementados
+
+### Command Network / War Room 5.0
+- Operations deja de mostrar todas sus rutas como una pared plana de botones.
+- Cuatro frentes claros: **Despliegue**, **Inteligencia**, **Conocimiento** y **Sistemas**.
+- Cada frente muestra únicamente las herramientas que corresponden a ese contexto.
+- La búsqueda global sigue cubriendo todo SIEGE y conserva deep-links a dossiers y fichas.
+- La jerarquía no elimina rutas existentes: las 16 rutas de 4.00 siguen cubiertas exactamente una vez.
+- La distribución cambia de 4 a 2 columnas en anchos estrechos para mantener lectura y evitar solapamientos.
 
 ### Media Room 5.0
 - Nueva sección **AMBIENTES / MOODS**.
@@ -34,4 +42,4 @@ Estado: desarrollo activo en `chatgpt/siege-5.00.0-nextgen`.
 - la información general nunca debe convertirse en perfil, inventario, build o progreso personal de un jugador.
 
 ## Próximos frentes del salto 5.00
-El desarrollo continuará sobre Operations/War Room, navegación contextual, Deployment, Intel, búsqueda global, Enciclopedia/Atlas, rendimiento y nuevas superficies de briefing. Cada bloque debe aportar una diferencia visible y verificable; no se contarán como novedades sistemas que ya existían en 4.00.
+El desarrollo continuará sobre Deployment, Intel, búsqueda contextual, Enciclopedia/Atlas, rendimiento, pantalla principal y nuevas superficies de briefing. Cada bloque debe aportar una diferencia visible y verificable; no se contarán como novedades sistemas que ya existían en 4.00.
