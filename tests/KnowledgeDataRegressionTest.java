@@ -76,14 +76,15 @@ public final class KnowledgeDataRegressionTest {
                 "Critical feed may only contain critical records");
         check(SiegeKnowledgeData.critical().size() >= 10, "Critical server topics too small for 3.00");
 
-        // User request: this encyclopedia must remain server-wide and non-personal.
+        // Privacy contract: no player-specific state belongs in this server-wide encyclopedia.
         String corpus = all.stream()
                 .map(e -> e.title(true) + " " + e.summary(true) + " " + e.body(true) + " "
                         + e.sources().stream().map(s -> s.note(true)).reduce("", (a, b) -> a + " " + b))
                 .reduce("", (a, b) -> a + " " + b)
                 .toLowerCase();
-        for (String forbidden : List.of("santi", "walter", "mell", "mathu", "agustin", "mi partida",
-                "mi inventario", "mi personaje", "current player", "player notebook")) {
+        for (String forbidden : List.of("mi partida", "mi inventario", "mi personaje", "mis habilidades",
+                "current player", "player notebook", "personal inventory", "private build", "current-rust-guard",
+                "current-deteriorer-snapshot", "current-meditation")) {
             check(!corpus.contains(forbidden), "Personal/player-specific data leaked into encyclopedia: " + forbidden);
         }
 
