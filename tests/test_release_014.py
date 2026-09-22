@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Durable release contracts from Atlas through SIEGE 1.50."""
+"""Durable release contracts from Atlas through SIEGE 2.0."""
 from pathlib import Path
 import re
 
@@ -14,6 +14,8 @@ CHANGELOG_075 = read("docs/CHANGELOG-0.75.0.md")
 CHANGELOG_125 = read("docs/CHANGELOG-1.25.0.md")
 CHANGELOG_126 = read("docs/CHANGELOG-1.26.0.md")
 CHANGELOG_150 = read("docs/CHANGELOG-1.50.0.md")
+CHANGELOG_200 = read("docs/CHANGELOG-2.0.0.md")
+ARCHITECTURE_200 = read("docs/INFORMATION-ARCHITECTURE-2.0.md")
 INTEL_DATA = read("src/main/java/uy/santipdr/siege/client/IntelData.java")
 INTEL_CURRENT = read("src/main/java/uy/santipdr/siege/client/IntelCurrentData.java")
 INTEL_CATALOG = read("src/main/java/uy/santipdr/siege/client/IntelCatalog.java")
@@ -37,18 +39,24 @@ SCENE_CATALOG = read("src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.j
 SCENE_SCHEDULE = read("src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java")
 EVENTS = read("src/main/java/uy/santipdr/siege/client/SiegeMenuThemeEvents.java")
 CHROME = read("src/main/java/uy/santipdr/siege/client/SiegeVanillaChrome.java")
+GUIDE = read("src/main/java/uy/santipdr/siege/client/SiegeGuideScreen.java")
+GUIDE_SUPPLEMENTAL = read("src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java")
+ARCHIVE = read("src/main/java/uy/santipdr/siege/client/SiegeArchiveScreen.java")
+EVIDENCE = read("src/main/java/uy/santipdr/siege/client/SiegeEvidenceReelScreen.java")
+TITLE = read("src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java")
 BUILD = read("build.gradle")
 WORKFLOW = read(".github/workflows/build.yml")
 RUNTIME_TEST = read("tests/RuntimeRegressionTest.java")
 GUI_RESOURCE_TEST = read("tests/GuiResourceRegressionTest.java")
 NAV_TEST = read("tests/NavigationIdentityTest.java")
+GUIDE_MEDIA_TEST = read("tests/GuideMediaRegressionTest.java")
 
 
 def numbered(changelog: str):
     return [int(v) for v in re.findall(r"(?m)^(\d+)\. ", changelog)]
 
 
-# Historical milestones remain real releases rather than disappearing after bumps.
+# Historical milestones stay real and the active build is exactly 2.0.0.
 assert numbered(CHANGELOG_014) == list(range(1, 51))
 assert numbered(CHANGELOG_050) == list(range(1, 51))
 assert numbered(CHANGELOG_060) == list(range(1, 61))
@@ -57,112 +65,23 @@ assert numbered(CHANGELOG_075) == list(range(1, 13))
 assert numbered(CHANGELOG_125) == list(range(1, 81))
 assert numbered(CHANGELOG_126) == list(range(1, 35))
 assert numbered(CHANGELOG_150) == list(range(1, 51))
-assert "version = '1.50.0'" in BUILD
-assert "version = '1.26.0'" not in BUILD
-assert "version = '1.20.0'" not in BUILD
-assert "version = '0.75.0'" not in BUILD
+assert numbered(CHANGELOG_200) == list(range(1, 81))
+assert "version = '2.0.0'" in BUILD
+for stale in ("version = '1.50.0'", "version = '1.26.0'", "version = '1.20.0'", "version = '0.75.0'"):
+    assert stale not in BUILD, f"Stale active version returned: {stale}"
 
-# Atlas and earlier Intel contracts remain intact.
+# Atlas and Intel contracts remain intact.
 assert 'file("SUP-001", "ATLAS", "SUPER-UNIT", 5, "125,000,000", "atlas"' in INTEL_DATA
 assert "No se recuperaron datos verificados" in INTEL_DATA
 for forbidden in ("FAVORITES", "toggleFavoriteIntel", "favoriteButton", "addIndexButton", "copyText", "GUARDAR"):
     assert forbidden not in INTEL_SCREEN, f"Removed Intel control returned: {forbidden}"
 assert 'label("AMPLIAR", "INSPECT")' in INTEL_SCREEN
-
-# Profiles remain one authoritative specification instead of drift-prone tables.
-for profile in ("CINEMATIC", "TACTICAL", "PERFORMANCE", "CALM", "READING", "CUSTOM"):
-    assert profile in PROFILE, f"Missing client profile {profile}"
-assert "class SiegeProfileSpec" in PROFILE_SPEC
-assert "public record Spec(" in PROFILE_SPEC
-assert "return SiegeProfileSpec.distance(profile);" in METRICS
-assert "SiegeProfileSpec.apply(profile);" in PROFILE
-assert "private static final int FIELDS = 22;" in PROFILE_SPEC
-for field in ("autoContrast", "scanlineIntensity", "interferenceIntensity"):
-    assert field in PROFILE_SPEC, f"Profile field missing: {field}"
-
-# Shared navigation/chrome covers owned surfaces and 1.50 gives native families real identities.
-assert "class SiegeNavigationModel" in NAVIGATION and "enum Section" in NAVIGATION
-for section in ("HOME", "DEPLOYMENT", "INTEL", "GUIDE", "SETTINGS", "COMMAND", "DIAGNOSTICS", "BACKGROUNDS", "INSPECTOR"):
-    assert section in NAVIGATION, f"Missing navigation identity {section}"
-for code in ('"AUD"', '"VID"', '"CTL"', '"MSE"', '"ACC"', '"LNG"', '"PAK"', '"WRD"'):
-    assert code in NAVIGATION, f"Missing 1.50 native identity {code}"
-assert "class SiegeScreenChrome" in SCREEN_CHROME
-assert "SiegeRuntimeStatus.readiness()" in SCREEN_CHROME
-assert "renderSceneTag" in SCREEN_CHROME and "ANOMALÍA VISUAL" not in SCREEN_CHROME  # label comes from catalog/background layer
-assert "SiegeScreenChrome.renderOverlay(screen, g);" in EVENTS
-assert "s instanceof SiegeDiagnosticsScreen" in EVENTS
-assert "renderCleanNativeHeader" not in EVENTS
-assert EVENTS.count("SiegeVanillaChrome.renderOverlay(screen, g);") == 1
-assert CHROME.count('g.drawCenteredString(font, center, width / 2, 6, titleColor);') == 1
-
-# Settings keep the seven requested domains.
-for section in ("APPEARANCE", "MOTION", "AUDIO", "INTEL", "ACCESSIBILITY", "BACKGROUNDS", "SYSTEM"):
-    assert section in SETTINGS, f"Missing settings domain {section}"
-assert "settingsSectionColumns" in UI_LAYOUT
-assert "draggingScrollbar" in SETTINGS and "scrollTo(" in SETTINGS
-assert "SiegeConfig.autoContrast" in SETTINGS
-assert "SiegeConfig.scanlineIntensity" in SETTINGS
-assert "SiegeConfig.interferenceIntensity" in SETTINGS
-
-# Command Center and diagnostics preserve explicit safe-repair semantics and 1.50 scene awareness.
-assert "CENTRO DE COMANDO" in NAVIGATION and "COMMAND CENTER" in NAVIGATION
-assert "priorityCard" in SYSTEM and "SiegeDiagnosticReport.operational" in SYSTEM
-assert "class SiegeDiagnosticReport" in DIAGNOSTIC and "public static int readiness()" in DIAGNOSTIC
-assert "enum Recovery" in DIAGNOSTIC and "public static boolean repair(Entry entry)" in DIAGNOSTIC
-for priority in ("CRÍTICO", "ATENCIÓN", "OPERATIVO"):
-    assert priority in DIAGNOSTIC or priority in SYSTEM
-assert "impact" in DIAGNOSTIC and "recommendation" in DIAGNOSTIC
-assert "comfortPinnedAnomaly" in DIAGNOSTIC
-assert "REPAIR SELECTED" in DIAGNOSTICS_SCREEN and "renderSelectedDetail" in DIAGNOSTICS_SCREEN
-
-# 1.50 scene metadata is authoritative across rendering, schedule, diagnostics and CI.
-assert "class SiegeSceneCatalog" in SCENE_CATALOG and "record Scene" in SCENE_CATALOG
-assert "STANDARD, FEATURED, ANOMALY" in SCENE_CATALOG
-assert '"tempest_jutcherson"' in SCENE_CATALOG and "comfortEligible" in SCENE_CATALOG
-assert '"rooftop_squad"' in SCENE_CATALOG
-assert "SiegeSceneCatalog.count()" in SCENE_SCHEDULE
-assert "SiegeSceneCatalog.anomalyIndex()" in SCENE_SCHEDULE
-assert "SiegeSceneCatalog.featuredIndex()" in SCENE_SCHEDULE
-assert "SiegeSceneCatalog.darknessBias" in BACKGROUND
-assert "SiegeSceneCatalog.label" in BACKGROUND
-assert "sceneTag" in BACKGROUND and "isAnomaly" in BACKGROUND and "isFeatured" in BACKGROUND
-assert "effectiveBackgroundDarkness(int sceneIndex)" in BACKGROUND
-
-# All GUI PNGs, not only Intel, are now release-gated.
-assert "Files.walk(gui)" in GUI_RESOURCE_TEST
-assert "ImageIO.read" in GUI_RESOURCE_TEST
-assert "Scene metadata mismatch" in GUI_RESOURCE_TEST
-assert "Corrupt GUI image" in GUI_RESOURCE_TEST
-assert "GuiResourceRegressionTest" in WORKFLOW
-assert "SiegeSceneCatalog.java" in WORKFLOW
-assert "NavigationIdentityTest" in WORKFLOW
-assert '"MSE"' in NAV_TEST and '"AUD"' in NAV_TEST and '"PAK"' in NAV_TEST
-
-# Adaptive visual layer and semantic audio remain intact.
-assert "effectiveBackgroundDarkness" in BACKGROUND and "effectivePanelDarkness" in BACKGROUND
-assert "SiegeConfig.scanlineIntensity" in BACKGROUND
-for sound in ("selection()", "dossier()", "category()", "warning()", "error()"):
-    assert sound in UI_SOUNDS, f"Semantic UI sound missing: {sound}"
-
-# Deployment remains vanilla-authoritative but no longer exposes the old 0.70 header.
-assert "class SiegeDeploymentStatus" in DEPLOYMENT
-for state in ("QUERYING", "OFFLINE", "NO_RESPONSE", "INCOMPATIBLE", "ONLINE"):
-    assert state in DEPLOYMENT, f"Missing deployment state {state}"
-assert "routeStep" in DEPLOYMENT and "compatibilityLabel" in DEPLOYMENT and "latencyBand" in DEPLOYMENT
-assert "SiegeDeploymentStatus.state" in MULTIPLAYER
-assert "CONTROL DE DESPLIEGUE" in MULTIPLAYER and "DEPLOYMENT CONTROL" in MULTIPLAYER
-assert "DESTINO → ESTADO → CONECTAR" in MULTIPLAYER
-assert "DESPLIEGUE 0.70" not in MULTIPLAYER and "DEPLOYMENT 0.70" not in MULTIPLAYER
-assert "SiegeRuntimeStatus.version()" in MULTIPLAYER
-assert "SiegeLacontinuacion.exaroton.me:18736" in MULTIPLAYER
-assert "original.onPress()" in MULTIPLAYER, "Vanilla callbacks must remain authoritative"
-assert "setScrollAmount" in MULTIPLAYER and "restoreAddress" in MULTIPLAYER
-
-# UNKNOWN and source-backed DVN unit classifications remain intact.
 assert '"UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT", "UNKNOWN"' in INTEL_SCREEN
 assert 'case "UNKNOWN" -> "UNK";' in INTEL_PRESENTATION
 assert 'case "UNKNOWN" -> 0xFF9AA4AB;' in INTEL_PRESENTATION
 assert 'Set.of("UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT", "UNKNOWN")' in INTEL_CATALOG
+
+# Source-backed DVN records and unresolved UNKNOWN records survive the rebuild.
 for fragment in (
         'dossier("ADV-007", "ENGINEER", "ADVANCED", 0, "150"',
         'dossier("ADV-008", "INFORMANT", "ADVANCED", 0, "155"',
@@ -176,19 +95,124 @@ for fragment in (
         'dossier("HU-012", "SKYDIVER", "UNKNOWN"',
         'dossier("HU-013", "SKYLINER", "UNKNOWN"'):
     assert fragment in INTEL_CURRENT, f"Missing unresolved UNKNOWN record: {fragment}"
-assert "Khanblades" in INTEL_CURRENT and "Spectral Shotgun" in INTEL_CURRENT and "Hivelink" in INTEL_CURRENT
-assert "Dart Rifle" in INTEL_CURRENT and "H94 Rifle" in INTEL_CURRENT
-assert "placeholder/classified" in INTEL_CURRENT and "bosses/classified/frame_00" in INTEL_CURRENT
-assert "SIN REGISTRO VISUAL" in INTEL_CURRENT and "NO VISUAL RECORD" in INTEL_CURRENT
 assert "No se encontró una referencia suficientemente fiable" in INTEL_CURRENT
 
-# Source policy remains conservative.
-assert "referencia suficientemente clara" in CHANGELOG_070
-assert "Proteus deja de figurar incorrectamente como Elite" in CHANGELOG_070
-assert "sigue en desarrollo" in CHANGELOG_070
-assert "No se copian renders o screenshots externos" in CHANGELOG_070
+# Profiles still have one authoritative specification.
+for profile in ("CINEMATIC", "TACTICAL", "PERFORMANCE", "CALM", "READING", "CUSTOM"):
+    assert profile in PROFILE, f"Missing client profile {profile}"
+assert "class SiegeProfileSpec" in PROFILE_SPEC and "public record Spec(" in PROFILE_SPEC
+assert "return SiegeProfileSpec.distance(profile);" in METRICS
+assert "SiegeProfileSpec.apply(profile);" in PROFILE
+assert "private static final int FIELDS = 22;" in PROFILE_SPEC
+for field in ("autoContrast", "scanlineIntensity", "interferenceIntensity"):
+    assert field in PROFILE_SPEC, f"Profile field missing: {field}"
 
-# 0.75 image recovery is strengthened, not replaced.
+# SIEGE 2.0 navigation has distinct information domains instead of the old GUIDE bucket.
+assert "class SiegeNavigationModel" in NAVIGATION and "enum Section" in NAVIGATION
+for section in ("HOME", "DEPLOYMENT", "INTEL", "REFERENCE", "FIELD_MANUAL", "SETTINGS", "COMMAND",
+                "DIAGNOSTICS", "BACKGROUNDS", "INSPECTOR", "MEDIA", "NATIVE"):
+    assert section in NAVIGATION, f"Missing 2.0 navigation identity {section}"
+assert "GUIDE," not in NAVIGATION
+for code in ('"AUD"', '"VID"', '"CTL"', '"MSE"', '"ACC"', '"LNG"', '"PAK"', '"WRD"'):
+    assert code in NAVIGATION, f"Missing native identity {code}"
+assert '"DOSSIERS INTEL"' in NAVIGATION
+assert '"MANUAL DE CAMPO"' in NAVIGATION
+assert '"ARCHIVO / ARSENAL"' in NAVIGATION
+assert '"EVIDENCIA"' in NAVIGATION
+
+# The cryptic readiness percentage is intentionally gone from ordinary chrome.
+assert "class SiegeScreenChrome" in SCREEN_CHROME
+assert "SiegeRuntimeStatus.readiness()" not in SCREEN_CHROME
+assert "readiness() + \"%\"" not in SCREEN_CHROME
+assert "SiegeRuntimeStatus.healthLabel" in SCREEN_CHROME
+assert "SiegeRuntimeStatus.version()" in SCREEN_CHROME
+assert "renderSceneTag" in SCREEN_CHROME
+# Readiness may remain an internal diagnostic metric, but it must not leak into normal navigation.
+assert "public static int readiness()" in DIAGNOSTIC
+assert "porcentajes crípticos" in ARCHITECTURE_200
+assert "readiness" in CHANGELOG_200.lower()
+
+# Archive, Armory, Field Manual and media are separate, explicit routes.
+assert "enum Mode { ARCHIVE, ARMORY }" in GUIDE
+assert "if (mode == Mode.ARMORY) return List.of(SiegeGuideData.Category.ITEMS);" in GUIDE
+assert "SiegeGuideData.Category.LORE" in GUIDE and "SiegeGuideData.Category.INSPIRATIONS" in GUIDE
+assert "new SiegeArchiveScreen(this)" in GUIDE
+assert '"third-justice"' in GUIDE_SUPPLEMENTAL
+assert "SiegeGuideData.Category.ITEMS" in GUIDE_SUPPLEMENTAL
+assert "SiegeEvidenceReelScreen" in GUIDE and "class SiegeEvidenceReelScreen" in EVIDENCE
+assert "third_justice_tooltip.png" in GUIDE_SUPPLEMENTAL
+assert "third_justice_field.png" in GUIDE_SUPPLEMENTAL
+for reel in ("third_justice_reel_01.png", "third_justice_reel_02.png", "third_justice_reel_03.png"):
+    assert reel in GUIDE_SUPPLEMENTAL
+assert "0,1 s" in GUIDE_SUPPLEMENTAL and "15%" in GUIDE_SUPPLEMENTAL and "doble" in GUIDE_SUPPLEMENTAL
+assert "ImageIO.read" in GUIDE_MEDIA_TEST and "exactly three curated frames" in GUIDE_MEDIA_TEST
+assert "Manual de campo" in ARCHITECTURE_200 and "Arsenal" in ARCHITECTURE_200 and "Intel · Dossiers" in ARCHITECTURE_200
+
+# Settings keep the seven requested domains and shared chrome stays centralized.
+for section in ("APPEARANCE", "MOTION", "AUDIO", "INTEL", "ACCESSIBILITY", "BACKGROUNDS", "SYSTEM"):
+    assert section in SETTINGS, f"Missing settings domain {section}"
+assert "settingsSectionColumns" in UI_LAYOUT
+assert "draggingScrollbar" in SETTINGS and "scrollTo(" in SETTINGS
+assert "SiegeConfig.autoContrast" in SETTINGS
+assert "SiegeConfig.scanlineIntensity" in SETTINGS
+assert "SiegeConfig.interferenceIntensity" in SETTINGS
+assert "SiegeScreenChrome.renderOverlay(screen, g);" in EVENTS
+assert "s instanceof SiegeDiagnosticsScreen" in EVENTS
+assert EVENTS.count("SiegeVanillaChrome.renderOverlay(screen, g);") == 1
+assert CHROME.count('g.drawCenteredString(font, center, width / 2, 6, titleColor);') == 1
+
+# Command Center/Diagnostics retain explicit safe-repair semantics without becoming lore surfaces.
+assert "CENTRO DE COMANDO" in NAVIGATION and "COMMAND CENTER" in NAVIGATION
+assert "priorityCard" in SYSTEM and "SiegeDiagnosticReport.operational" in SYSTEM
+assert "class SiegeDiagnosticReport" in DIAGNOSTIC
+assert "enum Recovery" in DIAGNOSTIC and "public static boolean repair(Entry entry)" in DIAGNOSTIC
+for priority in ("CRÍTICO", "ATENCIÓN", "OPERATIVO"):
+    assert priority in DIAGNOSTIC or priority in SYSTEM
+assert "impact" in DIAGNOSTIC and "recommendation" in DIAGNOSTIC
+assert "REPAIR SELECTED" in DIAGNOSTICS_SCREEN and "renderSelectedDetail" in DIAGNOSTICS_SCREEN
+assert "Conocimiento del mundo" in ARCHITECTURE_200
+
+# Scene metadata, anomaly rarity and resource QA remain authoritative.
+assert "class SiegeSceneCatalog" in SCENE_CATALOG and "record Scene" in SCENE_CATALOG
+assert "STANDARD, FEATURED, ANOMALY" in SCENE_CATALOG
+assert '"tempest_jutcherson"' in SCENE_CATALOG and "comfortEligible" in SCENE_CATALOG
+assert '"rooftop_squad"' in SCENE_CATALOG
+assert "SiegeSceneCatalog.count()" in SCENE_SCHEDULE
+assert "SiegeSceneCatalog.anomalyIndex()" in SCENE_SCHEDULE
+assert "SiegeSceneCatalog.featuredIndex()" in SCENE_SCHEDULE
+assert "SiegeSceneCatalog.darknessBias" in BACKGROUND
+assert "SiegeSceneCatalog.label" in BACKGROUND
+assert "sceneTag" in BACKGROUND and "isAnomaly" in BACKGROUND and "isFeatured" in BACKGROUND
+assert "effectiveBackgroundDarkness(int sceneIndex)" in BACKGROUND
+assert "Files.walk(gui)" in GUI_RESOURCE_TEST
+assert "ImageIO.read" in GUI_RESOURCE_TEST
+assert "Scene metadata mismatch" in GUI_RESOURCE_TEST
+assert "Corrupt GUI image" in GUI_RESOURCE_TEST
+assert "GuiResourceRegressionTest" in WORKFLOW
+assert "SiegeSceneCatalog.java" in WORKFLOW
+assert "NavigationIdentityTest" in WORKFLOW
+
+# Adaptive visuals and semantic audio remain intact.
+assert "effectiveBackgroundDarkness" in BACKGROUND and "effectivePanelDarkness" in BACKGROUND
+assert "SiegeConfig.scanlineIntensity" in BACKGROUND
+for sound in ("selection()", "dossier()", "category()", "warning()", "error()"):
+    assert sound in UI_SOUNDS, f"Semantic UI sound missing: {sound}"
+
+# Deployment remains vanilla-authoritative and keeps the official destination.
+assert "class SiegeDeploymentStatus" in DEPLOYMENT
+for state in ("QUERYING", "OFFLINE", "NO_RESPONSE", "INCOMPATIBLE", "ONLINE"):
+    assert state in DEPLOYMENT, f"Missing deployment state {state}"
+assert "routeStep" in DEPLOYMENT and "compatibilityLabel" in DEPLOYMENT and "latencyBand" in DEPLOYMENT
+assert "SiegeDeploymentStatus.state" in MULTIPLAYER
+assert "CONTROL DE DESPLIEGUE" in MULTIPLAYER and "DEPLOYMENT CONTROL" in MULTIPLAYER
+assert "DESTINO → ESTADO → CONECTAR" in MULTIPLAYER
+assert "DESPLIEGUE 0.70" not in MULTIPLAYER and "DEPLOYMENT 0.70" not in MULTIPLAYER
+assert "SiegeRuntimeStatus.version()" in MULTIPLAYER
+assert "SiegeLacontinuacion.exaroton.me:18736" in MULTIPLAYER
+assert "original.onPress()" in MULTIPLAYER, "Vanilla callbacks must remain authoritative"
+assert "setScrollAmount" in MULTIPLAYER and "restoreAddress" in MULTIPLAYER
+
+# Older image-recovery gates are strengthened, never replaced.
 assert "siete PNG de placeholder" in CHANGELOG_075
 assert "ImageIO" in CHANGELOG_075
 assert "ImageIO.read" in RUNTIME_TEST
@@ -198,12 +222,11 @@ assert "Image below Intel minimum resolution" in RUNTIME_TEST
 assert "Intel image must remain 16:9" in RUNTIME_TEST
 assert "Boss animation frame dimensions changed" in RUNTIME_TEST
 
-# Singleplayer remains deliberately hidden and no broad shortcut layer was added.
-TITLE = read("src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java")
+# Singleplayer stays deliberately hidden and no broad shortcut layer is introduced.
 assert "GLFW_KEY_S && Screen.hasControlDown()" in TITLE
 for source_name, source in (("profile", PROFILE), ("profile_spec", PROFILE_SPEC), ("metrics", METRICS),
                             ("diagnostic", DIAGNOSTIC), ("diagnostics", DIAGNOSTICS_SCREEN),
                             ("settings", SETTINGS), ("navigation", NAVIGATION), ("scene_catalog", SCENE_CATALOG)):
     assert "GLFW_KEY_" not in source, f"Unrequested keyboard shortcut added in {source_name}"
 
-print("SIEGE durable release contracts through 1.50 operational presentation overhaul passed")
+print("SIEGE durable release contracts through 2.0 generational rebuild passed")

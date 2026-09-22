@@ -20,7 +20,7 @@ import net.minecraftforge.fml.common.Mod;
 import uy.santipdr.siege.SiegeMod;
 
 /**
- * Applies the common 1.25 SIEGE presentation layer to owned and approved native
+ * Applies the common SIEGE 2.0 presentation layer to owned and approved native
  * menu flows while Minecraft retains validation, state and navigation logic.
  */
 @Mod.EventBusSubscriber(modid = SiegeMod.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -36,7 +36,8 @@ public final class SiegeMenuThemeEvents {
         return s instanceof SiegeTitleScreen || s instanceof SiegeMultiplayerScreen
                 || s instanceof SiegeSettingsScreen || s instanceof SiegeSystemScreen || s instanceof SiegeDiagnosticsScreen
                 || s instanceof IntelScreenV3 || s instanceof SiegeArchiveScreen || s instanceof IntelPortraitScreen
-                || s instanceof SiegeSceneScreen || s instanceof SiegeGuideScreen || s instanceof SiegeGuideImageScreen;
+                || s instanceof SiegeSceneScreen || s instanceof SiegeGuideScreen || s instanceof SiegeGuideImageScreen
+                || s instanceof SiegeEvidenceReelScreen;
     }
 
     private static boolean nativeDialog(Screen s) {
@@ -89,6 +90,8 @@ public final class SiegeMenuThemeEvents {
             field.setTextColorUneditable(SiegeConfig.highContrast ? 0xFFD5D7D8 : SiegeTheme.MUTED);
         }
 
+        if (screen instanceof SiegeTitleScreen) rebuildTitleKnowledgeRow(event, screen);
+
         if (screen instanceof SiegeSettingsScreen) {
             int buttonWidth = screen.width < 360 ? 54 : Math.min(132, Math.max(96, screen.width / 6));
             String currentVersion = version();
@@ -105,21 +108,10 @@ public final class SiegeMenuThemeEvents {
                     "Centro de comando: perfiles, prioridades, diagnóstico y salud del cliente.",
                     "Command center: profiles, priorities, diagnostics and client health."))));
             event.addListener(system);
+            replaceSettingsLoreShortcut(event, screen);
         }
 
-        if (screen instanceof IntelScreenV3) {
-            int buttonWidth = screen.width < 420 ? 58 : Math.min(118, Math.max(82, screen.width / 8));
-            String text = screen.width < 420 ? "ARCH." : label("ARCHIVO INTEL", "INTEL ARCHIVE");
-            SiegeButton archive = new SiegeButton(Math.max(84, screen.width - buttonWidth - 8), 7,
-                    buttonWidth, 19, Component.literal(text), b -> {
-                SiegeUiSounds.confirm();
-                Minecraft.getInstance().setScreen(new SiegeArchiveScreen(screen));
-            }, SiegeTheme.GOLD).withIcon("overview").setCompactCenter(true);
-            archive.setTooltip(Tooltip.create(Component.literal(label(
-                    "Estados de muerte, misiones, equipo, avisos actuales, unidades y protocolos operativos.",
-                    "Death states, missions, equipment, current notices, units and operational protocols."))));
-            event.addListener(archive);
-        }
+        if (screen instanceof IntelScreenV3) replaceIntelGuideShortcut(event, screen);
 
         if (!nativeDialog(screen)) return;
         boundScreen = screen;
@@ -148,6 +140,78 @@ public final class SiegeMenuThemeEvents {
                 if (focused) screen.setFocused(replacement);
                 buttons.add(replacement);
             }
+        }
+    }
+
+    private static void rebuildTitleKnowledgeRow(ScreenEvent.Init.Post event, Screen screen) {
+        for (var listener : List.copyOf(event.getListenersList())) {
+            if (!(listener instanceof SiegeButton original)) continue;
+            if (!"siege.menu.armory".equals(translationKey(original.getMessage()))) continue;
+
+            int x = original.getX(), y = original.getY(), h = original.getHeight(), full = original.getWidth();
+            int gap = full >= 150 ? 4 : 2;
+            int left = Math.max(1, (full - gap) / 2);
+            int right = Math.max(1, full - left - gap);
+            event.removeListener(original);
+
+            String archiveText = full < 170 ? label("ARCH.", "ARCH.") : label("ARCHIVO", "ARCHIVE");
+            String armoryText = full < 170 ? label("ARS.", "ARM.") : label("ARSENAL", "ARMORY");
+            SiegeButton archive = new SiegeButton(x, y, left, h, Component.literal(archiveText), b -> {
+                SiegeUiSounds.confirm();
+                Minecraft.getInstance().setScreen(new SiegeGuideScreen(screen, SiegeGuideScreen.Mode.ARCHIVE));
+            }, SiegeTheme.RED).setMainMenuStyle(true).withIcon("overview").setCompactCenter(true);
+            SiegeButton armory = new SiegeButton(x + left + gap, y, right, h, Component.literal(armoryText), b -> {
+                SiegeUiSounds.confirm();
+                Minecraft.getInstance().setScreen(new SiegeGuideScreen(screen, SiegeGuideScreen.Mode.ARMORY));
+            }, SiegeTheme.GOLD).setMainMenuStyle(true).withIcon("package").setCompactCenter(true);
+            archive.setTooltip(Tooltip.create(Component.literal(label(
+                    "Qué es SIEGE, contexto, operaciones, dificultad, crónicas e inspiraciones.",
+                    "What SIEGE is, context, operations, difficulty, chronicles and inspirations."))));
+            armory.setTooltip(Tooltip.create(Component.literal(label(
+                    "Equipo, objetos y registros multimedia de armamento.",
+                    "Equipment, items and armament multimedia records."))));
+            event.addListener(archive);
+            event.addListener(armory);
+            return;
+        }
+    }
+
+    private static void replaceIntelGuideShortcut(ScreenEvent.Init.Post event, Screen screen) {
+        for (var listener : List.copyOf(event.getListenersList())) {
+            if (!(listener instanceof SiegeButton original)) continue;
+            String message = original.getMessage().getString();
+            if (!message.equalsIgnoreCase("GUÍA") && !message.equalsIgnoreCase("GUIDE")) continue;
+            int x = original.getX(), y = original.getY(), w = original.getWidth(), h = original.getHeight();
+            event.removeListener(original);
+            SiegeButton archive = new SiegeButton(x, y, w, h, Component.literal(label("ARCHIVO", "ARCHIVE")), b -> {
+                SiegeUiSounds.confirm();
+                Minecraft.getInstance().setScreen(new SiegeGuideScreen(screen, SiegeGuideScreen.Mode.ARCHIVE));
+            }, SiegeTheme.GOLD).withIcon("overview").setCompactCenter(true);
+            archive.setTooltip(Tooltip.create(Component.literal(label(
+                    "Contexto general y conocimiento de SIEGE; los dossiers permanecen en Intel.",
+                    "General SIEGE context and knowledge; dossiers remain in Intel."))));
+            event.addListener(archive);
+            return;
+        }
+    }
+
+    private static void replaceSettingsLoreShortcut(ScreenEvent.Init.Post event, Screen screen) {
+        for (var listener : List.copyOf(event.getListenersList())) {
+            if (!(listener instanceof SiegeButton original)) continue;
+            String message = original.getMessage().getString();
+            if (!message.equalsIgnoreCase("GUÍA OPERATIVA") && !message.equalsIgnoreCase("OPERATIONAL GUIDE")) continue;
+            int x = original.getX(), y = original.getY(), w = original.getWidth(), h = original.getHeight();
+            event.removeListener(original);
+            SiegeButton diagnostics = new SiegeButton(x, y, w, h,
+                    Component.literal(label("DIAGNÓSTICO Y RECUPERACIÓN", "DIAGNOSTICS & RECOVERY")), b -> {
+                SiegeUiSounds.click();
+                Minecraft.getInstance().setScreen(new SiegeDiagnosticsScreen(screen));
+            }, SiegeTheme.ORANGE).withIcon("shield");
+            diagnostics.setTooltip(Tooltip.create(Component.literal(label(
+                    "Estado técnico del cliente y reparaciones explícitas; sin lore ni dossiers.",
+                    "Client technical state and explicit repairs; no lore or dossiers."))));
+            event.addListener(diagnostics);
+            return;
         }
     }
 

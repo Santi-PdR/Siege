@@ -37,7 +37,10 @@ public final class SiegeCommandStrip {
         }
         String intelText = "INTEL " + IntelCatalog.total();
         String audioText = !SiegeConfig.music ? "AUDIO OFF" : "AUDIO " + SiegeConfig.musicVolume + "%";
-        String healthText = SiegeRuntimeStatus.healthLabel(spanish) + " " + SiegeRuntimeStatus.readiness() + "%";
+        // 2.0 keeps health qualitative in navigation chrome. The diagnostic engine
+        // still computes readiness internally, but an unexplained percentage no
+        // longer leaks into ordinary menu surfaces.
+        String healthText = SiegeRuntimeStatus.healthLabel(spanish);
 
         g.pose().pushPose();
         g.pose().translate(0, 0, 448);

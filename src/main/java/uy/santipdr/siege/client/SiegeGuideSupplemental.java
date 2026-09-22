@@ -2,7 +2,7 @@ package uy.santipdr.siege.client;
 
 import java.util.List;
 
-/** Current guide records that are useful references but are not unit dossiers. */
+/** Current equipment records that are useful references but are not unit dossiers. */
 public final class SiegeGuideSupplemental {
     private SiegeGuideSupplemental() { }
 
@@ -12,23 +12,37 @@ public final class SiegeGuideSupplemental {
                     SiegeGuideData.Category.ITEMS,
                     "Third Justice",
                     "Third Justice",
-                    "CLASIFICACIÓN\nHerramienta de parry fabricada con Daemonium Ore Metal Gear. Rareza Eternal."
-                    + "\n\nVENTANA DE RESPUESTA\nAl bloquear abre una ventana de aproximadamente 0,1 s para interceptar el impacto. Después de una intercepción necesita cerca de 1 s antes de volver a responder con la misma técnica."
-                    + "\n\nEFECTO DEL PARRY\nEl metraje suministrado confirma que una intercepción correcta puede expulsar al atacante a distancia. No funciona como una defensa pasiva: exige leer la trayectoria y ejecutar el bloqueo en el momento preciso."
-                    + "\n\nACUMULACIÓN TEMPORAL\nEl mismo registro muestra que acumular parries durante un período limitado activa una «regeneración Fantasma». Mientras permanece activa puede compensar un fallo posterior de parry perfecto antes de agotarse."
-                    + "\n\nCOSTE FÍSICO\nEl registro del objeto indica una reducción aproximada del 15% en movilidad mientras se sostiene y un consumo energético equivalente al doble mientras se transporta en el inventario."
-                    + "\n\nEFECTO PASIVO\nMientras permanece equipada en el inventario concede +2 perks, según la documentación suministrada."
-                    + "\n\nEMPLEO\nSu utilidad aumenta en enfrentamientos prolongados: conservar las acumulaciones y no gastar la ventana de parry en ataques poco legibles reduce la probabilidad de quedar expuesto. El objeto no debe tratarse como un escudo permanente."
-                    + "\n\nREGISTRO VISUAL\nEl video suministrado muestra la herramienta en uso contra objetivos hostiles y confirma el retroceso producido por parries exitosos y la activación de la regeneración Fantasma por acumulación.",
-                    "CLASSIFICATION\nParry tool built from Daemonium Ore Metal Gear. Eternal rarity."
-                    + "\n\nRESPONSE WINDOW\nBlocking opens an approximately 0.1 s window to intercept an impact. After a successful interception it needs about 1 s before the same technique can answer again."
-                    + "\n\nPARRY EFFECT\nThe supplied footage confirms that a correct interception can drive the attacker back over a significant distance. It is not passive protection: the incoming trajectory has to be read and the block timed correctly."
-                    + "\n\nTEMPORARY ACCUMULATION\nThe same record shows that accumulating parries for a limited period activates a 'Phantom Regeneration'. While active it can compensate for a later failed perfect parry before the reserve is exhausted."
-                    + "\n\nPHYSICAL COST\nThe item record indicates roughly 15% reduced mobility while held and energy consumption equivalent to twice normal while carried in the inventory."
-                    + "\n\nPASSIVE EFFECT\nWhile kept equipped in the inventory it grants +2 perks, according to the supplied documentation."
-                    + "\n\nUSE\nIts value increases in prolonged engagements: preserving accumulated parries and avoiding unnecessary attempts against unreadable attacks reduces the chance of being left exposed. It should not be treated as a permanent shield."
-                    + "\n\nVISUAL RECORD\nThe supplied video shows the tool used against hostile targets and confirms the knockback from successful parries and activation of Phantom Regeneration through accumulation.",
-                    List.of(), false),
+                    "CLASIFICACIÓN\nHerramienta de parry identificada como Third Justice. Rareza Eternal en el registro suministrado."
+                    + "\n\nVENTANA DE RESPUESTA\nLa captura del objeto indica que al bloquear se abre una ventana de parry de 0,1 s. Después de una intercepción existe un enfriamiento de 1 s antes de volver a responder con la misma técnica."
+                    + "\n\nEFECTO DEL PARRY\nEl metraje suministrado muestra intercepciones contra objetivos hostiles y desplazamiento del atacante después de impactos correctamente desviados. No se presenta como defensa pasiva: depende de ejecutar el bloqueo en la ventana indicada."
+                    + "\n\nACUMULACIÓN TEMPORAL\nEl video proporcionado contiene una indicación de acumulación temporal de parries y activación de una regeneración Fantasma. El archivo conserva ese comportamiento como evidencia observada, sin extenderlo a condiciones que no aparecen en el metraje."
+                    + "\n\nCOSTE FÍSICO\nLa captura del objeto registra una reducción del 15% en velocidad de movimiento mientras se sostiene y hambre consumida al doble de velocidad mientras permanece en el inventario."
+                    + "\n\nREGISTRO MULTIMEDIA\nLa ficha conserva las dos capturas originales y una secuencia de fotogramas recuperados del video entregado. El visor REEL reproduce esa secuencia dentro de SIEGE sin incluir un decodificador MP4 en tiempo real."
+                    + "\n\nLÍMITE DEL ARCHIVO\nNo se añaden estadísticas, daño, durabilidad ni efectos que no estén respaldados por el material recibido u otra documentación ya conservada.",
+                    "CLASSIFICATION\nParry tool identified as Third Justice. Eternal rarity in the supplied record."
+                    + "\n\nRESPONSE WINDOW\nThe item capture states that blocking opens a 0.1 s parry window. After an interception there is a 1 s cooldown before the same technique can answer again."
+                    + "\n\nPARRY EFFECT\nThe supplied footage shows interceptions against hostile targets and displacement of the attacker after correctly deflected hits. It is not presented as passive protection: it depends on blocking inside the documented window."
+                    + "\n\nTEMPORARY ACCUMULATION\nThe supplied video contains an indication of temporary parry accumulation and activation of Phantom Regeneration. The archive preserves this as observed evidence without extending it to conditions that are not shown in the footage."
+                    + "\n\nPHYSICAL COST\nThe item capture records 15% reduced movement speed while held and hunger consumed twice as fast while carried in the inventory."
+                    + "\n\nMULTIMEDIA RECORD\nThe file retains both original captures and a sequence of frames recovered from the supplied video. The REEL viewer plays that sequence inside SIEGE without bundling a real-time MP4 decoder."
+                    + "\n\nARCHIVE LIMIT\nNo damage, durability, statistics or effects are added unless they are supported by the supplied material or other documentation already retained.",
+                    List.of(
+                            new SiegeGuideData.Art("third_justice_tooltip.png", 762, 207,
+                                    "Identificación y parámetros visibles de Third Justice",
+                                    "Visible Third Justice identification and parameters"),
+                            new SiegeGuideData.Art("third_justice_field.png", 1024, 579,
+                                    "Third Justice equipada durante una prueba de campo",
+                                    "Third Justice equipped during a field test"),
+                            new SiegeGuideData.Art("third_justice_reel_01.png", 640, 360,
+                                    "Registro de video · presentación de Third Justice",
+                                    "Video record · Third Justice introduction"),
+                            new SiegeGuideData.Art("third_justice_reel_02.png", 640, 360,
+                                    "Registro de video · intercepción contra objetivo hostil",
+                                    "Video record · interception against a hostile target"),
+                            new SiegeGuideData.Art("third_justice_reel_03.png", 640, 360,
+                                    "Registro de video · acumulación temporal y regeneración Fantasma",
+                                    "Video record · temporary accumulation and Phantom Regeneration")
+                    ), false),
             new SiegeGuideData.Entry(
                     "aerorig",
                     SiegeGuideData.Category.ITEMS,
