@@ -30,6 +30,20 @@ public final class OperationsIndexTest {
         check(server.stream().anyMatch(e -> e.route() == SiegeOperationsIndex.Route.DEPLOYMENT),
                 "Deployment route must surface server/ping queries");
 
+        var geography = SiegeOperationsIndex.search("Geography Table", false, 8);
+        check(geography.stream().anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.KNOWLEDGE
+                        && e.knowledgeId().equals("item-geography-table")),
+                "Knowledge search must deep-link Geography Table");
+
+        var rust = SiegeOperationsIndex.search("Rust Guard", false, 8);
+        check(rust.stream().anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.KNOWLEDGE
+                        && e.knowledgeId().equals("current-rust-guard")),
+                "Current SIEGE notes must be searchable from Operations");
+
+        var meditation = SiegeOperationsIndex.search("meditar 100 RE", true, 12);
+        check(meditation.stream().anyMatch(e -> e.route() == SiegeOperationsIndex.Route.KNOWLEDGE),
+                "Survival knowledge must surface from global search");
+
         check(SiegeOperationsIndex.search("a", false, 2).size() <= 2, "Search limit contract");
         check(SiegeOperationsIndex.search("", false, 5).isEmpty(), "Blank search must stay empty");
 
@@ -38,14 +52,16 @@ public final class OperationsIndexTest {
         clear.setAccessible(true);
         clear.invoke(null);
         SiegeRouteHistory.record(SiegeOperationsIndex.Route.INTEL);
+        SiegeRouteHistory.record(SiegeOperationsIndex.Route.KNOWLEDGE);
         SiegeRouteHistory.record(SiegeOperationsIndex.Route.DEPLOYMENT);
-        SiegeRouteHistory.record(SiegeOperationsIndex.Route.INTEL);
+        SiegeRouteHistory.record(SiegeOperationsIndex.Route.KNOWLEDGE);
         List<SiegeOperationsIndex.Route> recent = SiegeRouteHistory.snapshot();
-        check(recent.size() == 2, "Recent route history must deduplicate");
-        check(recent.get(0) == SiegeOperationsIndex.Route.INTEL
-                        && recent.get(1) == SiegeOperationsIndex.Route.DEPLOYMENT,
+        check(recent.size() == 3, "Recent route history must deduplicate");
+        check(recent.get(0) == SiegeOperationsIndex.Route.KNOWLEDGE
+                        && recent.get(1) == SiegeOperationsIndex.Route.DEPLOYMENT
+                        && recent.get(2) == SiegeOperationsIndex.Route.INTEL,
                 "Recent route ordering");
 
-        System.out.println("SIEGE 2.50 Operations index: routes, Intel, Armory, ranking and history passed");
+        System.out.println("SIEGE 3.00 Operations index: routes, Intel, Armory, Knowledge deep-links and history passed");
     }
 }
