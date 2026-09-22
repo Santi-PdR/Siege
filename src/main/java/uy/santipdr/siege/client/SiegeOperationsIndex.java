@@ -47,8 +47,7 @@ public final class SiegeOperationsIndex {
         for (SiegeKnowledgeData.Entry knowledge : SiegeKnowledgeRegistry.entries()) {
             String zone = knowledge.zone() == SiegeKnowledgeData.Zone.SERVER
                     ? (spanish ? "SERVIDOR" : "SERVER") : (spanish ? "HISTÓRICO" : "HISTORY");
-            String subtitle = zone + " · " + knowledge.domain().label(spanish)
-                    + " · " + knowledge.confidence().label(spanish);
+            String subtitle = zone + " · " + knowledge.domain().label(spanish);
             out.add(new Entry(Kind.KNOWLEDGE, knowledge.id(), knowledge.title(spanish), subtitle,
                     SiegeKnowledgeRegistry.searchable(knowledge, spanish), Route.ATLAS, null, knowledge.id()));
         }
@@ -88,22 +87,22 @@ public final class SiegeOperationsIndex {
 
     private static void addRoutes(List<Entry> out, boolean es) {
         route(out, Route.BRIEFING, "BRIEFING",
-                es ? "Ruta rápida para nuevos jugadores" : "Fast route for new players",
+                es ? "Lo esencial para empezar" : "The essentials to get started",
                 "start empezar newcomer nuevo new player briefing beginner principiante basics básico supervivencia survival");
         route(out, Route.ATLAS, es ? "ATLAS TÁCTICO" : "TACTICAL ATLAS",
-                es ? "Sistemas, investigación e histórico" : "Systems, research and history",
-                "atlas knowledge conocimiento wiki encyclopedia enciclopedia systems sistemas trials executors ejecutores structures estructuras relics reliquias research investigar history histórico");
+                es ? "Temas del servidor por categoría" : "Server topics by category",
+                "atlas knowledge conocimiento wiki encyclopedia enciclopedia systems sistemas trials executors ejecutores structures estructuras relics reliquias history histórico");
         route(out, Route.RACES, es ? "ATLAS DE RAZAS" : "RACE ATLAS",
-                es ? "Razas, rarezas, rutas de progresión y fuentes" : "Races, rarities, progression routes and sources",
+                es ? "Razas, rarezas y formas de progresión" : "Races, rarities and progression styles",
                 "race races raza razas rarity rareza obsainan fabled eternal saiyan deteriorer hacker cyborg human progression progresion");
         route(out, Route.PROGRESSION, es ? "PROGRESIÓN" : "PROGRESSION MAP",
-                es ? "V1→V4, rutas especiales, Trials y sistemas avanzados" : "V1→V4, special routes, Trials and advanced systems",
+                es ? "V1→V4, Trials, rutas especiales y sistemas avanzados" : "V1→V4, Trials, special routes and advanced systems",
                 "progression progresion v1 v2 v3 v4 trials trial steps pasos special routes ruta assembling relics dimensions raids");
         route(out, Route.THREATS, es ? "AMENAZAS" : "THREAT BOARD",
                 es ? "Dossiers, Executores, bosses y eventos" : "Dossiers, Executors, bosses and events",
                 "threat threats amenaza amenazas board dossier unit unidad boss bosses executor ejecutor raid event evento intel");
         route(out, Route.MEDIA, es ? "SALA MULTIMEDIA" : "MEDIA ROOM",
-                es ? "Fondos, soundtrack, controles y referencias DVN" : "Backgrounds, soundtrack, controls and DVN references",
+                es ? "Música, fondos y ambientación del menú" : "Music, backgrounds and menu atmosphere",
                 "media multimedia music musica soundtrack background fondo backgrounds dvn dummies noobs gallery galeria playlist track pista");
         route(out, Route.DEPLOYMENT, es ? "DESPLIEGUE" : "DEPLOYMENT",
                 es ? "Servidor oficial, estado y conexión" : "Official server, status and connection",
@@ -111,18 +110,18 @@ public final class SiegeOperationsIndex {
         route(out, Route.INTEL, "INTEL", es ? "Dossiers de unidades y amenazas" : "Unit and threat dossiers",
                 "dossier unit unidad advanced avanzado tank boss elite super unknown threat hp armament");
         route(out, Route.KNOWLEDGE, es ? "ENCICLOPEDIA" : "ENCYCLOPEDIA",
-                es ? "Archivo detallado del servidor" : "Detailed server archive",
-                "knowledge conocimiento server servidor detail detalle sources fuentes");
+                es ? "Guía detallada por temas del servidor" : "Detailed guide to server topics",
+                "knowledge conocimiento server servidor detail detalle");
         route(out, Route.ARCHIVE, es ? "ARCHIVO" : "ARCHIVE",
                 es ? "Qué es SIEGE, 2044, facciones, Núcleo e inspiraciones" : "What SIEGE is, 2044, factions, Core and inspirations",
                 "siege eternal craft 2044 lore nucleo core factions facciones gates rifts inspirations inspiraciones chronicle cronica");
         route(out, Route.ARMORY, es ? "ARSENAL" : "ARMORY", es ? "Objetos, equipamiento y evidencia" : "Items, equipment and evidence",
-                "items objetos gear equipment equipamiento third justice aerorig riflator holo watch weapon arma");
+                "items objetos gear equipment equipamiento third justice aerorig riflator holo watch weapon arma geography daemonium assembling halo improbability");
         route(out, Route.FIELD_MANUAL, es ? "MANUAL DE CAMPO" : "FIELD MANUAL",
                 es ? "Estados de muerte, trauma, misiones y protocolos" : "Death states, trauma, missions and protocols",
                 "downed mangled mutilated dismembered disfigured bleeding burned erased shellshock death muerte trauma states estados protocol protocolo mission mision");
         route(out, Route.COMMAND, es ? "CENTRO DE COMANDO" : "COMMAND CENTER", es ? "Perfil visual y estado del cliente" : "Visual profile and client state",
-                "client cliente profile perfil health salud command command center technical tecnico immersive inmersivo contrast contraste classic clasico");
+                "client cliente profile perfil health salud command command center immersive inmersivo contrast contraste classic clasico");
         route(out, Route.DIAGNOSTICS, es ? "DIAGNÓSTICO" : "DIAGNOSTICS", es ? "Problemas detectados y recuperación segura" : "Detected problems and safe recovery",
                 "diagnostic diagnostico recovery recuperacion repair reparar error warning aviso technical tecnico");
         route(out, Route.SETTINGS, es ? "AJUSTES" : "SETTINGS", es ? "Apariencia, movimiento, audio, Intel y accesibilidad" : "Appearance, motion, audio, Intel and accessibility",
