@@ -143,9 +143,12 @@ assert "new SiegeServerGuideScreen(screen)" in MENU_EVENTS
 assert "new SiegeOperationsHubScreen(screen)" in MENU_EVENTS
 assert "explicación simple y completa" in BRIEF
 
-# Privacy remains a release contract.
-for forbidden in ("mi inventario", "mi personaje", "mi partida actual", "player notebook", "private build", "private progress"):
-    assert forbidden.lower() not in (BASE + EXP + EXP401 + RACES + PROGRESSION + SERVER_GUIDE_DATA).lower()
+# Privacy remains a release contract. Block actual player-state payloads rather than
+# policy sentences that merely say private progress is excluded.
+privacy_surface = (BASE + EXP + EXP401 + RACES + PROGRESSION + SERVER_GUIDE_DATA).lower()
+for forbidden in ("mi inventario", "mi personaje", "mi partida actual", "player notebook",
+                  "current-deteriorer-snapshot", "current-rust-guard", "current-meditation", "current_confirmed"):
+    assert forbidden.lower() not in privacy_surface, f"Personal-state marker leaked: {forbidden}"
 
 # Existing high-value contracts survive the completion patch.
 assert "SiegeLacontinuacion.exaroton.me:18736" in MULTI
