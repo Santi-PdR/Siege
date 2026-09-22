@@ -42,7 +42,8 @@ public final class SiegeOperationsHubScreen extends Screen {
 
         routeButtonH = compact ? 18 : 20;
         routeGap = compact ? 3 : 5;
-        laneTop = panelY + (compact ? 68 : 84);
+        // Keep Command Network controls clear of the client/intel status block at every supported GUI scale.
+        laneTop = panelY + (compact ? 82 : 104);
         int contentX = panelX + 10;
         int contentW = panelW - 20;
 
