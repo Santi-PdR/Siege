@@ -34,7 +34,7 @@ jobs:
           python3 -m pip install --disable-pip-version-check --quiet pillow
           python3 scripts/prepare-backgrounds-hd.py
 
-      - name: Verify responsive layouts, Atlas knowledge and War Room search
+      - name: Verify responsive layouts, current knowledge and Operations search
         shell: bash
         run: |
           mkdir -p build/layout-tests build/guide-tests build/guide-media-tests build/archive-tests build/config-tests build/scene-tests build/knowledge-tests build/atlas-tests build/race-atlas-tests build/progression-tests build/media-tests build/ops-tests
@@ -54,7 +54,7 @@ jobs:
           java -cp build/scene-tests SceneScheduleTest
           javac -d build/knowledge-tests src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java tests/KnowledgeDataRegressionTest.java
           java -cp build/knowledge-tests KnowledgeDataRegressionTest
-          javac -d build/atlas-tests src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java src/main/java/uy/santipdr/siege/client/SiegeAtlasIndex.java tests/AtlasRegressionTest.java
+          javac -d build/atlas-tests src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java src/main/java/uy/santipdr/siege/client/SiegeAtlasIndex.java tests/AtlasRegressionTest.java
           java -cp build/atlas-tests AtlasRegressionTest
           javac -d build/race-atlas-tests src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasData.java tests/RaceAtlasRegressionTest.java
           java -cp build/race-atlas-tests RaceAtlasRegressionTest
@@ -62,7 +62,7 @@ jobs:
           java -cp build/progression-tests ProgressionMapRegressionTest
           javac -d build/media-tests src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java tests/MediaReferenceRegressionTest.java
           java -cp build/media-tests MediaReferenceRegressionTest
-          javac -d build/ops-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java src/main/java/uy/santipdr/siege/client/SiegeRouteHistory.java tests/OperationsIndexTest.java
+          javac -d build/ops-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java src/main/java/uy/santipdr/siege/client/SiegeCommandNetwork.java src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java src/main/java/uy/santipdr/siege/client/SiegeRouteHistory.java tests/OperationsIndexTest.java
           java -cp build/ops-tests OperationsIndexTest
           python3 tests/test_installer.py
           python3 tests/test_release_040.py
@@ -83,42 +83,23 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify SIEGE 5.00 foundation and durable 4.00 contracts
+      - name: Verify SIEGE 5.00 player-facing contracts
         shell: bash
         run: |
           grep -q "version = '5.00.0'" build.gradle
-          grep -q 'class SiegeOperationsHubScreen' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
-          grep -q 'class SiegeBriefingScreen' src/main/java/uy/santipdr/siege/client/SiegeBriefingScreen.java
-          grep -q 'class SiegeAtlasScreen' src/main/java/uy/santipdr/siege/client/SiegeAtlasScreen.java
-          grep -q 'class SiegeRaceAtlasScreen' src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasScreen.java
-          grep -q 'class SiegeProgressionMapScreen' src/main/java/uy/santipdr/siege/client/SiegeProgressionMapScreen.java
-          grep -q 'class SiegeThreatBoardScreen' src/main/java/uy/santipdr/siege/client/SiegeThreatBoardScreen.java
-          grep -q 'class SiegeMediaRoomScreen' src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java
-          grep -q 'class SiegeKnowledgeFileScreen' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeFileScreen.java
-          grep -q 'class SiegeKnowledgeExpansion40' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
-          grep -q 'class SiegeKnowledgeRegistry' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java
-          grep -q 'BRIEFING, ATLAS, RACES, PROGRESSION, THREATS, MEDIA' src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java
-          grep -q 'new SiegeRaceAtlasScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
-          grep -q 'new SiegeProgressionMapScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
-          grep -q 'new SiegeMediaRoomScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
-          grep -q 'new SiegeBriefingScreen(screen)' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
-          grep -q 'SiegeKnowledgeRegistry.entries' src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java
-          grep -q 'progression-mobility-priority' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
-          grep -q 'combat-adaptation' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
-          grep -q 'prompt-precision-framework' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
-          grep -q 'research-open-questions' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
-          grep -q 'OBSAINAN' src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasData.java
-          grep -q 'FABLED' src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasData.java
-          grep -q 'CLASSIC' src/main/java/uy/santipdr/siege/client/SiegeClientProfile.java
-          grep -q 'HIGH_CONTRAST' src/main/java/uy/santipdr/siege/client/SiegeClientProfile.java
-          grep -q 'IMMERSIVE' src/main/java/uy/santipdr/siege/client/SiegeClientProfile.java
-          grep -q 'STRONGHOLD' src/main/java/uy/santipdr/siege/client/SiegeClientProfile.java
-          grep -q 'Mode { BUNDLED, MOODS, DVN_AUDIO, VISUALS }' src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java
-          grep -q 'arctic-standoff' src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java
-          grep -q 'industrial-zone' src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java
-          grep -q 'Convenience Store' src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java
-          grep -q 'From the Ashes' src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java
-          if grep -nEi 'mi inventario|mi personaje|mi partida actual|player notebook|private build' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasData.java src/main/java/uy/santipdr/siege/client/SiegeProgressionData.java; then
+          grep -q 'class SiegeKnowledgeExpansion50' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java
+          grep -q '3 bloques de hierro + 1 mesa de encantamientos' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java
+          grep -q 'No se muestran recetas anteriores' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java
+          grep -q 'enum Lane { DEPLOYMENT, INTELLIGENCE, REFERENCE }' src/main/java/uy/santipdr/siege/client/SiegeCommandNetwork.java
+          grep -q 'Mode { START, RACES, PROGRESSION, SYSTEMS, ITEMS }' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
+          grep -q 'enum View { RACES, PROGRESSION, SYSTEMS, ITEMS }' src/main/java/uy/santipdr/siege/client/SiegeAtlasIndex.java
+          grep -q 'new SiegeRaceVariantsScreen' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeFileScreen.java
+          grep -q 'class SiegeNavigationCleanupEvents' src/main/java/uy/santipdr/siege/client/SiegeNavigationCleanupEvents.java
+          if grep -nE 'TAMBIÉN VER|SEE ALSO' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeFileScreen.java src/main/java/uy/santipdr/siege/client/SiegeAtlasScreen.java; then
+            echo "Generic see-also text must not return to 5.00 player surfaces."
+            exit 1
+          fi
+          if grep -nEi 'mi inventario|mi personaje|mi partida actual|player notebook|private build' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasData.java src/main/java/uy/santipdr/siege/client/SiegeProgressionData.java; then
             echo "Server knowledge must remain non-personal."
             exit 1
           fi
@@ -133,15 +114,10 @@ jobs:
           fi
           grep -q 'GLFW_KEY_LEFT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'GLFW_KEY_RIGHT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'Math.floorMod(selected + direction, files.size())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'SiegeGuideScreen.Mode.ARCHIVE' src/main/java/uy/santipdr/siege/client/SiegeMenuThemeEvents.java
-          grep -q 'SiegeGuideScreen.Mode.ARMORY' src/main/java/uy/santipdr/siege/client/SiegeMenuThemeEvents.java
           if grep -nE 'FAVORITES|toggleFavoriteIntel|favoriteButton|addIndexButton|copyText|GUARDAR' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
-            echo "Removed Intel controls must not return"
+            echo "Removed Intel controls must not return."
             exit 1
           fi
-          grep -q 'trackAnnouncementDurationMs' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
-          grep -q 'backgroundDarkness' src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
           if grep -qE 'GLFW_KEY_(I|P|G|M|R|HOME|END)([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java; then
             echo "The title screen contains an unrequested keyboard shortcut."
             exit 1
@@ -165,8 +141,8 @@ jobs:
           path: |
             src/main/resources/assets/siege/sounds/music
             src/main/resources/assets/siege/music_durations.properties
-          key: music-v1-${{ runner.os }}-${{ hashFiles('assets-source/music-full/**', 'scripts/prepare-music.sh') }}
-      - name: Prepare full SIEGE soundtrack
+          key: music-v2-${{ runner.os }}-${{ hashFiles('assets-source/music-full/**', 'scripts/prepare-music.sh') }}
+      - name: Prepare clean SIEGE soundtrack
         if: steps.music-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
@@ -178,6 +154,22 @@ jobs:
             sudo apt-get install -y --no-install-recommends ffmpeg
           fi
           bash scripts/prepare-music.sh
+
+      - name: Verify every SIEGE audio file decodes cleanly
+        shell: bash
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
+            sudo apt-get update -o Acquire::Retries=3
+            sudo apt-get install -y --no-install-recommends ffmpeg
+          fi
+          for file in src/main/resources/assets/siege/sounds/music/*.ogg src/main/resources/assets/siege/sounds/ui/*.ogg; do
+            test -f "$file"
+            ffmpeg -v error -xerror -i "$file" -f null -
+            codec="$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 "$file")"
+            rate="$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of csv=p=0 "$file")"
+            test "$codec" = "vorbis"
+            test "$rate" = "44100"
+          done
 
       - name: Verify clean boss frames
         shell: bash
@@ -200,11 +192,13 @@ jobs:
 
       - name: Compile and verify
         run: gradle --no-daemon reportBuildTools clean build
+
       - uses: actions/upload-artifact@v4
         with:
           name: siege-menu-${{ github.sha }}
           path: build/libs/*.jar
           if-no-files-found: error
+
       - name: Publish validated jar for installer
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
