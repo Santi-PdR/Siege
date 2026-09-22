@@ -12,7 +12,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import uy.santipdr.siege.SiegeMod;
 
-/** SIEGE 2.50 home integration and session navigation trail. */
+/** SIEGE 2.50+ home integration and session navigation trail. */
 @Mod.EventBusSubscriber(modid = SiegeMod.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class Siege250MenuEvents {
     private Siege250MenuEvents() { }
@@ -40,8 +40,8 @@ public final class Siege250MenuEvents {
                 Minecraft.getInstance().setScreen(new SiegeOperationsHubScreen(screen));
             }, SiegeTheme.CYAN).setMainMenuStyle(true).withIcon("overview").setCompactCenter(true);
             operations.setTooltip(Tooltip.create(Component.literal(label(
-                    "Centro unificado de rutas, estado del cliente y búsqueda entre dossiers/equipamiento.",
-                    "Unified routes, client status and dossier/equipment search."))));
+                    "Rutas, estado, búsqueda global y Enciclopedia del Servidor.",
+                    "Routes, status, global search and the Server Encyclopedia."))));
 
             SiegeButton settings = new SiegeButton(x + opsW + gap, y, settingsW, h,
                     Component.literal(full < 165 ? label("AJ.", "CFG") : label("AJUSTES", "SETTINGS")), b -> {
@@ -71,6 +71,7 @@ public final class Siege250MenuEvents {
             case "SiegeMultiplayerScreen", "JoinMultiplayerScreen", "DirectJoinServerScreen", "ConnectScreen" ->
                     SiegeOperationsIndex.Route.DEPLOYMENT;
             case "IntelScreenV3", "IntelPortraitScreen" -> SiegeOperationsIndex.Route.INTEL;
+            case "SiegeKnowledgeScreen" -> SiegeOperationsIndex.Route.KNOWLEDGE;
             case "SiegeArchiveScreen" -> SiegeOperationsIndex.Route.FIELD_MANUAL;
             case "SiegeSystemScreen" -> SiegeOperationsIndex.Route.COMMAND;
             case "SiegeDiagnosticsScreen" -> SiegeOperationsIndex.Route.DIAGNOSTICS;

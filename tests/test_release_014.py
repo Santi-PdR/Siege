@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Durable release contracts from Atlas through SIEGE 2.50."""
+"""Durable release contracts from Atlas through SIEGE 3.00."""
 from pathlib import Path
 import re
 
@@ -18,6 +18,7 @@ CHANGELOGS = {
     "200": read("docs/CHANGELOG-2.0.0.md"),
     "225": read("docs/CHANGELOG-2.25.0.md"),
     "250": read("docs/CHANGELOG-2.50.0.md"),
+    "300": read("docs/CHANGELOG-3.0.0.md"),
 }
 
 BUILD = read("build.gradle")
@@ -45,6 +46,10 @@ OPS_INDEX = read("src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.ja
 OPS_HUB = read("src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java")
 OPS_EVENTS = read("src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java")
 ROUTE_HISTORY = read("src/main/java/uy/santipdr/siege/client/SiegeRouteHistory.java")
+KNOWLEDGE = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java")
+KNOWLEDGE_SCREEN = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java")
+KNOWLEDGE_ARCH = read("docs/KNOWLEDGE-ARCHITECTURE-3.0.md")
+QA_300 = read("docs/QA-3.0.0.md")
 WORKFLOW = read(".github/workflows/build.yml")
 
 
@@ -52,7 +57,6 @@ def numbered(text: str):
     return [int(v) for v in re.findall(r"(?m)^(\d+)\. ", text)]
 
 
-# Historical release documentation remains intact and 2.50 is the active build.
 assert numbered(CHANGELOGS["014"]) == list(range(1, 51))
 assert numbered(CHANGELOGS["050"]) == list(range(1, 51))
 assert numbered(CHANGELOGS["060"]) == list(range(1, 61))
@@ -64,11 +68,11 @@ assert numbered(CHANGELOGS["150"]) == list(range(1, 51))
 assert numbered(CHANGELOGS["200"]) == list(range(1, 81))
 assert numbered(CHANGELOGS["225"]) == list(range(1, 26))
 assert numbered(CHANGELOGS["250"]) == list(range(1, 51))
-assert "version = '2.50.0'" in BUILD
-for stale in ("version = '2.25.0'", "version = '2.0.0'", "version = '1.50.0'", "version = '1.26.0'"):
+assert numbered(CHANGELOGS["300"]) == list(range(1, 101))
+assert "version = '3.00.0'" in BUILD
+for stale in ("version = '2.50.0'", "version = '2.25.0'", "version = '2.0.0'", "version = '1.50.0'", "version = '1.26.0'"):
     assert stale not in BUILD, f"Stale active version returned: {stale}"
 
-# Intel remains conservative, categorized and free of removed controls.
 assert 'file("SUP-001", "ATLAS", "SUPER-UNIT", 5, "125,000,000", "atlas"' in INTEL_DATA
 assert "No se recuperaron datos verificados" in INTEL_DATA
 for forbidden in ("FAVORITES", "toggleFavoriteIntel", "favoriteButton", "addIndexButton", "copyText", "GUARDAR"):
@@ -92,11 +96,11 @@ for fragment in (
     assert fragment in INTEL_CURRENT, f"Missing unresolved UNKNOWN record: {fragment}"
 assert "No se encontró una referencia suficientemente fiable" in INTEL_CURRENT
 
-# Information domains stay separate while Operations becomes a navigation layer.
-for section in ("HOME", "OPERATIONS", "DEPLOYMENT", "INTEL", "REFERENCE", "FIELD_MANUAL", "SETTINGS",
+for section in ("HOME", "OPERATIONS", "KNOWLEDGE", "DEPLOYMENT", "INTEL", "REFERENCE", "FIELD_MANUAL", "SETTINGS",
                 "COMMAND", "DIAGNOSTICS", "BACKGROUNDS", "INSPECTOR", "MEDIA", "NATIVE"):
     assert section in NAVIGATION, f"Missing navigation section {section}"
 assert '"OPERATIONS HUB"' in NAVIGATION and '"OPS"' in NAVIGATION
+assert '"SERVER ENCYCLOPEDIA"' in NAVIGATION and '"ENC"' in NAVIGATION
 assert "enum Mode { ARCHIVE, ARMORY }" in GUIDE
 assert "new SiegeArchiveScreen(this)" in GUIDE
 assert '"third-justice"' in GUIDE_SUPPLEMENTAL
@@ -105,32 +109,73 @@ assert "new SiegeArchiveScreen(this)" not in SYSTEM
 for section in ("APPEARANCE", "MOTION", "AUDIO", "INTEL", "ACCESSIBILITY", "BACKGROUNDS", "SYSTEM"):
     assert section in SETTINGS
 
-# Ordinary chrome keeps qualitative health instead of the old unexplained percentage.
 assert "SiegeRuntimeStatus.readiness()" not in SCREEN_CHROME
 assert "readiness() + \"%\"" not in SCREEN_CHROME
 assert "SiegeRuntimeStatus.healthLabel" in SCREEN_CHROME
 assert "public static int readiness()" in DIAGNOSTIC
 
-# Operations Hub is additive: search + deep links + live state + session history.
+assert "class SiegeKnowledgeData" in KNOWLEDGE
+assert "enum Zone { SERVER, HISTORY }" in KNOWLEDGE
+for confidence in ("STAFF_CONFIRMED", "SYSTEM_OBSERVED", "HISTORICAL", "UNCONFIRMED", "CONTRADICTION"):
+    assert confidence in KNOWLEDGE, f"Missing encyclopedia confidence {confidence}"
+for domain in ("PROGRESSION", "EXECUTORS", "TRIALS", "STRUCTURES", "BOSSES", "MISSIONS", "RACES",
+               "ABILITIES", "MEDITATION", "ITEMS", "ASSEMBLING", "RELICS", "DIMENSIONS", "DEATH_REVIVE",
+               "RAIDS_EVENTS", "FACTIONS", "ECONOMY", "PROMPTS", "CONTRADICTIONS", "SOURCES"):
+    assert domain in KNOWLEDGE, f"Missing encyclopedia domain {domain}"
+for audit_value in ("488 archivos", "252/252 JSON", "251.065", "sin duplicados"):
+    assert audit_value in KNOWLEDGE, f"Encyclopedia audit lost: {audit_value}"
+for entry_id in (
+        "server-overview", "rarity-order", "race-catalog", "race-human", "race-hacker", "race-shark",
+        "race-saiyan", "race-deteriorer", "race-pharaoh", "race-apotheosis", "race-death", "race-cyborg",
+        "race-ghoul", "race-subhuman", "race-terrarian", "race-kaioshin", "race-dragon", "race-shinigami",
+        "race-majin", "race-undertale-au", "race-slots", "fabled-acquisition", "progression-v1-v4",
+        "trials-basics", "executors-basics", "structures-basics", "bosses-basics", "missions-npcs",
+        "dimensions-basics", "assembling-table", "item-geography-table", "item-daemonium-kit",
+        "item-improbability-scroll", "relic-basics", "relic-third-justice", "respawn-cards", "raids-basics",
+        "factions-basics", "economy-basics", "prompt-design"):
+    assert f'"{entry_id}"' in KNOWLEDGE, f"Missing server encyclopedia entry {entry_id}"
+assert "Común → Poco común → Raro → Ultra raro → Legendario → Obsainan → Mítico → Godly → Eternal → Fabled" in KNOWLEDGE
+assert '"item-geography-table"' in KNOWLEDGE and "120 wins" in KNOWLEDGE
+assert '"race-deteriorer-old-debuff", Zone.HISTORY' in KNOWLEDGE
+assert '"meditation-levels", Zone.HISTORY, Domain.CONTRADICTIONS' in KNOWLEDGE
+assert "class SiegeKnowledgeScreen" in KNOWLEDGE_SCREEN
+assert "Mode { START, RACES, SYSTEMS, HISTORY }" in KNOWLEDGE_SCREEN
+assert "ENCICLOPEDIA DEL SERVIDOR" in KNOWLEDGE_SCREEN
+assert "Guía general" in KNOWLEDGE_SCREEN
+assert "perfiles de jugadores" in KNOWLEDGE_ARCH
+assert "añadir únicamente información general" in KNOWLEDGE_ARCH
+assert "KnowledgeDataRegressionTest" in WORKFLOW
+assert "información personal" in QA_300
+
+for forbidden in (
+        "current-rust-guard", "current-deteriorer-snapshot", "current-meditation", "CURRENT_CONFIRMED",
+        "PLAYER_EXPERIENCE", "SIEGE current notebook", "player notebook", "Mi partida actual"):
+    assert forbidden not in KNOWLEDGE, f"Personal/player-specific encyclopedia data returned: {forbidden}"
+
 assert "class SiegeOperationsIndex" in OPS_INDEX
-for kind in ("ROUTE", "INTEL", "ARMORY"):
+for kind in ("ROUTE", "INTEL", "ARMORY", "KNOWLEDGE"):
     assert kind in OPS_INDEX
-for route in ("DEPLOYMENT", "INTEL", "ARCHIVE", "ARMORY", "FIELD_MANUAL", "COMMAND", "DIAGNOSTICS", "SETTINGS", "BACKGROUNDS"):
+for route in ("DEPLOYMENT", "INTEL", "KNOWLEDGE", "ARCHIVE", "ARMORY", "FIELD_MANUAL", "COMMAND", "DIAGNOSTICS", "SETTINGS", "BACKGROUNDS"):
     assert route in OPS_INDEX
 assert "Normalizer.normalize" in OPS_INDEX
 assert "IntelCatalog.files()" in OPS_INDEX
 assert "SiegeGuideSupplemental.entries" in OPS_INDEX
+assert "SiegeKnowledgeData.entries()" in OPS_INDEX
+assert "knowledgeId" in OPS_INDEX
 assert "class SiegeOperationsHubScreen" in OPS_HUB
 assert "SiegeOperationsIndex.search" in OPS_HUB
 assert "new IntelScreenV3(this, entry.intel())" in OPS_HUB
+assert "new SiegeKnowledgeScreen(this, entry.knowledgeId())" in OPS_HUB
+assert "new SiegeKnowledgeScreen(this)" in OPS_HUB
 assert "SiegeRuntimeStatus.intelLabel" in OPS_HUB
 assert "SiegeRuntimeStatus.audioLabel" in OPS_HUB
+assert "SiegeKnowledgeData.critical" in OPS_HUB
 assert "SiegeRouteHistory.snapshot" in OPS_HUB
 assert "siege.menu.settings" in OPS_EVENTS
 assert "new SiegeOperationsHubScreen(screen)" in OPS_EVENTS
+assert 'case "SiegeKnowledgeScreen"' in OPS_EVENTS
 assert "class SiegeRouteHistory" in ROUTE_HISTORY and "RECENT.remove(route)" in ROUTE_HISTORY
 
-# Tempest Jutcherson remains an easter egg and is not a normal menu photo.
 assert "TEMPEST_JUTCHERSON" in EASTER_EGGS
 assert '"tempest_jutcherson"' in EASTER_EGGS
 assert '"tempest_jutcherson"' not in SCENE_CATALOG
@@ -140,7 +185,6 @@ assert "standardIndex(long slot)" in SCENE_SCHEDULE
 assert "SiegeSceneCatalog.featuredIndex()" in SCENE_SCHEDULE
 assert "SiegeSceneCatalog.anomalyIndex()" not in SCENE_SCHEDULE
 
-# Deployment and hidden Singleplayer contracts are preserved.
 assert "SiegeLacontinuacion.exaroton.me:18736" in MULTIPLAYER
 assert "original.onPress()" in MULTIPLAYER
 for state in ("QUERYING", "OFFLINE", "NO_RESPONSE", "INCOMPATIBLE", "ONLINE"):
@@ -150,13 +194,12 @@ for forbidden_key in ("GLFW_KEY_I", "GLFW_KEY_P", "GLFW_KEY_G", "GLFW_KEY_M", "G
     assert re.search(rf"(?<![A-Z0-9_]){re.escape(forbidden_key)}(?![A-Z0-9_])", TITLE) is None, \
         f"Unrequested title shortcut returned: {forbidden_key}"
 
-# CI must validate the new systems rather than merely compiling them.
-assert "OperationsIndexTest" in WORKFLOW
-assert "GuiResourceRegressionTest" in WORKFLOW
-assert "SceneScheduleTest" in WORKFLOW
-assert "NavigationIdentityTest" in WORKFLOW
-assert "version = '2.50.0'" in WORKFLOW
+for required in ("OperationsIndexTest", "KnowledgeDataRegressionTest", "GuiResourceRegressionTest", "SceneScheduleTest", "NavigationIdentityTest"):
+    assert required in WORKFLOW, f"CI lost {required}"
+assert "version = '3.00.0'" in WORKFLOW
 assert "tempest_jutcherson" in WORKFLOW
 assert "SiegeEasterEggVault.java" in WORKFLOW
+assert "SiegeKnowledgeData.java" in WORKFLOW
+assert "SiegeKnowledgeScreen" in WORKFLOW
 
-print("SIEGE durable release contracts through 2.50 advanced Operations overhaul passed")
+print("SIEGE durable release contracts through 3.00 Server Encyclopedia overhaul passed")

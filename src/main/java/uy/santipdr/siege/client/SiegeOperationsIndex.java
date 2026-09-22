@@ -7,24 +7,25 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Cross-domain index for SIEGE 2.50. It does not own gameplay data: it points to
- * the existing Intel, Archive, Arsenal, Manual, Deployment and technical screens.
+ * Cross-domain index for SIEGE 3.00. It points to Intel, Archive, Armory,
+ * Field Manual, Server Encyclopedia, Deployment and technical screens.
  * Search is accent-insensitive and intentionally local/offline.
  */
 public final class SiegeOperationsIndex {
-    public enum Kind { ROUTE, INTEL, ARMORY }
+    public enum Kind { ROUTE, INTEL, ARMORY, KNOWLEDGE }
     public enum Route {
-        DEPLOYMENT, INTEL, ARCHIVE, ARMORY, FIELD_MANUAL,
+        DEPLOYMENT, INTEL, KNOWLEDGE, ARCHIVE, ARMORY, FIELD_MANUAL,
         COMMAND, DIAGNOSTICS, SETTINGS, BACKGROUNDS
     }
 
     public record Entry(Kind kind, String id, String title, String subtitle,
-                        String keywords, Route route, IntelEntry intel) {
+                        String keywords, Route route, IntelEntry intel, String knowledgeId) {
         public Entry {
             id = id == null ? "" : id;
             title = title == null ? "" : title;
             subtitle = subtitle == null ? "" : subtitle;
             keywords = keywords == null ? "" : keywords;
+            knowledgeId = knowledgeId == null ? "" : knowledgeId;
         }
     }
 
@@ -40,14 +41,24 @@ public final class SiegeOperationsIndex {
                     text.variants(), text.status(), text.description(), text.advisory());
             out.add(new Entry(Kind.INTEL, intel.code(), intel.name(),
                     intel.code() + " · " + intel.category() + " · HP " + intel.hp(),
-                    keywords, Route.INTEL, intel));
+                    keywords, Route.INTEL, intel, ""));
         }
 
         for (SiegeGuideData.Entry item : SiegeGuideSupplemental.entries(
                 SiegeGuideData.Category.ITEMS, "", spanish)) {
             out.add(new Entry(Kind.ARMORY, item.id(), item.title(spanish),
                     spanish ? "ARSENAL · EQUIPAMIENTO" : "ARMORY · EQUIPMENT",
-                    item.body(spanish), Route.ARMORY, null));
+                    item.body(spanish), Route.ARMORY, null, ""));
+        }
+
+        for (SiegeKnowledgeData.Entry knowledge : SiegeKnowledgeData.entries()) {
+            String zone = knowledge.zone() == SiegeKnowledgeData.Zone.SERVER
+                    ? (spanish ? "SERVIDOR" : "SERVER")
+                    : (spanish ? "HISTÓRICO" : "HISTORY");
+            String subtitle = zone + " · " + knowledge.domain().label(spanish)
+                    + " · " + knowledge.confidence().label(spanish);
+            out.add(new Entry(Kind.KNOWLEDGE, knowledge.id(), knowledge.title(spanish), subtitle,
+                    SiegeKnowledgeData.searchable(knowledge, spanish), Route.KNOWLEDGE, null, knowledge.id()));
         }
         return List.copyOf(out);
     }
@@ -97,6 +108,9 @@ public final class SiegeOperationsIndex {
         route(out, Route.INTEL, "INTEL",
                 es ? "Dossiers de unidades y amenazas" : "Unit and threat dossiers",
                 "dossier unit unidad advanced avanzado tank boss elite super unknown threat hp armament");
+        route(out, Route.KNOWLEDGE, es ? "ENCICLOPEDIA" : "ENCYCLOPEDIA",
+                es ? "Guía del servidor: razas, rarezas, progresión, Trials y sistemas" : "Server guide: races, rarities, progression, Trials and systems",
+                "knowledge conocimiento wiki encyclopedia enciclopedia server servidor races razas rarity rareza progression progresion trials executors ejecutores bosses structures estructuras relics reliquias revive dimensions dimensiones economy economia");
         route(out, Route.ARCHIVE, es ? "ARCHIVO" : "ARCHIVE",
                 es ? "Qué es SIEGE, 2044, facciones, Núcleo e inspiraciones" : "What SIEGE is, 2044, factions, Core and inspirations",
                 "siege eternal craft 2044 lore nucleo core factions facciones gates rifts inspirations inspiraciones chronicle cronica");
@@ -107,8 +121,8 @@ public final class SiegeOperationsIndex {
                 es ? "Estados de muerte, trauma, misiones y protocolos" : "Death states, trauma, missions and protocols",
                 "downed mangled mutilated dismembered disfigured bleeding burned erased shellshock death muerte trauma states estados protocol protocolo mission mision");
         route(out, Route.COMMAND, es ? "CENTRO DE COMANDO" : "COMMAND CENTER",
-                es ? "Perfil, prioridades y estado del cliente" : "Profile, priorities and client state",
-                "client cliente profile perfil health salud command command center priority prioridad");
+                es ? "Perfil visual y estado del cliente" : "Visual profile and client state",
+                "client cliente profile perfil health salud command command center technical tecnico");
         route(out, Route.DIAGNOSTICS, es ? "DIAGNÓSTICO" : "DIAGNOSTICS",
                 es ? "Problemas detectados y recuperación segura" : "Detected problems and safe recovery",
                 "diagnostic diagnostico recovery recuperacion repair reparar error warning aviso technical tecnico");
@@ -122,13 +136,16 @@ public final class SiegeOperationsIndex {
 
     private static void route(List<Entry> out, Route route, String title, String subtitle, String keywords) {
         out.add(new Entry(Kind.ROUTE, "route:" + route.name().toLowerCase(Locale.ROOT), title, subtitle,
-                keywords, route, null));
+                keywords, route, null, ""));
     }
 
     static String normalize(String value) {
         if (value == null) return "";
         String decomposed = Normalizer.normalize(value, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}+", "");
-        return decomposed.toLowerCase(Locale.ROOT).replace('·', ' ').replaceAll("[^a-z0-9?_-]+", " ").trim();
+        return decomposed.toLowerCase(Locale.ROOT)
+                .replace('·', ' ')
+                .replaceAll("[^a-z0-9?_-]+", " ")
+                .trim();
     }
 }

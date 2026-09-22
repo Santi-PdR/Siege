@@ -9,10 +9,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * SIEGE 2.50 operational front door. It unifies navigation and search without
- * merging the underlying information domains: dossiers remain Intel, world
- * knowledge remains Archive, wounds/protocols remain Field Manual, and client
- * health remains Command/Diagnostics.
+ * SIEGE 3.00 operational front door. Navigation, search and live client status
+ * are unified without collapsing information domains: Intel, Archive, Armory,
+ * Field Manual and the non-personal Eternal Craft Server Encyclopedia remain distinct.
  */
 public final class SiegeOperationsHubScreen extends Screen {
     private final Screen parent;
@@ -32,7 +31,7 @@ public final class SiegeOperationsHubScreen extends Screen {
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
-        compact = width < 560 || height < 330;
+        compact = width < 560 || height < 350;
         int margin = compact ? 7 : Math.max(12, width / 70);
         panelX = margin;
         panelY = compact ? 31 : 36;
@@ -46,10 +45,10 @@ public final class SiegeOperationsHubScreen extends Screen {
 
         routeButtonH = compact ? 18 : 20;
         routeGap = compact ? 3 : 5;
-        routeTop = panelY + (compact ? 60 : 68);
+        routeTop = panelY + (compact ? 68 : 84);
         int routeX = panelX + 10;
         int routeW = panelW - 20;
-        int cols = 3;
+        int cols = compact && panelW < 350 ? 2 : 3;
         int cellW = Math.max(1, (routeW - routeGap * (cols - 1)) / cols);
         SiegeOperationsIndex.Route[] routes = SiegeOperationsIndex.Route.values();
         for (int i = 0; i < routes.length; i++) {
@@ -73,7 +72,8 @@ public final class SiegeOperationsHubScreen extends Screen {
         searchBox = new EditBox(font, searchX, searchY, searchW, 20,
                 Component.literal(label("Búsqueda operacional", "Operational search")));
         searchBox.setHint(Component.literal(label(
-                "Buscar dossier, objeto o ruta…", "Search dossier, item or route…")));
+                "Buscar dossier, raza, rareza, Trial, reliquia, objeto o ruta…",
+                "Search dossier, race, rarity, Trial, relic, item or route…")));
         searchBox.setResponder(value -> refreshResults());
         addRenderableWidget(searchBox);
 
@@ -111,6 +111,7 @@ public final class SiegeOperationsHubScreen extends Screen {
                 case ROUTE -> label("RUTA", "ROUTE");
                 case INTEL -> "INTEL";
                 case ARMORY -> label("ARSENAL", "ARMORY");
+                case KNOWLEDGE -> label("ENCICLOPEDIA", "ENCYCLOPEDIA");
             };
             button.setMessage(Component.literal(prefix + " · " + entry.title() + "  //  " + entry.subtitle()));
         }
@@ -125,6 +126,11 @@ public final class SiegeOperationsHubScreen extends Screen {
             minecraft.setScreen(new IntelScreenV3(this, entry.intel()));
             return;
         }
+        if (entry.kind() == SiegeOperationsIndex.Kind.KNOWLEDGE && !entry.knowledgeId().isBlank()) {
+            SiegeRouteHistory.record(SiegeOperationsIndex.Route.KNOWLEDGE);
+            minecraft.setScreen(new SiegeKnowledgeScreen(this, entry.knowledgeId()));
+            return;
+        }
         openRoute(entry.route());
     }
 
@@ -135,6 +141,7 @@ public final class SiegeOperationsHubScreen extends Screen {
         switch (route) {
             case DEPLOYMENT -> minecraft.setScreen(new SiegeMultiplayerScreen(this));
             case INTEL -> minecraft.setScreen(new IntelScreenV3(this));
+            case KNOWLEDGE -> minecraft.setScreen(new SiegeKnowledgeScreen(this));
             case ARCHIVE -> minecraft.setScreen(new SiegeGuideScreen(this, SiegeGuideScreen.Mode.ARCHIVE));
             case ARMORY -> minecraft.setScreen(new SiegeGuideScreen(this, SiegeGuideScreen.Mode.ARMORY));
             case FIELD_MANUAL -> minecraft.setScreen(new SiegeArchiveScreen(this));
@@ -157,8 +164,8 @@ public final class SiegeOperationsHubScreen extends Screen {
         String title = label("CENTRO DE OPERACIONES", "OPERATIONS HUB") + " // " + SiegeRuntimeStatus.version();
         g.drawString(font, fit(title, panelW - 24), tx, ty, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Buscar, verificar y abrir cada dominio sin mezclar su información.",
-                "Search, verify and open every domain without mixing its information."), panelW - 24),
+                "Buscar y abrir dossiers, guía del servidor, archivo, arsenal y herramientas técnicas desde un solo lugar.",
+                "Search and open dossiers, server guide, archive, armory and technical tools from one place."), panelW - 24),
                 tx, ty + 12, SiegeTheme.MUTED, false);
 
         int statusY = ty + 30;
@@ -173,6 +180,10 @@ public final class SiegeOperationsHubScreen extends Screen {
             String line = SiegeBackgrounds.sceneTag(scene, spanish()) + " · " + SiegeBackgrounds.name(scene, spanish())
                     + "   |   " + SiegeRuntimeStatus.audioLabel(spanish());
             g.drawString(font, fit(line, panelW - 24), tx, statusY + 22, SiegeTheme.CYAN, false);
+            String knowledge = (spanish() ? "ENCICLOPEDIA " : "ENCYCLOPEDIA ") + SiegeKnowledgeData.entries().size()
+                    + " · " + (spanish() ? "TEMAS CRÍTICOS " : "CRITICAL TOPICS ") + SiegeKnowledgeData.critical().size()
+                    + " · " + (spanish() ? "FUENTES FECHADAS" : "DATED SOURCES");
+            g.drawString(font, fit(knowledge, panelW - 24), tx, statusY + 33, SiegeTheme.GREEN, false);
         }
 
         SiegeTheme.divider(g, panelX + 10, routeTop - 7, panelW - 20, SiegeTheme.CYAN);
@@ -210,6 +221,7 @@ public final class SiegeOperationsHubScreen extends Screen {
         return switch (route) {
             case DEPLOYMENT -> label("DESPLIEGUE", "DEPLOYMENT");
             case INTEL -> "INTEL";
+            case KNOWLEDGE -> label("ENCICLOPEDIA", "ENCYCLOPEDIA");
             case ARCHIVE -> label("ARCHIVO", "ARCHIVE");
             case ARMORY -> label("ARSENAL", "ARMORY");
             case FIELD_MANUAL -> label("MANUAL", "MANUAL");
@@ -224,6 +236,7 @@ public final class SiegeOperationsHubScreen extends Screen {
         return switch (route) {
             case DEPLOYMENT -> "DEP";
             case INTEL -> "INT";
+            case KNOWLEDGE -> "ENC";
             case ARCHIVE -> "ARC";
             case ARMORY -> "ARS";
             case FIELD_MANUAL -> "FLD";
@@ -238,10 +251,13 @@ public final class SiegeOperationsHubScreen extends Screen {
         return switch (route) {
             case DEPLOYMENT -> label("Servidor oficial, compatibilidad y conexión.", "Official server, compatibility and connection.");
             case INTEL -> label("Dossiers actuales de unidades y amenazas.", "Current unit and threat dossiers.");
+            case KNOWLEDGE -> label(
+                    "Guía general del servidor: razas, rarezas, progresión, Trials, Executores, sistemas y cambios históricos.",
+                    "General server guide: races, rarities, progression, Trials, Executors, systems and historical changes.");
             case ARCHIVE -> label("SIEGE, 2044, facciones, Núcleo, Gates/Rifts e inspiraciones.", "SIEGE, 2044, factions, Core, Gates/Rifts and inspirations.");
             case ARMORY -> label("Equipamiento, objetos y evidencia multimedia.", "Equipment, items and multimedia evidence.");
             case FIELD_MANUAL -> label("Estados de muerte/heridas, misiones y protocolos.", "Death/injury states, missions and protocols.");
-            case COMMAND -> label("Perfil, prioridades y estado del cliente.", "Profile, priorities and client state.");
+            case COMMAND -> label("Perfil visual y estado del cliente.", "Visual profile and client state.");
             case DIAGNOSTICS -> label("Problemas técnicos y recuperación explícita.", "Technical problems and explicit recovery.");
             case SETTINGS -> label("Configuración visual, audio, Intel y accesibilidad.", "Visual, audio, Intel and accessibility configuration.");
             case BACKGROUNDS -> label("Galería y rotación de escenas del menú.", "Menu scene gallery and rotation.");
@@ -252,6 +268,7 @@ public final class SiegeOperationsHubScreen extends Screen {
         return switch (route) {
             case DEPLOYMENT -> SiegeTheme.RED;
             case INTEL, ARCHIVE, ARMORY, FIELD_MANUAL -> SiegeTheme.GOLD;
+            case KNOWLEDGE -> SiegeTheme.GREEN;
             case COMMAND -> SiegeTheme.CYAN;
             case DIAGNOSTICS -> SiegeTheme.ORANGE;
             case SETTINGS -> SiegeTheme.RED;
@@ -263,6 +280,7 @@ public final class SiegeOperationsHubScreen extends Screen {
         return switch (route) {
             case DEPLOYMENT -> "connect";
             case INTEL -> "intel";
+            case KNOWLEDGE -> "search";
             case ARCHIVE -> "overview";
             case ARMORY -> "package";
             case FIELD_MANUAL -> "overview";
