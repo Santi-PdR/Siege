@@ -20,16 +20,11 @@ DARKEST_SOURCE="$SOURCE_DIR/darkest_of_days.ogg"
 DVN_SOURCE="$SOURCE_DIR/dvn_lobby_music.ogg"
 HEAVEN_SOURCE="$SOURCE_DIR/heavens_hell_sent_gift.ogg"
 
-# The clean owner uploads supplied in chat on 2026-09-09 are the authoritative
-# masters. Tale, Darkest and Heaven are preserved from first packet to final
-# packet. The DVN lobby mix contains several songs; only Kaptain - Music Box is
-# part of the SIEGE soundtrack. Its boundaries are the two long silence gaps
-# detected in the supplied mix:
-#   silence ends  179.599646 s -> Kaptain begins
-#   silence starts 319.568250 s -> Kaptain ends
 KAPTAIN_START="179.599646"
 KAPTAIN_END="319.568250"
 KAPTAIN_DURATION="139.968604"
+OUTPUT_RATE="44100"
+HEADROOM_DB="-3dB"
 
 for source in "$TALE_SOURCE" "$DARKEST_SOURCE" "$DVN_SOURCE" "$HEAVEN_SOURCE"; do
   if [ ! -f "$source" ]; then
@@ -58,8 +53,6 @@ validate_source() {
   printf 'SIEGE source: %-24s %8sms\n' "$label" "$duration_ms"
 }
 
-# Guard against ever reintroducing the old ~22-25 second damaged repository
-# blobs. These minima are intentionally slightly below the supplied durations.
 validate_source "Tale of a Cruel World" "$TALE_SOURCE" 260000
 validate_source "Darkest of Days" "$DARKEST_SOURCE" 280000
 validate_source "DVN lobby mix" "$DVN_SOURCE" 535000
@@ -70,12 +63,14 @@ encode_full() {
   local source="$2"
   local target="$TARGET_DIR/$key.ogg"
 
-  # Minecraft 1.20.1 expects Vorbis. No -ss, -t, atrim or other time filter is
-  # allowed for a full track: the clean source is converted from beginning to end.
+  # 5.00 deliberately leaves headroom before Vorbis encoding. The 4.00 build
+  # decoded several tracks above 0 dBFS, which can turn into harsh crackling on
+  # some OpenAL/device combinations. 44.1 kHz also matches the SIEGE UI sounds.
   ffmpeg -hide_banner -loglevel error -y \
     -i "$source" \
     -map_metadata -1 -vn \
-    -ar 48000 -c:a libvorbis -q:a 5 \
+    -af "volume=$HEADROOM_DB" \
+    -ar "$OUTPUT_RATE" -c:a libvorbis -q:a 5 \
     "$target"
 }
 
@@ -83,14 +78,12 @@ encode_full "tale_cruel_world" "$TALE_SOURCE"
 encode_full "darkest_of_days" "$DARKEST_SOURCE"
 encode_full "heavens_hell_sent_gift" "$HEAVEN_SOURCE"
 
-# DVN is the only source intentionally split. Extract Kaptain - Music Box from
-# the exact music interval between the two silence separators; do not package
-# the rest of the 8:59 lobby compilation.
 ffmpeg -hide_banner -loglevel error -y \
   -ss "$KAPTAIN_START" -i "$DVN_SOURCE" \
   -t "$KAPTAIN_DURATION" \
   -map_metadata -1 -vn \
-  -ar 48000 -c:a libvorbis -q:a 5 \
+  -af "volume=$HEADROOM_DB" \
+  -ar "$OUTPUT_RATE" -c:a libvorbis -q:a 5 \
   "$TARGET_DIR/kaptain_music_box.ogg"
 
 tracks=(
@@ -100,8 +93,6 @@ tracks=(
   heavens_hell_sent_gift
 )
 
-# Expected ranges are based on the exact clean files supplied by the owner.
-# They catch accidental truncation or accidentally packaging all of DVN.
 declare -A min_ms=(
   [tale_cruel_world]=260000
   [darkest_of_days]=280000
@@ -118,10 +109,23 @@ declare -A max_ms=(
 for key in "${tracks[@]}"; do
   target="$TARGET_DIR/$key.ogg"
   codec="$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 "$target")"
+  rate="$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of csv=p=0 "$target")"
+  channels="$(ffprobe -v error -select_streams a:0 -show_entries stream=channels -of csv=p=0 "$target")"
   if [ "$codec" != "vorbis" ]; then
     echo "Prepared track $key is not Ogg Vorbis: $codec" >&2
     exit 1
   fi
+  if [ "$rate" != "$OUTPUT_RATE" ]; then
+    echo "Prepared track $key has wrong sample rate: $rate" >&2
+    exit 1
+  fi
+  if [ "$channels" -ne 2 ]; then
+    echo "Prepared track $key must remain stereo: $channels channels" >&2
+    exit 1
+  fi
+
+  # Decode the whole file once. Corrupt packets must fail CI instead of reaching Minecraft.
+  ffmpeg -v error -xerror -i "$target" -f null -
 
   duration_ms="$(probe_ms "$target")"
   if [ "$duration_ms" -lt "${min_ms[$key]}" ] || [ "$duration_ms" -gt "${max_ms[$key]}" ]; then
@@ -129,8 +133,20 @@ for key in "${tracks[@]}"; do
     exit 1
   fi
 
+  # Check the decoded stream rather than trusting source/container metadata.
+  peak="$(ffmpeg -hide_banner -nostats -i "$target" -af volumedetect -f null - 2>&1 \
+    | sed -n 's/.*max_volume: \([-0-9.]*\) dB.*/\1/p' | tail -n1)"
+  if [ -z "$peak" ]; then
+    echo "Could not measure decoded peak for $key" >&2
+    exit 1
+  fi
+  if ! awk -v p="$peak" 'BEGIN { exit !(p <= -1.0) }'; then
+    echo "Prepared track $key has insufficient decoded headroom: ${peak} dB" >&2
+    exit 1
+  fi
+
   printf '%s=%s\n' "$key" "$duration_ms" >> "$DURATION_FILE"
-  printf 'SIEGE music: %-28s %8sms  codec=%s\n' "$key" "$duration_ms" "$codec"
+  printf 'SIEGE music: %-28s %8sms  codec=%s rate=%s peak=%sdB\n' "$key" "$duration_ms" "$codec" "$rate" "$peak"
 done
 
 printf '\nGenerated duration metadata:\n'
