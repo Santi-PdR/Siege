@@ -7,24 +7,25 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Cross-domain index for SIEGE 2.50. It does not own gameplay data: it points to
- * the existing Intel, Archive, Arsenal, Manual, Deployment and technical screens.
- * Search is accent-insensitive and intentionally local/offline.
+ * Cross-domain index for SIEGE 3.00. It does not own gameplay data: it points to
+ * Intel, Archive, Armory, Field Manual, Knowledge, Deployment and technical
+ * screens. Search is accent-insensitive and intentionally local/offline.
  */
 public final class SiegeOperationsIndex {
-    public enum Kind { ROUTE, INTEL, ARMORY }
+    public enum Kind { ROUTE, INTEL, ARMORY, KNOWLEDGE }
     public enum Route {
-        DEPLOYMENT, INTEL, ARCHIVE, ARMORY, FIELD_MANUAL,
+        DEPLOYMENT, INTEL, KNOWLEDGE, ARCHIVE, ARMORY, FIELD_MANUAL,
         COMMAND, DIAGNOSTICS, SETTINGS, BACKGROUNDS
     }
 
     public record Entry(Kind kind, String id, String title, String subtitle,
-                        String keywords, Route route, IntelEntry intel) {
+                        String keywords, Route route, IntelEntry intel, String knowledgeId) {
         public Entry {
             id = id == null ? "" : id;
             title = title == null ? "" : title;
             subtitle = subtitle == null ? "" : subtitle;
             keywords = keywords == null ? "" : keywords;
+            knowledgeId = knowledgeId == null ? "" : knowledgeId;
         }
     }
 
@@ -40,14 +41,24 @@ public final class SiegeOperationsIndex {
                     text.variants(), text.status(), text.description(), text.advisory());
             out.add(new Entry(Kind.INTEL, intel.code(), intel.name(),
                     intel.code() + " · " + intel.category() + " · HP " + intel.hp(),
-                    keywords, Route.INTEL, intel));
+                    keywords, Route.INTEL, intel, ""));
         }
 
         for (SiegeGuideData.Entry item : SiegeGuideSupplemental.entries(
                 SiegeGuideData.Category.ITEMS, "", spanish)) {
             out.add(new Entry(Kind.ARMORY, item.id(), item.title(spanish),
                     spanish ? "ARSENAL · EQUIPAMIENTO" : "ARMORY · EQUIPMENT",
-                    item.body(spanish), Route.ARMORY, null));
+                    item.body(spanish), Route.ARMORY, null, ""));
+        }
+
+        for (SiegeKnowledgeData.Entry knowledge : SiegeKnowledgeData.entries()) {
+            String zone = knowledge.zone() == SiegeKnowledgeData.Zone.CURRENT
+                    ? (spanish ? "SIEGE ACTUAL" : "CURRENT SIEGE")
+                    : (spanish ? "ENCICLOPEDIA" : "ENCYCLOPEDIA");
+            String subtitle = zone + " · " + knowledge.domain().label(spanish)
+                    + " · " + knowledge.confidence().label(spanish);
+            out.add(new Entry(Kind.KNOWLEDGE, knowledge.id(), knowledge.title(spanish), subtitle,
+                    SiegeKnowledgeData.searchable(knowledge, spanish), Route.KNOWLEDGE, null, knowledge.id()));
         }
         return List.copyOf(out);
     }
@@ -97,6 +108,9 @@ public final class SiegeOperationsIndex {
         route(out, Route.INTEL, "INTEL",
                 es ? "Dossiers de unidades y amenazas" : "Unit and threat dossiers",
                 "dossier unit unidad advanced avanzado tank boss elite super unknown threat hp armament");
+        route(out, Route.KNOWLEDGE, es ? "CONOCIMIENTO" : "KNOWLEDGE",
+                es ? "SIEGE actual, enciclopedia, supervivencia y fuentes" : "Current SIEGE, encyclopedia, survival and sources",
+                "knowledge conocimiento wiki encyclopedia enciclopedia alex advice consejos current actual deteriorer re meditation meditacion relics reliquias sources fuentes survival supervivencia discord history historico");
         route(out, Route.ARCHIVE, es ? "ARCHIVO" : "ARCHIVE",
                 es ? "Qué es SIEGE, 2044, facciones, Núcleo e inspiraciones" : "What SIEGE is, 2044, factions, Core and inspirations",
                 "siege eternal craft 2044 lore nucleo core factions facciones gates rifts inspirations inspiraciones chronicle cronica");
@@ -122,7 +136,7 @@ public final class SiegeOperationsIndex {
 
     private static void route(List<Entry> out, Route route, String title, String subtitle, String keywords) {
         out.add(new Entry(Kind.ROUTE, "route:" + route.name().toLowerCase(Locale.ROOT), title, subtitle,
-                keywords, route, null));
+                keywords, route, null, ""));
     }
 
     static String normalize(String value) {
