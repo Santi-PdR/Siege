@@ -46,11 +46,10 @@ public final class SiegeOperationsIndex {
         }
         for (SiegeKnowledgeData.Entry knowledge : SiegeKnowledgeRegistry.entries()) {
             String zone = knowledge.zone() == SiegeKnowledgeData.Zone.SERVER
-                    ? (spanish ? "SERVIDOR" : "SERVER") : (spanish ? "HISTÓRICO" : "HISTORY");
-            String subtitle = zone + " · " + knowledge.domain().label(spanish)
-                    + " · " + knowledge.confidence().label(spanish);
+                    ? (spanish ? "SERVIDOR" : "SERVER") : (spanish ? "ANTIGUO" : "HISTORY");
+            String subtitle = zone + " · " + knowledge.domain().label(spanish);
             out.add(new Entry(Kind.KNOWLEDGE, knowledge.id(), knowledge.title(spanish), subtitle,
-                    SiegeKnowledgeRegistry.searchable(knowledge, spanish), Route.ATLAS, null, knowledge.id()));
+                    SiegeKnowledgeRegistry.searchable(knowledge, spanish), Route.KNOWLEDGE, null, knowledge.id()));
         }
         return List.copyOf(out);
     }
@@ -91,10 +90,10 @@ public final class SiegeOperationsIndex {
                 es ? "Ruta rápida para nuevos jugadores" : "Fast route for new players",
                 "start empezar newcomer nuevo new player briefing beginner principiante basics básico supervivencia survival");
         route(out, Route.ATLAS, es ? "ATLAS TÁCTICO" : "TACTICAL ATLAS",
-                es ? "Sistemas, investigación e histórico" : "Systems, research and history",
-                "atlas knowledge conocimiento wiki encyclopedia enciclopedia systems sistemas trials executors ejecutores structures estructuras relics reliquias research investigar history histórico");
+                es ? "Temas del servidor organizados" : "Organized server topics",
+                "atlas knowledge conocimiento wiki encyclopedia enciclopedia systems sistemas trials executors ejecutores structures estructuras relics reliquias history histórico");
         route(out, Route.RACES, es ? "ATLAS DE RAZAS" : "RACE ATLAS",
-                es ? "Razas, rarezas, rutas de progresión y fuentes" : "Races, rarities, progression routes and sources",
+                es ? "Razas, rarezas y rutas de progresión" : "Races, rarities and progression routes",
                 "race races raza razas rarity rareza obsainan fabled eternal saiyan deteriorer hacker cyborg human progression progresion");
         route(out, Route.PROGRESSION, es ? "PROGRESIÓN" : "PROGRESSION MAP",
                 es ? "V1→V4, rutas especiales, Trials y sistemas avanzados" : "V1→V4, special routes, Trials and advanced systems",
@@ -110,9 +109,9 @@ public final class SiegeOperationsIndex {
                 "server servidor online offline ping latency latencia connect conectar destino compatibility compatibilidad");
         route(out, Route.INTEL, "INTEL", es ? "Dossiers de unidades y amenazas" : "Unit and threat dossiers",
                 "dossier unit unidad advanced avanzado tank boss elite super unknown threat hp armament");
-        route(out, Route.KNOWLEDGE, es ? "ENCICLOPEDIA" : "ENCYCLOPEDIA",
-                es ? "Archivo detallado del servidor" : "Detailed server archive",
-                "knowledge conocimiento server servidor detail detalle sources fuentes");
+        route(out, Route.KNOWLEDGE, es ? "GUÍA DEL SERVIDOR" : "SERVER GUIDE",
+                es ? "Información por categorías para entender Eternal Craft" : "Category-based information for understanding Eternal Craft",
+                "guide guia knowledge conocimiento server servidor race races progression trials executors bosses relics revive dimensions economy");
         route(out, Route.ARCHIVE, es ? "ARCHIVO" : "ARCHIVE",
                 es ? "Qué es SIEGE, 2044, facciones, Núcleo e inspiraciones" : "What SIEGE is, 2044, factions, Core and inspirations",
                 "siege eternal craft 2044 lore nucleo core factions facciones gates rifts inspirations inspiraciones chronicle cronica");
@@ -122,9 +121,9 @@ public final class SiegeOperationsIndex {
                 es ? "Estados de muerte, trauma, misiones y protocolos" : "Death states, trauma, missions and protocols",
                 "downed mangled mutilated dismembered disfigured bleeding burned erased shellshock death muerte trauma states estados protocol protocolo mission mision");
         route(out, Route.COMMAND, es ? "CENTRO DE COMANDO" : "COMMAND CENTER", es ? "Perfil visual y estado del cliente" : "Visual profile and client state",
-                "client cliente profile perfil health salud command command center technical tecnico immersive inmersivo contrast contraste classic clasico");
+                "client cliente profile perfil health salud command command center immersive inmersivo contrast contraste classic clasico");
         route(out, Route.DIAGNOSTICS, es ? "DIAGNÓSTICO" : "DIAGNOSTICS", es ? "Problemas detectados y recuperación segura" : "Detected problems and safe recovery",
-                "diagnostic diagnostico recovery recuperacion repair reparar error warning aviso technical tecnico");
+                "diagnostic diagnostico recovery recuperacion repair reparar error warning aviso");
         route(out, Route.SETTINGS, es ? "AJUSTES" : "SETTINGS", es ? "Apariencia, movimiento, audio, Intel y accesibilidad" : "Appearance, motion, audio, Intel and accessibility",
                 "settings ajustes appearance apariencia motion movimiento audio intel accessibility accesibilidad configuration configuracion");
         route(out, Route.BACKGROUNDS, es ? "FONDOS" : "BACKGROUNDS", es ? "Galería, rotación y contraste de escenas" : "Scene gallery, rotation and contrast",
