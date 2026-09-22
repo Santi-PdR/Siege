@@ -28,13 +28,13 @@ jobs:
         with:
           gradle-version: '8.8'
 
-      - name: Prepare SIEGE 2.50 visual masters
+      - name: Prepare SIEGE 3.00 visual masters
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow
           python3 scripts/prepare-backgrounds-hd.py
 
-      - name: Verify responsive layouts, reference architecture and Operations search
+      - name: Verify responsive layouts, knowledge architecture and Operations search
         shell: bash
         run: |
           mkdir -p build/layout-tests
@@ -52,7 +52,9 @@ jobs:
           java -cp build/config-tests ConfigRegressionTest
           javac -d build/scene-tests src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java tests/SceneScheduleTest.java
           java -cp build/scene-tests SceneScheduleTest
-          javac -d build/ops-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java src/main/java/uy/santipdr/siege/client/SiegeRouteHistory.java tests/OperationsIndexTest.java
+          javac -d build/knowledge-tests src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java tests/KnowledgeDataRegressionTest.java
+          java -cp build/knowledge-tests KnowledgeDataRegressionTest
+          javac -d build/ops-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java src/main/java/uy/santipdr/siege/client/SiegeRouteHistory.java tests/OperationsIndexTest.java
           java -cp build/ops-tests OperationsIndexTest
           python3 tests/test_installer.py
           python3 tests/test_release_014.py
@@ -72,14 +74,23 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify SIEGE 2.50 navigation and easter-egg contracts
+      - name: Verify SIEGE 3.00 knowledge, navigation and easter-egg contracts
         shell: bash
         run: |
-          grep -q "version = '2.50.0'" build.gradle
+          grep -q "version = '3.00.0'" build.gradle
           grep -q 'class SiegeOperationsHubScreen' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
+          grep -q 'class SiegeKnowledgeScreen' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
+          grep -q 'class SiegeKnowledgeData' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
           grep -q 'SiegeOperationsIndex.search' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
+          grep -q 'new SiegeKnowledgeScreen(this, entry.knowledgeId())' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
           grep -q 'new SiegeOperationsHubScreen(screen)' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
-          grep -q 'siege.menu.settings' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
+          grep -q 'case "SiegeKnowledgeScreen"' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
+          grep -q 'CURRENT, ENCYCLOPEDIA' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q 'ALEX_CONFIRMED' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q 'HISTORICAL' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q 'UNCONFIRMED' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q 'REVELAR ARCHIVO' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
+          grep -q '251.065' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
           grep -q 'TEMPEST_JUTCHERSON' src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java
           if grep -q 'tempest_jutcherson' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java; then
             echo "Tempest Jutcherson must not be a normal menu/gallery scene."
@@ -118,8 +129,8 @@ jobs:
           fi
           grep -q 'trackAnnouncementDurationMs' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
           grep -q 'backgroundDarkness' src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
-          if grep -R -n 'version = .2\.25\.0.' build.gradle; then
-            echo "Stale 2.25 active version found."
+          if grep -qE "version = '2\.50\.0'" build.gradle; then
+            echo "Stale 2.50 active version found."
             exit 1
           fi
           if grep -qE 'GLFW_KEY_(I|P|G|M|R|HOME|END)([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java; then
