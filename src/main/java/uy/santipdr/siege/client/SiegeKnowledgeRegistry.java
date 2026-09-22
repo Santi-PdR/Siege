@@ -3,41 +3,79 @@ package uy.santipdr.siege.client;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
-/** Unified read-only knowledge registry for SIEGE 4.00. */
+/** Current-first player knowledge registry for SIEGE 5.00. */
 public final class SiegeKnowledgeRegistry {
-    private static final List<SiegeKnowledgeData.Entry> ALL = java.util.stream.Stream
-            .concat(SiegeKnowledgeData.entries().stream(), SiegeKnowledgeExpansion40.entries().stream())
+    private static final Set<String> HIDDEN_PLAYER_IDS = Set.of(
+            "source-policy", "source-audit", "research-open-questions",
+            "progression-mobility-priority", "prompt-precision-framework",
+            "assembling-planning", "revive-repeat-penalties", "deteriorer-re-overflow-history"
+    );
+
+    /** Complete maintenance history, including old/conflicting records. Never rendered directly. */
+    private static final List<SiegeKnowledgeData.Entry> MAINTENANCE = java.util.stream.Stream.of(
+            SiegeKnowledgeData.entries(), SiegeKnowledgeExpansion40.entries(), SiegeKnowledgeExpansion50.entries())
+            .flatMap(List::stream).toList();
+
+    /**
+     * One current record per ID. Newer generations replace older text rather than showing both
+     * versions to a player. This is especially important for recipes and revival rules.
+     */
+    private static final Map<String, SiegeKnowledgeData.Entry> CURRENT_BY_ID = buildCurrent();
+    private static final List<SiegeKnowledgeData.Entry> PUBLIC = CURRENT_BY_ID.values().stream()
+            .filter(SiegeKnowledgeRegistry::playerFacing)
             .toList();
 
     private SiegeKnowledgeRegistry() { }
 
-    public static List<SiegeKnowledgeData.Entry> entries() { return ALL; }
+    private static Map<String, SiegeKnowledgeData.Entry> buildCurrent() {
+        LinkedHashMap<String, SiegeKnowledgeData.Entry> out = new LinkedHashMap<>();
+        for (SiegeKnowledgeData.Entry entry : SiegeKnowledgeData.entries())
+            if (entry.zone() == SiegeKnowledgeData.Zone.SERVER) out.put(entry.id(), entry);
+        for (SiegeKnowledgeData.Entry entry : SiegeKnowledgeExpansion40.entries())
+            if (entry.zone() == SiegeKnowledgeData.Zone.SERVER) out.put(entry.id(), entry);
+        for (SiegeKnowledgeData.Entry entry : SiegeKnowledgeExpansion50.entries())
+            if (entry.zone() == SiegeKnowledgeData.Zone.SERVER) out.put(entry.id(), entry);
+        return Map.copyOf(out);
+    }
+
+    private static boolean playerFacing(SiegeKnowledgeData.Entry entry) {
+        if (entry == null || entry.zone() != SiegeKnowledgeData.Zone.SERVER) return false;
+        if (entry.domain() == SiegeKnowledgeData.Domain.SOURCES
+                || entry.domain() == SiegeKnowledgeData.Domain.CONTRADICTIONS) return false;
+        return !HIDDEN_PLAYER_IDS.contains(entry.id());
+    }
+
+    /** Current information suitable for normal SIEGE interfaces. */
+    public static List<SiegeKnowledgeData.Entry> entries() { return PUBLIC; }
+
+    /** Internal history for maintenance/tests; not a player-facing list. */
+    public static List<SiegeKnowledgeData.Entry> maintenanceEntries() { return MAINTENANCE; }
 
     public static SiegeKnowledgeData.Entry get(String id) {
         if (id == null) return null;
-        for (SiegeKnowledgeData.Entry entry : ALL) if (entry.id().equals(id)) return entry;
-        return null;
+        return CURRENT_BY_ID.get(id);
     }
 
     public static List<SiegeKnowledgeData.Entry> critical() {
-        return ALL.stream().filter(SiegeKnowledgeData.Entry::critical)
-                .sorted(Comparator.comparing((SiegeKnowledgeData.Entry e) ->
-                                e.zone() == SiegeKnowledgeData.Zone.SERVER ? 0 : 1)
-                        .thenComparing(SiegeKnowledgeData.Entry::id))
+        return PUBLIC.stream().filter(SiegeKnowledgeData.Entry::critical)
+                .sorted(Comparator.comparing(SiegeKnowledgeData.Entry::id))
                 .toList();
     }
 
     public static List<SiegeKnowledgeData.Entry> search(String query, boolean spanish, int limit) {
         int safeLimit = Math.max(1, Math.min(128, limit));
         String q = normalize(query);
-        if (q.isBlank()) return ALL.stream().limit(safeLimit).toList();
+        if (q.isBlank()) return PUBLIC.stream().limit(safeLimit).toList();
 
         record Ranked(SiegeKnowledgeData.Entry entry, int score) { }
         List<Ranked> ranked = new ArrayList<>();
-        for (SiegeKnowledgeData.Entry entry : ALL) {
+        for (SiegeKnowledgeData.Entry entry : PUBLIC) {
             int score = score(entry, q, spanish);
             if (score > 0) ranked.add(new Ranked(entry, score));
         }
