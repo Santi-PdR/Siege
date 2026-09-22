@@ -23,6 +23,7 @@ public final class SiegeNavigationModel {
             case "SiegeRaceAtlasScreen" -> d(Section.RACES, "ATLAS DE RAZAS", "RACE ATLAS", "RAC", 0xFFD6AE65);
             case "SiegeProgressionMapScreen" -> d(Section.PROGRESSION, "MAPA DE PROGRESIÓN", "PROGRESSION MAP", "PRG", 0xFFD6AE65);
             case "SiegeThreatBoardScreen" -> d(Section.THREATS, "TABLERO DE AMENAZAS", "THREAT BOARD", "THR", 0xFFE54852);
+            case "SiegeServerGuideScreen" -> d(Section.KNOWLEDGE, "GUÍA DEL SERVIDOR", "SERVER GUIDE", "GUI", 0xFFE89B59);
             case "SiegeKnowledgeScreen", "SiegeKnowledgeFileScreen" ->
                     d(Section.KNOWLEDGE, "ENCICLOPEDIA DEL SERVIDOR", "SERVER ENCYCLOPEDIA", "ENC", 0xFF72C98B);
             case "SiegeMultiplayerScreen", "JoinMultiplayerScreen", "DirectJoinServerScreen", "EditServerScreen",
