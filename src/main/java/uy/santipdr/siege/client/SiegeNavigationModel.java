@@ -1,9 +1,6 @@
 package uy.santipdr.siege.client;
 
-/**
- * Minecraft-independent map of SIEGE surfaces. It gives owned and approved
- * title-menu screens one section identity, accent family and responsive chrome reservation.
- */
+/** Minecraft-independent map of SIEGE surfaces and chrome identity. */
 public final class SiegeNavigationModel {
     public enum Section {
         HOME, OPERATIONS, KNOWLEDGE, DEPLOYMENT, INTEL, REFERENCE, FIELD_MANUAL, SETTINGS, COMMAND,
@@ -21,7 +18,13 @@ public final class SiegeNavigationModel {
         return switch (simple) {
             case "SiegeTitleScreen" -> d(Section.HOME, "PORTADA", "HOME", "HOME", 0xFFE54852);
             case "SiegeOperationsHubScreen" -> d(Section.OPERATIONS, "CENTRO DE OPERACIONES", "OPERATIONS HUB", "OPS", 0xFF68C6D8);
+            case "SiegeRecruitBriefingScreen", "SiegeRecruitScreen" ->
+                    d(Section.OPERATIONS, "BRIEFING DE RECLUTA", "RECRUIT BRIEFING", "RCT", 0xFF72C98B);
             case "SiegeKnowledgeScreen" -> d(Section.KNOWLEDGE, "ENCICLOPEDIA DEL SERVIDOR", "SERVER ENCYCLOPEDIA", "ENC", 0xFF72C98B);
+            case "SiegeRaceAtlasScreen" -> d(Section.KNOWLEDGE, "ATLAS DE RAZAS", "RACE ATLAS", "RCE", 0xFFD6AE65);
+            case "SiegeProgressionMapScreen", "SiegeProgressionScreen" ->
+                    d(Section.KNOWLEDGE, "MAPA DE PROGRESIÓN", "PROGRESSION MAP", "PRG", 0xFFD6AE65);
+            case "SiegeThreatBoardScreen" -> d(Section.INTEL, "TABLERO DE AMENAZAS", "THREAT BOARD", "THR", 0xFFE89B59);
             case "SiegeMultiplayerScreen", "JoinMultiplayerScreen", "DirectJoinServerScreen", "EditServerScreen",
                  "ConnectScreen", "DisconnectedScreen" ->
                     d(Section.DEPLOYMENT, "DESPLIEGUE", "DEPLOYMENT", "DEP", 0xFFE54852);
@@ -30,6 +33,7 @@ public final class SiegeNavigationModel {
             case "SiegeGuideScreen", "SiegeGuideImageScreen" ->
                     d(Section.REFERENCE, "ARCHIVO / ARSENAL", "ARCHIVE / ARMORY", "REF", 0xFFD6AE65);
             case "SiegeEvidenceReelScreen" -> d(Section.MEDIA, "EVIDENCIA", "EVIDENCE", "MED", 0xFF68C6D8);
+            case "SiegeMediaRoomScreen" -> d(Section.MEDIA, "SALA MULTIMEDIA", "MEDIA ROOM", "AV", 0xFF789BFF);
             case "SiegeSettingsScreen" -> d(Section.SETTINGS, "CONFIGURACIÓN", "SETTINGS", "CFG", 0xFFE54852);
             case "SiegeSystemScreen" -> d(Section.COMMAND, "CENTRO DE COMANDO", "COMMAND CENTER", "CMD", 0xFF68C6D8);
             case "SiegeDiagnosticsScreen" -> d(Section.DIAGNOSTICS, "DIAGNÓSTICO", "DIAGNOSTICS", "DIA", 0xFFE89B59);
