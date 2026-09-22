@@ -10,7 +10,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
-/** SIEGE 4.00 unified threat board without merging source domains. */
+/** SIEGE 4.00 threat board: units, Executors, bosses and events in one clear view. */
 public final class SiegeThreatBoardScreen extends Screen {
     private enum Mode { DOSSIERS, EXECUTORS, BOSSES, EVENTS }
     private record ThreatRef(String id, String title, String subtitle, String body,
@@ -54,8 +54,9 @@ public final class SiegeThreatBoardScreen extends Screen {
             Mode next = values[i];
             int x = tabX + i * (tabW + gap);
             int w = i == values.length - 1 ? panelX + panelW - 10 - x : tabW;
-            SiegeButton button = new SiegeButton(x, tabY, w, 19, Component.literal(modeLabel(next)),
-                    b -> switchMode(next), modeAccent(next)).setCompactCenter(true).setSelected(next == mode);
+            SiegeButton button = new SiegeButton(x, tabY, w, 19,
+                    Component.literal(tabLabel(next, w)), b -> switchMode(next), modeAccent(next))
+                    .setCompactCenter(true).setSelected(next == mode);
             button.setTooltip(Tooltip.create(Component.literal(modeDescription(next))));
             addRenderableWidget(button);
         }
@@ -63,8 +64,8 @@ public final class SiegeThreatBoardScreen extends Screen {
         search = new EditBox(font, panelX + 10, tabY + 25, panelW - 20, 20,
                 Component.literal(label("Buscar amenaza", "Search threat")));
         search.setHint(Component.literal(label(
-                "Buscar unidad, código, categoría, Executor, boss o evento…",
-                "Search unit, code, category, Executor, boss or event…")));
+                "Unidad, código, Executor, boss, raid o evento…",
+                "Unit, code, Executor, boss, raid or event…")));
         search.setResponder(value -> { listOffset = 0; detailOffset = 0; refresh(); });
         addRenderableWidget(search);
 
@@ -92,7 +93,7 @@ public final class SiegeThreatBoardScreen extends Screen {
 
         openButton = new SiegeButton(detailX + Math.max(0, detailW - (compact ? 108 : 144)),
                 detailY + Math.max(0, detailH - 22), Math.min(compact ? 108 : 144, detailW), 18,
-                Component.literal(label("ABRIR ARCHIVO", "OPEN FILE")), b -> openSelected(), SiegeTheme.RED)
+                Component.literal(label("VER INFORMACIÓN", "OPEN INFO")), b -> openSelected(), SiegeTheme.RED)
                 .withIcon("intel").setCompactCenter(true);
         openButton.visible = false;
         addRenderableWidget(openButton);
@@ -141,10 +142,11 @@ public final class SiegeThreatBoardScreen extends Screen {
         };
         for (SiegeKnowledgeData.Entry entry : SiegeKnowledgeRegistry.entries()) {
             if (entry.domain() != domain) continue;
-            out.add(new ThreatRef("knowledge:" + entry.id(), entry.title(spanish()),
-                    entry.domain().label(spanish()) + " · " + entry.confidence().label(spanish()),
+            String state = entry.zone() == SiegeKnowledgeData.Zone.HISTORY
+                    ? label("PUEDE HABER CAMBIADO", "MAY HAVE CHANGED") : entry.domain().label(spanish());
+            out.add(new ThreatRef("knowledge:" + entry.id(), entry.title(spanish()), state,
                     entry.summary(spanish()) + "\n\n" + entry.body(spanish()),
-                    SiegeKnowledgeData.confidenceAccent(entry.confidence()), null, entry));
+                    entry.zone() == SiegeKnowledgeData.Zone.HISTORY ? SiegeTheme.ORANGE : modeAccent(mode), null, entry));
         }
         out.sort(Comparator.comparing(ThreatRef::title));
         return out;
@@ -158,7 +160,7 @@ public final class SiegeThreatBoardScreen extends Screen {
             button.visible = present; button.active = present;
             if (!present) continue;
             ThreatRef ref = visible.get(index);
-            button.setMessage(Component.literal(ref.title() + "  //  " + ref.subtitle()));
+            button.setMessage(Component.literal(fit(ref.title() + "  //  " + ref.subtitle(), Math.max(20, listW - 28))));
             button.setSelected(selected != null && selected.id().equals(ref.id()));
         }
         if (openButton != null) { openButton.visible = selected != null; openButton.active = selected != null; }
@@ -197,8 +199,8 @@ public final class SiegeThreatBoardScreen extends Screen {
         int x = panelX + 12;
         g.drawString(font, fit(label("TABLERO DE AMENAZAS", "THREAT BOARD") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
                 x, panelY + 9, SiegeTheme.INK, false);
-        g.drawString(font, fit(label("Intel verificado y archivo del servidor se consultan juntos sin mezclar sus fuentes.",
-                "Verified Intel and server archive are viewed together without merging their sources."), panelW - 24),
+        g.drawString(font, fit(label("Unidades, Executores, bosses y eventos separados por categoría.",
+                "Units, Executors, bosses and events separated by category."), panelW - 24),
                 x, panelY + 21, SiegeTheme.MUTED, false);
         g.drawString(font, fit(modeDescription(mode) + " · " + visible.size(), panelW - 24), x, panelY + 32, modeAccent(mode), false);
         SiegeTheme.panel(g, listX - 3, listY - 3, listW + 6, rows.size() * 22 + 6, SiegeTheme.RED);
@@ -233,13 +235,23 @@ public final class SiegeThreatBoardScreen extends Screen {
         g.disableScissor();
     }
 
+    private String tabLabel(Mode value, int width) {
+        String full = modeLabel(value);
+        if (font.width(full) <= Math.max(8, width - 12)) return full;
+        return switch (value) {
+            case DOSSIERS -> "INTEL";
+            case EXECUTORS -> label("EJEC.", "EXEC.");
+            case BOSSES -> "BOSS";
+            case EVENTS -> label("EVENT.", "EVENTS");
+        };
+    }
     private String modeLabel(Mode value) { return switch (value) {
         case DOSSIERS -> "DOSSIERS"; case EXECUTORS -> label("EJECUTORES", "EXECUTORS");
         case BOSSES -> "BOSSES"; case EVENTS -> label("EVENTOS", "EVENTS"); }; }
     private String modeDescription(Mode value) { return switch (value) {
         case DOSSIERS -> label("Unidades clasificadas por Intel", "Units classified by Intel");
-        case EXECUTORS -> label("Ejecutores recuperados del archivo", "Executors recovered from the archive");
-        case BOSSES -> label("Bosses y reglas de adaptación", "Bosses and adaptation rules");
+        case EXECUTORS -> label("Ejecutores y sus mecánicas conocidas", "Executors and their known mechanics");
+        case BOSSES -> label("Bosses, peligros y adaptación", "Bosses, dangers and adaptation");
         case EVENTS -> label("Raids, hordas y riesgos de área", "Raids, hordes and area risks"); }; }
     private int modeAccent(Mode value) { return switch (value) {
         case DOSSIERS -> SiegeTheme.GOLD; case EXECUTORS -> SiegeTheme.RED;
