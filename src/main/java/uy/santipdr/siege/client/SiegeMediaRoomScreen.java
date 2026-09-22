@@ -4,13 +4,14 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** Background, soundtrack and Dummies vs Noobs inspiration room. */
+/** SIEGE 5.00 audiovisual room: current media, operational moods and DVN direction. */
 public final class SiegeMediaRoomScreen extends Screen {
-    private enum Mode { BUNDLED, DVN_AUDIO, VISUALS }
+    private enum Mode { BUNDLED, MOODS, DVN_AUDIO, VISUALS }
 
     private final Screen parent;
     private Mode mode = Mode.BUNDLED;
     private int panelX, panelY, panelW, panelH, contentX, contentY, contentW, contentH;
+    private int listOffset;
     private boolean compact;
 
     public SiegeMediaRoomScreen(Screen parent) {
@@ -40,11 +41,12 @@ public final class SiegeMediaRoomScreen extends Screen {
         int tabX = panelX + 10;
         int gap = 4;
         int tabW = panelW - 20;
-        int cell = Math.max(40, (tabW - gap * 2) / 3);
-        for (int i = 0; i < Mode.values().length; i++) {
+        int count = Mode.values().length;
+        int cell = Math.max(34, (tabW - gap * (count - 1)) / count);
+        for (int i = 0; i < count; i++) {
             Mode value = Mode.values()[i];
             int x = tabX + i * (cell + gap);
-            int w = i == 2 ? panelX + panelW - 10 - x : cell;
+            int w = i == count - 1 ? panelX + panelW - 10 - x : cell;
             addRenderableWidget(new SiegeButton(x, tabY, w, 19,
                     Component.literal(tabLabel(value, w)), b -> switchMode(value), modeAccent(value))
                     .setCompactCenter(true).setSelected(value == mode));
@@ -60,6 +62,7 @@ public final class SiegeMediaRoomScreen extends Screen {
     private void switchMode(Mode next) {
         if (mode == next) return;
         mode = next;
+        listOffset = 0;
         SiegeUiSounds.category();
         rebuildWidgets();
     }
@@ -106,16 +109,17 @@ public final class SiegeMediaRoomScreen extends Screen {
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xC9000000 : 0xA0000000);
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.CYAN);
-        g.drawString(font, fit(label("SALA MULTIMEDIA", "MEDIA ROOM") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
+        g.drawString(font, fit(label("SALA MULTIMEDIA 5.0", "MEDIA ROOM 5.0") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
                 panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Música, fondos y referencias visuales para mantener la identidad de SIEGE.",
-                "Music, backgrounds and visual references that keep SIEGE's identity consistent."), panelW - 24),
+                "Escenas, música y ambientes operacionales con identidad SIEGE / Dummies vs Noobs.",
+                "Scenes, music and operational moods with a SIEGE / Dummies vs Noobs identity."), panelW - 24),
                 panelX + 12, panelY + 21, SiegeTheme.MUTED, false);
 
         SiegeTheme.panel(g, contentX - 3, contentY - 3, contentW + 6, contentH + 6, modeAccent(mode));
         switch (mode) {
             case BUNDLED -> renderBundled(g);
+            case MOODS -> renderMoods(g);
             case DVN_AUDIO -> renderDvnAudio(g);
             case VISUALS -> renderVisuals(g);
         }
@@ -158,6 +162,33 @@ public final class SiegeMediaRoomScreen extends Screen {
         }
     }
 
+    private void renderMoods(GuiGraphics g) {
+        int x = contentX + 9;
+        int y = contentY + 8;
+        int w = contentW - 18;
+        g.drawString(font, fit(label("AMBIENTES OPERACIONALES", "OPERATIONAL MOODS"), w), x, y, SiegeTheme.GOLD, false);
+        y += 14;
+        g.drawString(font, fit(label(
+                "Cada ambiente combina el soundtrack actual con referencias DVN según la pantalla o situación.",
+                "Each mood combines the current soundtrack with DVN references for a screen or situation."), w),
+                x, y, SiegeTheme.MUTED, false);
+        y += 20;
+        var moods = SiegeMediaReferenceData.moods();
+        int visible = Math.max(1, (contentY + contentH - y - 12) / 39);
+        int start = Math.min(listOffset, Math.max(0, moods.size() - visible));
+        for (int i = start; i < moods.size() && i < start + visible; i++) {
+            var mood = moods.get(i);
+            g.drawString(font, fit(mood.title(spanish()) + "  //  " + mood.bundledTrack(), w), x, y, SiegeTheme.CYAN, false);
+            y += 11;
+            g.drawString(font, fit(mood.purpose(spanish()), w), x + 8, y, SiegeTheme.MUTED, false);
+            y += 11;
+            g.drawString(font, fit(label("REFERENCIAS: ", "REFERENCES: ") + String.join(" · ", mood.referenceTracks()), w),
+                    x + 8, y, SiegeTheme.GOLD, false);
+            y += 17;
+        }
+        renderScrollState(g, moods.size(), visible);
+    }
+
     private void renderDvnAudio(GuiGraphics g) {
         int x = contentX + 9;
         int y = contentY + 8;
@@ -166,38 +197,69 @@ public final class SiegeMediaRoomScreen extends Screen {
                 x, y, SiegeTheme.GOLD, false);
         y += 14;
         g.drawString(font, fit(label(
-                "Referencias para ampliar la playlist cuando tengamos los archivos adecuados.",
-                "References for expanding the playlist when the appropriate files are available."), w),
+                "Catálogo de referencia: no cambia la playlist instalada por sí solo.",
+                "Reference catalog: it does not change the installed playlist by itself."), w),
                 x, y, SiegeTheme.MUTED, false);
         y += 18;
-        for (SiegeMediaReferenceData.Track track : SiegeMediaReferenceData.dvnTracks()) {
-            if (y + 22 > contentY + contentH) break;
+        var tracks = SiegeMediaReferenceData.dvnTracks();
+        int visible = Math.max(1, (contentY + contentH - y - 12) / 25);
+        int start = Math.min(listOffset, Math.max(0, tracks.size() - visible));
+        for (int i = start; i < tracks.size() && i < start + visible; i++) {
+            var track = tracks.get(i);
             g.drawString(font, fit(track.title() + "  //  " + track.use().label(spanish()), w), x, y, SiegeTheme.CYAN, false);
             y += 11;
             g.drawString(font, fit(track.note(spanish()), w), x + 8, y, SiegeTheme.MUTED, false);
             y += 14;
         }
+        renderScrollState(g, tracks.size(), visible);
     }
 
     private void renderVisuals(GuiGraphics g) {
         int x = contentX + 9;
         int y = contentY + 8;
         int w = contentW - 18;
-        g.drawString(font, fit(label("FONDOS DVN QUE ENCAJAN CON LA TEMÁTICA", "DVN BACKGROUNDS THAT FIT THE THEME"), w),
-                x, y, SiegeTheme.BLUE, false);
+        g.drawString(font, fit(label("DIRECCIÓN DE FONDOS DVN", "DVN BACKGROUND DIRECTION"), w), x, y, SiegeTheme.BLUE, false);
         y += 15;
         g.drawString(font, fit(label(
-                "Prioridad: escenas 16:9 nítidas, tácticas y oscuras que dejen leer bien la interfaz.",
-                "Priority: sharp 16:9 tactical, dark scenes that keep the interface readable."), w),
+                "Escenas tácticas 16:9, oscuras y legibles; la galería sólo recibe masters de calidad suficiente.",
+                "Tactical, dark and readable 16:9 scenes; only sufficiently good masters enter the gallery."), w),
                 x, y, SiegeTheme.MUTED, false);
         y += 20;
-        for (SiegeMediaReferenceData.Visual visual : SiegeMediaReferenceData.visualReferences()) {
-            if (y + 24 > contentY + contentH) break;
+        var visuals = SiegeMediaReferenceData.visualReferences();
+        int visible = Math.max(1, (contentY + contentH - y - 12) / 27);
+        int start = Math.min(listOffset, Math.max(0, visuals.size() - visible));
+        for (int i = start; i < visuals.size() && i < start + visible; i++) {
+            var visual = visuals.get(i);
             g.drawString(font, fit(visual.title(spanish()), w), x, y, SiegeTheme.GOLD, false);
             y += 11;
             g.drawString(font, fit(visual.note(spanish()), w), x + 8, y, SiegeTheme.MUTED, false);
             y += 16;
         }
+        renderScrollState(g, visuals.size(), visible);
+    }
+
+    private void renderScrollState(GuiGraphics g, int total, int visible) {
+        if (total <= visible) return;
+        int max = Math.max(0, total - visible);
+        int current = Math.min(listOffset, max);
+        String text = label("RUEDA: ", "WHEEL: ") + (current + 1) + "–" + Math.min(total, current + visible) + " / " + total;
+        g.drawString(font, text, contentX + 9, contentY + contentH - 11, SiegeTheme.MUTED, false);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (mode == Mode.BUNDLED || mouseX < contentX || mouseX > contentX + contentW
+                || mouseY < contentY || mouseY > contentY + contentH) {
+            return super.mouseScrolled(mouseX, mouseY, delta);
+        }
+        int total = switch (mode) {
+            case MOODS -> SiegeMediaReferenceData.moods().size();
+            case DVN_AUDIO -> SiegeMediaReferenceData.dvnTracks().size();
+            case VISUALS -> SiegeMediaReferenceData.visualReferences().size();
+            default -> 0;
+        };
+        listOffset = Math.max(0, Math.min(Math.max(0, total - 1), listOffset + (delta < 0 ? 1 : -1)));
+        return true;
     }
 
     private String tabLabel(Mode value, int width) {
@@ -205,6 +267,7 @@ public final class SiegeMediaRoomScreen extends Screen {
         if (font.width(full) <= Math.max(8, width - 12)) return full;
         return switch (value) {
             case BUNDLED -> label("ACTUAL", "CURRENT");
+            case MOODS -> label("AMBI.", "MOODS");
             case DVN_AUDIO -> "DVN OST";
             case VISUALS -> "DVN BG";
         };
@@ -212,6 +275,7 @@ public final class SiegeMediaRoomScreen extends Screen {
     private String modeLabel(Mode value) {
         return switch (value) {
             case BUNDLED -> label("ACTUAL", "CURRENT");
+            case MOODS -> label("AMBIENTES", "MOODS");
             case DVN_AUDIO -> label("MÚSICA DVN", "DVN MUSIC");
             case VISUALS -> label("FONDOS DVN", "DVN VISUALS");
         };
@@ -219,6 +283,7 @@ public final class SiegeMediaRoomScreen extends Screen {
     private int modeAccent(Mode value) {
         return switch (value) {
             case BUNDLED -> SiegeTheme.CYAN;
+            case MOODS -> SiegeTheme.GREEN;
             case DVN_AUDIO -> SiegeTheme.GOLD;
             case VISUALS -> SiegeTheme.BLUE;
         };
