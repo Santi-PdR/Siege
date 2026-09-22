@@ -12,8 +12,10 @@ public final class SceneScheduleTest {
         int featuredIndex = SiegeSceneCatalog.featuredIndex();
         int standardCount = SiegeSceneCatalog.standardCount();
         check(SiegeSceneSchedule.COUNT == SiegeSceneCatalog.count(), "Schedule/catalog count drift");
-        check(anomalyIndex >= 0 && featuredIndex >= 0 && anomalyIndex != featuredIndex, "Special scene indices");
-        check(standardCount == SiegeSceneSchedule.COUNT - 2, "Standard scene count drift");
+        check(anomalyIndex < 0, "Easter-egg art must not be a normal scene");
+        check(featuredIndex >= 0, "Featured scene missing");
+        check(standardCount == SiegeSceneSchedule.COUNT - 1, "Standard scene count drift");
+        check(!SiegeSceneCatalog.containsId("tempest_jutcherson"), "Tempest leaked into normal menu catalog");
 
         for (long cycle = -12; cycle <= 12; cycle++) {
             Set<Integer> bag = new HashSet<>();
@@ -21,7 +23,7 @@ public final class SceneScheduleTest {
             for (int i = 0; i < standardCount; i++) {
                 int current = SiegeSceneSchedule.standardIndex(start + i);
                 check(current >= 0 && current < SiegeSceneSchedule.COUNT, "Standard bounds");
-                check(current != anomalyIndex && current != featuredIndex, "Special scene leaked into standard bag");
+                check(current != featuredIndex, "Featured scene leaked into standard bag");
                 check(bag.add(current), "Standard scene repeated before shuffled bag was exhausted");
                 check(current == SiegeSceneSchedule.standardIndex(start + i), "Stable standard selection");
             }
@@ -32,19 +34,18 @@ public final class SceneScheduleTest {
         }
 
         for (long start : new long[]{-10000, 0, 10000, 74000000}) {
-            int rare = 0, special = 0;
+            int featured = 0;
             for (long slot = start; slot < start + 100; slot++) {
                 int current = SiegeSceneSchedule.index(slot, true);
                 check(current >= 0 && current < SiegeSceneSchedule.COUNT, "Bounds");
                 check(current == SiegeSceneSchedule.index(slot, true), "Stable render selection");
+                check(current == SiegeSceneSchedule.index(slot, false),
+                        "Easter-egg surprise flag must not alter normal menu art");
                 check(current != SiegeSceneSchedule.index(slot + 1, true), "No consecutive repeats");
-                check(SiegeSceneSchedule.index(slot, false) != anomalyIndex, "Comfort mode excludes anomaly");
-                if (current == anomalyIndex) rare++;
-                if (current == featuredIndex) special++;
+                if (current == featuredIndex) featured++;
             }
-            check(rare == 2, "Two rare anomaly slots per 100");
-            check(special == 6, "Six featured slots per 100");
+            check(featured == 6, "Six featured slots per 100");
         }
-        System.out.println("Scene schedule: shuffled bags, rarity, bounds, continuity and comfort mode passed");
+        System.out.println("Scene schedule: shuffled bags, no easter-egg leakage, bounds and continuity passed");
     }
 }

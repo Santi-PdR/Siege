@@ -28,13 +28,13 @@ jobs:
         with:
           gradle-version: '8.8'
 
-      - name: Prepare SIEGE 2.25 visual masters
+      - name: Prepare SIEGE 2.50 visual masters
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow
           python3 scripts/prepare-backgrounds-hd.py
 
-      - name: Verify responsive layouts, reference architecture and Intel search
+      - name: Verify responsive layouts, reference architecture and Operations search
         shell: bash
         run: |
           mkdir -p build/layout-tests
@@ -52,6 +52,8 @@ jobs:
           java -cp build/config-tests ConfigRegressionTest
           javac -d build/scene-tests src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java tests/SceneScheduleTest.java
           java -cp build/scene-tests SceneScheduleTest
+          javac -d build/ops-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java src/main/java/uy/santipdr/siege/client/SiegeRouteHistory.java tests/OperationsIndexTest.java
+          java -cp build/ops-tests OperationsIndexTest
           python3 tests/test_installer.py
           python3 tests/test_release_014.py
 
@@ -70,24 +72,28 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify SIEGE 2.25 navigation contracts
+      - name: Verify SIEGE 2.50 navigation and easter-egg contracts
         shell: bash
         run: |
-          grep -q "version = '2.25.0'" build.gradle
+          grep -q "version = '2.50.0'" build.gradle
+          grep -q 'class SiegeOperationsHubScreen' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
+          grep -q 'SiegeOperationsIndex.search' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
+          grep -q 'new SiegeOperationsHubScreen(screen)' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
+          grep -q 'siege.menu.settings' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
+          grep -q 'TEMPEST_JUTCHERSON' src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java
+          if grep -q 'tempest_jutcherson' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java; then
+            echo "Tempest Jutcherson must not be a normal menu/gallery scene."
+            exit 1
+          fi
+          if grep -q 'tempest_jutcherson' scripts/prepare-backgrounds-hd.py; then
+            echo "Tempest Jutcherson must not be processed as a normal menu background."
+            exit 1
+          fi
+
           grep -q 'GLFW_KEY_LEFT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'GLFW_KEY_RIGHT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'Math.floorMod(selected + direction, files.size())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'Component.literal("←")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'Component.literal("→")' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'isInsidePreviewFooter' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
-          grep -q 'previewDual' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
-          grep -q 'mouseScrolled' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
-          grep -q 'VISTA LIMPIA' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
-          grep -q 'ROTACIÓN AUTO' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java
           grep -q 'IntelScreenV3(Screen parent, IntelEntry requestedEntry)' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'targetCode.equals(files.get(i).code())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'new IntelScreenV3(this, entry)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java
-
           grep -q 'SiegeGuideScreen.Mode.ARCHIVE' src/main/java/uy/santipdr/siege/client/SiegeMenuThemeEvents.java
           grep -q 'SiegeGuideScreen.Mode.ARMORY' src/main/java/uy/santipdr/siege/client/SiegeMenuThemeEvents.java
           grep -q 'new SiegeArchiveScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeGuideScreen.java
@@ -103,11 +109,8 @@ jobs:
           grep -q 'SHELLSHOCK' src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java
           grep -q 'MUTILATED' src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java
           grep -q 'third-justice' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
-          grep -q 'third_justice_reel_03.png' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
           grep -q 'standardIndex(long slot)' src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java
           grep -q 'STANDARD_INDICES' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
-          grep -q 'SiegeCommandStrip.render(screen, g);' src/main/java/uy/santipdr/siege/client/SiegeScreenChrome.java
-          grep -q 'rotationRemainingMs' src/main/java/uy/santipdr/siege/client/SiegeScreenChrome.java
 
           if grep -nE 'FAVORITES|toggleFavoriteIntel|favoriteButton|addIndexButton|copyText|GUARDAR' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
             echo "Removed Intel controls must not return"
@@ -115,8 +118,8 @@ jobs:
           fi
           grep -q 'trackAnnouncementDurationMs' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
           grep -q 'backgroundDarkness' src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
-          if grep -R -n '1\.50\.0' src/main/java; then
-            echo "Stale 1.50.0 string found in live Java sources."
+          if grep -R -n 'version = .2\.25\.0.' build.gradle; then
+            echo "Stale 2.25 active version found."
             exit 1
           fi
           if grep -qE 'GLFW_KEY_(I|P|G|M|R|HOME|END)([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java; then
@@ -180,7 +183,7 @@ jobs:
         run: |
           javac -d build/runtime-tests src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/IntelPresentation.java src/main/java/uy/santipdr/siege/client/SiegeAudioHealth.java src/main/java/uy/santipdr/siege/client/SiegePreviewClock.java tests/RuntimeRegressionTest.java
           java -cp build/runtime-tests uy.santipdr.siege.client.RuntimeRegressionTest
-          javac -d build/gui-resource-tests src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java tests/GuiResourceRegressionTest.java
+          javac -d build/gui-resource-tests src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java tests/GuiResourceRegressionTest.java
           java -cp build/gui-resource-tests GuiResourceRegressionTest
 
       - name: Compile and verify

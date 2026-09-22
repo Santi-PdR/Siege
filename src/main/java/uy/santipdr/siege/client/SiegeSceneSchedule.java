@@ -7,14 +7,11 @@ public final class SiegeSceneSchedule {
 
     public static int index(long slot, boolean surprises) {
         int phase = (int)Math.floorMod(slot, 100L);
-        int anomaly = SiegeSceneCatalog.anomalyIndex();
         int featured = SiegeSceneCatalog.featuredIndex();
 
-        // Two isolated anomaly appearances per 100 slots (~2%). Comfort modes
-        // exclude them completely without disturbing the standard permutation.
-        if (surprises && anomaly >= 0 && (phase == 17 || phase == 73)) return anomaly;
-
-        // Featured art stays uncommon but predictable enough to feel intentional.
+        // 2.50 keeps the actual menu rotation clean. Easter-egg art is not part
+        // of SiegeSceneCatalog, so the surprise flag no longer changes menu art.
+        // The parameter remains for binary/source compatibility with callers.
         if (featured >= 0 && (phase == 8 || phase == 26 || phase == 44 || phase == 62 || phase == 80 || phase == 98))
             return featured;
 
@@ -25,7 +22,7 @@ public final class SiegeSceneSchedule {
      * Deterministic shuffled-bag selection for normal scenes.
      * Every standard scene appears once before the permutation repeats, while
      * each cycle starts from a shifted position so the gallery does not fall
-     * back into the old 0,1,2,3... ordering. Consecutive repeats are impossible.
+     * back into a simple numeric sequence. Consecutive repeats are impossible.
      */
     public static int standardIndex(long slot) {
         int count = Math.max(1, SiegeSceneCatalog.standardCount());

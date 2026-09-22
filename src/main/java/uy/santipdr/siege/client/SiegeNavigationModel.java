@@ -6,7 +6,7 @@ package uy.santipdr.siege.client;
  */
 public final class SiegeNavigationModel {
     public enum Section {
-        HOME, DEPLOYMENT, INTEL, REFERENCE, FIELD_MANUAL, SETTINGS, COMMAND,
+        HOME, OPERATIONS, DEPLOYMENT, INTEL, REFERENCE, FIELD_MANUAL, SETTINGS, COMMAND,
         DIAGNOSTICS, BACKGROUNDS, INSPECTOR, MEDIA, NATIVE
     }
 
@@ -20,6 +20,7 @@ public final class SiegeNavigationModel {
         String simple = className == null ? "" : className.substring(className.lastIndexOf('.') + 1);
         return switch (simple) {
             case "SiegeTitleScreen" -> d(Section.HOME, "PORTADA", "HOME", "HOME", 0xFFE54852);
+            case "SiegeOperationsHubScreen" -> d(Section.OPERATIONS, "CENTRO DE OPERACIONES", "OPERATIONS HUB", "OPS", 0xFF68C6D8);
             case "SiegeMultiplayerScreen", "JoinMultiplayerScreen", "DirectJoinServerScreen", "EditServerScreen",
                  "ConnectScreen", "DisconnectedScreen" ->
                     d(Section.DEPLOYMENT, "DESPLIEGUE", "DEPLOYMENT", "DEP", 0xFFE54852);

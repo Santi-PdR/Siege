@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 /**
- * Authoritative metadata for every SIEGE menu scene.
+ * Authoritative metadata for every normal SIEGE menu scene.
  * Rendering, gallery labels, contrast bias, scheduling and CI all read the same table.
- * 2.0+ ships one 1920x1080 prepared master for every scene so the runtime never
- * has to magnify a sub-HD texture differently from the rest of the gallery.
+ *
+ * Tempest Jutcherson is deliberately NOT part of this catalog in 2.50. It remains
+ * reserved as an easter-egg asset and therefore cannot leak into normal rotation,
+ * the background gallery or the home scene label.
  */
 public final class SiegeSceneCatalog {
     public enum Kind { STANDARD, FEATURED, ANOMALY }
@@ -38,9 +40,7 @@ public final class SiegeSceneCatalog {
             scene("night_operation", "Operación nocturna", "Night Operation", 0),
             scene("urban_rendezvous", "Encuentro urbano", "Urban Rendezvous", 2),
             new Scene("rooftop_squad", "Escuadrón en azotea · Especial", "Rooftop Squad · Special",
-                    HD_W, HD_H, 3, Kind.FEATURED, true),
-            new Scene("tempest_jutcherson", "TEMPEST JUTCHERSON", "TEMPEST JUTCHERSON",
-                    HD_W, HD_H, 6, Kind.ANOMALY, false)
+                    HD_W, HD_H, 3, Kind.FEATURED, true)
     );
 
     private static final List<Integer> STANDARD_INDICES = IntStream.range(0, SCENES.size())
@@ -68,6 +68,10 @@ public final class SiegeSceneCatalog {
     public static int standardIndex(int ordinal) {
         if (STANDARD_INDICES.isEmpty()) return 0;
         return STANDARD_INDICES.get(Math.floorMod(ordinal, STANDARD_INDICES.size()));
+    }
+    public static boolean containsId(String id) {
+        if (id == null) return false;
+        return SCENES.stream().anyMatch(scene -> scene.id().equals(id));
     }
 
     private static int indexOf(Kind kind) {

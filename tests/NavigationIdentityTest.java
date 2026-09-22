@@ -1,12 +1,13 @@
 import uy.santipdr.siege.client.SiegeNavigationModel;
 import uy.santipdr.siege.client.SiegeUiLayout;
 
-/** SIEGE 2.0 information-architecture and native identity contract. */
+/** SIEGE 2.50 information architecture and native identity contract. */
 public final class NavigationIdentityTest {
     private static void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
 
     public static void main(String[] args) {
         expect("uy.santipdr.siege.client.SiegeTitleScreen", SiegeNavigationModel.Section.HOME, "HOME", "HOME");
+        expect("uy.santipdr.siege.client.SiegeOperationsHubScreen", SiegeNavigationModel.Section.OPERATIONS, "OPS", "OPERATIONS HUB");
         expect("uy.santipdr.siege.client.SiegeMultiplayerScreen", SiegeNavigationModel.Section.DEPLOYMENT, "DEP", "DEPLOYMENT");
         expect("uy.santipdr.siege.client.IntelScreenV3", SiegeNavigationModel.Section.INTEL, "INT", "INTEL DOSSIERS");
         expect("uy.santipdr.siege.client.SiegeGuideScreen", SiegeNavigationModel.Section.REFERENCE, "REF", "ARCHIVE / ARMORY");
@@ -33,7 +34,7 @@ public final class NavigationIdentityTest {
                 "Status width should adapt to viewport width");
         check(SiegeUiLayout.density(320, 240) == SiegeUiLayout.Density.ULTRA_COMPACT, "Ultra compact identity");
         check(SiegeUiLayout.density(1280, 720) == SiegeUiLayout.Density.WIDE, "Wide identity");
-        System.out.println("SIEGE 2.0 dossiers/reference/manual/media and native identities passed");
+        System.out.println("SIEGE 2.50 Operations/dossiers/reference/manual/media and native identities passed");
     }
 
     private static void expect(String className, SiegeNavigationModel.Section section, String code, String english) {
