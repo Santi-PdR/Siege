@@ -10,6 +10,8 @@ public final class NavigationIdentityTest {
         expect("uy.santipdr.siege.client.SiegeOperationsHubScreen", SiegeNavigationModel.Section.OPERATIONS, "OPS", "WAR ROOM");
         expect("uy.santipdr.siege.client.SiegeBriefingScreen", SiegeNavigationModel.Section.BRIEFING, "BRF", "ENTRY BRIEFING");
         expect("uy.santipdr.siege.client.SiegeAtlasScreen", SiegeNavigationModel.Section.ATLAS, "ATL", "TACTICAL ATLAS");
+        expect("uy.santipdr.siege.client.SiegeRaceAtlasScreen", SiegeNavigationModel.Section.RACES, "RAC", "RACE ATLAS");
+        expect("uy.santipdr.siege.client.SiegeProgressionMapScreen", SiegeNavigationModel.Section.PROGRESSION, "PRG", "PROGRESSION MAP");
         expect("uy.santipdr.siege.client.SiegeThreatBoardScreen", SiegeNavigationModel.Section.THREATS, "THR", "THREAT BOARD");
         expect("uy.santipdr.siege.client.SiegeKnowledgeFileScreen", SiegeNavigationModel.Section.KNOWLEDGE, "ENC", "SERVER ENCYCLOPEDIA");
         expect("uy.santipdr.siege.client.SiegeKnowledgeScreen", SiegeNavigationModel.Section.KNOWLEDGE, "ENC", "SERVER ENCYCLOPEDIA");
@@ -18,6 +20,7 @@ public final class NavigationIdentityTest {
         expect("uy.santipdr.siege.client.SiegeGuideScreen", SiegeNavigationModel.Section.REFERENCE, "REF", "ARCHIVE / ARMORY");
         expect("uy.santipdr.siege.client.SiegeArchiveScreen", SiegeNavigationModel.Section.FIELD_MANUAL, "FLD", "FIELD MANUAL");
         expect("uy.santipdr.siege.client.SiegeEvidenceReelScreen", SiegeNavigationModel.Section.MEDIA, "MED", "EVIDENCE");
+        expect("uy.santipdr.siege.client.SiegeMediaRoomScreen", SiegeNavigationModel.Section.MEDIA, "MED", "MEDIA ROOM");
         expect("uy.santipdr.siege.client.SiegeSettingsScreen", SiegeNavigationModel.Section.SETTINGS, "CFG", "SETTINGS");
         expect("uy.santipdr.siege.client.SiegeSystemScreen", SiegeNavigationModel.Section.COMMAND, "CMD", "COMMAND CENTER");
         expect("uy.santipdr.siege.client.SiegeDiagnosticsScreen", SiegeNavigationModel.Section.DIAGNOSTICS, "DIA", "DIAGNOSTICS");
@@ -35,7 +38,7 @@ public final class NavigationIdentityTest {
         check(SiegeNavigationModel.statusWidth(300) < SiegeNavigationModel.statusWidth(1200), "Responsive status width");
         check(SiegeUiLayout.density(320, 240) == SiegeUiLayout.Density.ULTRA_COMPACT, "Ultra compact identity");
         check(SiegeUiLayout.density(1280, 720) == SiegeUiLayout.Density.WIDE, "Wide identity");
-        System.out.println("SIEGE 4.00 War Room, Briefing, Atlas, Threat Board and native identities passed");
+        System.out.println("SIEGE 4.00 War Room, Briefing, Race Atlas, Progression, Threat Board, Media and native identities passed");
     }
 
     private static void expect(String className, SiegeNavigationModel.Section section, String code, String english) {
