@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -17,7 +16,9 @@ public final class SiegeRaceAtlasScreen extends Screen {
     private List<SiegeRaceAtlasData.Race> visible = List.of();
     private SiegeRaceAtlasData.Race selected;
     private int offset;
+    private int detailOffset;
     private int panelX, panelY, panelW, panelH, listX, listY, listW, detailX, detailY, detailW, detailH;
+    private int rarityY, rarityRows, searchY;
     private boolean compact;
 
     public SiegeRaceAtlasScreen(Screen parent) {
@@ -39,19 +40,23 @@ public final class SiegeRaceAtlasScreen extends Screen {
         addRenderableWidget(new SiegeButton(8, 7, compact ? 62 : 88, 19,
                 Component.literal(label("VOLVER", "BACK")), b -> onClose(), SiegeTheme.RED)
                 .withIcon("back").setCompactCenter(true));
-        addRenderableWidget(new SiegeButton(Math.max(8, width - (compact ? 88 : 126) - 8), 7,
-                compact ? 88 : 126, 19, Component.literal(label("PROGRESIÓN", "PROGRESSION")),
+        int progressionW = compact ? 88 : 126;
+        addRenderableWidget(new SiegeButton(Math.max(8, width - progressionW - 8), 7,
+                progressionW, 19, Component.literal(compact ? label("PROGRES.", "PROGRESS") : label("PROGRESIÓN", "PROGRESSION")),
                 b -> minecraft.setScreen(new SiegeProgressionMapScreen(this)), SiegeTheme.GOLD)
                 .withIcon("overview").setCompactCenter(true));
 
-        search = new EditBox(font, panelX + 10, panelY + 47, panelW - 20, 20,
+        rarityY = panelY + 34;
+        rarityRows = rarityRows(panelW - 24);
+        searchY = rarityY + rarityRows * 11 + 6;
+        search = new EditBox(font, panelX + 10, searchY, panelW - 20, 20,
                 Component.literal(label("Buscar raza", "Search race")));
         search.setHint(Component.literal(label("Human, Hacker, Saiyan, Obsainan, Cyborg…",
                 "Human, Hacker, Saiyan, Obsainan, Cyborg…")));
-        search.setResponder(v -> { offset = 0; refresh(); });
+        search.setResponder(v -> { offset = 0; detailOffset = 0; refresh(); });
         addRenderableWidget(search);
 
-        int bodyTop = panelY + 73;
+        int bodyTop = searchY + 27;
         if (compact) {
             listX = panelX + 10;
             listY = bodyTop;
@@ -59,7 +64,7 @@ public final class SiegeRaceAtlasScreen extends Screen {
             detailX = listX;
             detailY = bodyTop + 3 * 22 + 8;
             detailW = listW;
-            detailH = Math.max(54, panelY + panelH - detailY - 10);
+            detailH = Math.max(46, panelY + panelH - detailY - 10);
         } else {
             listX = panelX + 10;
             listY = bodyTop;
@@ -70,7 +75,7 @@ public final class SiegeRaceAtlasScreen extends Screen {
             detailH = Math.max(90, panelY + panelH - detailY - 10);
         }
 
-        int count = compact ? 3 : Math.max(5, Math.min(9, (panelH - 92) / 22));
+        int count = compact ? 3 : Math.max(4, Math.min(9, (detailH - 2) / 22));
         for (int i = 0; i < count; i++) {
             int slot = i;
             SiegeButton row = new SiegeButton(listX, listY + i * 22, listW, 19, Component.empty(),
@@ -82,13 +87,30 @@ public final class SiegeRaceAtlasScreen extends Screen {
         refresh();
     }
 
+    private int rarityRows(int available) {
+        String prefix = label("RAREZAS: ", "RARITIES: ");
+        int cursor = font.width(prefix);
+        int rowsNeeded = 1;
+        for (SiegeRaceAtlasData.Rarity rarity : SiegeRaceAtlasData.rarityOrder()) {
+            int item = font.width(rarity.label(spanish())) + font.width("  >  ");
+            if (cursor + item > available && cursor > font.width(prefix)) {
+                rowsNeeded++;
+                cursor = 0;
+            }
+            cursor += item;
+        }
+        return Math.max(1, Math.min(3, rowsNeeded));
+    }
+
     private void refresh() {
         String q = search == null ? "" : search.getValue();
         visible = SiegeRaceAtlasData.search(q, 64);
         int max = Math.max(0, visible.size() - rows.size());
         offset = Math.max(0, Math.min(max, offset));
-        if (selected == null || visible.stream().noneMatch(r -> r.id().equals(selected.id())))
+        if (selected == null || visible.stream().noneMatch(r -> r.id().equals(selected.id()))) {
             selected = visible.isEmpty() ? null : visible.get(0);
+            detailOffset = 0;
+        }
         for (int i = 0; i < rows.size(); i++) {
             SiegeButton button = rows.get(i);
             int index = offset + i;
@@ -97,7 +119,8 @@ public final class SiegeRaceAtlasScreen extends Screen {
             button.active = present;
             if (!present) continue;
             SiegeRaceAtlasData.Race race = visible.get(index);
-            button.setMessage(Component.literal(race.name() + "  //  " + race.rarity().label(spanish())));
+            String text = race.name() + "  //  " + race.rarity().label(spanish());
+            button.setMessage(Component.literal(fit(text, Math.max(20, listW - 28))));
             button.setSelected(selected != null && selected.id().equals(race.id()));
         }
     }
@@ -106,6 +129,7 @@ public final class SiegeRaceAtlasScreen extends Screen {
         int index = offset + slot;
         if (index < 0 || index >= visible.size()) return;
         selected = visible.get(index);
+        detailOffset = 0;
         SiegeUiSounds.selection();
         refresh();
     }
@@ -118,6 +142,10 @@ public final class SiegeRaceAtlasScreen extends Screen {
             refresh();
             return true;
         }
+        if (mouseX >= detailX && mouseX < detailX + detailW && mouseY >= detailY && mouseY < detailY + detailH) {
+            detailOffset = Math.max(0, detailOffset - (int)Math.signum(delta) * 2);
+            return true;
+        }
         return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
@@ -125,7 +153,8 @@ public final class SiegeRaceAtlasScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (selected != null && button == 0 && mouseX >= detailX && mouseX <= detailX + detailW
                 && mouseY >= detailY && mouseY <= detailY + detailH) {
-            if (mouseY >= detailY + detailH - 30 && !selected.knowledgeId().isBlank()) {
+            int buttonY = detailY + detailH - 24;
+            if (mouseY >= buttonY && !selected.knowledgeId().isBlank()) {
                 SiegeUiSounds.confirm();
                 minecraft.setScreen(new SiegeKnowledgeScreen(this, selected.knowledgeId()));
                 return true;
@@ -140,11 +169,11 @@ public final class SiegeRaceAtlasScreen extends Screen {
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xC8000000 : 0xA6000000);
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.GOLD);
-        g.drawString(font, label("ATLAS DE RAZAS", "RACE ATLAS") + " // " + SiegeRuntimeStatus.version(),
+        g.drawString(font, fit(label("ATLAS DE RAZAS", "RACE ATLAS") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
                 panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Razas documentadas del servidor. Lo desconocido queda sin confirmar en vez de inventarse.",
-                "Documented server races. Unknown fields stay unconfirmed instead of being invented."), panelW - 24),
+                "Elegí una raza para ver rareza, forma de progresión y lo importante para entenderla.",
+                "Choose a race to see rarity, progression style and the important things to know."), panelW - 24),
                 panelX + 12, panelY + 21, SiegeTheme.MUTED, false);
         renderRarityStrip(g);
 
@@ -159,19 +188,36 @@ public final class SiegeRaceAtlasScreen extends Screen {
 
     private void renderRarityStrip(GuiGraphics g) {
         List<SiegeRaceAtlasData.Rarity> order = SiegeRaceAtlasData.rarityOrder();
-        int x = panelX + 12;
-        int y = panelY + 34;
-        int available = panelW - 24;
-        String prefix = label("RAREZA: ", "RARITY: ");
-        g.drawString(font, prefix, x, y, SiegeTheme.MUTED, false);
-        int cursor = x + font.width(prefix);
-        for (SiegeRaceAtlasData.Rarity rarity : order) {
-            String text = rarity.label(spanish());
-            int w = font.width(text);
-            if (cursor + w > x + available) break;
-            g.drawString(font, text, cursor, y, rarity.accent(), false);
-            cursor += w + font.width(" > ");
-            if (cursor < x + available) g.drawString(font, ">", cursor - font.width(" > ") + 2, y, SiegeTheme.MUTED, false);
+        int left = panelX + 12;
+        int right = panelX + panelW - 12;
+        int y = rarityY;
+        String prefix = label("RAREZAS: ", "RARITIES: ");
+        int cursor = left;
+        g.drawString(font, prefix, cursor, y, SiegeTheme.MUTED, false);
+        cursor += font.width(prefix);
+        int usedRows = 1;
+        for (int i = 0; i < order.size(); i++) {
+            SiegeRaceAtlasData.Rarity rarity = order.get(i);
+            String suffix = i + 1 < order.size() ? "  >" : "";
+            int itemWidth = font.width(rarity.label(spanish()) + suffix) + 5;
+            if (cursor + itemWidth > right && usedRows < rarityRows) {
+                usedRows++;
+                y += 11;
+                cursor = left;
+            }
+            if (cursor + itemWidth > right) {
+                // This should only happen on extremely narrow windows; fit the final label
+                // instead of silently dropping a rarity tier.
+                String fitted = fit(rarity.label(spanish()), Math.max(8, right - cursor));
+                g.drawString(font, fitted, cursor, y, rarity.accent(), false);
+                continue;
+            }
+            g.drawString(font, rarity.label(spanish()), cursor, y, rarity.accent(), false);
+            cursor += font.width(rarity.label(spanish()));
+            if (!suffix.isEmpty()) {
+                g.drawString(font, " > ", cursor, y, SiegeTheme.MUTED, false);
+                cursor += font.width(" > ");
+            }
         }
     }
 
@@ -183,7 +229,7 @@ public final class SiegeRaceAtlasScreen extends Screen {
         }
         int x = detailX + 9;
         int y = detailY + 8;
-        int w = detailW - 18;
+        int w = Math.max(40, detailW - 18);
         int accent = selected.rarity().accent();
         g.drawString(font, fit(selected.name(), w), x, y, SiegeTheme.INK, false);
         y += 13;
@@ -193,31 +239,44 @@ public final class SiegeRaceAtlasScreen extends Screen {
                 SiegeTheme.CYAN, false);
         y += 12;
         if (selected.historical()) {
-            g.drawString(font, label("ARCHIVO HISTÓRICO / VIGENCIA PARCIAL", "HISTORICAL FILE / PARTIAL VALIDITY"),
-                    x, y, SiegeTheme.ORANGE, false);
+            g.drawString(font, fit(label("PUEDE HABER CAMBIADO", "MAY HAVE CHANGED"), w), x, y, SiegeTheme.ORANGE, false);
             y += 13;
         }
         SiegeTheme.divider(g, x, y, w, accent);
         y += 7;
-        List<FormattedCharSequence> lines = font.split(Component.literal(selected.summary(spanish())), w);
-        for (FormattedCharSequence line : lines) {
-            if (y + font.lineHeight >= detailY + detailH - 36) break;
-            g.drawString(font, line, x, y, SiegeTheme.INK, false);
-            y += font.lineHeight + 2;
-        }
-        String tags = label("TAGS: ", "TAGS: ") + String.join(" · ", selected.tags());
-        if (y + 22 < detailY + detailH) {
-            y += 5;
-            g.drawString(font, fit(tags, w), x, y, SiegeTheme.MUTED, false);
+
+        SiegeKnowledgeData.Entry knowledge = selected.knowledgeId().isBlank() ? null : SiegeKnowledgeData.get(selected.knowledgeId());
+        String body = knowledge != null ? knowledge.body(spanish()) : selected.summary(spanish());
+        List<FormattedCharSequence> lines = new ArrayList<>();
+        lines.addAll(font.split(Component.literal(label("RESUMEN — ", "SUMMARY — ") + selected.summary(spanish())), w));
+        lines.add(Component.empty().getVisualOrderText());
+        if (knowledge != null) {
+            lines.addAll(font.split(Component.literal(label("LO IMPORTANTE", "WHAT TO KNOW")), w));
+            for (String paragraph : body.split("\\n", -1)) {
+                if (paragraph.isEmpty()) lines.add(Component.empty().getVisualOrderText());
+                else lines.addAll(font.split(Component.literal(paragraph), w));
+            }
         }
 
+        int first = Math.max(0, Math.min(detailOffset, Math.max(0, lines.size() - 1)));
+        int textTop = y;
         int buttonY = detailY + detailH - 24;
-        boolean hot = mouseX >= x && mouseX < x + w && mouseY >= buttonY && mouseY < buttonY + 18;
-        int color = hot ? 0xCC314B59 : 0xB51A252B;
-        g.fill(x, buttonY, x + w, buttonY + 18, color);
-        g.fill(x, buttonY, x + 2, buttonY + 18, accent);
-        String open = label("ABRIR FICHA DE ENCICLOPEDIA", "OPEN ENCYCLOPEDIA FILE");
-        g.drawCenteredString(font, fit(open, w - 8), x + w / 2, buttonY + 5, hot ? SiegeTheme.INK : SiegeTheme.MUTED);
+        int maxY = buttonY - 5;
+        g.enableScissor(detailX, textTop - 1, detailX + detailW, maxY);
+        int yy = textTop;
+        for (int i = first; i < lines.size() && yy + font.lineHeight <= maxY; i++) {
+            g.drawString(font, lines.get(i), x, yy, i == first ? SiegeTheme.INK : SiegeTheme.INK, false);
+            yy += font.lineHeight + 2;
+        }
+        g.disableScissor();
+
+        if (!selected.knowledgeId().isBlank()) {
+            boolean hot = mouseX >= x && mouseX < x + w && mouseY >= buttonY && mouseY < buttonY + 18;
+            g.fill(x, buttonY, x + w, buttonY + 18, hot ? 0xCC314B59 : 0xB51A252B);
+            g.fill(x, buttonY, x + 2, buttonY + 18, accent);
+            String open = label("VER EN ENCICLOPEDIA", "OPEN IN ENCYCLOPEDIA");
+            g.drawCenteredString(font, fit(open, w - 8), x + w / 2, buttonY + 5, hot ? SiegeTheme.INK : SiegeTheme.MUTED);
+        }
     }
 
     private String fit(String text, int px) {
@@ -232,6 +291,6 @@ public final class SiegeRaceAtlasScreen extends Screen {
 
     private String label(String es, String en) { return spanish() ? es : en; }
 
-    @Override public void onClose() { SiegeUiSounds.back(); minecraft.setScreen(parent); }
+    @Override public void onClose() { SiegeUiSounds.back(); if (minecraft != null) minecraft.setScreen(parent); }
     @Override public boolean isPauseScreen() { return false; }
 }
