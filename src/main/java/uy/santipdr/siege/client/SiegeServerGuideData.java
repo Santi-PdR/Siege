@@ -5,13 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Player-facing category map for the SIEGE server guide.
- *
- * This file deliberately contains no personal player state and no source/audit
- * vocabulary. It only decides which existing server-wide encyclopedia entries
- * should be grouped together for fast reading.
- */
+/** Player-facing category map for the SIEGE server guide. */
 public final class SiegeServerGuideData {
     public enum Category {
         START("EMPEZAR", "START HERE", "Lo esencial para entender el servidor antes de arriesgar recursos.",
@@ -43,34 +37,34 @@ public final class SiegeServerGuideData {
         if (category == null) return List.of();
         Set<String> ids = switch (category) {
             case START -> ordered(
-                    "server-overview", "newcomer-operational-rule", "server-exploration",
-                    "rarity-order", "progression-v1-v4", "trials-basics", "executors-basics",
-                    "structures-basics", "bosses-basics", "respawn-cards", "relic-basics",
-                    "dimensions-basics", "economy-basics", "prompt-precision-framework");
+                    "guide-first-hour", "server-overview", "newcomer-operational-rule", "server-exploration",
+                    "guide-races", "guide-progression", "guide-trials", "guide-executors", "guide-bosses",
+                    "guide-revive", "guide-relics", "guide-dimensions", "guide-economy", "guide-actions");
             case RACES -> ordered(
-                    "rarity-order", "race-catalog", "race-slots", "fabled-acquisition",
+                    "guide-races", "rarity-order", "race-catalog", "race-slots", "fabled-acquisition",
                     "race-human", "race-hacker", "race-shark", "race-saiyan", "race-deteriorer",
                     "race-pharaoh", "race-apotheosis", "race-death", "race-cyborg", "race-ghoul",
                     "race-subhuman", "race-terrarian", "race-kaioshin", "race-dragon",
                     "race-shinigami", "race-majin", "race-undertale-au");
             case PROGRESSION -> ordered(
-                    "progression-v1-v4", "fabled-acquisition", "progression-mobility-priority",
-                    "server-exploration", "trials-basics", "trial-meditation", "trial-spire",
-                    "meditation-levels", "assembling-planning", "race-human", "race-saiyan");
+                    "guide-progression", "guide-trials", "progression-v1-v4", "fabled-acquisition",
+                    "progression-mobility-priority", "server-exploration", "trials-basics", "trial-meditation",
+                    "trial-spire", "meditation-levels", "assembling-planning", "race-human", "race-saiyan");
             case THREATS -> ordered(
-                    "executors-basics", "executors-history", "bosses-basics", "combat-adaptation",
-                    "raids-basics", "raid-area-discipline", "factions-basics", "structures-basics",
-                    "missions-npcs");
+                    "guide-executors", "guide-bosses", "executors-basics", "executors-history", "bosses-basics",
+                    "combat-adaptation", "raids-basics", "raid-area-discipline", "factions-basics",
+                    "structures-basics", "missions-npcs");
             case SYSTEMS -> ordered(
-                    "relic-basics", "relic-analysis-workflow", "relic-third-justice",
-                    "item-geography-table", "item-daemonium-kit", "item-improbability-scroll",
-                    "assembling-table", "assembling-planning", "ability-room", "ability-gate",
-                    "dimensions-basics", "economy-basics", "prompt-design", "prompt-precision-framework");
+                    "guide-relics", "guide-assembling", "guide-dimensions", "guide-economy", "guide-actions",
+                    "relic-basics", "relic-analysis-workflow", "relic-third-justice", "item-geography-table",
+                    "item-daemonium-kit", "item-improbability-scroll", "assembling-table", "assembling-planning",
+                    "ability-room", "ability-gate", "dimensions-basics", "economy-basics", "prompt-design",
+                    "prompt-precision-framework");
             case SURVIVAL -> ordered(
-                    "newcomer-operational-rule", "progression-mobility-priority", "server-exploration",
-                    "respawn-cards", "death-revive-history", "death-revive-contradictions",
-                    "revive-repeat-penalties", "bosses-basics", "raid-area-discipline",
-                    "structures-basics", "prompt-precision-framework");
+                    "guide-first-hour", "guide-revive", "newcomer-operational-rule", "progression-mobility-priority",
+                    "server-exploration", "respawn-cards", "death-revive-history", "death-revive-contradictions",
+                    "revive-repeat-penalties", "guide-bosses", "bosses-basics", "raid-area-discipline",
+                    "structures-basics", "guide-actions", "prompt-precision-framework");
             case HISTORY -> ordered(
                     "executors-history", "race-deteriorer-old-debuff", "race-shark", "race-pharaoh",
                     "race-kaioshin", "race-undertale-au", "relic-third-justice", "death-revive-history",
