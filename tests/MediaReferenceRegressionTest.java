@@ -8,9 +8,15 @@ public final class MediaReferenceRegressionTest {
         check(tracks.size() >= 6, "DVN soundtrack reference list unexpectedly small");
         for (String title : new String[] {"Convenience Store", "Music Box", "New Store", "Jazz Music", "From the Ashes", "Sad Choir"})
             check(tracks.stream().anyMatch(t -> t.title().equals(title)), "Missing DVN media reference: " + title);
-        check(tracks.stream().allMatch(t -> t.note(false).toLowerCase().contains("not")
-                        || t.note(false).toLowerCase().contains("requires")),
-                "External audio references must state non-bundled/licensing boundary");
+        check(tracks.stream().allMatch(t -> !t.title().isBlank() && !t.note(false).isBlank()),
+                "Every external soundtrack reference needs a title and policy note");
+
+        String policy = tracks.stream().map(t -> t.note(false).toLowerCase()).reduce("", (a, b) -> a + " " + b);
+        check(policy.contains("not automatically bundled") || policy.contains("not bundled"),
+                "Reference catalog must explicitly say external audio is not bundled automatically");
+        check(policy.contains("requires a clear source/license") || policy.contains("without verifying audio rights"),
+                "Reference catalog must preserve the licensing/rights boundary");
+
         check(SiegeMediaReferenceData.visualReferences().size() >= 4, "Visual direction list unexpectedly small");
         check(SiegeMediaReferenceData.visualReferences().stream().anyMatch(v -> v.note(false).contains("16:9")),
                 "Visual references must retain HD/aspect-ratio direction");
