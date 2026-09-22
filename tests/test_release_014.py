@@ -57,7 +57,6 @@ def numbered(text: str):
     return [int(v) for v in re.findall(r"(?m)^(\d+)\. ", text)]
 
 
-# Historical release docs remain intact and 3.00 is active.
 assert numbered(CHANGELOGS["014"]) == list(range(1, 51))
 assert numbered(CHANGELOGS["050"]) == list(range(1, 51))
 assert numbered(CHANGELOGS["060"]) == list(range(1, 61))
@@ -74,7 +73,6 @@ assert "version = '3.00.0'" in BUILD
 for stale in ("version = '2.50.0'", "version = '2.25.0'", "version = '2.0.0'", "version = '1.50.0'", "version = '1.26.0'"):
     assert stale not in BUILD, f"Stale active version returned: {stale}"
 
-# Intel remains conservative and free of removed controls.
 assert 'file("SUP-001", "ATLAS", "SUPER-UNIT", 5, "125,000,000", "atlas"' in INTEL_DATA
 assert "No se recuperaron datos verificados" in INTEL_DATA
 for forbidden in ("FAVORITES", "toggleFavoriteIntel", "favoriteButton", "addIndexButton", "copyText", "GUARDAR"):
@@ -98,7 +96,6 @@ for fragment in (
     assert fragment in INTEL_CURRENT, f"Missing unresolved UNKNOWN record: {fragment}"
 assert "No se encontró una referencia suficientemente fiable" in INTEL_CURRENT
 
-# Information domains remain separate.
 for section in ("HOME", "OPERATIONS", "KNOWLEDGE", "DEPLOYMENT", "INTEL", "REFERENCE", "FIELD_MANUAL", "SETTINGS",
                 "COMMAND", "DIAGNOSTICS", "BACKGROUNDS", "INSPECTOR", "MEDIA", "NATIVE"):
     assert section in NAVIGATION, f"Missing navigation section {section}"
@@ -112,13 +109,11 @@ assert "new SiegeArchiveScreen(this)" not in SYSTEM
 for section in ("APPEARANCE", "MOTION", "AUDIO", "INTEL", "ACCESSIBILITY", "BACKGROUNDS", "SYSTEM"):
     assert section in SETTINGS
 
-# Ordinary chrome keeps qualitative health instead of the old unexplained percentage.
 assert "SiegeRuntimeStatus.readiness()" not in SCREEN_CHROME
 assert "readiness() + \"%\"" not in SCREEN_CHROME
 assert "SiegeRuntimeStatus.healthLabel" in SCREEN_CHROME
 assert "public static int readiness()" in DIAGNOSTIC
 
-# 3.00 Server Encyclopedia contracts.
 assert "class SiegeKnowledgeData" in KNOWLEDGE
 assert "enum Zone { SERVER, HISTORY }" in KNOWLEDGE
 for confidence in ("STAFF_CONFIRMED", "SYSTEM_OBSERVED", "HISTORICAL", "UNCONFIRMED", "CONTRADICTION"):
@@ -127,7 +122,7 @@ for domain in ("PROGRESSION", "EXECUTORS", "TRIALS", "STRUCTURES", "BOSSES", "MI
                "ABILITIES", "MEDITATION", "ITEMS", "ASSEMBLING", "RELICS", "DIMENSIONS", "DEATH_REVIVE",
                "RAIDS_EVENTS", "FACTIONS", "ECONOMY", "PROMPTS", "CONTRADICTIONS", "SOURCES"):
     assert domain in KNOWLEDGE, f"Missing encyclopedia domain {domain}"
-for audit_value in ("488 archivos", "252/252 JSON", "251.065", "0 duplicados"):
+for audit_value in ("488 archivos", "252/252 JSON", "251.065", "sin duplicados"):
     assert audit_value in KNOWLEDGE, f"Encyclopedia audit lost: {audit_value}"
 for entry_id in (
         "server-overview", "rarity-order", "race-catalog", "race-human", "race-hacker", "race-shark",
@@ -152,13 +147,11 @@ assert "añadir únicamente información general" in KNOWLEDGE_ARCH
 assert "KnowledgeDataRegressionTest" in WORKFLOW
 assert "información personal" in QA_300
 
-# No personal-player subsystem is allowed back into the encyclopedia.
 for forbidden in (
         "current-rust-guard", "current-deteriorer-snapshot", "current-meditation", "CURRENT_CONFIRMED",
         "PLAYER_EXPERIENCE", "SIEGE current notebook", "player notebook", "Mi partida actual"):
     assert forbidden not in KNOWLEDGE, f"Personal/player-specific encyclopedia data returned: {forbidden}"
 
-# Operations Hub remains additive: search + deep links + live state + history.
 assert "class SiegeOperationsIndex" in OPS_INDEX
 for kind in ("ROUTE", "INTEL", "ARMORY", "KNOWLEDGE"):
     assert kind in OPS_INDEX
@@ -183,7 +176,6 @@ assert "new SiegeOperationsHubScreen(screen)" in OPS_EVENTS
 assert 'case "SiegeKnowledgeScreen"' in OPS_EVENTS
 assert "class SiegeRouteHistory" in ROUTE_HISTORY and "RECENT.remove(route)" in ROUTE_HISTORY
 
-# Tempest Jutcherson stays an easter egg and not a normal menu image.
 assert "TEMPEST_JUTCHERSON" in EASTER_EGGS
 assert '"tempest_jutcherson"' in EASTER_EGGS
 assert '"tempest_jutcherson"' not in SCENE_CATALOG
@@ -193,7 +185,6 @@ assert "standardIndex(long slot)" in SCENE_SCHEDULE
 assert "SiegeSceneCatalog.featuredIndex()" in SCENE_SCHEDULE
 assert "SiegeSceneCatalog.anomalyIndex()" not in SCENE_SCHEDULE
 
-# Deployment and hidden Singleplayer contracts remain.
 assert "SiegeLacontinuacion.exaroton.me:18736" in MULTIPLAYER
 assert "original.onPress()" in MULTIPLAYER
 for state in ("QUERYING", "OFFLINE", "NO_RESPONSE", "INCOMPATIBLE", "ONLINE"):
@@ -203,7 +194,6 @@ for forbidden_key in ("GLFW_KEY_I", "GLFW_KEY_P", "GLFW_KEY_G", "GLFW_KEY_M", "G
     assert re.search(rf"(?<![A-Z0-9_]){re.escape(forbidden_key)}(?![A-Z0-9_])", TITLE) is None, \
         f"Unrequested title shortcut returned: {forbidden_key}"
 
-# CI validates the new systems rather than merely compiling them.
 for required in ("OperationsIndexTest", "KnowledgeDataRegressionTest", "GuiResourceRegressionTest", "SceneScheduleTest", "NavigationIdentityTest"):
     assert required in WORKFLOW, f"CI lost {required}"
 assert "version = '3.00.0'" in WORKFLOW
