@@ -139,9 +139,12 @@ public final class SiegeProgressionMapScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && selected != null && mouseX >= detailX && mouseX <= detailX + detailW
                 && mouseY >= detailY + detailH - 24 && mouseY <= detailY + detailH) {
-            SiegeUiSounds.confirm();
-            minecraft.setScreen(new SiegeKnowledgeScreen(this, selected.knowledgeId()));
-            return true;
+            SiegeKnowledgeData.Entry knowledge = SiegeKnowledgeRegistry.get(selected.knowledgeId());
+            if (knowledge != null) {
+                SiegeUiSounds.confirm();
+                minecraft.setScreen(new SiegeKnowledgeFileScreen(this, knowledge));
+                return true;
+            }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -201,7 +204,7 @@ public final class SiegeProgressionMapScreen extends Screen {
         boolean hot = mouseX >= x && mouseX < x + w && mouseY >= by && mouseY < by + 16;
         g.fill(x, by, x + w, by + 16, hot ? 0xCC314B59 : 0xB51A252B);
         g.fill(x, by, x + 2, by + 16, accent);
-        g.drawCenteredString(font, fit(label("VER INFORMACIÓN", "OPEN DETAILS"), w - 8),
+        g.drawCenteredString(font, fit(label("VER INFORMACIÓN COMPLETA", "VIEW FULL INFO"), w - 8),
                 x + w / 2, by + 4, hot ? SiegeTheme.INK : SiegeTheme.MUTED);
     }
 
