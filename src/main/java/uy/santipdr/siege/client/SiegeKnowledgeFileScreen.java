@@ -51,7 +51,8 @@ public final class SiegeKnowledgeFileScreen extends Screen {
     private boolean hasNextStep() {
         if (entry == null) return false;
         return switch (entry.id()) {
-            case "server-overview", "race-system", "progression-v1-v4", "trials-basics", "bosses-basics" -> true;
+            case "server-overview", "race-system", "progression-v1-v4", "trials-basics", "bosses-basics",
+                 "race-subhuman", "race-saiyan", "race-ghoul" -> true;
             default -> false;
         };
     }
@@ -64,6 +65,9 @@ public final class SiegeKnowledgeFileScreen extends Screen {
             case "progression-v1-v4" -> label("ABRIR MAPA DE PROGRESIÓN", "OPEN PROGRESSION MAP");
             case "trials-basics" -> label("VER TRIALS EN EL ATLAS", "OPEN TRIALS IN ATLAS");
             case "bosses-basics" -> label("ABRIR INTEL · UNIDADES Y BOSSES", "OPEN INTEL · UNITS AND BOSSES");
+            case "race-subhuman" -> label("VER VARIANTES SUBHUMAN", "OPEN SUBHUMAN VARIANTS");
+            case "race-saiyan" -> label("VER TRANSFORMACIONES SAIYAN", "OPEN SAIYAN TRANSFORMATIONS");
+            case "race-ghoul" -> label("VER EVOLUCIONES GHOUL", "OPEN GHOUL EVOLUTIONS");
             default -> "";
         };
     }
@@ -71,8 +75,7 @@ public final class SiegeKnowledgeFileScreen extends Screen {
     private String nextStepIcon() {
         if (entry == null) return "overview";
         return switch (entry.id()) {
-            case "bosses-basics" -> "intel";
-            case "race-system" -> "intel";
+            case "bosses-basics", "race-system", "race-subhuman", "race-saiyan", "race-ghoul" -> "intel";
             default -> "overview";
         };
     }
@@ -87,6 +90,9 @@ public final class SiegeKnowledgeFileScreen extends Screen {
             case "progression-v1-v4" -> minecraft.setScreen(new SiegeProgressionMapScreen(this));
             case "trials-basics" -> minecraft.setScreen(new SiegeAtlasScreen(this, SiegeAtlasIndex.View.PROGRESSION));
             case "bosses-basics" -> minecraft.setScreen(new IntelScreenV3(this));
+            case "race-subhuman" -> minecraft.setScreen(new SiegeRaceVariantsScreen(this, "subhuman"));
+            case "race-saiyan" -> minecraft.setScreen(new SiegeRaceVariantsScreen(this, "saiyan"));
+            case "race-ghoul" -> minecraft.setScreen(new SiegeRaceVariantsScreen(this, "ghoul"));
             default -> { }
         }
     }
