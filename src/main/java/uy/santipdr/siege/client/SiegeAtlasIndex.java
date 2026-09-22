@@ -12,7 +12,7 @@ public final class SiegeAtlasIndex {
             "rarity-order", "race-catalog", "progression-v1-v4", "progression-mobility-priority",
             "trials-basics", "executors-basics", "structures-basics", "bosses-basics",
             "dimensions-basics", "respawn-cards", "relic-basics", "relic-analysis-workflow",
-            "economy-basics", "prompt-design", "prompt-precision-framework", "source-policy"
+            "economy-basics", "prompt-design", "prompt-precision-framework"
     );
 
     private SiegeAtlasIndex() { }
@@ -44,7 +44,6 @@ public final class SiegeAtlasIndex {
                     && entry.domain() != SiegeKnowledgeData.Domain.CONTRADICTIONS
                     && entry.domain() != SiegeKnowledgeData.Domain.OVERVIEW;
             case RESEARCH -> entry.zone() == SiegeKnowledgeData.Zone.HISTORY
-                    || entry.domain() == SiegeKnowledgeData.Domain.SOURCES
                     || entry.domain() == SiegeKnowledgeData.Domain.CONTRADICTIONS
                     || entry.confidence() == SiegeKnowledgeData.Confidence.UNCONFIRMED
                     || entry.confidence() == SiegeKnowledgeData.Confidence.CONTRADICTION
@@ -55,26 +54,26 @@ public final class SiegeAtlasIndex {
     public static String label(View view, boolean spanish) {
         return switch (view) {
             case BRIEFING -> spanish ? "EMPEZAR" : "START HERE";
-            case RACES -> spanish ? "REGISTRO DE RAZAS" : "RACE REGISTRY";
+            case RACES -> spanish ? "RAZAS" : "RACES";
             case SYSTEMS -> spanish ? "SISTEMAS" : "SYSTEMS";
-            case RESEARCH -> spanish ? "INVESTIGACIÓN" : "RESEARCH";
+            case RESEARCH -> spanish ? "HISTÓRICO" : "HISTORY";
         };
     }
 
     public static String description(View view, boolean spanish) {
         return switch (view) {
             case BRIEFING -> spanish
-                    ? "Lo mínimo que conviene entender antes de arriesgar recursos: progreso, revive, amenazas, movilidad y límites."
-                    : "The minimum to understand before risking resources: progression, revival, threats, mobility and limits.";
+                    ? "Lo esencial antes de arriesgar recursos: progreso, revive, amenazas, movilidad y equipo."
+                    : "The essentials before risking resources: progression, revival, threats, mobility and gear.";
             case RACES -> spanish
-                    ? "Rarezas, razas documentadas, progresión y diferencias conocidas sin mezclar datos personales."
-                    : "Rarities, documented races, progression and known differences without personal data.";
+                    ? "Razas conocidas, rarezas, formas de progresión y variantes importantes."
+                    : "Known races, rarities, progression styles and important variants.";
             case SYSTEMS -> spanish
-                    ? "Trials, Executores, estructuras, bosses, dimensiones, Assembling, reliquias, economía, prompts y eventos."
-                    : "Trials, Executors, structures, bosses, dimensions, Assembling, relics, economy, prompts and events.";
+                    ? "Trials, Executores, estructuras, bosses, dimensiones, Assembling, reliquias, economía y eventos."
+                    : "Trials, Executors, structures, bosses, dimensions, Assembling, relics, economy and events.";
             case RESEARCH -> spanish
-                    ? "Histórico, contradicciones, fuentes y preguntas todavía abiertas del archivo."
-                    : "History, contradictions, sources and questions still open in the archive.";
+                    ? "Cambios antiguos, contradicciones y datos que todavía no están completos."
+                    : "Older changes, contradictions and information that is still incomplete.";
         };
     }
 }
