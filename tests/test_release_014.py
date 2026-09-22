@@ -147,7 +147,8 @@ for state in ("QUERYING", "OFFLINE", "NO_RESPONSE", "INCOMPATIBLE", "ONLINE"):
     assert state in DEPLOYMENT
 assert "GLFW_KEY_S && Screen.hasControlDown()" in TITLE
 for forbidden_key in ("GLFW_KEY_I", "GLFW_KEY_P", "GLFW_KEY_G", "GLFW_KEY_M", "GLFW_KEY_R"):
-    assert forbidden_key not in TITLE, f"Unrequested title shortcut returned: {forbidden_key}"
+    assert re.search(rf"(?<![A-Z0-9_]){re.escape(forbidden_key)}(?![A-Z0-9_])", TITLE) is None, \
+        f"Unrequested title shortcut returned: {forbidden_key}"
 
 # CI must validate the new systems rather than merely compiling them.
 assert "OperationsIndexTest" in WORKFLOW
