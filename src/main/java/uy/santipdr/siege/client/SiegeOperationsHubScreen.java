@@ -8,11 +8,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/**
- * SIEGE 3.00 operational front door. Navigation, search and live client status
- * are unified without collapsing information domains: Intel, Archive, Armory,
- * Field Manual and the non-personal Eternal Craft Server Encyclopedia remain distinct.
- */
+/** Search/control surface behind the SIEGE 4.0 Recruit Briefing. */
 public final class SiegeOperationsHubScreen extends Screen {
     private final Screen parent;
     private final List<SiegeButton> resultButtons = new ArrayList<>();
@@ -31,34 +27,33 @@ public final class SiegeOperationsHubScreen extends Screen {
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
-        compact = width < 560 || height < 350;
+        compact = width < 620 || height < 380;
         int margin = compact ? 7 : Math.max(12, width / 70);
         panelX = margin;
-        panelY = compact ? 31 : 36;
+        panelY = compact ? 31 : 38;
         panelW = Math.max(1, width - margin * 2);
         panelH = Math.max(1, height - panelY - (compact ? 18 : 24));
 
-        int backW = compact ? 62 : 86;
-        addRenderableWidget(new SiegeButton(8, 7, backW, 19,
+        addRenderableWidget(new SiegeButton(8, 7, compact ? 62 : 88, 19,
                 Component.literal(label("VOLVER", "BACK")), b -> onClose(), SiegeTheme.RED)
                 .withIcon("back").setCompactCenter(true));
 
         routeButtonH = compact ? 18 : 20;
         routeGap = compact ? 3 : 5;
-        routeTop = panelY + (compact ? 68 : 84);
+        routeTop = panelY + (compact ? 63 : 75);
         int routeX = panelX + 10;
         int routeW = panelW - 20;
-        int cols = compact && panelW < 350 ? 2 : 3;
-        int cellW = Math.max(1, (routeW - routeGap * (cols - 1)) / cols);
+        int cols = routeW < 430 ? 2 : routeW < 820 ? 3 : 5;
+        int cellW = Math.max(58, (routeW - routeGap * (cols - 1)) / cols);
         SiegeOperationsIndex.Route[] routes = SiegeOperationsIndex.Route.values();
         for (int i = 0; i < routes.length; i++) {
             SiegeOperationsIndex.Route route = routes[i];
             int row = i / cols;
             int col = i % cols;
             int x = routeX + col * (cellW + routeGap);
-            int w = col == cols - 1 ? routeX + routeW - x : cellW;
+            int right = col == cols - 1 ? routeX + routeW : x + cellW;
             int y = routeTop + row * (routeButtonH + routeGap);
-            SiegeButton button = new SiegeButton(x, y, w, routeButtonH,
+            SiegeButton button = new SiegeButton(x, y, Math.max(40, right - x), routeButtonH,
                     Component.literal(routeLabel(route)), b -> openRoute(route), routeAccent(route))
                     .withIcon(routeIcon(route)).setCompactCenter(true);
             button.setTooltip(Tooltip.create(Component.literal(routeDescription(route))));
@@ -66,25 +61,24 @@ public final class SiegeOperationsHubScreen extends Screen {
         }
 
         int rows = (routes.length + cols - 1) / cols;
-        searchY = routeTop + rows * (routeButtonH + routeGap) + (compact ? 8 : 12);
+        searchY = routeTop + rows * (routeButtonH + routeGap) + (compact ? 7 : 10);
         int searchX = panelX + 10;
         int searchW = panelW - 20;
         searchBox = new EditBox(font, searchX, searchY, searchW, 20,
                 Component.literal(label("Búsqueda operacional", "Operational search")));
         searchBox.setHint(Component.literal(label(
-                "Buscar dossier, raza, rareza, Trial, reliquia, objeto o ruta…",
-                "Search dossier, race, rarity, Trial, relic, item or route…")));
+                "ATLAS, Human, Trial, Third Justice, Executor, revive…",
+                "ATLAS, Human, Trial, Third Justice, Executor, revive…")));
         searchBox.setResponder(value -> refreshResults());
         addRenderableWidget(searchBox);
 
         resultsY = searchY + 25;
-        int available = Math.max(0, panelY + panelH - resultsY - 24);
-        visibleResultSlots = Math.max(0, Math.min(5, available / (routeButtonH + 3)));
-        for (int i = 0; i < 5; i++) {
+        int available = Math.max(0, panelY + panelH - resultsY - 21);
+        visibleResultSlots = Math.max(0, Math.min(6, available / (routeButtonH + 3)));
+        for (int i = 0; i < 6; i++) {
             int slot = i;
             SiegeButton button = new SiegeButton(searchX, resultsY + i * (routeButtonH + 3), searchW, routeButtonH,
-                    Component.empty(), b -> openResult(slot), SiegeTheme.CYAN)
-                    .withIcon("search");
+                    Component.empty(), b -> openResult(slot), SiegeTheme.CYAN).withIcon("search");
             button.visible = i < visibleResultSlots;
             button.active = false;
             resultButtons.add(addRenderableWidget(button));
@@ -103,7 +97,7 @@ public final class SiegeOperationsHubScreen extends Screen {
             button.active = present;
             if (!present) {
                 button.setMessage(Component.literal(i == 0 && !searchBox.getValue().isBlank()
-                        ? label("Sin coincidencias verificables", "No verified matches") : ""));
+                        ? label("Sin coincidencias", "No matches") : ""));
                 continue;
             }
             SiegeOperationsIndex.Entry entry = results.get(i);
@@ -113,7 +107,9 @@ public final class SiegeOperationsHubScreen extends Screen {
                 case ARMORY -> label("ARSENAL", "ARMORY");
                 case KNOWLEDGE -> label("ENCICLOPEDIA", "ENCYCLOPEDIA");
             };
-            button.setMessage(Component.literal(prefix + " · " + entry.title() + "  //  " + entry.subtitle()));
+            String message = prefix + " · " + entry.title();
+            if (!compact && !entry.subtitle().isBlank()) message += "  //  " + entry.subtitle();
+            button.setMessage(Component.literal(message));
         }
     }
 
@@ -148,7 +144,7 @@ public final class SiegeOperationsHubScreen extends Screen {
             case COMMAND -> minecraft.setScreen(new SiegeSystemScreen(this));
             case DIAGNOSTICS -> minecraft.setScreen(new SiegeDiagnosticsScreen(this));
             case SETTINGS -> minecraft.setScreen(new SiegeSettingsScreen(this));
-            case BACKGROUNDS -> minecraft.setScreen(new SiegeSceneScreen(this));
+            case BACKGROUNDS -> minecraft.setScreen(new SiegeMediaRoomScreen(this));
         }
     }
 
@@ -156,47 +152,38 @@ public final class SiegeOperationsHubScreen extends Screen {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
-        g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xB9000000 : 0x8A000000);
+        g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xB9000000 : 0x8F000000);
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.CYAN);
 
         int tx = panelX + 12;
         int ty = panelY + 9;
-        String title = label("CENTRO DE OPERACIONES", "OPERATIONS HUB") + " // " + SiegeRuntimeStatus.version();
-        g.drawString(font, fit(title, panelW - 24), tx, ty, SiegeTheme.INK, false);
+        int textW = panelW - 24;
+        g.drawString(font, fit(label("CENTRO DE OPERACIONES", "OPERATIONS HUB")
+                + " // " + SiegeRuntimeStatus.version(), textW), tx, ty, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Buscar y abrir dossiers, guía del servidor, archivo, arsenal y herramientas técnicas desde un solo lugar.",
-                "Search and open dossiers, server guide, archive, armory and technical tools from one place."), panelW - 24),
+                "Búsqueda global y accesos directos para encontrar cualquier sección sin recorrer todo el menú.",
+                "Global search and shortcuts for finding any section without walking the whole menu."), textW),
                 tx, ty + 12, SiegeTheme.MUTED, false);
 
-        int statusY = ty + 30;
-        String health = SiegeRuntimeStatus.healthLabel(spanish());
-        g.drawString(font, fit(label("CLIENTE ", "CLIENT ") + health + " · "
-                        + SiegeRuntimeStatus.profileFitLabel(spanish()), panelW - 24),
-                tx, statusY, SiegeRuntimeStatus.healthAccent(), false);
-        g.drawString(font, fit(SiegeRuntimeStatus.intelLabel(spanish()), panelW - 24),
-                tx, statusY + 11, SiegeTheme.GOLD, false);
+        String status = SiegeRuntimeStatus.healthLabel(spanish()) + " · "
+                + SiegeRuntimeStatus.profileFitLabel(spanish()) + " · "
+                + (spanish() ? "ENCICLOPEDIA " : "ENCYCLOPEDIA ") + SiegeKnowledgeData.entries().size();
+        g.drawString(font, fit(status, textW), tx, ty + 29, SiegeRuntimeStatus.healthAccent(), false);
         if (!compact) {
             int scene = SiegeBackgrounds.currentIndex(System.currentTimeMillis());
-            String line = SiegeBackgrounds.sceneTag(scene, spanish()) + " · " + SiegeBackgrounds.name(scene, spanish())
-                    + "   |   " + SiegeRuntimeStatus.audioLabel(spanish());
-            g.drawString(font, fit(line, panelW - 24), tx, statusY + 22, SiegeTheme.CYAN, false);
-            String knowledge = (spanish() ? "ENCICLOPEDIA " : "ENCYCLOPEDIA ") + SiegeKnowledgeData.entries().size()
-                    + " · " + (spanish() ? "TEMAS CRÍTICOS " : "CRITICAL TOPICS ") + SiegeKnowledgeData.critical().size()
-                    + " · " + (spanish() ? "FUENTES FECHADAS" : "DATED SOURCES");
-            g.drawString(font, fit(knowledge, panelW - 24), tx, statusY + 33, SiegeTheme.GREEN, false);
+            String media = SiegeBackgrounds.name(scene, spanish()) + " · " + SiegeRuntimeStatus.audioLabel(spanish());
+            g.drawString(font, fit(media, textW), tx, ty + 41, SiegeTheme.CYAN, false);
         }
 
         SiegeTheme.divider(g, panelX + 10, routeTop - 7, panelW - 20, SiegeTheme.CYAN);
-        g.drawString(font, label("RUTAS OPERACIONALES", "OPERATIONAL ROUTES"), panelX + 13, routeTop - 18,
-                SiegeTheme.CYAN, false);
+        g.drawString(font, label("RUTAS", "ROUTES"), panelX + 13, routeTop - 18, SiegeTheme.CYAN, false);
 
-        int recentY = panelY + panelH - 15;
+        int recentY = panelY + panelH - 14;
         List<SiegeOperationsIndex.Route> recent = SiegeRouteHistory.snapshot();
         if (!recent.isEmpty()) {
             String recentText = label("RECIENTE: ", "RECENT: ") + recent.stream()
-                    .limit(4).map(this::routeShort).reduce((a, b) -> a + "  ›  " + b).orElse("");
-            g.drawString(font, fit(recentText, panelW - 24), panelX + 12, recentY,
-                    SiegeTheme.MUTED, false);
+                    .limit(4).map(this::routeShort).reduce((a, b) -> a + " › " + b).orElse("");
+            g.drawString(font, fit(recentText, textW), panelX + 12, recentY, SiegeTheme.MUTED, false);
         }
 
         if (searchBox != null) {
@@ -210,13 +197,6 @@ public final class SiegeOperationsHubScreen extends Screen {
         SiegeScreenChrome.renderOverlay(this, g);
     }
 
-    private String fit(String value, int pixels) {
-        if (pixels <= 0) return "";
-        if (font.width(value) <= pixels) return value;
-        if (pixels <= font.width("…")) return font.plainSubstrByWidth(value, pixels);
-        return font.plainSubstrByWidth(value, pixels - font.width("…")) + "…";
-    }
-
     private String routeLabel(SiegeOperationsIndex.Route route) {
         return switch (route) {
             case DEPLOYMENT -> label("DESPLIEGUE", "DEPLOYMENT");
@@ -228,7 +208,7 @@ public final class SiegeOperationsHubScreen extends Screen {
             case COMMAND -> label("COMANDO", "COMMAND");
             case DIAGNOSTICS -> label("DIAGNÓSTICO", "DIAGNOSTICS");
             case SETTINGS -> label("AJUSTES", "SETTINGS");
-            case BACKGROUNDS -> label("FONDOS", "BACKGROUNDS");
+            case BACKGROUNDS -> label("MULTIMEDIA", "MEDIA");
         };
     }
 
@@ -243,24 +223,22 @@ public final class SiegeOperationsHubScreen extends Screen {
             case COMMAND -> "CMD";
             case DIAGNOSTICS -> "DIA";
             case SETTINGS -> "CFG";
-            case BACKGROUNDS -> "BG";
+            case BACKGROUNDS -> "AV";
         };
     }
 
     private String routeDescription(SiegeOperationsIndex.Route route) {
         return switch (route) {
             case DEPLOYMENT -> label("Servidor oficial, compatibilidad y conexión.", "Official server, compatibility and connection.");
-            case INTEL -> label("Dossiers actuales de unidades y amenazas.", "Current unit and threat dossiers.");
-            case KNOWLEDGE -> label(
-                    "Guía general del servidor: razas, rarezas, progresión, Trials, Executores, sistemas y cambios históricos.",
-                    "General server guide: races, rarities, progression, Trials, Executors, systems and historical changes.");
+            case INTEL -> label("Dossiers de unidades y amenazas.", "Unit and threat dossiers.");
+            case KNOWLEDGE -> label("Razas, rarezas, progresión, Trials, Executores y sistemas.", "Races, rarities, progression, Trials, Executors and systems.");
             case ARCHIVE -> label("SIEGE, 2044, facciones, Núcleo, Gates/Rifts e inspiraciones.", "SIEGE, 2044, factions, Core, Gates/Rifts and inspirations.");
-            case ARMORY -> label("Equipamiento, objetos y evidencia multimedia.", "Equipment, items and multimedia evidence.");
-            case FIELD_MANUAL -> label("Estados de muerte/heridas, misiones y protocolos.", "Death/injury states, missions and protocols.");
+            case ARMORY -> label("Objetos, reliquias, equipamiento y Third Justice.", "Items, relics, equipment and Third Justice.");
+            case FIELD_MANUAL -> label("Muerte/heridas, misiones y protocolos.", "Death/injury states, missions and protocols.");
             case COMMAND -> label("Perfil visual y estado del cliente.", "Visual profile and client state.");
-            case DIAGNOSTICS -> label("Problemas técnicos y recuperación explícita.", "Technical problems and explicit recovery.");
-            case SETTINGS -> label("Configuración visual, audio, Intel y accesibilidad.", "Visual, audio, Intel and accessibility configuration.");
-            case BACKGROUNDS -> label("Galería y rotación de escenas del menú.", "Menu scene gallery and rotation.");
+            case DIAGNOSTICS -> label("Problemas técnicos y recuperación.", "Technical problems and recovery.");
+            case SETTINGS -> label("Apariencia, audio, Intel y accesibilidad.", "Appearance, audio, Intel and accessibility.");
+            case BACKGROUNDS -> label("Soundtrack, fondos, galería y referencias DVN.", "Soundtrack, backgrounds, gallery and DVN references.");
         };
     }
 
@@ -290,17 +268,14 @@ public final class SiegeOperationsHubScreen extends Screen {
         };
     }
 
-    private boolean spanish() {
-        return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_");
+    private String fit(String value, int pixels) {
+        if (value == null || pixels <= 0) return "";
+        if (font.width(value) <= pixels) return value;
+        if (pixels <= font.width("…")) return font.plainSubstrByWidth(value, pixels);
+        return font.plainSubstrByWidth(value, pixels - font.width("…")) + "…";
     }
-
+    private boolean spanish() { return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_"); }
     private String label(String es, String en) { return spanish() ? es : en; }
-
-    @Override
-    public void onClose() {
-        if (minecraft != null) minecraft.setScreen(parent);
-    }
-
-    @Override
-    public boolean isPauseScreen() { return false; }
+    @Override public void onClose() { SiegeUiSounds.back(); if (minecraft != null) minecraft.setScreen(parent); }
+    @Override public boolean isPauseScreen() { return false; }
 }
