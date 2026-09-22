@@ -7,7 +7,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
-/** Full source-aware record viewer shared by the 4.00 Atlas and search. */
+/** Full player-facing server information file. */
 public final class SiegeKnowledgeFileScreen extends Screen {
     private final Screen parent;
     private final SiegeKnowledgeData.Entry entry;
@@ -17,7 +17,7 @@ public final class SiegeKnowledgeFileScreen extends Screen {
     private boolean compact;
 
     public SiegeKnowledgeFileScreen(Screen parent, SiegeKnowledgeData.Entry entry) {
-        super(Component.literal("SIEGE // KNOWLEDGE FILE"));
+        super(Component.literal("SIEGE // SERVER FILE"));
         this.parent = parent;
         this.entry = entry;
     }
@@ -32,7 +32,7 @@ public final class SiegeKnowledgeFileScreen extends Screen {
         panelW = Math.max(1, width - margin * 2);
         panelH = Math.max(1, height - panelY - (compact ? 17 : 23));
         contentX = panelX + 10;
-        contentY = panelY + 52;
+        contentY = panelY + 48;
         contentW = panelW - 20;
         contentH = Math.max(60, panelY + panelH - contentY - 10);
 
@@ -56,16 +56,18 @@ public final class SiegeKnowledgeFileScreen extends Screen {
         SiegeMusic.ensurePlaying();
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xC7000000 : 0x99000000);
-        int accent = entry == null ? SiegeTheme.MUTED : SiegeKnowledgeData.confidenceAccent(entry.confidence());
+        int accent = entry == null ? SiegeTheme.MUTED
+                : entry.zone() == SiegeKnowledgeData.Zone.HISTORY ? SiegeTheme.ORANGE : SiegeTheme.CYAN;
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, accent);
 
-        String title = entry == null ? label("ARCHIVO NO DISPONIBLE", "FILE UNAVAILABLE") : entry.title(spanish());
+        String title = entry == null ? label("INFORMACIÓN NO DISPONIBLE", "INFORMATION UNAVAILABLE") : entry.title(spanish());
         g.drawString(font, fit(title, panelW - 24), panelX + 12, panelY + 9, SiegeTheme.INK, false);
-        String meta = entry == null ? "--" : entry.domain().label(spanish()) + " · "
-                + SiegeKnowledgeData.sourceLine(entry, spanish());
+        String meta = entry == null ? "--" : entry.domain().label(spanish())
+                + (entry.zone() == SiegeKnowledgeData.Zone.HISTORY
+                ? label(" · PUEDE HABER CAMBIADO", " · MAY HAVE CHANGED") : "");
         g.drawString(font, fit(meta, panelW - 24), panelX + 12, panelY + 22, accent, false);
-        g.drawString(font, fit(label("ARCHIVO DE SERVIDOR · NO CONTIENE PERFIL DE JUGADOR",
-                        "SERVER FILE · NO PLAYER PROFILE DATA"), panelW - 24),
+        g.drawString(font, fit(label("Información general para entender este tema del servidor.",
+                        "General information for understanding this server topic."), panelW - 24),
                 panelX + 12, panelY + 34, SiegeTheme.MUTED, false);
 
         SiegeTheme.panel(g, contentX - 3, contentY - 3, contentW + 6, contentH + 6, accent);
@@ -82,21 +84,16 @@ public final class SiegeKnowledgeFileScreen extends Screen {
         addParagraph(lines, entry.summary(spanish()), contentW - 16, blank);
         lines.add(blank);
         addParagraph(lines, entry.body(spanish()), contentW - 16, blank);
-        if (!entry.related().isEmpty()) {
+
+        List<String> relatedTitles = entry.related().stream()
+                .map(SiegeKnowledgeRegistry::get)
+                .filter(java.util.Objects::nonNull)
+                .map(e -> e.title(spanish()))
+                .distinct().limit(8).toList();
+        if (!relatedTitles.isEmpty()) {
             lines.add(blank);
-            addParagraph(lines, label("RELACIONADO: ", "RELATED: ") + String.join(" · ", entry.related()),
+            addParagraph(lines, label("TAMBIÉN VER: ", "SEE ALSO: ") + String.join(" · ", relatedTitles),
                     contentW - 16, blank);
-        }
-        if (!entry.sources().isEmpty()) {
-            lines.add(blank);
-            addParagraph(lines, label("REFERENCIAS", "REFERENCES"), contentW - 16, blank);
-            for (SiegeKnowledgeData.Source source : entry.sources()) {
-                String line = "• " + source.confidence().label(spanish())
-                        + (source.date().isBlank() ? "" : " · " + source.date())
-                        + (source.section().isBlank() ? "" : " · " + source.section())
-                        + (source.note(spanish()).isBlank() ? "" : " — " + source.note(spanish()));
-                addParagraph(lines, line, contentW - 16, blank);
-            }
         }
 
         int maxOffset = Math.max(0, lines.size() - 1);
@@ -130,11 +127,6 @@ public final class SiegeKnowledgeFileScreen extends Screen {
     private boolean spanish() {
         return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_");
     }
-
     private String label(String es, String en) { return spanish() ? es : en; }
-
-    @Override
-    public void onClose() {
-        minecraft.setScreen(parent);
-    }
+    @Override public void onClose() { if (minecraft != null) minecraft.setScreen(parent); }
 }
