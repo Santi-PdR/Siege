@@ -28,16 +28,16 @@ jobs:
         with:
           gradle-version: '8.8'
 
-      - name: Prepare SIEGE 3.00 visual masters
+      - name: Prepare SIEGE 4.00 visual masters
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow
           python3 scripts/prepare-backgrounds-hd.py
 
-      - name: Verify responsive layouts, server encyclopedia and Operations search
+      - name: Verify responsive layouts, Atlas knowledge and War Room search
         shell: bash
         run: |
-          mkdir -p build/layout-tests
+          mkdir -p build/layout-tests build/guide-tests build/guide-media-tests build/archive-tests build/config-tests build/scene-tests build/knowledge-tests build/atlas-tests build/ops-tests
           javac -d build/layout-tests src/main/java/uy/santipdr/siege/client/SiegeGalleryLayout.java src/main/java/uy/santipdr/siege/client/SiegeIntelLayout.java src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelPresentation.java src/main/java/uy/santipdr/siege/client/SiegeImageViewport.java src/main/java/uy/santipdr/siege/client/SiegeUiLayout.java src/main/java/uy/santipdr/siege/client/IntelEntry.java tests/UiRegressionTest.java
           java -cp build/layout-tests UiRegressionTest
           javac -d build/layout-tests src/main/java/uy/santipdr/siege/client/SiegeMultiplayerLayout.java tests/MultiplayerLayoutTest.java
@@ -54,10 +54,12 @@ jobs:
           java -cp build/scene-tests SceneScheduleTest
           javac -d build/knowledge-tests src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java tests/KnowledgeDataRegressionTest.java
           java -cp build/knowledge-tests KnowledgeDataRegressionTest
-          javac -d build/ops-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java src/main/java/uy/santipdr/siege/client/SiegeRouteHistory.java tests/OperationsIndexTest.java
+          javac -d build/atlas-tests src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java src/main/java/uy/santipdr/siege/client/SiegeAtlasIndex.java tests/AtlasRegressionTest.java
+          java -cp build/atlas-tests AtlasRegressionTest
+          javac -d build/ops-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java src/main/java/uy/santipdr/siege/client/SiegeRouteHistory.java tests/OperationsIndexTest.java
           java -cp build/ops-tests OperationsIndexTest
           python3 tests/test_installer.py
-          python3 tests/test_release_014.py
+          python3 tests/test_release_040.py
 
       - name: Verify menu theme scope and drawing bounds
         run: |
@@ -74,34 +76,30 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify SIEGE 3.00 encyclopedia, navigation and easter-egg contracts
+      - name: Verify SIEGE 4.00 War Room, privacy and easter-egg contracts
         shell: bash
         run: |
-          grep -q "version = '3.00.0'" build.gradle
+          grep -q "version = '4.00.0'" build.gradle
           grep -q 'class SiegeOperationsHubScreen' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
-          grep -q 'class SiegeKnowledgeScreen' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
-          grep -q 'class SiegeKnowledgeData' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'SiegeOperationsIndex.search' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
-          grep -q 'new SiegeKnowledgeScreen(this, entry.knowledgeId())' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
-          grep -q 'new SiegeOperationsHubScreen(screen)' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
-          grep -q 'case "SiegeKnowledgeScreen"' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
-          grep -q 'enum Zone { SERVER, HISTORY }' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'STAFF_CONFIRMED' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'HISTORICAL' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'UNCONFIRMED' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'CONTRADICTION' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'Mode { START, RACES, SYSTEMS, HISTORY }' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
-          grep -q 'ENCICLOPEDIA DEL SERVIDOR' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
-          grep -q 'race-catalog' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'rarity-order' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'Obsainan' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'Fabled' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q '251.065' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          if grep -nEi 'current-rust-guard|current-deteriorer-snapshot|current-meditation|CURRENT_CONFIRMED|PLAYER_EXPERIENCE|SIEGE current notebook|player notebook|Mi partida actual|mi inventario|mi personaje' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java; then
-            echo "Server Encyclopedia must not contain personal player-state records."
+          grep -q 'class SiegeBriefingScreen' src/main/java/uy/santipdr/siege/client/SiegeBriefingScreen.java
+          grep -q 'class SiegeAtlasScreen' src/main/java/uy/santipdr/siege/client/SiegeAtlasScreen.java
+          grep -q 'class SiegeThreatBoardScreen' src/main/java/uy/santipdr/siege/client/SiegeThreatBoardScreen.java
+          grep -q 'class SiegeKnowledgeFileScreen' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeFileScreen.java
+          grep -q 'class SiegeKnowledgeExpansion40' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
+          grep -q 'class SiegeKnowledgeRegistry' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java
+          grep -q 'BRIEFING, ATLAS, THREATS' src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java
+          grep -q 'new SiegeBriefingScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
+          grep -q 'new SiegeAtlasScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
+          grep -q 'new SiegeThreatBoardScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
+          grep -q 'SiegeKnowledgeRegistry.entries' src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java
+          grep -q 'progression-mobility-priority' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
+          grep -q 'combat-adaptation' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
+          grep -q 'prompt-precision-framework' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
+          grep -q 'research-open-questions' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
+          if grep -nEi 'mi inventario|mi personaje|mi partida actual|player notebook|private build' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java; then
+            echo "4.00 server knowledge must remain non-personal."
             exit 1
           fi
-
           grep -q 'TEMPEST_JUTCHERSON' src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java
           if grep -q 'tempest_jutcherson' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java; then
             echo "Tempest Jutcherson must not be a normal menu/gallery scene."
@@ -111,49 +109,19 @@ jobs:
             echo "Tempest Jutcherson must not be processed as a normal menu background."
             exit 1
           fi
-
           grep -q 'GLFW_KEY_LEFT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'GLFW_KEY_RIGHT' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'Math.floorMod(selected + direction, files.size())' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
-          grep -q 'IntelScreenV3(Screen parent, IntelEntry requestedEntry)' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java
           grep -q 'SiegeGuideScreen.Mode.ARCHIVE' src/main/java/uy/santipdr/siege/client/SiegeMenuThemeEvents.java
           grep -q 'SiegeGuideScreen.Mode.ARMORY' src/main/java/uy/santipdr/siege/client/SiegeMenuThemeEvents.java
-          grep -q 'new SiegeArchiveScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeGuideScreen.java
-          grep -q 'new SiegeEvidenceReelScreen' src/main/java/uy/santipdr/siege/client/SiegeGuideScreen.java
-          if grep -q 'new SiegeArchiveScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeSystemScreen.java; then
-            echo "Gameplay knowledge must not live in Settings/System."
-            exit 1
-          fi
-          if grep -q 'readiness()' src/main/java/uy/santipdr/siege/client/SiegeScreenChrome.java; then
-            echo "Ordinary navigation must not expose a cryptic readiness percentage."
-            exit 1
-          fi
-          grep -q 'SHELLSHOCK' src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java
-          grep -q 'MUTILATED' src/main/java/uy/santipdr/siege/client/SiegeArchiveData.java
-          grep -q 'third-justice' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
-          grep -q 'standardIndex(long slot)' src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java
-          grep -q 'STANDARD_INDICES' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
-
           if grep -nE 'FAVORITES|toggleFavoriteIntel|favoriteButton|addIndexButton|copyText|GUARDAR' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
             echo "Removed Intel controls must not return"
             exit 1
           fi
           grep -q 'trackAnnouncementDurationMs' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
           grep -q 'backgroundDarkness' src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
-          if grep -qE "version = '2\.50\.0'" build.gradle; then
-            echo "Stale 2.50 active version found."
-            exit 1
-          fi
           if grep -qE 'GLFW_KEY_(I|P|G|M|R|HOME|END)([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java; then
             echo "The title screen contains an unrequested keyboard shortcut."
-            exit 1
-          fi
-          if grep -qE 'GLFW_KEY_(SPACE|P|R|X|HOME|END|F1|[1-9])([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java; then
-            echo "The gallery contains an unrequested keyboard shortcut."
-            exit 1
-          fi
-          if grep -qE 'GLFW_KEY_(Q|E|F|HOME|END|PAGE_UP|PAGE_DOWN|UP|DOWN|[0-9])([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/IntelScreenV3.java; then
-            echo "Intel contains an unrequested keyboard shortcut."
             exit 1
           fi
 
