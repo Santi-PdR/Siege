@@ -7,7 +7,7 @@ import java.util.List;
  *
  * This file is deliberately non-personal. It only stores reusable Eternal Craft
  * mechanics, dated staff guidance, uncertainty and historical warnings that are
- * useful to any player. Player inventories, builds and private progression are
+ * useful to any player. Player-specific inventories, builds and progression are
  * forbidden here by regression tests.
  */
 public final class SiegeKnowledgeExpansion40 {
