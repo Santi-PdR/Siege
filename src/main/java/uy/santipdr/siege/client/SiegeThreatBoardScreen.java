@@ -5,16 +5,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
-/** Tactical summary of existing Intel + source-aware server threat domains. */
+/** Tactical SIEGE 4.0 threat summary. */
 public final class SiegeThreatBoardScreen extends Screen {
     private final Screen parent;
     private final List<SiegeButton> threatButtons = new ArrayList<>();
     private SiegeThreatBoardData.Threat selected = SiegeThreatBoardData.all().get(0);
+    private int offset;
     private int panelX, panelY, panelW, panelH, listX, listY, listW, detailX, detailY, detailW, detailH;
     private boolean compact;
 
@@ -37,48 +37,76 @@ public final class SiegeThreatBoardScreen extends Screen {
         addRenderableWidget(new SiegeButton(8, 7, compact ? 62 : 88, 19,
                 Component.literal(label("VOLVER", "BACK")), b -> onClose(), SiegeTheme.RED)
                 .withIcon("back").setCompactCenter(true));
-        addRenderableWidget(new SiegeButton(Math.max(8, width - (compact ? 82 : 112) - 8), 7,
-                compact ? 82 : 112, 19, Component.literal("INTEL"),
-                b -> minecraft.setScreen(new IntelScreenV3(this)), SiegeTheme.RED)
+        int intelW = compact ? 72 : 106;
+        addRenderableWidget(new SiegeButton(Math.max(8, width - intelW - 8), 7, intelW, 19,
+                Component.literal("INTEL"), b -> minecraft.setScreen(new IntelScreenV3(this)), SiegeTheme.RED)
                 .withIcon("intel").setCompactCenter(true));
 
-        int bodyTop = panelY + 63;
+        int bodyTop = panelY + 62;
         if (compact) {
             listX = panelX + 10;
             listY = bodyTop;
             listW = panelW - 20;
             detailX = listX;
-            detailY = bodyTop + 4 * 22 + 8;
+            detailY = bodyTop + 3 * 22 + 8;
             detailW = listW;
             detailH = Math.max(58, panelY + panelH - detailY - 10);
         } else {
             listX = panelX + 10;
             listY = bodyTop;
-            listW = Math.max(220, Math.min(330, panelW * 36 / 100));
+            listW = Math.max(220, Math.min(340, panelW * 36 / 100));
             detailX = listX + listW + 10;
             detailY = bodyTop;
             detailW = panelX + panelW - 10 - detailX;
             detailH = Math.max(95, panelY + panelH - detailY - 10);
         }
 
-        int visible = compact ? 4 : SiegeThreatBoardData.all().size();
+        int visible = compact ? 3 : Math.max(5, Math.min(SiegeThreatBoardData.all().size(), detailH / 22));
         for (int i = 0; i < visible; i++) {
-            SiegeThreatBoardData.Threat threat = SiegeThreatBoardData.all().get(i);
+            int slot = i;
             SiegeButton button = new SiegeButton(listX, listY + i * 22, listW, 19,
-                    Component.literal(threat.title(spanish())), b -> choose(threat), threat.severity().accent())
-                    .withIcon(threat.opensIntel() ? "intel" : "shield");
-            button.withBadge(threat.severity().label(spanish()));
-            button.setSelected(threat.id().equals(selected.id()));
-            button.setTooltip(Tooltip.create(Component.literal(threat.summary(spanish()))));
+                    Component.empty(), b -> chooseSlot(slot), SiegeTheme.ORANGE).withIcon("shield");
             threatButtons.add(addRenderableWidget(button));
+        }
+        refreshRows();
+    }
+
+    private void chooseSlot(int slot) {
+        int index = offset + slot;
+        if (index < 0 || index >= SiegeThreatBoardData.all().size()) return;
+        selected = SiegeThreatBoardData.all().get(index);
+        SiegeUiSounds.selection();
+        refreshRows();
+    }
+
+    private void refreshRows() {
+        List<SiegeThreatBoardData.Threat> all = SiegeThreatBoardData.all();
+        int max = Math.max(0, all.size() - threatButtons.size());
+        offset = Math.max(0, Math.min(max, offset));
+        for (int i = 0; i < threatButtons.size(); i++) {
+            SiegeButton button = threatButtons.get(i);
+            int index = offset + i;
+            boolean present = index < all.size();
+            button.visible = present;
+            button.active = present;
+            if (!present) continue;
+            SiegeThreatBoardData.Threat threat = all.get(index);
+            button.setMessage(Component.literal(threat.title(spanish())));
+            button.withBadge(threat.severity().label(spanish()));
+            button.setSelected(selected != null && threat.id().equals(selected.id()));
         }
     }
 
-    private void choose(SiegeThreatBoardData.Threat threat) {
-        selected = threat;
-        SiegeUiSounds.selection();
-        for (int i = 0; i < threatButtons.size(); i++)
-            threatButtons.get(i).setSelected(SiegeThreatBoardData.all().get(i).id().equals(threat.id()));
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (mouseX >= listX && mouseX <= listX + listW
+                && mouseY >= listY && mouseY <= listY + threatButtons.size() * 22) {
+            int max = Math.max(0, SiegeThreatBoardData.all().size() - threatButtons.size());
+            offset = Math.max(0, Math.min(max, offset - (int)Math.signum(delta)));
+            refreshRows();
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     @Override
@@ -100,13 +128,14 @@ public final class SiegeThreatBoardScreen extends Screen {
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xCD000000 : 0xA8000000);
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.ORANGE);
 
-        g.drawString(font, label("TABLERO DE AMENAZAS", "THREAT BOARD") + " // " + SiegeRuntimeStatus.version(),
+        g.drawString(font, fit(label("TABLERO DE AMENAZAS", "THREAT BOARD")
+                + " // " + SiegeRuntimeStatus.version(), panelW - 24),
                 panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Resumen operativo: dossiers reales + riesgos generales documentados. No genera enemigos ni stats nuevos.",
-                "Operational summary: real dossiers + documented general risks. It does not create new enemies or stats."), panelW - 24),
-                panelX + 12, panelY + 21, SiegeTheme.MUTED, false);
-        renderIntelCounts(g, panelX + 12, panelY + 36, panelW - 24);
+                "Qué conviene reconocer antes de combatir, explorar o activar una zona peligrosa.",
+                "What to recognize before fighting, exploring or activating a dangerous area."), panelW - 24),
+                panelX + 12, panelY + 22, SiegeTheme.MUTED, false);
+        renderIntelCounts(g, panelX + 12, panelY + 38, panelW - 24);
 
         SiegeTheme.panel(g, listX - 3, listY - 3, listW + 6, threatButtons.size() * 22 + 6, SiegeTheme.ORANGE);
         SiegeTheme.panel(g, detailX - 3, detailY - 3, detailW + 6, detailH + 6,
@@ -122,10 +151,8 @@ public final class SiegeThreatBoardScreen extends Screen {
         Map<String, Integer> counts = new LinkedHashMap<>();
         for (String category : List.of("UNIT", "ADVANCED", "TANK", "BOSS", "ELITE", "SUPER-UNIT", "UNKNOWN"))
             counts.put(category, 0);
-        for (IntelEntry entry : IntelCatalog.files())
-            counts.computeIfPresent(entry.category(), (k, v) -> v + 1);
-        String line = counts.entrySet().stream()
-                .map(e -> shortCategory(e.getKey()) + " " + e.getValue())
+        for (IntelEntry entry : IntelCatalog.files()) counts.computeIfPresent(entry.category(), (k, v) -> v + 1);
+        String line = counts.entrySet().stream().map(e -> shortCategory(e.getKey()) + " " + e.getValue())
                 .reduce((a, b) -> a + "  ·  " + b).orElse("");
         g.drawString(font, fit(line, w), x, y, SiegeTheme.CYAN, false);
     }
@@ -160,8 +187,9 @@ public final class SiegeThreatBoardScreen extends Screen {
         boolean hot = mouseX >= x && mouseX < x + w && mouseY >= by && mouseY < by + 16;
         g.fill(x, by, x + w, by + 16, hot ? 0xD13A4C55 : 0xB51A252B);
         g.fill(x, by, x + 2, by + 16, accent);
-        String open = selected.opensIntel() ? label("ABRIR INTEL", "OPEN INTEL") : label("ABRIR FUENTE", "OPEN SOURCE");
-        g.drawCenteredString(font, open, x + w / 2, by + 4, hot ? SiegeTheme.INK : SiegeTheme.MUTED);
+        String open = selected.opensIntel() ? label("ABRIR INTEL", "OPEN INTEL")
+                : label("VER INFORMACIÓN", "OPEN DETAILS");
+        g.drawCenteredString(font, fit(open, w - 8), x + w / 2, by + 4, hot ? SiegeTheme.INK : SiegeTheme.MUTED);
     }
 
     private String fit(String text, int px) {
@@ -171,6 +199,6 @@ public final class SiegeThreatBoardScreen extends Screen {
     }
     private boolean spanish() { return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_"); }
     private String label(String es, String en) { return spanish() ? es : en; }
-    @Override public void onClose() { SiegeUiSounds.back(); minecraft.setScreen(parent); }
+    @Override public void onClose() { SiegeUiSounds.back(); if (minecraft != null) minecraft.setScreen(parent); }
     @Override public boolean isPauseScreen() { return false; }
 }
