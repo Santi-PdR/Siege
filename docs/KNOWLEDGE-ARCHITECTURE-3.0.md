@@ -1,151 +1,239 @@
-# SIEGE 3.00 — Arquitectura del conocimiento
+# SIEGE 3.00 — Arquitectura de la Enciclopedia del Servidor
 
 ## Objetivo
 
-SIEGE 3.00 incorpora conocimiento recuperado del Discord de Eternal Craft sin convertirlo en una verdad única ni mezclarlo con el estado actual del jugador.
+SIEGE 3.00 incorpora conocimiento recuperado del historial de Eternal Craft como una **guía general del servidor para cualquier jugador**.
 
-El mod mantiene cinco dominios distintos:
+La enciclopedia no guarda ni muestra:
+
+- perfiles de jugadores;
+- inventarios personales;
+- progreso individual;
+- builds privadas;
+- notas personales;
+- anécdotas centradas en personas concretas.
+
+Su función es responder preguntas como:
+
+- ¿Qué razas existen?
+- ¿Cuál es el orden de rarezas?
+- ¿Cómo funciona la progresión V1 → V4?
+- ¿Qué son los Trials?
+- ¿Qué se sabe de Executores, bosses, estructuras, reliquias o dimensiones?
+- ¿Qué sistemas cambiaron con el tiempo?
+- ¿Qué información está confirmada y cuál sigue pendiente?
+
+## Dominios del mod
+
+La Enciclopedia no reemplaza las demás secciones:
 
 - **Intel**: dossiers de unidades y amenazas.
-- **Archivo / Arsenal**: lore general, contexto, objetos y material curado.
+- **Archivo**: SIEGE, 2044, Núcleo, facciones, Gates/Rifts, inspiración y lore general.
+- **Arsenal**: objetos/equipamiento curado y evidencia multimedia del mod.
 - **Manual de Campo**: estados, heridas, misiones y protocolos operativos.
-- **Knowledge Vault**: estado actual registrado + enciclopedia histórica/source-aware de Eternal Craft.
-- **Command / Diagnostics**: estado técnico del cliente; nunca gameplay/lore.
+- **Enciclopedia del Servidor**: razas, rarezas, progresión, sistemas generales e historial verificable.
+- **Deployment**: servidor, compatibilidad y conexión.
+- **Command / Diagnostics / Settings**: estado técnico del cliente; nunca gameplay/lore.
 
-## Regla principal
+## Navegación 3.00
 
-`SIEGE ACTUAL != ETERNAL CRAFT — ENCICLOPEDIA`
+La Enciclopedia tiene cuatro vistas:
 
-La zona CURRENT responde: “¿qué está registrado de mi partida ahora?”.
-La zona ENCYCLOPEDIA responde: “¿qué se recuperó del historial del servidor y con qué confianza?”.
+### EMPEZAR
 
-Un dato histórico nunca sustituye silenciosamente un dato actual. Un dato posible nunca se muestra como confirmado.
+Información que debería conocer un jugador nuevo antes de meterse a sistemas avanzados:
 
-## Fuente del primer corpus 3.00
+- qué tipo de servidor es Eternal Craft / SIEGE;
+- exploración y supervivencia;
+- rarezas de raza;
+- catálogo básico de razas;
+- progresión general;
+- Trials;
+- Executores;
+- estructuras;
+- bosses;
+- misiones/NPC;
+- dimensiones;
+- revive;
+- reliquias;
+- economía;
+- cómo interpretar información incompleta.
 
-La investigación recuperada declara:
+### RAZAS
 
-- 488 archivos procesados.
-- 251.065 mensajes.
-- 72.384 mensajes de Alex.
-- 29.605 mensajes de Santi.
-- 37.435 replies reconstruidas.
-- 153 prompts clasificados.
-- 35 documentos temáticos.
-- transcripciones completas y un índice SQLite/FTS.
+Catálogo de razas y conceptos relacionados:
 
-Estos números describen el corpus; no implican que cada mensaje sea correcto.
+- Human;
+- Hacker;
+- Shark;
+- Saiyan;
+- Deteriorer;
+- Faraón;
+- Apotheosis;
+- Muerte;
+- Cyborg;
+- Ghoul;
+- Subhuman;
+- Terrariano;
+- Kaioshin;
+- Dragon;
+- Shinigami;
+- Majin;
+- razas ocultas de AUs de Undertale;
+- slots de raza;
+- rarezas;
+- Fabled;
+- progresión V1 → V4 cuando corresponde.
 
-## Jerarquía de confianza
+La existencia de una raza en la enciclopedia no garantiza disponibilidad en la temporada actual.
 
-1. `CURRENT_CONFIRMED`: dato del bloc actual del jugador.
-2. `ALEX_CONFIRMED`: explicación directa atribuida a Alex/staff en la investigación.
-3. `SYSTEM_OBSERVED`: resultado mostrado/observado.
-4. `PLAYER_EXPERIENCE`: experiencia de jugador sin autoridad de staff.
-5. `HISTORICAL`: dato real de una etapa antigua que puede haber cambiado.
-6. `UNCONFIRMED`: mención posible, incompleta o pendiente.
-7. `CONTRADICTION`: dos fuentes no reconciliadas.
+### SISTEMAS
 
-Los colores de la UI expresan confianza, no rareza ni amenaza.
+Sistemas del servidor agrupados por tema:
 
-## Spoiler guard
+- progresión;
+- Executores;
+- Trials;
+- estructuras;
+- bosses;
+- misiones/NPC;
+- habilidades;
+- energía/meditación;
+- objetos;
+- Assembling/Cyborgs;
+- reliquias;
+- dimensiones;
+- muerte/revive;
+- raids/eventos;
+- facciones;
+- economía;
+- prompts/acciones.
 
-El Knowledge Vault abre en **SIEGE ACTUAL**. La Enciclopedia no se muestra por defecto.
+### HISTÓRICO
 
-Entradas que pueden adelantar mecánicas usan `spoiler=true`. En ese estado:
+Información que existió, cambió, se contradice o necesita contexto temporal:
 
-- el título sigue visible;
-- el resumen sigue visible;
-- la fuente/confianza sigue visible;
-- el cuerpo detallado permanece oculto hasta `REVELAR ARCHIVO`;
-- el reveal dura sólo durante la sesión de esa pantalla.
+- reglas antiguas de Deteriorer;
+- cambios de edición de Executores;
+- rutas antiguas de razas;
+- cambios del sistema de muerte/revive;
+- umbrales contradictorios;
+- política de fuentes;
+- cobertura de la investigación.
 
-Supervivencia puede mostrar resúmenes críticos aunque el cuerpo esté bloqueado, porque su función es evitar pérdidas graves.
+La vista histórica existe precisamente para impedir que una regla vieja vuelva a aparecer como actual.
 
-## Dominios preparados
+## Modelo de datos
 
-El modelo admite:
+Cada entrada contiene:
 
-- Overview
-- Progression
-- Executors
-- Trials
-- Structures
-- Bosses
-- Missions
-- NPCs
-- Races
-- Pets / Summons
-- Abilities
-- Energies
-- Meditation
-- Magic
-- Items
-- Crafting
-- Assembling / Cyborgs
-- Relics
-- Dimensions
-- Rituals
-- Sabotage / Hacking
-- Death / Injury / Revive
-- Raids / Events
-- Factions
-- Economy / Wins
-- Prompts / Commands
-- Action → Consequence
-- Hidden Mechanics
-- Mistakes
-- Alex Advice
-- History
-- Mysteries
-- Contradictions
-- Sources
+- `id` estable;
+- `zone`: `SERVER` o `HISTORY`;
+- `domain`;
+- título ES/EN;
+- resumen ES/EN;
+- cuerpo ES/EN;
+- indicador `critical` cuando el tema implica riesgo operativo importante;
+- relaciones con otras entradas;
+- una o más referencias.
 
-No se crean fichas vacías fingiendo conocimiento. Los dominios existen para incorporar futuras extracciones con evidencia.
+## Confianza
 
-## Deep links
+La Enciclopedia usa cinco estados:
 
-Operations Hub indexa:
+1. `STAFF_CONFIRMED`
+2. `SYSTEM_OBSERVED`
+3. `HISTORICAL`
+4. `UNCONFIRMED`
+5. `CONTRADICTION`
 
-- rutas;
-- Intel;
-- Arsenal;
-- Knowledge.
+Estos estados describen la **calidad temporal/de evidencia**, no rareza ni amenaza.
 
-Un resultado KNOWLEDGE guarda `knowledgeId`, por lo que `Geography Table`, `Rust Guard`, `Daemonium Kit`, `meditación`, etc. pueden abrir directamente su ficha.
+## Cobertura del corpus
 
-## Relaciones
+La auditoría disponible reporta:
 
-Cada ficha puede almacenar IDs relacionados. Ejemplo:
+- 488 archivos encontrados;
+- 252/252 JSON abiertos íntegramente;
+- 251.065 mensajes únicos indexados;
+- 0 duplicados;
+- cobertura 02/11/2025 → 20/09/2026;
+- sólo canal General en el export disponible.
 
-`current-rust-guard`
-→ `alex-raid-oxidation`
-→ `prompt-precision`
-→ `alex-adaptation`
+Esto significa que el texto fue indexado, no que toda la semántica ya esté revisada ni que cada mecánica siga vigente.
 
-Las relaciones no significan causalidad. Sólo indican que conviene consultar esas entradas juntas.
+## Regla de privacidad/contenido
 
-## Política de historia
+El código y los tests de 3.00 deben bloquear regresiones hacia contenido personal.
+
+No se deben introducir en `SiegeKnowledgeData`:
+
+- nombres de jugadores;
+- estado de una partida concreta;
+- HP/energía de un jugador concreto;
+- inventario de una persona;
+- logros personales;
+- conversaciones usadas como anécdota de jugador cuando no aportan una regla general del servidor.
+
+Si una fuente original contiene nombres pero el dato útil es general, la ficha debe resumir la mecánica sin conservar la identidad de la persona.
+
+## Política de datos históricos
 
 Cuando una mecánica cambia:
 
-- el dato antiguo conserva fecha/fuente;
-- pasa a `HISTORICAL` cuando corresponde;
-- el dato nuevo se añade por separado;
-- nunca se reescribe la historia para parecer consistente.
+- el dato antiguo puede conservarse en `HISTORY`;
+- siempre debe llevar fecha/contexto;
+- no sustituye automáticamente un dato nuevo;
+- no se muestra como regla vigente.
 
-Ejemplo ya implementado: duración antigua extrema de Deteriorer permanece separada de su snapshot actual.
+Ejemplos ya preparados:
 
-## Política de incertidumbre
+- Deteriorer con debuffs antiguos extremadamente largos;
+- cambios de edición de Executores;
+- Shark V2 histórica;
+- Faraón y disponibilidad variable;
+- cambios del sistema RCP/medkit/desfibrilador;
+- contradicciones de Injured/Bleeding;
+- niveles de meditación con umbrales diferentes según fecha/contexto.
 
-Una cifra marcada como posible no se usa como cifra de cálculo actual.
+## Política de huecos
 
-Ejemplos 3.00:
+Campo faltante significa **no confirmado**, nunca “no existe” o “no hace falta”.
 
-- +6% RE/5 turnos → `UNCONFIRMED`.
-- posible reset posterior a V4 → `UNCONFIRMED`.
-- Filter Rod → `MYSTERIES`.
-- posible riesgo de cruce con Halo → `MYSTERIES`.
+No se inventan:
+
+- recetas;
+- porcentajes;
+- probabilidades;
+- stats;
+- drops;
+- pasos de Trials;
+- costes;
+- requisitos;
+- disponibilidad actual.
+
+## Búsqueda
+
+La búsqueda interna y Operations Hub indexan:
+
+- título;
+- resumen;
+- cuerpo;
+- dominio;
+- referencias;
+- relaciones.
+
+Ejemplos de deep-link válidos:
+
+- `Obsainan`
+- `Fabled`
+- `Geography Table`
+- `Daemonium Kit`
+- `Executors terror radius`
+- `V4 Trials`
+- `Respawn Cards`
+- `Assembling`
+- `Deteriorer`
 
 ## Frontera con gameplay
 
@@ -153,14 +241,17 @@ Ejemplos 3.00:
 
 Nunca debe:
 
-- cambiar atributos;
+- cambiar stats;
 - cambiar raza;
-- tocar RE;
 - conceder objetos;
+- alterar energía;
+- registrar inventarios;
 - crear recetas;
 - modificar el servidor;
-- afirmar reglas no respaldadas sólo para rellenar categorías.
+- convertir automáticamente lore en regla jugable.
 
 ## Futuro
 
-La siguiente expansión natural es importar más documentos temáticos del corpus de 251.065 mensajes, especialmente Ejecutores, Trials, Estructuras, Bosses, Razas, Items, Magia y progresión, manteniendo la misma trazabilidad por fecha/fuente/confianza.
+El modelo está preparado para ampliar más temas conforme se siga revisando el corpus: Ejecutores individuales, Trials concretos, estructuras, bosses, razas, dimensiones, reliquias, economía y sistemas todavía incompletos.
+
+La prioridad no es llenar categorías: es **añadir únicamente información general que le sirva a un jugador nuevo o a alguien que quiere aprender un tema concreto**.
