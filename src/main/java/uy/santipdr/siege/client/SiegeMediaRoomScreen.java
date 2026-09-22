@@ -4,7 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** Background/soundtrack command surface plus reference-only DVN media notes. */
+/** Background and soundtrack command surface with DVN recommendations. */
 public final class SiegeMediaRoomScreen extends Screen {
     private enum Mode { BUNDLED, DVN_AUDIO, VISUALS }
 
@@ -40,7 +40,7 @@ public final class SiegeMediaRoomScreen extends Screen {
         int tabX = panelX + 10;
         int gap = 4;
         int tabW = panelW - 20;
-        int cell = (tabW - gap * 2) / 3;
+        int cell = Math.max(52, (tabW - gap * 2) / 3);
         for (int i = 0; i < Mode.values().length; i++) {
             Mode value = Mode.values()[i];
             int x = tabX + i * (cell + gap);
@@ -82,7 +82,7 @@ public final class SiegeMediaRoomScreen extends Screen {
         int sceneY = y + 58;
         addRenderableWidget(new SiegeButton(contentX, sceneY, w, 19, Component.literal(label("◀ FONDO", "◀ SCENE")),
                 b -> shiftScene(-1), SiegeTheme.BLUE).withIcon("image").setCompactCenter(true));
-        addRenderableWidget(new SiegeButton(contentX + w + gap, sceneY, w, 19, Component.literal(label("ROTACIÓN AUTO", "AUTO ROTATE")),
+        addRenderableWidget(new SiegeButton(contentX + w + gap, sceneY, w, 19, Component.literal(label("ROTACIÓN", "ROTATE")),
                 b -> { SiegeConfig.selectedScene = -1; SiegeConfig.animatedBackgrounds = true; SiegeConfig.save(); SiegeUiSounds.confirm(); },
                 SiegeTheme.GREEN).withIcon("image").setCompactCenter(true));
         addRenderableWidget(new SiegeButton(contentX + (w + gap) * 2, sceneY,
@@ -107,8 +107,8 @@ public final class SiegeMediaRoomScreen extends Screen {
         g.drawString(font, label("SALA MULTIMEDIA", "MEDIA ROOM") + " // " + SiegeRuntimeStatus.version(),
                 panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Controla recursos incluidos y separa recomendaciones externas de lo que realmente distribuye el mod.",
-                "Control bundled resources while keeping external recommendations separate from what the mod actually distributes."), panelW - 24),
+                "Música, fondos y ambientación visual del menú en un solo lugar.",
+                "Music, backgrounds and menu atmosphere in one place."), panelW - 24),
                 panelX + 12, panelY + 21, SiegeTheme.MUTED, false);
 
         SiegeTheme.panel(g, contentX - 3, contentY - 3, contentW + 6, contentH + 6, modeAccent(mode));
@@ -145,7 +145,7 @@ public final class SiegeMediaRoomScreen extends Screen {
 
         int listY = contentY + 127;
         if (listY + 10 < contentY + contentH) {
-            g.drawString(font, label("PISTAS INCLUIDAS", "BUNDLED TRACKS"), x, listY, SiegeTheme.INK, false);
+            g.drawString(font, label("PISTAS DEL MENÚ", "MENU TRACKS"), x, listY, SiegeTheme.INK, false);
             int yy = listY + 13;
             for (String name : SiegeMusic.trackNames()) {
                 if (yy + font.lineHeight > contentY + contentH - 6) break;
@@ -160,13 +160,12 @@ public final class SiegeMediaRoomScreen extends Screen {
         int x = contentX + 9;
         int y = contentY + 8;
         int w = contentW - 18;
-        g.drawString(font, label("REFERENCIAS DE SOUNDTRACK DVN — NO INCLUIDAS", "DVN SOUNDTRACK REFERENCES — NOT BUNDLED"),
+        g.drawString(font, label("MÚSICA DE DUMMIES VS NOOBS", "DUMMIES VS NOOBS MUSIC"),
                 x, y, SiegeTheme.GOLD, false);
         y += 14;
         g.drawString(font, fit(label(
-                "Son candidatas para futuras importaciones. No se descargan ni redistribuyen automáticamente sin derechos claros.",
-                "These are future import candidates. They are not automatically downloaded or redistributed without clear rights."), w),
-                x, y, SiegeTheme.MUTED, false);
+                "Pistas que encajan con distintas partes de SIEGE.",
+                "Tracks that fit different parts of SIEGE."), w), x, y, SiegeTheme.MUTED, false);
         y += 18;
         for (SiegeMediaReferenceData.Track track : SiegeMediaReferenceData.dvnTracks()) {
             if (y + 22 > contentY + contentH) break;
@@ -181,13 +180,12 @@ public final class SiegeMediaRoomScreen extends Screen {
         int x = contentX + 9;
         int y = contentY + 8;
         int w = contentW - 18;
-        g.drawString(font, label("DIRECCIÓN VISUAL DVN PARA FUTUROS FONDOS", "DVN VISUAL DIRECTION FOR FUTURE BACKGROUNDS"),
+        g.drawString(font, label("FONDOS QUE ENCAJAN CON DUMMIES VS NOOBS", "DUMMIES VS NOOBS BACKGROUND IDEAS"),
                 x, y, SiegeTheme.BLUE, false);
         y += 15;
         g.drawString(font, fit(label(
-                "Regla 4.0: 16:9, preferentemente 1920×1080 o más, sin deformar y con contraste probado contra la UI.",
-                "4.0 rule: 16:9, preferably 1920×1080 or higher, no distortion and contrast tested against the UI."), w),
-                x, y, SiegeTheme.MUTED, false);
+                "Priorizar escenas nítidas, 16:9 y con espacio limpio para que la interfaz siga legible.",
+                "Prefer sharp 16:9 scenes with clean space so the interface remains readable."), w), x, y, SiegeTheme.MUTED, false);
         y += 20;
         for (SiegeMediaReferenceData.Visual visual : SiegeMediaReferenceData.visualReferences()) {
             if (y + 24 > contentY + contentH) break;
@@ -200,7 +198,7 @@ public final class SiegeMediaRoomScreen extends Screen {
 
     private String modeLabel(Mode value) {
         return switch (value) {
-            case BUNDLED -> label("INCLUIDO", "BUNDLED");
+            case BUNDLED -> label("MENÚ", "MENU");
             case DVN_AUDIO -> label("MÚSICA DVN", "DVN MUSIC");
             case VISUALS -> label("FONDOS DVN", "DVN VISUALS");
         };
