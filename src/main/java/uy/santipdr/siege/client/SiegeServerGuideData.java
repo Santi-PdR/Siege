@@ -38,7 +38,7 @@ public final class SiegeServerGuideData {
         Set<String> ids = switch (category) {
             case START -> ordered(
                     "guide-first-hour", "server-overview", "newcomer-operational-rule", "server-exploration",
-                    "guide-races", "guide-progression", "guide-trials", "guide-executors", "guide-bosses",
+                    "guide-races", "guide-progression", "guide-trials", "trials-basics", "guide-executors", "guide-bosses",
                     "guide-revive", "guide-relics", "guide-dimensions", "guide-economy", "guide-actions");
             case RACES -> ordered(
                     "guide-races", "rarity-order", "race-catalog", "race-slots", "fabled-acquisition",
