@@ -1,9 +1,7 @@
 package uy.santipdr.siege.client;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -12,24 +10,24 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
 /**
- * SIEGE 3.00 knowledge vault. Current player notes and the Eternal Craft
- * encyclopedia are separate surfaces inside the same screen. Historical or
- * uncertain records keep their confidence/date, and spoiler entries are masked
- * until explicitly revealed for this screen session.
+ * SIEGE 3.00 server encyclopedia.
+ *
+ * This surface is intentionally non-personal: it explains Eternal Craft/SIEGE
+ * systems, races, progression and dated history for any player who wants to
+ * learn a topic. Player profiles, inventories and private progress do not live
+ * here.
  */
 public final class SiegeKnowledgeScreen extends Screen {
-    private enum Mode { CURRENT, ENCYCLOPEDIA, SURVIVAL, SOURCES }
+    private enum Mode { START, RACES, SYSTEMS, HISTORY }
     private static final int ROWS = 7;
 
     private final Screen parent;
     private final String requestedId;
-    private final Set<String> revealed = new HashSet<>();
     private final List<SiegeButton> entryButtons = new ArrayList<>();
     private List<SiegeKnowledgeData.Entry> visibleEntries = List.of();
     private SiegeKnowledgeData.Entry selected;
     private EditBox search;
-    private SiegeButton revealButton;
-    private Mode mode = Mode.CURRENT;
+    private Mode mode = Mode.START;
     private int listOffset;
     private int detailOffset;
     private int panelX, panelY, panelW, panelH;
@@ -40,10 +38,9 @@ public final class SiegeKnowledgeScreen extends Screen {
     public SiegeKnowledgeScreen(Screen parent) { this(parent, null); }
 
     public SiegeKnowledgeScreen(Screen parent, String requestedId) {
-        super(Component.literal("SIEGE // KNOWLEDGE VAULT"));
+        super(Component.literal("SIEGE // SERVER ENCYCLOPEDIA"));
         this.parent = parent;
         this.requestedId = requestedId;
-        if (requestedId != null && !requestedId.isBlank()) mode = Mode.ENCYCLOPEDIA;
     }
 
     @Override
@@ -76,10 +73,10 @@ public final class SiegeKnowledgeScreen extends Screen {
         }
 
         search = new EditBox(font, panelX + 10, modeY + 25, panelW - 20, 20,
-                Component.literal(label("Buscar conocimiento", "Search knowledge")));
+                Component.literal(label("Buscar tema del servidor", "Search server topic")));
         search.setHint(Component.literal(label(
-                "Buscar Deteriorer, RE, Geography Table, revive, prompts…",
-                "Search Deteriorer, RE, Geography Table, revive, prompts…")));
+                "Buscar raza, rareza, Trial, Executor, reliquia, revive…",
+                "Search race, rarity, Trial, Executor, relic, revive…")));
         search.setResponder(value -> { listOffset = 0; refresh(); });
         addRenderableWidget(search);
 
@@ -113,13 +110,6 @@ public final class SiegeKnowledgeScreen extends Screen {
             entryButtons.add(addRenderableWidget(row));
         }
 
-        revealButton = new SiegeButton(detailX + Math.max(0, detailW - 126),
-                detailY + Math.max(0, detailH - 22), Math.min(126, detailW), 18,
-                Component.literal(label("REVELAR ARCHIVO", "REVEAL FILE")), b -> revealSelected(), SiegeTheme.ORANGE)
-                .withIcon("eye").setCompactCenter(true);
-        revealButton.visible = false;
-        addRenderableWidget(revealButton);
-
         refresh();
         if (!requestedApplied && requestedId != null) {
             requestedApplied = true;
@@ -139,15 +129,9 @@ public final class SiegeKnowledgeScreen extends Screen {
     private void refresh() {
         String query = search == null ? "" : search.getValue();
         boolean es = spanish();
-        List<SiegeKnowledgeData.Entry> base = switch (mode) {
-            case CURRENT -> SiegeKnowledgeData.search(query, es, SiegeKnowledgeData.Zone.CURRENT, 128);
-            case ENCYCLOPEDIA -> SiegeKnowledgeData.search(query, es, SiegeKnowledgeData.Zone.ENCYCLOPEDIA, 128);
-            case SURVIVAL -> SiegeKnowledgeData.search(query, es, null, 128).stream()
-                    .filter(SiegeKnowledgeData.Entry::critical).toList();
-            case SOURCES -> SiegeKnowledgeData.search(query, es, SiegeKnowledgeData.Zone.ENCYCLOPEDIA, 128).stream()
-                    .filter(e -> e.domain() == SiegeKnowledgeData.Domain.SOURCES).toList();
-        };
-        visibleEntries = base;
+        List<SiegeKnowledgeData.Entry> searched = SiegeKnowledgeData.search(query, es, null, 128);
+        visibleEntries = searched.stream().filter(this::belongsToMode).toList();
+
         int rows = entryButtons.size();
         int maxOffset = Math.max(0, visibleEntries.size() - rows);
         listOffset = Math.max(0, Math.min(maxOffset, listOffset));
@@ -156,6 +140,33 @@ public final class SiegeKnowledgeScreen extends Screen {
             detailOffset = 0;
         }
         refreshButtons();
+    }
+
+    private boolean belongsToMode(SiegeKnowledgeData.Entry entry) {
+        if (entry == null) return false;
+        return switch (mode) {
+            case START -> isBeginnerEntry(entry);
+            case RACES -> entry.domain() == SiegeKnowledgeData.Domain.RACES
+                    || entry.id().equals("rarity-order")
+                    || entry.id().equals("progression-v1-v4")
+                    || entry.id().equals("fabled-acquisition");
+            case SYSTEMS -> entry.zone() == SiegeKnowledgeData.Zone.SERVER
+                    && entry.domain() != SiegeKnowledgeData.Domain.RACES
+                    && entry.domain() != SiegeKnowledgeData.Domain.SOURCES;
+            case HISTORY -> entry.zone() == SiegeKnowledgeData.Zone.HISTORY
+                    || entry.domain() == SiegeKnowledgeData.Domain.SOURCES
+                    || entry.domain() == SiegeKnowledgeData.Domain.CONTRADICTIONS;
+        };
+    }
+
+    private boolean isBeginnerEntry(SiegeKnowledgeData.Entry entry) {
+        return switch (entry.id()) {
+            case "server-overview", "server-exploration", "rarity-order", "race-catalog",
+                 "progression-v1-v4", "trials-basics", "executors-basics", "structures-basics",
+                 "bosses-basics", "missions-npcs", "dimensions-basics", "respawn-cards",
+                 "relic-basics", "economy-basics", "source-policy" -> true;
+            default -> false;
+        };
     }
 
     private void refreshButtons() {
@@ -167,12 +178,12 @@ public final class SiegeKnowledgeScreen extends Screen {
             button.active = present;
             if (!present) continue;
             SiegeKnowledgeData.Entry entry = visibleEntries.get(index);
-            String prefix = entry.zone() == SiegeKnowledgeData.Zone.CURRENT ? label("ACTUAL", "CURRENT")
+            String prefix = entry.zone() == SiegeKnowledgeData.Zone.HISTORY
+                    ? label("HIST", "HIST")
                     : entry.domain().label(spanish());
             button.setMessage(Component.literal(prefix + " · " + entry.title(spanish())));
             button.setSelected(selected != null && selected.id().equals(entry.id()));
         }
-        updateRevealButton();
     }
 
     private void selectVisible(int slot) {
@@ -188,10 +199,9 @@ public final class SiegeKnowledgeScreen extends Screen {
         if (id == null) return;
         SiegeKnowledgeData.Entry entry = SiegeKnowledgeData.get(id);
         if (entry == null) return;
-        mode = entry.zone() == SiegeKnowledgeData.Zone.CURRENT ? Mode.CURRENT : Mode.ENCYCLOPEDIA;
+        mode = preferredMode(entry);
         selected = entry;
-        String query = search == null ? "" : search.getValue();
-        if (!query.isBlank()) search.setValue("");
+        if (search != null && !search.getValue().isBlank()) search.setValue("");
         refresh();
         for (int i = 0; i < visibleEntries.size(); i++) {
             if (visibleEntries.get(i).id().equals(id)) {
@@ -202,28 +212,29 @@ public final class SiegeKnowledgeScreen extends Screen {
         refreshButtons();
     }
 
-    private void revealSelected() {
-        if (selected == null) return;
-        revealed.add(selected.id());
-        SiegeUiSounds.confirm();
-        updateRevealButton();
-    }
-
-    private void updateRevealButton() {
-        if (revealButton == null) return;
-        revealButton.visible = selected != null && selected.spoiler() && !revealed.contains(selected.id());
-        revealButton.active = revealButton.visible;
+    private Mode preferredMode(SiegeKnowledgeData.Entry entry) {
+        if (entry.zone() == SiegeKnowledgeData.Zone.HISTORY
+                || entry.domain() == SiegeKnowledgeData.Domain.SOURCES
+                || entry.domain() == SiegeKnowledgeData.Domain.CONTRADICTIONS) return Mode.HISTORY;
+        if (entry.domain() == SiegeKnowledgeData.Domain.RACES
+                || entry.id().equals("rarity-order")
+                || entry.id().equals("progression-v1-v4")
+                || entry.id().equals("fabled-acquisition")) return Mode.RACES;
+        if (isBeginnerEntry(entry)) return Mode.START;
+        return Mode.SYSTEMS;
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (mouseX >= listX && mouseX < listX + listW && mouseY >= listY && mouseY < listY + entryButtons.size() * 22) {
+        if (mouseX >= listX && mouseX < listX + listW
+                && mouseY >= listY && mouseY < listY + entryButtons.size() * 22) {
             int max = Math.max(0, visibleEntries.size() - entryButtons.size());
             listOffset = Math.max(0, Math.min(max, listOffset - (int)Math.signum(delta)));
             refreshButtons();
             return true;
         }
-        if (mouseX >= detailX && mouseX < detailX + detailW && mouseY >= detailY && mouseY < detailY + detailH) {
+        if (mouseX >= detailX && mouseX < detailX + detailW
+                && mouseY >= detailY && mouseY < detailY + detailH) {
             detailOffset = Math.max(0, detailOffset - (int)Math.signum(delta) * 2);
             return true;
         }
@@ -237,18 +248,19 @@ public final class SiegeKnowledgeScreen extends Screen {
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xC2000000 : 0x96000000);
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.CYAN);
 
-        String title = label("ARCHIVO DE CONOCIMIENTO", "KNOWLEDGE VAULT") + " // " + SiegeRuntimeStatus.version();
+        String title = label("ENCICLOPEDIA DEL SERVIDOR", "SERVER ENCYCLOPEDIA")
+                + " // " + SiegeRuntimeStatus.version();
         g.drawString(font, fit(title, panelW - 24), panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "SIEGE ACTUAL permanece separado de la Enciclopedia histórica del Discord.",
-                "CURRENT SIEGE stays separate from the historical Discord Encyclopedia."), panelW - 24),
+                "Guía general: razas, rarezas, progresión, Trials, sistemas y cambios históricos.",
+                "General guide: races, rarities, progression, Trials, systems and historical changes."), panelW - 24),
                 panelX + 12, panelY + 21, SiegeTheme.MUTED, false);
 
         SiegeTheme.panel(g, listX - 3, listY - 3, listW + 6, entryButtons.size() * 22 + 6, SiegeTheme.GOLD);
         SiegeTheme.panel(g, detailX - 3, detailY - 3, detailW + 6, detailH + 6, SiegeTheme.CYAN);
 
         if (visibleEntries.isEmpty()) {
-            g.drawString(font, label("No hay registros que coincidan.", "No matching records."),
+            g.drawString(font, label("No hay temas que coincidan.", "No matching topics."),
                     listX + 7, listY + 7, SiegeTheme.MUTED, false);
         }
 
@@ -260,7 +272,7 @@ public final class SiegeKnowledgeScreen extends Screen {
 
     private void renderDetail(GuiGraphics g) {
         if (selected == null) {
-            g.drawString(font, label("Seleccioná un registro.", "Select a record."),
+            g.drawString(font, label("Seleccioná un tema.", "Select a topic."),
                     detailX + 8, detailY + 8, SiegeTheme.MUTED, false);
             return;
         }
@@ -274,44 +286,36 @@ public final class SiegeKnowledgeScreen extends Screen {
                 + SiegeKnowledgeData.sourceLine(selected, spanish()), textW), x, y + 12, confidence, false);
         SiegeTheme.divider(g, x, y + 24, textW, confidence);
 
-        boolean locked = selected.spoiler() && !revealed.contains(selected.id());
-        String text = locked
-                ? label("ARCHIVO CON SPOILERS\n\n" + selected.summary(true)
-                        + "\n\nEl detalle completo está oculto. Revelalo sólo si querés consultar conocimiento recuperado del Discord que puede adelantarte mecánicas.",
-                        "SPOILER FILE\n\n" + selected.summary(false)
-                        + "\n\nFull detail is hidden. Reveal it only if you want to consult recovered Discord knowledge that may expose mechanics early.")
-                : selected.body(spanish());
-
         List<FormattedCharSequence> lines = new ArrayList<>();
         FormattedCharSequence blank = Component.empty().getVisualOrderText();
-        for (String paragraph : text.split("\\n", -1)) {
+        for (String paragraph : selected.body(spanish()).split("\\n", -1)) {
             if (paragraph.isEmpty()) lines.add(blank);
             else lines.addAll(font.split(Component.literal(paragraph), textW));
         }
 
-        if (!locked && !selected.related().isEmpty()) {
+        if (!selected.related().isEmpty()) {
             lines.add(blank);
             lines.addAll(font.split(Component.literal(label("RELACIONADO: ", "RELATED: ")
                     + String.join(" · ", selected.related())), textW));
         }
-        if (!locked && !selected.sources().isEmpty()) {
+        if (!selected.sources().isEmpty()) {
             lines.add(blank);
-            lines.addAll(font.split(Component.literal(label("FUENTES", "SOURCES")), textW));
+            lines.addAll(font.split(Component.literal(label("REFERENCIA", "REFERENCE")), textW));
             for (SiegeKnowledgeData.Source source : selected.sources()) {
                 String sourceText = "• " + source.confidence().label(spanish())
                         + (source.date().isBlank() ? "" : " · " + source.date())
-                        + (source.channel().isBlank() ? "" : " · " + source.channel())
+                        + (source.section().isBlank() ? "" : " · " + source.section())
                         + (source.note(spanish()).isBlank() ? "" : " — " + source.note(spanish()));
                 lines.addAll(font.split(Component.literal(sourceText), textW));
             }
         }
 
         int first = Math.max(0, Math.min(detailOffset, Math.max(0, lines.size() - 1)));
-        int maxY = detailY + detailH - (revealButton != null && revealButton.visible ? 28 : 8);
+        int maxY = detailY + detailH - 8;
         int yy = y + 31;
         g.enableScissor(detailX, yy - 1, detailX + detailW, maxY);
         for (int i = first; i < lines.size() && yy + font.lineHeight <= maxY; i++) {
-            g.drawString(font, lines.get(i), x, yy, i == first && locked ? SiegeTheme.ORANGE : SiegeTheme.INK, false);
+            g.drawString(font, lines.get(i), x, yy, SiegeTheme.INK, false);
             yy += font.lineHeight + 2;
         }
         g.disableScissor();
@@ -319,28 +323,36 @@ public final class SiegeKnowledgeScreen extends Screen {
 
     private String modeLabel(Mode value) {
         return switch (value) {
-            case CURRENT -> label("SIEGE ACTUAL", "CURRENT SIEGE");
-            case ENCYCLOPEDIA -> label("ENCICLOPEDIA", "ENCYCLOPEDIA");
-            case SURVIVAL -> label("SUPERVIVENCIA", "SURVIVAL");
-            case SOURCES -> label("FUENTES", "SOURCES");
+            case START -> label("EMPEZAR", "START");
+            case RACES -> label("RAZAS", "RACES");
+            case SYSTEMS -> label("SISTEMAS", "SYSTEMS");
+            case HISTORY -> label("HISTÓRICO", "HISTORY");
         };
     }
 
     private String modeDescription(Mode value) {
         return switch (value) {
-            case CURRENT -> label("Último estado y herramientas registradas de tu partida.", "Latest recorded state and tools from your run.");
-            case ENCYCLOPEDIA -> label("Conocimiento recuperado del Discord, fechado y con nivel de confianza.", "Recovered Discord knowledge with dates and confidence.");
-            case SURVIVAL -> label("Advertencias y consejos que pueden evitar muerte, pérdida o daño accidental.", "Warnings and advice that can prevent death, loss or accidental damage.");
-            case SOURCES -> label("Auditoría del export y reglas para distinguir confirmado, histórico y no confirmado.", "Export audit and rules for distinguishing confirmed, historical and unconfirmed data.");
+            case START -> label(
+                    "Lo principal que conviene entender antes de jugar: progresión, riesgos, Trials, revive, exploración y economía.",
+                    "Core concepts to understand before playing: progression, risks, Trials, revival, exploration and economy.");
+            case RACES -> label(
+                    "Razas documentadas, rarezas, progresión y límites conocidos sin perfiles de jugadores.",
+                    "Documented races, rarities, progression and known limits without player profiles.");
+            case SYSTEMS -> label(
+                    "Executores, bosses, estructuras, habilidades, Assembling, reliquias, dimensiones, raids y otros sistemas.",
+                    "Executors, bosses, structures, abilities, Assembling, relics, dimensions, raids and other systems.");
+            case HISTORY -> label(
+                    "Cambios de versiones anteriores, contradicciones y política de fuentes para no confundir datos viejos con actuales.",
+                    "Older-version changes, contradictions and source policy so old data is not confused with current information.");
         };
     }
 
     private int modeAccent(Mode value) {
         return switch (value) {
-            case CURRENT -> SiegeTheme.GREEN;
-            case ENCYCLOPEDIA -> SiegeTheme.GOLD;
-            case SURVIVAL -> SiegeTheme.ORANGE;
-            case SOURCES -> SiegeTheme.CYAN;
+            case START -> SiegeTheme.GREEN;
+            case RACES -> SiegeTheme.GOLD;
+            case SYSTEMS -> SiegeTheme.CYAN;
+            case HISTORY -> SiegeTheme.ORANGE;
         };
     }
 
