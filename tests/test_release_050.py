@@ -34,6 +34,7 @@ for route in ("BRIEFING", "DEPLOYMENT", "THREATS", "INTEL", "RACES", "PROGRESSIO
 assert "SiegeCommandNetwork.routes(lane)" in HUB
 assert "switchLane" in HUB
 assert 'Component.literal("SIEGE // COMMAND NETWORK")' in HUB
+assert "laneTop = panelY + (compact ? 82 : 104)" in HUB
 assert "new SiegeBriefingScreen(this)" in HUB
 assert "new SiegeMediaRoomScreen(this)" in HUB
 assert "SiegeOperationsIndex.search" in HUB
