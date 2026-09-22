@@ -46,13 +46,13 @@ public final class Siege250MenuEvents {
         event.removeListener(original);
 
         SiegeButton briefing = new SiegeButton(x, y, briefingW, h,
-                Component.literal(buttonLabel("BRIEFING", "BRF", briefingW)), b -> {
+                Component.literal(buttonLabel(label("GUÍA", "GUIDE"), "GUI", briefingW)), b -> {
             SiegeUiSounds.confirm();
-            Minecraft.getInstance().setScreen(new SiegeBriefingScreen(screen));
+            Minecraft.getInstance().setScreen(new SiegeServerGuideScreen(screen));
         }, SiegeTheme.ORANGE).setMainMenuStyle(true).withIcon("shield").setCompactCenter(true);
         briefing.setTooltip(Tooltip.create(Component.literal(label(
-                "Lo esencial del servidor antes de entrar a sistemas peligrosos.",
-                "Server essentials before entering dangerous systems."))));
+                "Razas, progresión, Trials, amenazas, revive, reliquias y sistemas explicados por categorías.",
+                "Races, progression, Trials, threats, revival, relics and systems explained by category."))));
 
         SiegeButton deployment = new SiegeButton(x + briefingW + gap, y, deploymentW, h,
                 Component.literal(buttonLabel(label("DESPLIEGUE", "DEPLOYMENT"), "DEP", deploymentW)), b -> {
@@ -80,8 +80,8 @@ public final class Siege250MenuEvents {
             Minecraft.getInstance().setScreen(new SiegeOperationsHubScreen(screen));
         }, SiegeTheme.CYAN).setMainMenuStyle(true).withIcon("overview").setCompactCenter(true);
         operations.setTooltip(Tooltip.create(Component.literal(label(
-                "Atlas, razas, progresión, amenazas, multimedia, búsqueda y herramientas.",
-                "Atlas, races, progression, threats, media, search and tools."))));
+                "Razas, progresión, amenazas, multimedia, Intel, búsqueda y herramientas.",
+                "Races, progression, threats, media, Intel, search and tools."))));
 
         SiegeButton settings = new SiegeButton(x + opsW + gap, y, settingsW, h,
                 Component.literal(buttonLabel(label("AJUSTES", "SETTINGS"), label("AJ.", "CFG"), settingsW)), b -> {
@@ -99,7 +99,7 @@ public final class Siege250MenuEvents {
     private static String buttonLabel(String full, String shortLabel, int width) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft == null) return shortLabel;
-        int usable = Math.max(1, width - 30); // icon + padding
+        int usable = Math.max(1, width - 30);
         return minecraft.font.width(full) <= usable ? full : shortLabel;
     }
 
@@ -114,6 +114,7 @@ public final class Siege250MenuEvents {
     private static SiegeOperationsIndex.Route routeFor(String simple) {
         return switch (simple) {
             case "SiegeBriefingScreen" -> SiegeOperationsIndex.Route.BRIEFING;
+            case "SiegeServerGuideScreen", "SiegeKnowledgeScreen" -> SiegeOperationsIndex.Route.KNOWLEDGE;
             case "SiegeAtlasScreen", "SiegeKnowledgeFileScreen" -> SiegeOperationsIndex.Route.ATLAS;
             case "SiegeRaceAtlasScreen" -> SiegeOperationsIndex.Route.RACES;
             case "SiegeProgressionMapScreen" -> SiegeOperationsIndex.Route.PROGRESSION;
@@ -121,7 +122,6 @@ public final class Siege250MenuEvents {
             case "SiegeMediaRoomScreen" -> SiegeOperationsIndex.Route.MEDIA;
             case "SiegeMultiplayerScreen", "JoinMultiplayerScreen", "DirectJoinServerScreen", "ConnectScreen" -> SiegeOperationsIndex.Route.DEPLOYMENT;
             case "IntelScreenV3", "IntelPortraitScreen" -> SiegeOperationsIndex.Route.INTEL;
-            case "SiegeKnowledgeScreen" -> SiegeOperationsIndex.Route.KNOWLEDGE;
             case "SiegeArchiveScreen" -> SiegeOperationsIndex.Route.FIELD_MANUAL;
             case "SiegeSystemScreen" -> SiegeOperationsIndex.Route.COMMAND;
             case "SiegeDiagnosticsScreen" -> SiegeOperationsIndex.Route.DIAGNOSTICS;
