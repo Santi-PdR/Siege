@@ -42,7 +42,7 @@ public final class SiegeKnowledgeCorrections50 {
                     "El Medkit sirve como objeto médico y aparece repetidamente como forma de curarse. El sistema actual de reanimación general usa desfibriladores, así que no se presenta el Medkit como sustituto universal para revivir.\n\nCrafteo actual confirmado en la revisión del 22/09/2026: 3 bloques de hierro + 1 mesa de encantamientos.\n\nLa receta anterior no se muestra porque ya no es la vigente.",
                     "The Medkit is a medical item and repeatedly appears as a way to heal. The current general revival system uses defibrillators, so the Medkit is not presented as a universal revival replacement.\n\nCurrent recipe confirmed during the 2026-09-22 review: 3 iron blocks + 1 enchanting table.\n\nThe previous recipe is not shown because it is no longer current.",
                     false, List.of("death-revive-current", "item-defibrillator"),
-                    src(SiegeKnowledgeData.Confidence.USER_CONFIRMED, "22/09/2026", "Crafteos actuales",
+                    src(SiegeKnowledgeData.Confidence.SYSTEM_OBSERVED, "22/09/2026", "Crafteos actuales",
                             "Corrección actual aportada durante la revisión 5.00.",
                             "Current correction supplied during the 5.00 review.")),
 
