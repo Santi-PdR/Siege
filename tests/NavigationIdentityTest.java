@@ -8,7 +8,7 @@ public final class NavigationIdentityTest {
     public static void main(String[] args) {
         expect("uy.santipdr.siege.client.SiegeTitleScreen", SiegeNavigationModel.Section.HOME, "HOME", "HOME");
         expect("uy.santipdr.siege.client.SiegeOperationsHubScreen", SiegeNavigationModel.Section.OPERATIONS, "OPS", "OPERATIONS HUB");
-        expect("uy.santipdr.siege.client.SiegeKnowledgeScreen", SiegeNavigationModel.Section.KNOWLEDGE, "KNW", "KNOWLEDGE VAULT");
+        expect("uy.santipdr.siege.client.SiegeKnowledgeScreen", SiegeNavigationModel.Section.KNOWLEDGE, "ENC", "SERVER ENCYCLOPEDIA");
         expect("uy.santipdr.siege.client.SiegeMultiplayerScreen", SiegeNavigationModel.Section.DEPLOYMENT, "DEP", "DEPLOYMENT");
         expect("uy.santipdr.siege.client.IntelScreenV3", SiegeNavigationModel.Section.INTEL, "INT", "INTEL DOSSIERS");
         expect("uy.santipdr.siege.client.SiegeGuideScreen", SiegeNavigationModel.Section.REFERENCE, "REF", "ARCHIVE / ARMORY");
@@ -35,7 +35,7 @@ public final class NavigationIdentityTest {
                 "Status width should adapt to viewport width");
         check(SiegeUiLayout.density(320, 240) == SiegeUiLayout.Density.ULTRA_COMPACT, "Ultra compact identity");
         check(SiegeUiLayout.density(1280, 720) == SiegeUiLayout.Density.WIDE, "Wide identity");
-        System.out.println("SIEGE 3.00 Operations/Knowledge/dossiers/reference/manual/media and native identities passed");
+        System.out.println("SIEGE 3.00 Operations/Server Encyclopedia/dossiers/reference/manual/media and native identities passed");
     }
 
     private static void expect(String className, SiegeNavigationModel.Section section, String code, String english) {
