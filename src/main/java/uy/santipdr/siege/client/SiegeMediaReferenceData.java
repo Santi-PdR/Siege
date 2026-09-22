@@ -2,14 +2,7 @@ package uy.santipdr.siege.client;
 
 import java.util.List;
 
-/**
- * Reference-only Dummies vs Noobs media catalog.
- *
- * These entries are suggestions/context, not redistributed assets. SIEGE only
- * bundles audio/images that are already part of the project or supplied with
- * clear permission. This prevents a UI feature from silently turning into an
- * unlicensed media downloader.
- */
+/** Curated Dummies vs Noobs media ideas used by SIEGE 4.0's Media Room. */
 public final class SiegeMediaReferenceData {
     public enum Use {
         LOBBY("LOBBY", "LOBBY"),
@@ -34,38 +27,44 @@ public final class SiegeMediaReferenceData {
 
     private static final List<Track> DVN_TRACKS = List.of(
             new Track("Convenience Store", Use.LOBBY,
-                    "Referencia de lobby de Dummies vs Noobs. No incluida automáticamente en el JAR.",
-                    "Dummies vs Noobs lobby reference. Not automatically bundled in the JAR."),
+                    "Buen tono para navegación tranquila y pantallas de descanso.",
+                    "Good fit for calm navigation and downtime screens."),
             new Track("Music Box", Use.LOBBY,
-                    "Referencia de lobby; SIEGE ya conserva su propio recorte Kaptain Music Box suministrado al proyecto.",
-                    "Lobby reference; SIEGE already keeps its project-supplied Kaptain Music Box cut."),
+                    "Tono de lobby reconocible; combina especialmente bien con la portada y la galería.",
+                    "Recognizable lobby tone; fits the title screen and gallery especially well."),
             new Track("New Store", Use.LOBBY,
-                    "Referencia de lobby de Dummies vs Noobs. Requiere fuente/licencia clara antes de distribuirse.",
-                    "Dummies vs Noobs lobby reference. Requires a clear source/license before redistribution."),
+                    "Funciona bien para Arsenal, galería o pantallas de preparación.",
+                    "Fits Armory, gallery or preparation screens well."),
             new Track("Jazz Music", Use.LOBBY,
-                    "Referencia de lobby para una sección tranquila o multimedia; no incluida.",
-                    "Lobby reference suitable for a calm/media section; not bundled."),
+                    "Más relajada: ideal para Enciclopedia, lectura o Multimedia.",
+                    "More relaxed: ideal for Encyclopedia, reading or Media."),
             new Track("From the Ashes", Use.VICTORY,
-                    "Referencia asociada a victoria. No se distribuye sin verificar derechos del audio.",
-                    "Victory-associated reference. Not redistributed without verifying audio rights."),
+                    "Encaja con cierres victoriosos o momentos de operación completada.",
+                    "Fits victorious endings or operation-complete moments."),
             new Track("Sad Choir", Use.LOSS,
-                    "Referencia asociada a derrota. No se distribuye sin verificar derechos del audio.",
-                    "Loss-associated reference. Not redistributed without verifying audio rights.")
+                    "Encaja con derrota, archivo oscuro o transiciones de alto riesgo.",
+                    "Fits defeat, dark archive or high-risk transitions.")
     );
 
     private static final List<Visual> VISUALS = List.of(
-            new Visual("Stronghold / última fortaleza", "Stronghold / last stronghold",
-                    "Buscar capturas oficiales con defensa de fortaleza, escuadra de 8 y armamento moderno/futurista.",
-                    "Look for official imagery showing stronghold defense, an eight-player squad and modern/future weaponry."),
+            new Visual("Última fortaleza", "Last stronghold",
+                    "Defensa de fortaleza, escuadra táctica y armamento moderno/futurista.",
+                    "Stronghold defense, tactical squad and modern/near-future weaponry."),
             new Visual("Operación urbana nocturna", "Night urban operation",
-                    "Escenas DVN con siluetas tácticas, calles oscuras, focos y señalética militar funcionan bien bajo el chrome SIEGE.",
-                    "DVN scenes with tactical silhouettes, dark streets, spotlights and military signage fit the SIEGE chrome well."),
+                    "Calles oscuras, focos, siluetas tácticas y señalética militar.",
+                    "Dark streets, spotlights, tactical silhouettes and military signage."),
             new Visual("Hangar / briefing", "Hangar / briefing",
-                    "Ideal para Recruit Briefing, Deployment o Media Room; priorizar imágenes 16:9 de alta resolución.",
-                    "Ideal for Recruit Briefing, Deployment or Media Room; prioritize high-resolution 16:9 images."),
+                    "Ideal para Despliegue, Briefing de Recluta y Sala Multimedia.",
+                    "Ideal for Deployment, Recruit Briefing and Media Room."),
             new Visual("Defensa de oleada", "Wave defense",
-                    "Debe comunicar escala y presión sin tapar la UI; usar contraste adaptativo y evitar texto incrustado importante.",
-                    "Should communicate scale and pressure without fighting the UI; use adaptive contrast and avoid important baked-in text.")
+                    "Escena amplia con presión de combate sin tapar las zonas de lectura del menú.",
+                    "Wide combat-pressure scene that keeps menu reading areas clear."),
+            new Visual("Escuadra en avance", "Squad advancing",
+                    "Composición con varios soldados y profundidad de campo para reforzar la identidad cooperativa.",
+                    "Multi-soldier composition with depth to reinforce the cooperative identity."),
+            new Visual("Zona industrial devastada", "Devastated industrial zone",
+                    "Ruinas, humo, luz fría y maquinaria para secciones de Intel o Amenazas.",
+                    "Ruins, smoke, cold light and machinery for Intel or Threat sections.")
     );
 
     public static List<Track> dvnTracks() { return DVN_TRACKS; }
