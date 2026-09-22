@@ -1,12 +1,6 @@
 package uy.santipdr.siege.client;
 
-/**
- * Single authoritative contract for every SIEGE presentation profile.
- *
- * 1.25 removes the old duplication where profile application and profile-fit
- * diagnostics described the same presets independently. A profile now has one
- * specification that is used by apply, detect and diagnostics.
- */
+/** Single authoritative contract for every SIEGE presentation profile. */
 public final class SiegeProfileSpec {
     public record Spec(
             boolean reading,
@@ -31,7 +25,6 @@ public final class SiegeProfileSpec {
             int panelDarkness) { }
 
     private static final int FIELDS = 22;
-
     private SiegeProfileSpec() { }
 
     public static Spec of(SiegeClientProfile.Profile profile) {
@@ -51,6 +44,15 @@ public final class SiegeProfileSpec {
             case READING -> new Spec(true, SiegeConfig.Graphics.BALANCED,
                     true, true, true, false, false, false, false, false, false,
                     false, false, false, false, true, 0, 0, 48, 88);
+            case CLASSIC -> new Spec(false, SiegeConfig.Graphics.BALANCED,
+                    false, false, false, true, true, true, false, false, true,
+                    true, true, true, true, true, 0, 0, 28, 70);
+            case HIGH_CONTRAST -> new Spec(false, SiegeConfig.Graphics.BALANCED,
+                    true, true, true, false, false, false, false, false, false,
+                    true, false, true, false, true, 0, 0, 52, 90);
+            case IMMERSIVE -> new Spec(false, SiegeConfig.Graphics.CINEMATIC,
+                    false, false, false, true, true, true, true, true, true,
+                    true, true, true, true, true, 58, 42, 20, 62);
             case CUSTOM -> throw new IllegalArgumentException("CUSTOM has no fixed specification");
         };
     }
@@ -61,7 +63,10 @@ public final class SiegeProfileSpec {
                 SiegeClientProfile.Profile.TACTICAL,
                 SiegeClientProfile.Profile.PERFORMANCE,
                 SiegeClientProfile.Profile.CALM,
-                SiegeClientProfile.Profile.READING
+                SiegeClientProfile.Profile.READING,
+                SiegeClientProfile.Profile.CLASSIC,
+                SiegeClientProfile.Profile.HIGH_CONTRAST,
+                SiegeClientProfile.Profile.IMMERSIVE
         };
     }
 
@@ -94,9 +99,7 @@ public final class SiegeProfileSpec {
         SiegeConfig.panelDarkness = s.panelDarkness();
     }
 
-    public static boolean matches(SiegeClientProfile.Profile profile) {
-        return distance(profile) == 0;
-    }
+    public static boolean matches(SiegeClientProfile.Profile profile) { return distance(profile) == 0; }
 
     public static int distance(SiegeClientProfile.Profile profile) {
         if (profile == null || profile == SiegeClientProfile.Profile.CUSTOM) return FIELDS;
@@ -128,7 +131,6 @@ public final class SiegeProfileSpec {
     }
 
     public static int fieldCount() { return FIELDS; }
-
     private static int diff(boolean current, boolean expected) { return current == expected ? 0 : 1; }
     private static int diff(int current, int expected) { return current == expected ? 0 : 1; }
     private static int diff(Object current, Object expected) { return current == expected ? 0 : 1; }
