@@ -1,3 +1,4 @@
+import uy.santipdr.siege.client.SiegeEasterEggVault;
 import uy.santipdr.siege.client.SiegeSceneCatalog;
 
 import javax.imageio.ImageIO;
@@ -9,9 +10,9 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * SIEGE 2.0 release gate for visual media. Every GUI PNG/JPG must decode.
- * Backgrounds are shipped as prepared 1920x1080 masters so runtime rendering
- * never relies on a sub-HD source texture.
+ * SIEGE 2.50 release gate for visual media. Every GUI PNG/JPG must decode.
+ * Normal menu backgrounds are prepared 1920x1080 masters. Easter-egg assets may
+ * remain checked in, but they must not be part of the public scene catalog.
  */
 public final class GuiResourceRegressionTest {
     private static void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
@@ -34,7 +35,7 @@ public final class GuiResourceRegressionTest {
         }
 
         Path backgrounds = gui.resolve("backgrounds");
-        check(SiegeSceneCatalog.count() >= 13, "Scene catalog unexpectedly shrank");
+        check(SiegeSceneCatalog.count() >= 12, "Scene catalog unexpectedly shrank");
         for (int i = 0; i < SiegeSceneCatalog.count(); i++) {
             Path file = backgrounds.resolve(SiegeSceneCatalog.id(i) + ".png");
             int[] size = decode(file);
@@ -43,19 +44,20 @@ public final class GuiResourceRegressionTest {
                             + SiegeSceneCatalog.width(i) + "x" + SiegeSceneCatalog.height(i)
                             + " file=" + size[0] + "x" + size[1]);
             check(size[0] >= 1920 && size[1] >= 1080,
-                    "SIEGE 2.0 background below Full HD: " + SiegeSceneCatalog.id(i) + " -> " + size[0] + "x" + size[1]);
+                    "SIEGE 2.50 background below Full HD: " + SiegeSceneCatalog.id(i) + " -> " + size[0] + "x" + size[1]);
             check(size[0] * 9 == size[1] * 16,
                     "Background must remain 16:9: " + SiegeSceneCatalog.id(i));
+            check(!SiegeEasterEggVault.reserved(SiegeSceneCatalog.id(i)),
+                    "Reserved easter egg leaked into normal menu catalog: " + SiegeSceneCatalog.id(i));
         }
 
-        int anomaly = SiegeSceneCatalog.anomalyIndex();
-        check(anomaly >= 0 && SiegeSceneCatalog.kind(anomaly) == SiegeSceneCatalog.Kind.ANOMALY,
-                "Tempest anomaly metadata missing");
-        check(!SiegeSceneCatalog.comfortEligible(anomaly), "Anomaly must stay excluded from comfort rotation");
+        check(SiegeSceneCatalog.anomalyIndex() < 0, "Normal scene catalog must not expose an anomaly entry");
+        check(!SiegeSceneCatalog.containsId(SiegeEasterEggVault.TEMPEST_JUTCHERSON),
+                "Tempest easter egg must stay outside menu/gallery scenes");
         check(SiegeSceneCatalog.featuredIndex() >= 0, "Featured scene metadata missing");
 
         System.out.println("SIEGE GUI resources: " + images.size()
-                + " PNG/JPG images decoded; Full-HD scene metadata verified");
+                + " PNG/JPG images decoded; Full-HD menu scenes and easter-egg isolation verified");
     }
 
     private static boolean supportedImage(Path path) {
