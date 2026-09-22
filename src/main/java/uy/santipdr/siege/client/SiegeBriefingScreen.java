@@ -7,7 +7,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** SIEGE 4.00 fast non-personal newcomer briefing. */
+/** SIEGE 4.00 fast newcomer briefing. */
 public final class SiegeBriefingScreen extends Screen {
     private static final List<String> STEPS = List.of(
             "server-overview", "newcomer-operational-rule", "server-exploration", "race-catalog",
@@ -43,14 +43,7 @@ public final class SiegeBriefingScreen extends Screen {
                 Component.literal(label("VOLVER", "BACK")), b -> onClose(), SiegeTheme.RED)
                 .withIcon("back").setCompactCenter(true));
 
-        int atlasW = compact ? 84 : 118;
-        addRenderableWidget(new SiegeButton(panelX + panelW - atlasW - 10, panelY + 8, atlasW, 18,
-                Component.literal(label("ABRIR ATLAS", "OPEN ATLAS")), b -> {
-            SiegeUiSounds.confirm();
-            minecraft.setScreen(new SiegeAtlasScreen(this, SiegeAtlasIndex.View.BRIEFING));
-        }, SiegeTheme.CYAN).withIcon("overview").setCompactCenter(true));
-
-        startY = panelY + (compact ? 58 : 66);
+        startY = panelY + (compact ? 56 : 64);
         gap = compact ? 4 : 6;
         cardH = compact ? 22 : 28;
         int cols = compact && panelW < 410 ? 1 : 2;
@@ -132,14 +125,14 @@ public final class SiegeBriefingScreen extends Screen {
 
         int x = panelX + 12;
         g.drawString(font, fit(label("BRIEFING DE INGRESO", "ENTRY BRIEFING") + " // "
-                + SiegeRuntimeStatus.version(), panelW - 150), x, panelY + 9, SiegeTheme.INK, false);
+                + SiegeRuntimeStatus.version(), panelW - 24), x, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Ruta rápida para entender SIEGE antes de gastar recursos o entrar a sistemas peligrosos.",
-                "Fast route for understanding SIEGE before spending resources or entering dangerous systems."), panelW - 24),
+                "Lo principal para empezar: progreso, razas, Trials, amenazas, revive, reliquias y exploración.",
+                "The essentials to start: progression, races, Trials, threats, revival, relics and exploration."), panelW - 24),
                 x, panelY + 23, SiegeTheme.MUTED, false);
         g.drawString(font, fit(label(
-                "Cada paso abre una ficha con fuente y fecha; lo histórico permanece marcado como histórico.",
-                "Every step opens a sourced, dated file; historical information stays marked as historical."), panelW - 24),
+                "Elegí un tema y abrí una explicación corta, clara y práctica.",
+                "Choose a topic and open a short, clear and practical explanation."), panelW - 24),
                 x, panelY + 35, SiegeTheme.CYAN, false);
         SiegeTheme.divider(g, panelX + 10, startY - 8, panelW - 20, SiegeTheme.ORANGE);
 
