@@ -6,10 +6,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-/** Unified read-only knowledge registry for SIEGE 4.00. */
+/** Unified read-only knowledge registry for SIEGE 4.00.1. */
 public final class SiegeKnowledgeRegistry {
     private static final List<SiegeKnowledgeData.Entry> ALL = java.util.stream.Stream
-            .concat(SiegeKnowledgeData.entries().stream(), SiegeKnowledgeExpansion40.entries().stream())
+            .concat(
+                    java.util.stream.Stream.concat(
+                            SiegeKnowledgeData.entries().stream(),
+                            SiegeKnowledgeExpansion40.entries().stream()),
+                    SiegeKnowledgeExpansion401.entries().stream())
             .toList();
 
     private SiegeKnowledgeRegistry() { }
