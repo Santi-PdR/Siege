@@ -5,10 +5,10 @@ import java.util.List;
 /** Non-personal progression map built only from source-aware server records. */
 public final class SiegeProgressionData {
     public enum Status {
-        CONFIRMED("CONFIRMADO", "CONFIRMED", SiegeTheme.GREEN),
-        PARTIAL("PARCIAL", "PARTIAL", SiegeTheme.GOLD),
-        HISTORICAL("HISTÓRICO", "HISTORICAL", SiegeTheme.ORANGE),
-        VARIABLE("VARIABLE", "VARIABLE", SiegeTheme.CYAN);
+        CONFIRMED("CONFIRMADO", "CONFIRMED", 0xFF72C98B),
+        PARTIAL("PARCIAL", "PARTIAL", 0xFFD6AE65),
+        HISTORICAL("HISTÓRICO", "HISTORICAL", 0xFFE89B59),
+        VARIABLE("VARIABLE", "VARIABLE", 0xFF68C6D8);
         private final String es, en;
         private final int accent;
         Status(String es, String en, int accent) { this.es = es; this.en = en; this.accent = accent; }
