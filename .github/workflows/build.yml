@@ -28,16 +28,16 @@ jobs:
         with:
           gradle-version: '8.8'
 
-      - name: Prepare SIEGE 4.00 visual masters
+      - name: Prepare SIEGE 4.00.1 visual masters
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow
           python3 scripts/prepare-backgrounds-hd.py
 
-      - name: Verify responsive layouts, Atlas knowledge and War Room search
+      - name: Verify responsive layouts, server guide, Atlas knowledge and War Room search
         shell: bash
         run: |
-          mkdir -p build/layout-tests build/guide-tests build/guide-media-tests build/archive-tests build/config-tests build/scene-tests build/knowledge-tests build/atlas-tests build/race-atlas-tests build/progression-tests build/media-tests build/ops-tests
+          mkdir -p build/layout-tests build/guide-tests build/guide-media-tests build/archive-tests build/config-tests build/scene-tests build/knowledge-tests build/atlas-tests build/server-guide-tests build/race-atlas-tests build/progression-tests build/media-tests build/ops-tests
           javac -d build/layout-tests src/main/java/uy/santipdr/siege/client/SiegeGalleryLayout.java src/main/java/uy/santipdr/siege/client/SiegeIntelLayout.java src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelPresentation.java src/main/java/uy/santipdr/siege/client/SiegeImageViewport.java src/main/java/uy/santipdr/siege/client/SiegeUiLayout.java src/main/java/uy/santipdr/siege/client/IntelEntry.java tests/UiRegressionTest.java
           java -cp build/layout-tests UiRegressionTest
           javac -d build/layout-tests src/main/java/uy/santipdr/siege/client/SiegeMultiplayerLayout.java tests/MultiplayerLayoutTest.java
@@ -54,15 +54,17 @@ jobs:
           java -cp build/scene-tests SceneScheduleTest
           javac -d build/knowledge-tests src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java tests/KnowledgeDataRegressionTest.java
           java -cp build/knowledge-tests KnowledgeDataRegressionTest
-          javac -d build/atlas-tests src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java src/main/java/uy/santipdr/siege/client/SiegeAtlasIndex.java tests/AtlasRegressionTest.java
+          javac -d build/atlas-tests src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion401.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java src/main/java/uy/santipdr/siege/client/SiegeAtlasIndex.java tests/AtlasRegressionTest.java
           java -cp build/atlas-tests AtlasRegressionTest
+          javac -d build/server-guide-tests src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion401.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java src/main/java/uy/santipdr/siege/client/SiegeServerGuideData.java tests/ServerGuideRegressionTest.java
+          java -cp build/server-guide-tests ServerGuideRegressionTest
           javac -d build/race-atlas-tests src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasData.java tests/RaceAtlasRegressionTest.java
           java -cp build/race-atlas-tests RaceAtlasRegressionTest
           javac -d build/progression-tests src/main/java/uy/santipdr/siege/client/SiegeProgressionData.java tests/ProgressionMapRegressionTest.java
           java -cp build/progression-tests ProgressionMapRegressionTest
           javac -d build/media-tests src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java tests/MediaReferenceRegressionTest.java
           java -cp build/media-tests MediaReferenceRegressionTest
-          javac -d build/ops-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java src/main/java/uy/santipdr/siege/client/SiegeRouteHistory.java tests/OperationsIndexTest.java
+          javac -d build/ops-tests src/main/java/uy/santipdr/siege/client/IntelSearch.java src/main/java/uy/santipdr/siege/client/IntelEntry.java src/main/java/uy/santipdr/siege/client/AgreementReport.java src/main/java/uy/santipdr/siege/client/IntelData.java src/main/java/uy/santipdr/siege/client/IntelCurrentData.java src/main/java/uy/santipdr/siege/client/IntelCatalog.java src/main/java/uy/santipdr/siege/client/SiegeGuideData.java src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion401.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java src/main/java/uy/santipdr/siege/client/SiegeRouteHistory.java tests/OperationsIndexTest.java
           java -cp build/ops-tests OperationsIndexTest
           python3 tests/test_installer.py
           python3 tests/test_release_040.py
@@ -82,11 +84,14 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify completed SIEGE 4.00 War Room, privacy and easter-egg contracts
+      - name: Verify completed SIEGE 4.00.1 guide, War Room, privacy and easter-egg contracts
         shell: bash
         run: |
-          grep -q "version = '4.00.0'" build.gradle
+          grep -q "version = '4.00.1'" build.gradle
           grep -q 'class SiegeOperationsHubScreen' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
+          grep -q 'class SiegeServerGuideScreen' src/main/java/uy/santipdr/siege/client/SiegeServerGuideScreen.java
+          grep -q 'class SiegeServerGuideData' src/main/java/uy/santipdr/siege/client/SiegeServerGuideData.java
+          grep -q 'class SiegeKnowledgeExpansion401' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion401.java
           grep -q 'class SiegeBriefingScreen' src/main/java/uy/santipdr/siege/client/SiegeBriefingScreen.java
           grep -q 'class SiegeAtlasScreen' src/main/java/uy/santipdr/siege/client/SiegeAtlasScreen.java
           grep -q 'class SiegeRaceAtlasScreen' src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasScreen.java
@@ -100,12 +105,16 @@ jobs:
           grep -q 'new SiegeRaceAtlasScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
           grep -q 'new SiegeProgressionMapScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
           grep -q 'new SiegeMediaRoomScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
-          grep -q 'new SiegeBriefingScreen(screen)' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
+          grep -q 'new SiegeServerGuideScreen(this)' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
+          grep -q 'new SiegeServerGuideScreen(screen)' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
           grep -q 'SiegeKnowledgeRegistry.entries' src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java
+          grep -q 'guide-first-hour' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion401.java
+          grep -q 'guide-races' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion401.java
+          grep -q 'guide-trials' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion401.java
+          grep -q 'guide-revive' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion401.java
           grep -q 'progression-mobility-priority' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
           grep -q 'combat-adaptation' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
           grep -q 'prompt-precision-framework' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
-          grep -q 'research-open-questions' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java
           grep -q 'OBSAINAN' src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasData.java
           grep -q 'FABLED' src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasData.java
           grep -q 'CLASSIC' src/main/java/uy/santipdr/siege/client/SiegeClientProfile.java
@@ -113,8 +122,8 @@ jobs:
           grep -q 'IMMERSIVE' src/main/java/uy/santipdr/siege/client/SiegeClientProfile.java
           grep -q 'Convenience Store' src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java
           grep -q 'From the Ashes' src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java
-          if grep -nEi 'mi inventario|mi personaje|mi partida actual|player notebook|private build' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasData.java src/main/java/uy/santipdr/siege/client/SiegeProgressionData.java; then
-            echo "4.00 server knowledge must remain non-personal."
+          if grep -nEi 'mi inventario|mi personaje|mi partida actual|player notebook|private build|private progress' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion401.java src/main/java/uy/santipdr/siege/client/SiegeServerGuideData.java src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasData.java src/main/java/uy/santipdr/siege/client/SiegeProgressionData.java; then
+            echo "4.00.1 server knowledge must remain non-personal."
             exit 1
           fi
           grep -q 'TEMPEST_JUTCHERSON' src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java
