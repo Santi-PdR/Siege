@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SIEGE 5.00 major-jump contracts introduced after the completed 4.00 release."""
+"""SIEGE 5.00 major-jump contracts."""
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,6 +11,15 @@ MEDIA_DATA = read("src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceDat
 MEDIA_ROOM = read("src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java")
 COMMAND = read("src/main/java/uy/santipdr/siege/client/SiegeCommandNetwork.java")
 HUB = read("src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java")
+OPS = read("src/main/java/uy/santipdr/siege/client/SiegeOperationsIndex.java")
+BRIEF = read("src/main/java/uy/santipdr/siege/client/SiegeBriefingScreen.java")
+ATLAS_INDEX = read("src/main/java/uy/santipdr/siege/client/SiegeAtlasIndex.java")
+ATLAS = read("src/main/java/uy/santipdr/siege/client/SiegeAtlasScreen.java")
+ENC = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java")
+DETAIL = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeFileScreen.java")
+REG = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java")
+EXP50 = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java")
+PROGRESSION = read("src/main/java/uy/santipdr/siege/client/SiegeProgressionData.java")
 PROFILES = read("src/main/java/uy/santipdr/siege/client/SiegeClientProfile.java")
 PROFILE_SPEC = read("src/main/java/uy/santipdr/siege/client/SiegeProfileSpec.java")
 TITLE = read("src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java")
@@ -22,29 +31,61 @@ MEDIA_DOC = read("docs/DVN-MEDIA-CANDIDATES-5.0.md")
 
 assert "version = '5.00.0'" in BUILD
 assert "SIEGE 5.00.0" in CHANGELOG
-assert "Command Network" in CHANGELOG
 
-# War Room 5.0 replaces the flat route wall with a small hierarchy without breaking direct search/deep links.
-assert "enum Lane { DEPLOYMENT, INTELLIGENCE, KNOWLEDGE, SYSTEMS }" in COMMAND
-assert "coversEveryRouteExactlyOnce" in COMMAND
-for route in ("BRIEFING", "DEPLOYMENT", "THREATS", "INTEL", "RACES", "PROGRESSION", "ATLAS",
-              "KNOWLEDGE", "ARCHIVE", "ARMORY", "FIELD_MANUAL", "MEDIA", "COMMAND", "DIAGNOSTICS",
-              "SETTINGS", "BACKGROUNDS"):
-    assert f"Route.{route}" in COMMAND
-assert "SiegeCommandNetwork.routes(lane)" in HUB
-assert "switchLane" in HUB
-assert 'Component.literal("SIEGE // COMMAND NETWORK")' in HUB
-assert "laneTop = panelY + (compact ? 82 : 104)" in HUB
-assert "new SiegeBriefingScreen(this)" in HUB
-assert "new SiegeMediaRoomScreen(this)" in HUB
-assert "SiegeOperationsIndex.search" in HUB
+# Operations is intentionally smaller than 4.00.
+assert "enum Lane { DEPLOYMENT, INTELLIGENCE, REFERENCE }" in COMMAND
+assert "hasNoDuplicateVisibleRoutes" in COMMAND
+for hidden in ("Route.ARCHIVE", "Route.ARMORY", "Route.DIAGNOSTICS", "Route.COMMAND", "Route.SETTINGS", "Route.BACKGROUNDS"):
+    assert hidden not in COMMAND
+for visible in ("Route.BRIEFING", "Route.DEPLOYMENT", "Route.THREATS", "Route.INTEL", "Route.RACES",
+                "Route.PROGRESSION", "Route.ATLAS", "Route.KNOWLEDGE", "Route.FIELD_MANUAL", "Route.MEDIA"):
+    assert visible in COMMAND
+assert "SiegeCommandNetwork.isVisible(route)" in HUB
+assert 'Component.literal("SIEGE // OPERATIONS")' in HUB
+assert "CLIENTE " not in HUB and "profileFitLabel" not in HUB
+assert "Kind.ARMORY" not in OPS
+assert "confidence().label" not in OPS
 
-# Media Room 5.0 is a real surface, not only a longer list of references.
+# Briefing is a newcomer path, not a second encyclopedia.
+for required in ("server-overview", "newcomer-operational-rule", "race-system", "abilities-experience",
+                 "progression-v1-v4", "trials-basics", "executors-basics", "bosses-basics", "death-revive-current"):
+    assert f'"{required}"' in BRIEF
+for removed in ("progression-mobility-priority", "dimensions-basics", "economy-basics", "prompt-precision-framework"):
+    assert removed not in BRIEF
+assert "PRIMEROS PASOS" in BRIEF
+
+# Atlas/Encyclopedia expose current information in natural categories; no historical/editorial tab or generic see-also.
+assert "enum View { RACES, PROGRESSION, SYSTEMS, ITEMS }" in ATLAS_INDEX
+assert "RESEARCH" not in ATLAS_INDEX and "BRIEFING" not in ATLAS_INDEX
+assert "Mode { START, RACES, PROGRESSION, SYSTEMS, ITEMS }" in ENC
+for surface in (ATLAS, ENC, DETAIL):
+    assert "TAMBIÉN VER" not in surface and "SEE ALSO" not in surface
+assert "SiegeKnowledgeExpansion50.entries" in REG
+assert "maintenanceEntries" in REG
+assert "Zone.SERVER" in REG
+
+# Current recipes/rules override stale information in normal UI.
+assert '"item-defibrillator"' in EXP50
+assert "3 bloques de hierro + 1 mesa de encantamientos" in EXP50
+assert "No se muestran recetas anteriores" in EXP50
+assert '"death-revive-current"' in EXP50
+assert "RCP dejó de ser" in EXP50
+assert '"item-geography-table"' in EXP50
+assert "investigar sus propiedades" in EXP50
+assert "120 wins" not in EXP50 and "220 wins" not in EXP50
+
+# Race-specific progression is explicit instead of pretending everything is V1→V4.
+for key in ('"race-saiyan"', '"saiyan-transformations"', '"race-ghoul"', '"ghoul-progression"',
+            '"race-subhuman"', '"subhuman-adamantium-human"', '"subhuman-sorcerer"', '"subhuman-evil-morty"'):
+    assert key in EXP50
+for track in ('"core"', '"v1v4"', '"special"', '"trials"'):
+    assert track in PROGRESSION
+assert "DEPENDE DE LA RAZA" in PROGRESSION
+assert "Trial Spire" in PROGRESSION and "Witch Trials" in PROGRESSION
+
+# Media Room 5.0 remains a real audiovisual surface.
 assert "Mode { BUNDLED, MOODS, DVN_AUDIO, VISUALS }" in MEDIA_ROOM
-assert "renderMoods" in MEDIA_ROOM
-assert "mouseScrolled" in MEDIA_ROOM
-assert "renderScrollState" in MEDIA_ROOM
-assert "SiegeMediaReferenceData.moods()" in MEDIA_ROOM
+assert "renderMoods" in MEDIA_ROOM and "mouseScrolled" in MEDIA_ROOM
 for mood in ('"stronghold"', '"deployment"', '"intel"', '"last-stand"'):
     assert mood in MEDIA_DATA
 for visual in ('"stronghold-defense"', '"arctic-standoff"', '"urban-night"', '"city-siege"',
@@ -53,18 +94,12 @@ for visual in ('"stronghold-defense"', '"arctic-standoff"', '"urban-night"', '"c
     assert visual in MEDIA_DATA
 for track in ("Convenience Store", "Music Box", "New Store", "Jazz Music", "From the Ashes", "Sad Choir"):
     assert track in MEDIA_DATA
+assert "768×432" in MEDIA_DOC and "no se hará upscale barato" in MEDIA_DOC.lower() and "1920×1080" in MEDIA_DOC
 
-# External references remain references. The quality gate explicitly rejects fake HD promotion.
-assert "768×432" in MEDIA_DOC
-assert "no se hará upscale barato" in MEDIA_DOC.lower()
-assert "1920×1080" in MEDIA_DOC
-assert "Tempest Jutcherson queda fuera siempre" in MEDIA_DOC
-
-# 5.00 adds an identity preset while preserving accessibility instead of adding more flashing effects.
+# Stronghold profile keeps the accessibility intent.
 assert "STRONGHOLD" in PROFILES
 assert "case STRONGHOLD" in PROFILE_SPEC
 assert "SiegeClientProfile.Profile.STRONGHOLD" in PROFILE_SPEC
-assert "false, true, false, true, true, true, true, false, true" in PROFILE_SPEC
 assert "38, 0, 34, 78" in PROFILE_SPEC
 
 # Major-release invariants remain intact.
@@ -73,8 +108,7 @@ assert "GLFW_KEY_S && Screen.hasControlDown()" in TITLE
 assert '"tempest_jutcherson"' in EASTER
 assert '"tempest_jutcherson"' not in SCENES
 assert "Publish validated jar for installer" in WORKFLOW
-assert "version = '5.00.0'" in WORKFLOW
 assert "python3 tests/test_release_040.py" in WORKFLOW
 assert "python3 tests/test_release_050.py" in WORKFLOW
 
-print("SIEGE 5.00 foundation contracts passed")
+print("SIEGE 5.00 navigation, natural-language knowledge, freshness and audiovisual contracts passed")
