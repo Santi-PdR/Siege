@@ -45,23 +45,25 @@ public final class Siege250MenuEvents {
         int deploymentW = Math.max(1, full - gap - briefingW);
         event.removeListener(original);
 
+        String briefingLabel = briefingW < 96 ? "BRF" : "BRIEFING";
+        String deploymentLabel = deploymentW < 118 ? "DEP" : label("DESPLIEGUE", "DEPLOYMENT");
         SiegeButton briefing = new SiegeButton(x, y, briefingW, h,
-                Component.literal(full < 165 ? "BRF" : "BRIEFING"), b -> {
+                Component.literal(briefingLabel), b -> {
             SiegeUiSounds.confirm();
             Minecraft.getInstance().setScreen(new SiegeBriefingScreen(screen));
         }, SiegeTheme.ORANGE).setMainMenuStyle(true).withIcon("shield").setCompactCenter(true);
         briefing.setTooltip(Tooltip.create(Component.literal(label(
-                "Entrada rápida: qué saber antes de gastar recursos o entrar a sistemas peligrosos.",
-                "Fast entry: what to know before spending resources or entering dangerous systems."))));
+                "Qué conviene saber antes de explorar, progresar o gastar recursos.",
+                "What to know before exploring, progressing or spending resources."))));
 
         SiegeButton deployment = new SiegeButton(x + briefingW + gap, y, deploymentW, h,
-                Component.literal(full < 165 ? "DEP" : label("DESPLIEGUE", "DEPLOYMENT")), b -> {
+                Component.literal(deploymentLabel), b -> {
             SiegeUiSounds.confirm();
             Minecraft.getInstance().setScreen(new SiegeMultiplayerScreen(screen));
         }, SiegeTheme.RED).setMainMenuStyle(true).withIcon("connect").setCompactCenter(true);
         deployment.setTooltip(Tooltip.create(Component.literal(label(
-                "Servidor oficial, compatibilidad, estado y conexión.",
-                "Official server, compatibility, status and connection."))));
+                "Servidor oficial, estado y conexión.",
+                "Official server, status and connection."))));
 
         event.addListener(briefing);
         event.addListener(deployment);
@@ -74,23 +76,25 @@ public final class Siege250MenuEvents {
         int settingsW = Math.max(1, full - gap - opsW);
         event.removeListener(original);
 
+        String operationsLabel = opsW < 118 ? "OPS" : label("OPERACIONES", "OPERATIONS");
+        String settingsLabel = settingsW < 92 ? label("AJ.", "CFG") : label("AJUSTES", "SETTINGS");
         SiegeButton operations = new SiegeButton(x, y, opsW, h,
-                Component.literal(full < 165 ? "OPS" : label("OPERACIONES", "OPERATIONS")), b -> {
+                Component.literal(operationsLabel), b -> {
             SiegeUiSounds.confirm();
             Minecraft.getInstance().setScreen(new SiegeOperationsHubScreen(screen));
         }, SiegeTheme.CYAN).setMainMenuStyle(true).withIcon("overview").setCompactCenter(true);
         operations.setTooltip(Tooltip.create(Component.literal(label(
-                "Sala de Operaciones 4.00: Atlas, razas, progresión, amenazas, multimedia, búsqueda global y herramientas.",
-                "4.00 War Room: Atlas, races, progression, threats, media, global search and tools."))));
+                "Razas, progresión, amenazas, multimedia, Intel, Arsenal y herramientas del servidor.",
+                "Races, progression, threats, media, Intel, Armory and server tools."))));
 
         SiegeButton settings = new SiegeButton(x + opsW + gap, y, settingsW, h,
-                Component.literal(full < 165 ? label("AJ.", "CFG") : label("AJUSTES", "SETTINGS")), b -> {
+                Component.literal(settingsLabel), b -> {
             SiegeUiSounds.confirm();
             Minecraft.getInstance().setScreen(new SiegeSettingsScreen(screen));
         }, SiegeTheme.RED).setMainMenuStyle(true).withIcon("settings").setCompactCenter(true);
         settings.setTooltip(Tooltip.create(Component.literal(label(
-                "Configuración visual, audio, Intel y accesibilidad.",
-                "Visual, audio, Intel and accessibility configuration."))));
+                "Apariencia, audio, Intel y accesibilidad.",
+                "Appearance, audio, Intel and accessibility."))));
         event.addListener(operations);
         event.addListener(settings);
     }
