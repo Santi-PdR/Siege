@@ -9,6 +9,8 @@ BUILD = read("build.gradle")
 WORKFLOW = read(".github/workflows/build.yml")
 MEDIA_DATA = read("src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java")
 MEDIA_ROOM = read("src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java")
+COMMAND = read("src/main/java/uy/santipdr/siege/client/SiegeCommandNetwork.java")
+HUB = read("src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java")
 PROFILES = read("src/main/java/uy/santipdr/siege/client/SiegeClientProfile.java")
 PROFILE_SPEC = read("src/main/java/uy/santipdr/siege/client/SiegeProfileSpec.java")
 TITLE = read("src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java")
@@ -21,6 +23,20 @@ MEDIA_DOC = read("docs/DVN-MEDIA-CANDIDATES-5.0.md")
 assert "version = '5.00.0'" in BUILD
 assert "SIEGE 5.00.0" in CHANGELOG
 assert "Command Network" in CHANGELOG
+
+# War Room 5.0 replaces the flat route wall with a small hierarchy without breaking direct search/deep links.
+assert "enum Lane { DEPLOYMENT, INTELLIGENCE, KNOWLEDGE, SYSTEMS }" in COMMAND
+assert "coversEveryRouteExactlyOnce" in COMMAND
+for route in ("BRIEFING", "DEPLOYMENT", "THREATS", "INTEL", "RACES", "PROGRESSION", "ATLAS",
+              "KNOWLEDGE", "ARCHIVE", "ARMORY", "FIELD_MANUAL", "MEDIA", "COMMAND", "DIAGNOSTICS",
+              "SETTINGS", "BACKGROUNDS"):
+    assert f"Route.{route}" in COMMAND
+assert "SiegeCommandNetwork.routes(lane)" in HUB
+assert "switchLane" in HUB
+assert 'Component.literal("SIEGE // COMMAND NETWORK")' in HUB
+assert "new SiegeBriefingScreen(this)" in HUB
+assert "new SiegeMediaRoomScreen(this)" in HUB
+assert "SiegeOperationsIndex.search" in HUB
 
 # Media Room 5.0 is a real surface, not only a longer list of references.
 assert "Mode { BUNDLED, MOODS, DVN_AUDIO, VISUALS }" in MEDIA_ROOM
