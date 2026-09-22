@@ -1,10 +1,11 @@
 package uy.santipdr.siege.client;
 
+import java.util.Arrays;
 import java.util.List;
 
-/** SIEGE 5.00 navigation hierarchy used by the War Room to avoid a flat wall of buttons. */
+/** SIEGE 5.00 Operations only exposes routes useful during play/preparation. */
 public final class SiegeCommandNetwork {
-    public enum Lane { DEPLOYMENT, INTELLIGENCE, KNOWLEDGE, SYSTEMS }
+    public enum Lane { DEPLOYMENT, INTELLIGENCE, REFERENCE }
 
     private SiegeCommandNetwork() { }
 
@@ -19,31 +20,25 @@ public final class SiegeCommandNetwork {
                     SiegeOperationsIndex.Route.RACES,
                     SiegeOperationsIndex.Route.PROGRESSION,
                     SiegeOperationsIndex.Route.ATLAS);
-            case KNOWLEDGE -> List.of(
+            case REFERENCE -> List.of(
                     SiegeOperationsIndex.Route.KNOWLEDGE,
-                    SiegeOperationsIndex.Route.ARCHIVE,
-                    SiegeOperationsIndex.Route.ARMORY,
                     SiegeOperationsIndex.Route.FIELD_MANUAL,
                     SiegeOperationsIndex.Route.MEDIA);
-            case SYSTEMS -> List.of(
-                    SiegeOperationsIndex.Route.COMMAND,
-                    SiegeOperationsIndex.Route.DIAGNOSTICS,
-                    SiegeOperationsIndex.Route.SETTINGS,
-                    SiegeOperationsIndex.Route.BACKGROUNDS);
         };
     }
 
     public static Lane laneFor(SiegeOperationsIndex.Route route) {
         if (route == null) return Lane.DEPLOYMENT;
-        for (Lane lane : Lane.values()) {
-            if (routes(lane).contains(route)) return lane;
-        }
+        for (Lane lane : Lane.values()) if (routes(lane).contains(route)) return lane;
         return Lane.DEPLOYMENT;
     }
 
-    public static boolean coversEveryRouteExactlyOnce() {
-        var flattened = java.util.Arrays.stream(Lane.values()).flatMap(lane -> routes(lane).stream()).toList();
-        return flattened.size() == SiegeOperationsIndex.Route.values().length
-                && flattened.stream().distinct().count() == flattened.size();
+    public static boolean isVisible(SiegeOperationsIndex.Route route) {
+        return route != null && Arrays.stream(Lane.values()).anyMatch(lane -> routes(lane).contains(route));
+    }
+
+    public static boolean hasNoDuplicateVisibleRoutes() {
+        var flattened = Arrays.stream(Lane.values()).flatMap(lane -> routes(lane).stream()).toList();
+        return flattened.stream().distinct().count() == flattened.size();
     }
 }
