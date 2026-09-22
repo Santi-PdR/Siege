@@ -2,6 +2,7 @@ package uy.santipdr.siege.client;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,10 +23,7 @@ public final class SiegeKnowledgeRegistry {
             SiegeKnowledgeData.entries(), SiegeKnowledgeExpansion40.entries(), SiegeKnowledgeExpansion50.entries())
             .flatMap(List::stream).toList();
 
-    /**
-     * One current record per ID. Newer generations replace older text rather than showing both
-     * versions to a player. This is especially important for recipes and revival rules.
-     */
+    /** One current record per ID. Newer generations replace older text. */
     private static final Map<String, SiegeKnowledgeData.Entry> CURRENT_BY_ID = buildCurrent();
     private static final List<SiegeKnowledgeData.Entry> PUBLIC = CURRENT_BY_ID.values().stream()
             .filter(SiegeKnowledgeRegistry::playerFacing)
@@ -41,7 +39,7 @@ public final class SiegeKnowledgeRegistry {
             if (entry.zone() == SiegeKnowledgeData.Zone.SERVER) out.put(entry.id(), entry);
         for (SiegeKnowledgeData.Entry entry : SiegeKnowledgeExpansion50.entries())
             if (entry.zone() == SiegeKnowledgeData.Zone.SERVER) out.put(entry.id(), entry);
-        return Map.copyOf(out);
+        return Collections.unmodifiableMap(out);
     }
 
     private static boolean playerFacing(SiegeKnowledgeData.Entry entry) {
@@ -51,15 +49,14 @@ public final class SiegeKnowledgeRegistry {
         return !HIDDEN_PLAYER_IDS.contains(entry.id());
     }
 
-    /** Current information suitable for normal SIEGE interfaces. */
     public static List<SiegeKnowledgeData.Entry> entries() { return PUBLIC; }
-
-    /** Internal history for maintenance/tests; not a player-facing list. */
     public static List<SiegeKnowledgeData.Entry> maintenanceEntries() { return MAINTENANCE; }
 
+    /** Player-facing lookup. Editorial/history-only records deliberately resolve to null. */
     public static SiegeKnowledgeData.Entry get(String id) {
         if (id == null) return null;
-        return CURRENT_BY_ID.get(id);
+        SiegeKnowledgeData.Entry entry = CURRENT_BY_ID.get(id);
+        return playerFacing(entry) ? entry : null;
     }
 
     public static List<SiegeKnowledgeData.Entry> critical() {
