@@ -6,15 +6,11 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 
-/**
- * First-contact screen for players who want to understand the server before
- * opening deep Intel or advanced configuration.
- */
+/** First-contact briefing for SIEGE 4.0. */
 public final class SiegeRecruitBriefingScreen extends Screen {
-    private enum Topic {
-        SERVER, RACES, PROGRESSION, SURVIVAL, THREATS, EQUIPMENT, DEPLOYMENT, MEDIA
-    }
+    private enum Topic { SERVER, RACES, PROGRESSION, SURVIVAL, THREATS, EQUIPMENT, DEPLOYMENT, MEDIA }
 
     private final Screen parent;
     private final List<SiegeButton> topicButtons = new ArrayList<>();
@@ -31,48 +27,55 @@ public final class SiegeRecruitBriefingScreen extends Screen {
     protected void init() {
         SiegeUiSounds.resetHover();
         topicButtons.clear();
-        compact = width < 620 || height < 370;
+        compact = width < 650 || height < 390;
         int margin = compact ? 7 : Math.max(12, width / 80);
         panelX = margin;
         panelY = compact ? 31 : 38;
         panelW = Math.max(1, width - margin * 2);
         panelH = Math.max(1, height - panelY - (compact ? 18 : 24));
         gridX = panelX + 10;
-        gridY = panelY + 56;
         gridW = panelW - 20;
 
         addRenderableWidget(new SiegeButton(8, 7, compact ? 62 : 88, 19,
                 Component.literal(label("VOLVER", "BACK")), b -> onClose(), SiegeTheme.RED)
                 .withIcon("back").setCompactCenter(true));
+        int searchW = compact ? 74 : 112;
+        addRenderableWidget(new SiegeButton(Math.max(8, width - searchW - 8), 7, searchW, 19,
+                Component.literal(label("BUSCAR", "SEARCH")),
+                b -> minecraft.setScreen(new SiegeOperationsHubScreen(this)), SiegeTheme.CYAN)
+                .withIcon("search").setCompactCenter(true));
 
-        int cols = compact ? 2 : 4;
+        int introLines = compact ? 2 : 2;
+        gridY = panelY + 40 + introLines * 12;
+        int cols = panelW < 430 ? 2 : panelW < 900 ? 4 : 4;
         int gap = 5;
-        int h = compact ? 21 : 24;
-        int cellW = Math.max(70, (gridW - gap * (cols - 1)) / cols);
+        int h = compact ? 20 : 23;
+        int cellW = Math.max(64, (gridW - gap * (cols - 1)) / cols);
         Topic[] topics = Topic.values();
         for (int i = 0; i < topics.length; i++) {
             Topic topic = topics[i];
             int row = i / cols;
             int col = i % cols;
             int x = gridX + col * (cellW + gap);
-            int w = col == cols - 1 ? gridX + gridW - x : cellW;
+            int right = col == cols - 1 ? gridX + gridW : x + cellW;
             int y = gridY + row * (h + gap);
-            SiegeButton button = new SiegeButton(x, y, w, h, Component.literal(topicLabel(topic)),
-                    b -> select(topic), topicAccent(topic)).withIcon(topicIcon(topic)).setCompactCenter(true)
-                    .setSelected(topic == selected);
+            SiegeButton button = new SiegeButton(x, y, Math.max(40, right - x), h,
+                    Component.literal(topicLabel(topic)), b -> select(topic), topicAccent(topic))
+                    .withIcon(topicIcon(topic)).setCompactCenter(true).setSelected(topic == selected);
             button.setTooltip(Tooltip.create(Component.literal(topicDescription(topic))));
             topicButtons.add(addRenderableWidget(button));
         }
 
         int rows = (topics.length + cols - 1) / cols;
-        detailY = gridY + rows * (h + gap) + 8;
-        detailH = Math.max(75, panelY + panelH - detailY - 10);
+        detailY = gridY + rows * (h + gap) + 9;
+        detailH = Math.max(68, panelY + panelH - detailY - 10);
     }
 
     private void select(Topic topic) {
         selected = topic;
         SiegeUiSounds.selection();
-        for (int i = 0; i < topicButtons.size(); i++) topicButtons.get(i).setSelected(Topic.values()[i] == topic);
+        for (int i = 0; i < topicButtons.size(); i++)
+            topicButtons.get(i).setSelected(Topic.values()[i] == topic);
     }
 
     private void openSelected() {
@@ -106,39 +109,47 @@ public final class SiegeRecruitBriefingScreen extends Screen {
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xCB000000 : 0xA4000000);
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.CYAN);
 
-        g.drawString(font, label("BRIEFING PARA RECLUTAS", "RECRUIT BRIEFING") + " // " + SiegeRuntimeStatus.version(),
-                panelX + 12, panelY + 9, SiegeTheme.INK, false);
+        int textW = panelW - 24;
+        g.drawString(font, fit(label("BRIEFING DE RECLUTA", "RECRUIT BRIEFING")
+                + " // " + SiegeRuntimeStatus.version(), textW), panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Una entrada rápida al servidor. Cada bloque abre el sistema especializado correspondiente.",
-                "A fast entry into the server. Each block opens the matching specialized system."), panelW - 24),
+                "Si recién entrás, empezá acá: cada bloque responde una pregunta distinta.",
+                "New here? Start here: each block answers a different question."), textW),
                 panelX + 12, panelY + 22, SiegeTheme.MUTED, false);
         g.drawString(font, fit(label(
-                "No usa datos personales: sólo conocimiento general de Eternal Craft / SIEGE.",
-                "No personal data: only general Eternal Craft / SIEGE knowledge."), panelW - 24),
-                panelX + 12, panelY + 34, SiegeTheme.GREEN, false);
+                "Elegí un tema y después abrilo para ver la pantalla especializada.",
+                "Choose a topic, then open it to enter the specialized screen."), textW),
+                panelX + 12, panelY + 34, SiegeTheme.CYAN, false);
 
         int accent = topicAccent(selected);
         SiegeTheme.panel(g, gridX - 3, detailY - 3, gridW + 6, detailH + 6, accent);
         int x = gridX + 10;
         int y = detailY + 9;
         int w = gridW - 20;
-        g.drawString(font, topicLabel(selected), x, y, accent, false);
+        g.drawString(font, fit(topicLabel(selected), w), x, y, accent, false);
         y += 14;
-        g.drawString(font, fit(topicDescription(selected), w), x, y, SiegeTheme.INK, false);
-        y += 18;
-        String[] bullets = topicBullets(selected);
-        for (String bullet : bullets) {
-            if (y + font.lineHeight >= detailY + detailH - 30) break;
-            g.drawString(font, fit("• " + bullet, w), x, y, SiegeTheme.MUTED, false);
-            y += font.lineHeight + 3;
+
+        for (FormattedCharSequence line : font.split(Component.literal(topicDescription(selected)), w)) {
+            if (y > detailY + detailH - 55) break;
+            g.drawString(font, line, x, y, SiegeTheme.INK, false);
+            y += font.lineHeight + 2;
+        }
+        y += 4;
+        for (String bullet : topicBullets(selected)) {
+            for (FormattedCharSequence line : font.split(Component.literal("• " + bullet), w)) {
+                if (y + font.lineHeight >= detailY + detailH - 28) break;
+                g.drawString(font, line, x, y, SiegeTheme.MUTED, false);
+                y += font.lineHeight + 2;
+            }
+            if (y + font.lineHeight >= detailY + detailH - 28) break;
         }
 
         int by = detailY + detailH - 22;
         boolean hot = mouseX >= x && mouseX <= x + w && mouseY >= by && mouseY <= by + 16;
         g.fill(x, by, x + w, by + 16, hot ? 0xD13A4C55 : 0xB51A252B);
         g.fill(x, by, x + 2, by + 16, accent);
-        g.drawCenteredString(font, label("ABRIR", "OPEN") + " // " + topicLabel(selected), x + w / 2, by + 4,
-                hot ? SiegeTheme.INK : SiegeTheme.MUTED);
+        g.drawCenteredString(font, fit(label("ABRIR", "OPEN") + " // " + topicLabel(selected), w - 8),
+                x + w / 2, by + 4, hot ? SiegeTheme.INK : SiegeTheme.MUTED);
 
         super.render(g, mouseX, mouseY, partialTick);
         SiegeUiSounds.updateHover(children());
@@ -154,65 +165,66 @@ public final class SiegeRecruitBriefingScreen extends Screen {
             case THREATS -> label("AMENAZAS", "THREATS");
             case EQUIPMENT -> label("ARSENAL", "ARMORY");
             case DEPLOYMENT -> label("DESPLIEGUE", "DEPLOYMENT");
-            case MEDIA -> label("SALA MULTIMEDIA", "MEDIA ROOM");
+            case MEDIA -> label("MULTIMEDIA", "MEDIA");
         };
     }
 
     private String topicDescription(Topic topic) {
         return switch (topic) {
-            case SERVER -> label("Servidor, sistemas principales, diferencia entre lore, reglas e histórico.",
-                    "Server, core systems, and the difference between lore, rules and history.");
-            case RACES -> label("Catálogo de razas, rarezas conocidas, progresión y qué datos siguen abiertos.",
-                    "Race catalog, known rarities, progression and what remains unresolved.");
-            case PROGRESSION -> label("V1→V4, rutas especiales, Trials, investigación, reliquias y sistemas avanzados.",
-                    "V1→V4, special routes, Trials, research, relics and advanced systems.");
-            case SURVIVAL -> label("Muerte, heridas, revive, misiones y protocolos que conviene conocer antes de arriesgar recursos.",
-                    "Death, injuries, revive, missions and protocols to know before risking resources.");
-            case THREATS -> label("Intel de unidades, bosses, Executores, raids, estructuras y otros riesgos documentados.",
-                    "Unit Intel, bosses, Executors, raids, structures and other documented risks.");
+            case SERVER -> label("Qué tipo de servidor es, cómo se divide la información y cuáles son sus sistemas principales.",
+                    "What kind of server it is, how information is organized and which systems matter most.");
+            case RACES -> label("Razas conocidas, orden de rareza, variantes y formas generales de progresar.",
+                    "Known races, rarity order, variants and general progression routes.");
+            case PROGRESSION -> label("V1→V4, Trials, exploración, reliquias, Assembling, dimensiones y otras rutas de avance.",
+                    "V1→V4, Trials, exploration, relics, Assembling, dimensions and other progression routes.");
+            case SURVIVAL -> label("Estados de muerte/heridas, revive, misiones y protocolos que conviene conocer antes de arriesgar recursos.",
+                    "Death/injury states, revival, missions and protocols to know before risking resources.");
+            case THREATS -> label("Unidades, bosses, Executores, raids, estructuras y otros riesgos que conviene reconocer antes de combatir.",
+                    "Units, bosses, Executors, raids, structures and other risks worth recognizing before combat.");
             case EQUIPMENT -> label("Objetos, reliquias, Third Justice, Assembling y herramientas de investigación.",
                     "Items, relics, Third Justice, Assembling and research tools.");
             case DEPLOYMENT -> label("Servidor oficial, compatibilidad, ping, conexión y estados de despliegue.",
                     "Official server, compatibility, ping, connection and deployment states.");
-            case MEDIA -> label("Fondos, soundtrack, controles de reproducción, referencias DVN y material multimedia.",
-                    "Backgrounds, soundtrack, playback controls, DVN references and multimedia material.");
+            case MEDIA -> label("Fondos, soundtrack, galería, controles de reproducción y estética Dummies vs Noobs.",
+                    "Backgrounds, soundtrack, gallery, playback controls and Dummies vs Noobs visual direction.");
         };
     }
 
     private String[] topicBullets(Topic topic) {
         return switch (topic) {
             case SERVER -> new String[] {
-                    label("Empieza por la Enciclopedia del Servidor.", "Start with the Server Encyclopedia."),
-                    label("Los datos antiguos permanecen fechados como histórico.", "Old data remains dated as history."),
-                    label("No se rellenan requisitos o stats inexistentes.", "Missing requirements or stats are not invented.") };
+                    label("La Enciclopedia explica sistemas generales; Intel queda para unidades.", "The Encyclopedia explains general systems; Intel stays for units."),
+                    label("El Manual de Campo concentra heridas, revive y protocolos.", "The Field Manual concentrates injuries, revival and protocols."),
+                    label("Arsenal concentra objetos y equipamiento.", "Armory concentrates items and equipment.") };
             case RACES -> new String[] {
-                    label("Orden de rareza completo documentado.", "Documented complete rarity order."),
-                    label("17 familias/razas visibles en el atlas inicial.", "17 visible race/family entries in the initial atlas."),
-                    label("Rareza desconocida se muestra como SIN CONFIRMAR.", "Unknown rarity is shown as UNCONFIRMED.") };
+                    label("Rarezas: Común → Poco común → Raro → Ultra raro → Legendario → Obsainan → Mítico → Godly → Eternal → Fabled.",
+                            "Rarities: Common → Uncommon → Rare → Ultra Rare → Legendary → Obsainan → Mythic → Godly → Eternal → Fabled."),
+                    label("No todas las razas usan V1→V4.", "Not every race uses V1→V4."),
+                    label("El Atlas separa variantes y datos históricos.", "The Atlas separates variants and historical data.") };
             case PROGRESSION -> new String[] {
-                    label("Ruta general y rutas especiales separadas.", "General and special routes are separated."),
-                    label("Trials no tienen una receta universal.", "Trials do not have one universal recipe."),
-                    label("Cada nodo abre su fuente de enciclopedia.", "Every node opens its encyclopedia source.") };
+                    label("Muchos Trials o artefactos usan V4, pero no todos.", "Many Trials or artifacts use V4, but not all."),
+                    label("Explorar, investigar reliquias y mejorar movilidad también forman parte del progreso.", "Exploration, relic research and mobility are also progression."),
+                    label("Las rutas especiales se muestran por separado.", "Special routes are shown separately.") };
             case SURVIVAL -> new String[] {
-                    label("Estados de muerte/heridas en un manual propio.", "Death/injury states live in their own manual."),
-                    label("Versiones viejas no sustituyen reglas actuales.", "Old versions do not overwrite current rules."),
-                    label("Protocolos priorizan claridad y salida segura.", "Protocols prioritize clarity and safe exit.") };
+                    label("El sistema de heridas/revive cambió varias veces.", "The injury/revival system changed several times."),
+                    label("Usá el Manual de Campo para la referencia operativa.", "Use the Field Manual for operational reference."),
+                    label("Entrá a dimensiones y raids con una salida preparada.", "Enter dimensions and raids with an exit plan.") };
             case THREATS -> new String[] {
-                    label("Intel permanece separado del lore general.", "Intel remains separate from general lore."),
-                    label("UNKNOWN se conserva cuando falta fuente fiable.", "UNKNOWN remains when reliable sourcing is missing."),
-                    label("Threat Board resume dominios sin inventar amenazas nuevas.", "Threat Board summarizes domains without inventing new threats.") };
+                    label("Intel mantiene UNIT / ADVANCED / TANK / BOSS / ELITE / SUPER-UNIT / UNKNOWN.", "Intel keeps UNIT / ADVANCED / TANK / BOSS / ELITE / SUPER-UNIT / UNKNOWN."),
+                    label("Executores tienen su propio comportamiento y terror radius.", "Executors have their own behavior and terror radius."),
+                    label("Variar tácticas importa contra amenazas que pueden adaptarse.", "Varying tactics matters against threats that may adapt.") };
             case EQUIPMENT -> new String[] {
-                    label("Geography Table = investigación; Daemonium Kit = extracción.", "Geography Table = research; Daemonium Kit = extraction."),
-                    label("Third Justice mantiene su evidencia multimedia separada.", "Third Justice keeps its multimedia evidence separate."),
-                    label("Precios antiguos siempre llevan fecha/contexto.", "Old prices always keep date/context.") };
+                    label("Geography Table revela información oculta de ciertos objetos/reliquias.", "Geography Table reveals hidden information on some items/relics."),
+                    label("Daemonium Kit está relacionado con extraer materiales de reliquias.", "Daemonium Kit is related to extracting relic materials."),
+                    label("Assembling instala chips y trasplantes avanzados.", "Assembling installs advanced chips and transplants.") };
             case DEPLOYMENT -> new String[] {
-                    label("Servidor oficial protegido contra Editar/Eliminar.", "Official server protected from Edit/Delete."),
-                    label("Callbacks vanilla siguen siendo autoritativos.", "Vanilla callbacks remain authoritative."),
-                    label("Estados QUERYING/OFFLINE/NO RESPONSE/INCOMPATIBLE/ONLINE.", "QUERYING/OFFLINE/NO RESPONSE/INCOMPATIBLE/ONLINE states.") };
+                    label("El servidor oficial aparece primero y está protegido contra Editar/Eliminar.", "The official server appears first and is protected from Edit/Delete."),
+                    label("La pantalla muestra estados de conexión y compatibilidad.", "The screen shows connection and compatibility states."),
+                    label("La conexión sigue usando el flujo normal de Minecraft.", "Connection still uses Minecraft's normal flow.") };
             case MEDIA -> new String[] {
-                    label("Tempest Jutcherson sigue fuera de la galería normal.", "Tempest Jutcherson remains outside the normal gallery."),
-                    label("Música aleatoria sin repetición hasta completar la bolsa.", "Random music without repeats until the bag completes."),
-                    label("Referencias externas no se distribuyen sin derechos claros.", "External references are not redistributed without clear rights.") };
+                    label("La galería normal sólo usa escenas serias del menú.", "The normal gallery only uses serious menu scenes."),
+                    label("Tempest Jutcherson sigue reservado como easter egg.", "Tempest Jutcherson remains reserved as an easter egg."),
+                    label("La Sala Multimedia también reúne ideas de soundtrack y dirección visual DVN.", "The Media Room also collects soundtrack ideas and DVN visual direction.") };
         };
     }
 
@@ -228,11 +240,9 @@ public final class SiegeRecruitBriefingScreen extends Screen {
 
     private String topicIcon(Topic topic) {
         return switch (topic) {
-            case SERVER -> "overview";
-            case RACES -> "intel";
-            case PROGRESSION -> "overview";
+            case SERVER, PROGRESSION -> "overview";
+            case RACES, THREATS -> "intel";
             case SURVIVAL -> "shield";
-            case THREATS -> "intel";
             case EQUIPMENT -> "package";
             case DEPLOYMENT -> "connect";
             case MEDIA -> "image";
@@ -246,6 +256,6 @@ public final class SiegeRecruitBriefingScreen extends Screen {
     }
     private boolean spanish() { return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_"); }
     private String label(String es, String en) { return spanish() ? es : en; }
-    @Override public void onClose() { SiegeUiSounds.back(); minecraft.setScreen(parent); }
+    @Override public void onClose() { SiegeUiSounds.back(); if (minecraft != null) minecraft.setScreen(parent); }
     @Override public boolean isPauseScreen() { return false; }
 }
