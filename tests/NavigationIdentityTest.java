@@ -1,7 +1,7 @@
 import uy.santipdr.siege.client.SiegeNavigationModel;
 import uy.santipdr.siege.client.SiegeUiLayout;
 
-/** SIEGE 4.00 information architecture and native identity contract. */
+/** SIEGE 4.00.1 information architecture and native identity contract. */
 public final class NavigationIdentityTest {
     private static void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
 
@@ -13,6 +13,7 @@ public final class NavigationIdentityTest {
         expect("uy.santipdr.siege.client.SiegeRaceAtlasScreen", SiegeNavigationModel.Section.RACES, "RAC", "RACE ATLAS");
         expect("uy.santipdr.siege.client.SiegeProgressionMapScreen", SiegeNavigationModel.Section.PROGRESSION, "PRG", "PROGRESSION MAP");
         expect("uy.santipdr.siege.client.SiegeThreatBoardScreen", SiegeNavigationModel.Section.THREATS, "THR", "THREAT BOARD");
+        expect("uy.santipdr.siege.client.SiegeServerGuideScreen", SiegeNavigationModel.Section.KNOWLEDGE, "GUI", "SERVER GUIDE");
         expect("uy.santipdr.siege.client.SiegeKnowledgeFileScreen", SiegeNavigationModel.Section.KNOWLEDGE, "ENC", "SERVER ENCYCLOPEDIA");
         expect("uy.santipdr.siege.client.SiegeKnowledgeScreen", SiegeNavigationModel.Section.KNOWLEDGE, "ENC", "SERVER ENCYCLOPEDIA");
         expect("uy.santipdr.siege.client.SiegeMultiplayerScreen", SiegeNavigationModel.Section.DEPLOYMENT, "DEP", "DEPLOYMENT");
@@ -38,7 +39,7 @@ public final class NavigationIdentityTest {
         check(SiegeNavigationModel.statusWidth(300) < SiegeNavigationModel.statusWidth(1200), "Responsive status width");
         check(SiegeUiLayout.density(320, 240) == SiegeUiLayout.Density.ULTRA_COMPACT, "Ultra compact identity");
         check(SiegeUiLayout.density(1280, 720) == SiegeUiLayout.Density.WIDE, "Wide identity");
-        System.out.println("SIEGE 4.00 War Room, Briefing, Race Atlas, Progression, Threat Board, Media and native identities passed");
+        System.out.println("SIEGE 4.00.1 Server Guide, War Room, Race Atlas, Progression, Threat Board, Media and native identities passed");
     }
 
     private static void expect(String className, SiegeNavigationModel.Section section, String code, String english) {
