@@ -14,9 +14,12 @@ public final class OperationsIndexTest {
         check(atlas.stream().anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.INTEL && e.id().equals("SUP-001")),
                 "Atlas dossier must be searchable directly");
 
-        var justice = SiegeOperationsIndex.search("third justice", false, 5);
+        var justice = SiegeOperationsIndex.search("third justice", false, 8);
         check(justice.stream().anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.ARMORY && e.id().equals("third-justice")),
-                "Third Justice must resolve through Armory search");
+                "Third Justice must still resolve through Armory search");
+        check(justice.stream().anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.KNOWLEDGE
+                        && e.knowledgeId().equals("relic-third-justice")),
+                "Third Justice historical server reference should also be searchable");
 
         var core = SiegeOperationsIndex.search("Núcleo", true, 5);
         check(core.stream().anyMatch(e -> e.route() == SiegeOperationsIndex.Route.ARCHIVE),
@@ -33,21 +36,30 @@ public final class OperationsIndexTest {
         var geography = SiegeOperationsIndex.search("Geography Table", false, 8);
         check(geography.stream().anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.KNOWLEDGE
                         && e.knowledgeId().equals("item-geography-table")),
-                "Knowledge search must deep-link Geography Table");
+                "Server Encyclopedia search must deep-link Geography Table");
 
-        var rust = SiegeOperationsIndex.search("Rust Guard", false, 8);
-        check(rust.stream().anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.KNOWLEDGE
-                        && e.knowledgeId().equals("current-rust-guard")),
-                "Current SIEGE notes must be searchable from Operations");
+        var rarity = SiegeOperationsIndex.search("Obsainan Fabled", true, 12);
+        check(rarity.stream().anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.KNOWLEDGE
+                        && e.knowledgeId().equals("rarity-order")),
+                "Race rarity ladder must surface from global search");
 
-        var meditation = SiegeOperationsIndex.search("meditar 100 RE", true, 12);
-        check(meditation.stream().anyMatch(e -> e.route() == SiegeOperationsIndex.Route.KNOWLEDGE),
-                "Survival knowledge must surface from global search");
+        var races = SiegeOperationsIndex.search("Human Hacker Saiyan", false, 12);
+        check(races.stream().anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.KNOWLEDGE
+                        && e.knowledgeId().equals("race-catalog")),
+                "Race catalog must surface from global search");
+
+        var executors = SiegeOperationsIndex.search("Executor terror radius", false, 12);
+        check(executors.stream().anyMatch(e -> e.kind() == SiegeOperationsIndex.Kind.KNOWLEDGE
+                        && e.knowledgeId().equals("executors-basics")),
+                "Executor server basics must surface from global search");
+
+        var trials = SiegeOperationsIndex.search("V4 trials", false, 12);
+        check(trials.stream().anyMatch(e -> e.route() == SiegeOperationsIndex.Route.KNOWLEDGE),
+                "Trial/progression server knowledge must surface from global search");
 
         check(SiegeOperationsIndex.search("a", false, 2).size() <= 2, "Search limit contract");
         check(SiegeOperationsIndex.search("", false, 5).isEmpty(), "Blank search must stay empty");
 
-        // Session history is deduplicated and most-recent-first.
         Method clear = SiegeRouteHistory.class.getDeclaredMethod("clearForTests");
         clear.setAccessible(true);
         clear.invoke(null);
@@ -62,6 +74,6 @@ public final class OperationsIndexTest {
                         && recent.get(2) == SiegeOperationsIndex.Route.INTEL,
                 "Recent route ordering");
 
-        System.out.println("SIEGE 3.00 Operations index: routes, Intel, Armory, Knowledge deep-links and history passed");
+        System.out.println("SIEGE 3.00 Operations index: routes, Intel, Armory and Server Encyclopedia deep-links passed");
     }
 }
