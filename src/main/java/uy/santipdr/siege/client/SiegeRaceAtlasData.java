@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-/** Structured, non-personal race catalog for the SIEGE 4.00 Atlas. */
+/** Structured, non-personal race catalog for the SIEGE 5.00 Atlas. */
 public final class SiegeRaceAtlasData {
     public enum Rarity {
         COMMON("COMÚN", "COMMON", 0xFFA7B0B6),
@@ -20,7 +20,7 @@ public final class SiegeRaceAtlasData {
         ETERNAL("ETERNAL", "ETERNAL", 0xFFF0D66B),
         FABLED("FABLED", "FABLED", 0xFFFFFFFF),
         HIDDEN("OCULTA", "HIDDEN", 0xFF9AA4AB),
-        UNKNOWN("SIN CONFIRMAR", "UNCONFIRMED", 0xFF7D858A);
+        UNKNOWN("DESCONOCIDA", "UNKNOWN", 0xFF7D858A);
 
         private final String es, en;
         private final int accent;
@@ -32,9 +32,10 @@ public final class SiegeRaceAtlasData {
     public enum Progression {
         VERSIONED("V1 → V4", "V1 → V4"),
         TRANSFORMATIONS("TRANSFORMACIONES", "TRANSFORMATIONS"),
+        SPECIAL("PROGRESIÓN PROPIA", "OWN PROGRESSION"),
         STEPS_TRIALS("PASOS / TRIALS", "STEPS / TRIALS"),
         ASSEMBLING("ASSEMBLING", "ASSEMBLING"),
-        UNKNOWN("POR RECONSTRUIR", "TO RECONSTRUCT");
+        UNKNOWN("DESCONOCIDA", "UNKNOWN");
         private final String es, en;
         Progression(String es, String en) { this.es = es; this.en = en; }
         public String label(boolean spanish) { return spanish ? es : en; }
@@ -42,7 +43,7 @@ public final class SiegeRaceAtlasData {
 
     public record Race(String id, String name, Rarity rarity, Progression progression,
                        String summaryEs, String summaryEn, String knowledgeId,
-                       boolean historical, List<String> tags) {
+                       boolean mayHaveChanged, List<String> tags) {
         public Race {
             id = safe(id); name = safe(name);
             rarity = rarity == null ? Rarity.UNKNOWN : rarity;
@@ -57,78 +58,78 @@ public final class SiegeRaceAtlasData {
 
     private static final List<Race> RACES = List.of(
             r("human", "Human", Rarity.UNKNOWN, Progression.VERSIONED,
-                    "Ruta relativamente rápida hacia V4; varios Trials/artefactos usan V4 como requisito inicial.",
-                    "Relatively fast route toward V4; several Trials/artifacts use V4 as an initial requirement.",
+                    "Usa V1→V4 y suele ser una de las rutas más rápidas de llevar hasta V4.",
+                    "Uses V1→V4 and is usually one of the faster routes to reach V4.",
                     "race-human", false, "v4", "starter", "trials"),
             r("hacker", "Hacker", Rarity.UNKNOWN, Progression.VERSIONED,
-                    "Raza tecnológica centrada en energía, Room, Gate, sabotaje y entrenamiento dirigido.",
-                    "Technology-focused race centered on energy, Room, Gate, sabotage and focused training.",
+                    "Raza tecnológica relacionada con energía, Room, Gate, sabotaje y entrenamiento dirigido.",
+                    "Technology-focused race tied to energy, Room, Gate, sabotage and focused training.",
                     "race-hacker", false, "room", "gate", "energy", "tech"),
             r("shark", "Shark", Rarity.UNKNOWN, Progression.VERSIONED,
-                    "Raza con ventajas acuáticas documentadas; parte de su progresión V2 está conservada sólo como histórica.",
-                    "Race with documented aquatic advantages; part of its V2 progression is preserved only as historical.",
+                    "Tiene ventajas acuáticas. Parte de sus pasos de progresión cambió con el tiempo, así que conviene revisar la ficha antes de intentar V2.",
+                    "Has aquatic advantages. Some progression steps changed over time, so check its entry before attempting V2.",
                     "race-shark", true, "water", "v2"),
             r("saiyan", "Saiyan", Rarity.OBSAINAN, Progression.TRANSFORMATIONS,
-                    "Progresa mediante transformaciones y stats, no con el mismo esquema V2/V3/V4 de otras razas.",
-                    "Progresses through transformations and stats rather than the same V2/V3/V4 scheme as other races.",
-                    "race-saiyan", false, "transformations", "teleport", "dojo"),
-            r("deteriorer", "Deteriorer", Rarity.OBSAINAN, Progression.UNKNOWN,
-                    "Raza basada en deterioro/oxidación progresiva y degradación de capacidades.",
-                    "Race based on progressive deterioration/oxidation and capability degradation.",
+                    "Crece con entrenamiento y transformaciones. Un Saiyan recién obtenido y uno muy entrenado pueden ser muy distintos.",
+                    "Grows through training and transformations. A newly obtained Saiyan and a heavily trained one can be very different.",
+                    "race-saiyan", false, "transformations", "training", "dojo"),
+            r("deteriorer", "Deteriorer", Rarity.OBSAINAN, Progression.SPECIAL,
+                    "Gira alrededor del deterioro y la oxidación progresiva, debilitando capacidades con el tiempo.",
+                    "Built around progressive deterioration and oxidation, weakening capabilities over time.",
                     "race-deteriorer", false, "oxidation", "wear", "debuff"),
             r("pharaoh", "Faraón", Rarity.UNKNOWN, Progression.UNKNOWN,
-                    "Documentada con una dimensión desértica propia; disponibilidad cambió entre etapas del servidor.",
-                    "Documented with its own desert dimension; availability changed across server eras.",
+                    "Está relacionada con una zona o dimensión desértica propia. Su disponibilidad no siempre fue la misma.",
+                    "Linked to its own desert area or dimension. Its availability has not always been the same.",
                     "race-pharaoh", true, "dimension", "desert"),
-            r("apotheosis", "Apotheosis", Rarity.ETERNAL, Progression.UNKNOWN,
-                    "Raza Eternal vinculada a la fe; reglas, costes y límites completos siguen incompletos.",
-                    "Eternal-rarity race linked to faith; complete rules, costs and limits remain incomplete.",
+            r("apotheosis", "Apotheosis", Rarity.ETERNAL, Progression.SPECIAL,
+                    "Raza Eternal relacionada con la fe. Todavía faltan partes claras de sus costes, límites y progreso.",
+                    "Eternal-rarity race tied to faith. Parts of its costs, limits and progression are still unclear.",
                     "race-apotheosis", false, "faith", "eternal"),
-            r("death", "Muerte", Rarity.UNKNOWN, Progression.UNKNOWN,
-                    "Raza relacionada con absorber almas de bosses; no confundir con estados/eventos llamados Muerte.",
-                    "Race related to absorbing boss souls; do not confuse it with states/events also named Death.",
+            r("death", "Muerte", Rarity.UNKNOWN, Progression.SPECIAL,
+                    "Está relacionada con absorber almas de bosses. No hay que confundirla con los estados de muerte del jugador.",
+                    "Related to absorbing boss souls. It should not be confused with player death states.",
                     "race-death", false, "souls", "boss"),
             r("cyborg", "Cyborg", Rarity.UNKNOWN, Progression.ASSEMBLING,
-                    "Se relaciona con implantes, trasplantes y chips mediante Assembling.",
-                    "Linked to implants, transplants and chips through Assembling.",
+                    "Su progreso se relaciona con implantes, trasplantes, chips y Assembling.",
+                    "Its progression is tied to implants, transplants, chips and Assembling.",
                     "race-cyborg", false, "assembling", "implants", "chips"),
-            r("ghoul", "Ghoul", Rarity.UNKNOWN, Progression.UNKNOWN,
-                    "Raza confirmada; el nombre también aparece en enemigos, por lo que el contexto importa.",
-                    "Confirmed race; the name also appears for enemies, so context matters.",
-                    "race-ghoul", false, "ghoul"),
-            r("subhuman", "Subhuman", Rarity.UNKNOWN, Progression.UNKNOWN,
-                    "Familia de variantes Human mutadas, con menciones como Adamantium Human y Sorcerer.",
-                    "Family of mutated Human variants, with mentions such as Adamantium Human and Sorcerer.",
-                    "race-subhuman", false, "human", "variants"),
+            r("ghoul", "Ghoul", Rarity.UNKNOWN, Progression.SPECIAL,
+                    "Puede fortalecerse comiendo carne y además tiene evoluciones separadas como V2 y Super Ghoul.",
+                    "Can grow stronger by eating meat and also has separate evolutions such as V2 and Super Ghoul.",
+                    "race-ghoul", false, "meat", "v2", "super-ghoul"),
+            r("subhuman", "Subhuman", Rarity.UNKNOWN, Progression.SPECIAL,
+                    "Es una familia de humanos mutados. Variantes conocidas incluyen Adamantium Human, Sorcerer y Evil Morty.",
+                    "A family of mutated humans. Known variants include Adamantium Human, Sorcerer and Evil Morty.",
+                    "race-subhuman", false, "human", "variants", "adamantium", "sorcerer", "evil-morty"),
             r("terrarian", "Terrariano", Rarity.UNKNOWN, Progression.UNKNOWN,
-                    "Raza recomendada para enfrentamientos contra bosses; la progresión completa no está reconstruida.",
-                    "Race recommended for boss encounters; full progression is not reconstructed.",
+                    "Puede ser útil contra bosses; todavía no está clara su progresión completa.",
+                    "Can be useful against bosses; its full progression is still unclear.",
                     "race-terrarian", false, "boss"),
             r("kaioshin", "Kaioshin", Rarity.UNKNOWN, Progression.VERSIONED,
-                    "Raza documentada; un caso histórico V2 estuvo ligado a Solaris sin convertirse en requisito universal.",
-                    "Documented race; one historical V2 case was linked to Solaris without becoming a universal requirement.",
+                    "Usa una progresión por versiones. Algunos pasos antiguos estuvieron relacionados con Solaris, pero no se toman como regla actual sin confirmar.",
+                    "Uses versioned progression. Some older steps involved Solaris, but they are not treated as current rules without confirmation.",
                     "race-kaioshin", true, "v2", "solaris"),
-            r("dragon", "Dragon", Rarity.UNKNOWN, Progression.UNKNOWN,
-                    "Se documentaron tres variantes; una relacionada con Blox Fruits y dos todavía sin reconstruir.",
-                    "Three variants were documented; one related to Blox Fruits and two not yet reconstructed.",
+            r("dragon", "Dragon", Rarity.UNKNOWN, Progression.SPECIAL,
+                    "Tiene varias variantes conocidas. Una está relacionada con Blox Fruits y todavía faltan datos de otras rutas.",
+                    "Has several known variants. One is tied to Blox Fruits and other routes still lack details.",
                     "race-dragon", false, "variants"),
             r("shinigami", "Shinigami", Rarity.UNKNOWN, Progression.UNKNOWN,
-                    "Existencia confirmada; habilidades y progresión siguen sin evidencia suficiente para una ficha completa.",
-                    "Existence confirmed; abilities and progression still lack enough evidence for a complete profile.",
+                    "La raza existe, pero todavía falta información suficiente para explicar bien sus habilidades y progresión.",
+                    "The race exists, but there is not enough information yet to explain its abilities and progression well.",
                     "race-shinigami", false, "confirmed"),
             r("majin", "Majin", Rarity.UNKNOWN, Progression.UNKNOWN,
-                    "Existencia confirmada; stats, requisitos y habilidades completos permanecen abiertos.",
-                    "Existence confirmed; full stats, requirements and abilities remain open.",
+                    "La raza existe, pero sus requisitos, habilidades y etapas todavía no están completos.",
+                    "The race exists, but its requirements, abilities and stages are still incomplete.",
                     "race-majin", false, "confirmed"),
             r("undertale-au", "Undertale AU", Rarity.HIDDEN, Progression.STEPS_TRIALS,
-                    "Familia de razas ocultas obtenibles mediante Trials y otros pasos difíciles; nombres/rutas no están completos.",
-                    "Family of hidden races obtainable through Trials and other difficult steps; names/routes are incomplete.",
+                    "Familia de razas ocultas que puede depender de Trials y pasos difíciles. Las rutas conocidas todavía están incompletas.",
+                    "Family of hidden races that can depend on Trials and difficult steps. Known routes are still incomplete.",
                     "race-undertale-au", true, "hidden", "trial", "steps")
     );
 
     private static Race r(String id, String name, Rarity rarity, Progression progression,
-                          String es, String en, String knowledgeId, boolean historical, String... tags) {
-        return new Race(id, name, rarity, progression, es, en, knowledgeId, historical, List.of(tags));
+                          String es, String en, String knowledgeId, boolean mayHaveChanged, String... tags) {
+        return new Race(id, name, rarity, progression, es, en, knowledgeId, mayHaveChanged, List.of(tags));
     }
 
     public static List<Race> all() { return RACES; }
@@ -161,7 +162,7 @@ public final class SiegeRaceAtlasData {
     public static long knownRarityCount() {
         return RACES.stream().filter(r -> r.rarity() != Rarity.UNKNOWN && r.rarity() != Rarity.HIDDEN).count();
     }
-    public static long historicalCount() { return RACES.stream().filter(Race::historical).count(); }
+    public static long historicalCount() { return RACES.stream().filter(Race::mayHaveChanged).count(); }
 
     static String normalize(String value) {
         if (value == null) return "";
