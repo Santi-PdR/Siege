@@ -10,15 +10,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
 /**
- * SIEGE 3.00 server encyclopedia.
- *
- * This surface is intentionally non-personal: it explains Eternal Craft/SIEGE
- * systems, races, progression and dated history for any player who wants to
- * learn a topic. Player profiles, inventories and private progress do not live
- * here.
+ * Player-facing SIEGE server encyclopedia. Provenance remains in the data model
+ * for maintenance, but the normal UI focuses on what a player needs to know.
  */
 public final class SiegeKnowledgeScreen extends Screen {
-    private enum Mode { START, RACES, SYSTEMS, HISTORY }
+    private enum Mode { START, RACES, PROGRESSION, SYSTEMS, HISTORY }
     private static final int ROWS = 7;
 
     private final Screen parent;
@@ -60,24 +56,25 @@ public final class SiegeKnowledgeScreen extends Screen {
 
         int modeX = panelX + 10;
         int modeY = panelY + 35;
-        int gap = 4;
-        int modeW = Math.max(48, (panelW - 20 - gap * 3) / 4);
+        int gap = 3;
+        int modeW = Math.max(38, (panelW - 20 - gap * 4) / 5);
         for (int i = 0; i < Mode.values().length; i++) {
             Mode value = Mode.values()[i];
             int x = modeX + i * (modeW + gap);
             int w = i == Mode.values().length - 1 ? panelX + panelW - 10 - x : modeW;
-            SiegeButton button = new SiegeButton(x, modeY, w, 19, Component.literal(modeLabel(value)),
-                    b -> switchMode(value), modeAccent(value)).setCompactCenter(true).setSelected(value == mode);
+            SiegeButton button = new SiegeButton(x, modeY, w, 19,
+                    Component.literal(modeButtonLabel(value, w)), b -> switchMode(value), modeAccent(value))
+                    .setCompactCenter(true).setSelected(value == mode);
             button.setTooltip(Tooltip.create(Component.literal(modeDescription(value))));
             addRenderableWidget(button);
         }
 
         search = new EditBox(font, panelX + 10, modeY + 25, panelW - 20, 20,
-                Component.literal(label("Buscar tema del servidor", "Search server topic")));
+                Component.literal(label("Buscar tema", "Search topic")));
         search.setHint(Component.literal(label(
-                "Buscar raza, rareza, Trial, Executor, reliquia, revive…",
-                "Search race, rarity, Trial, Executor, relic, revive…")));
-        search.setResponder(value -> { listOffset = 0; refresh(); });
+                "Raza, rareza, Trial, Executor, reliquia, revive, dimensión…",
+                "Race, rarity, Trial, Executor, relic, revive, dimension…")));
+        search.setResponder(value -> { listOffset = 0; detailOffset = 0; refresh(); });
         addRenderableWidget(search);
 
         int bodyTop = modeY + 51;
@@ -103,8 +100,7 @@ public final class SiegeKnowledgeScreen extends Screen {
         for (int i = 0; i < rowCount; i++) {
             int slot = i;
             SiegeButton row = new SiegeButton(listX, listY + i * 22, listW, 19,
-                    Component.empty(), b -> selectVisible(slot), SiegeTheme.GOLD)
-                    .withIcon("overview");
+                    Component.empty(), b -> selectVisible(slot), SiegeTheme.GOLD).withIcon("overview");
             row.visible = false;
             row.active = false;
             entryButtons.add(addRenderableWidget(row));
@@ -122,6 +118,7 @@ public final class SiegeKnowledgeScreen extends Screen {
         mode = next;
         listOffset = 0;
         detailOffset = 0;
+        selected = null;
         SiegeUiSounds.category();
         rebuildWidgets();
     }
@@ -129,11 +126,11 @@ public final class SiegeKnowledgeScreen extends Screen {
     private void refresh() {
         String query = search == null ? "" : search.getValue();
         boolean es = spanish();
-        List<SiegeKnowledgeData.Entry> searched = SiegeKnowledgeData.search(query, es, null, 128);
+        // 4.00.1 uses the unified registry, so Expansion40 content is no longer invisible.
+        List<SiegeKnowledgeData.Entry> searched = SiegeKnowledgeRegistry.search(query, es, 128);
         visibleEntries = searched.stream().filter(this::belongsToMode).toList();
 
-        int rows = entryButtons.size();
-        int maxOffset = Math.max(0, visibleEntries.size() - rows);
+        int maxOffset = Math.max(0, visibleEntries.size() - entryButtons.size());
         listOffset = Math.max(0, Math.min(maxOffset, listOffset));
         if (selected == null || visibleEntries.stream().noneMatch(e -> e.id().equals(selected.id()))) {
             selected = visibleEntries.isEmpty() ? null : visibleEntries.get(0);
@@ -146,25 +143,28 @@ public final class SiegeKnowledgeScreen extends Screen {
         if (entry == null) return false;
         return switch (mode) {
             case START -> isBeginnerEntry(entry);
-            case RACES -> entry.domain() == SiegeKnowledgeData.Domain.RACES
-                    || entry.id().equals("rarity-order")
-                    || entry.id().equals("progression-v1-v4")
-                    || entry.id().equals("fabled-acquisition");
+            case RACES -> entry.domain() == SiegeKnowledgeData.Domain.RACES;
+            case PROGRESSION -> entry.domain() == SiegeKnowledgeData.Domain.PROGRESSION
+                    || entry.domain() == SiegeKnowledgeData.Domain.TRIALS
+                    || entry.domain() == SiegeKnowledgeData.Domain.MEDITATION;
             case SYSTEMS -> entry.zone() == SiegeKnowledgeData.Zone.SERVER
                     && entry.domain() != SiegeKnowledgeData.Domain.RACES
+                    && entry.domain() != SiegeKnowledgeData.Domain.PROGRESSION
+                    && entry.domain() != SiegeKnowledgeData.Domain.TRIALS
+                    && entry.domain() != SiegeKnowledgeData.Domain.MEDITATION
                     && entry.domain() != SiegeKnowledgeData.Domain.SOURCES;
             case HISTORY -> entry.zone() == SiegeKnowledgeData.Zone.HISTORY
-                    || entry.domain() == SiegeKnowledgeData.Domain.SOURCES
                     || entry.domain() == SiegeKnowledgeData.Domain.CONTRADICTIONS;
         };
     }
 
     private boolean isBeginnerEntry(SiegeKnowledgeData.Entry entry) {
         return switch (entry.id()) {
-            case "server-overview", "server-exploration", "rarity-order", "race-catalog",
-                 "progression-v1-v4", "trials-basics", "executors-basics", "structures-basics",
-                 "bosses-basics", "missions-npcs", "dimensions-basics", "respawn-cards",
-                 "relic-basics", "economy-basics", "source-policy" -> true;
+            case "server-overview", "newcomer-operational-rule", "server-exploration", "race-catalog",
+                 "rarity-order", "progression-v1-v4", "progression-mobility-priority", "trials-basics",
+                 "executors-basics", "structures-basics", "bosses-basics", "missions-npcs",
+                 "dimensions-basics", "respawn-cards", "relic-basics", "relic-analysis-workflow",
+                 "economy-basics", "prompt-precision-framework" -> true;
             default -> false;
         };
     }
@@ -179,9 +179,8 @@ public final class SiegeKnowledgeScreen extends Screen {
             if (!present) continue;
             SiegeKnowledgeData.Entry entry = visibleEntries.get(index);
             String prefix = entry.zone() == SiegeKnowledgeData.Zone.HISTORY
-                    ? label("HIST", "HIST")
-                    : entry.domain().label(spanish());
-            button.setMessage(Component.literal(prefix + " · " + entry.title(spanish())));
+                    ? label("ANTIGUO", "OLD") : entry.domain().label(spanish());
+            button.setMessage(Component.literal(fit(prefix + " · " + entry.title(spanish()), Math.max(20, listW - 28))));
             button.setSelected(selected != null && selected.id().equals(entry.id()));
         }
     }
@@ -197,7 +196,7 @@ public final class SiegeKnowledgeScreen extends Screen {
 
     private void selectById(String id) {
         if (id == null) return;
-        SiegeKnowledgeData.Entry entry = SiegeKnowledgeData.get(id);
+        SiegeKnowledgeData.Entry entry = SiegeKnowledgeRegistry.get(id);
         if (entry == null) return;
         mode = preferredMode(entry);
         selected = entry;
@@ -214,12 +213,11 @@ public final class SiegeKnowledgeScreen extends Screen {
 
     private Mode preferredMode(SiegeKnowledgeData.Entry entry) {
         if (entry.zone() == SiegeKnowledgeData.Zone.HISTORY
-                || entry.domain() == SiegeKnowledgeData.Domain.SOURCES
                 || entry.domain() == SiegeKnowledgeData.Domain.CONTRADICTIONS) return Mode.HISTORY;
-        if (entry.domain() == SiegeKnowledgeData.Domain.RACES
-                || entry.id().equals("rarity-order")
-                || entry.id().equals("progression-v1-v4")
-                || entry.id().equals("fabled-acquisition")) return Mode.RACES;
+        if (entry.domain() == SiegeKnowledgeData.Domain.RACES) return Mode.RACES;
+        if (entry.domain() == SiegeKnowledgeData.Domain.PROGRESSION
+                || entry.domain() == SiegeKnowledgeData.Domain.TRIALS
+                || entry.domain() == SiegeKnowledgeData.Domain.MEDITATION) return Mode.PROGRESSION;
         if (isBeginnerEntry(entry)) return Mode.START;
         return Mode.SYSTEMS;
     }
@@ -246,18 +244,18 @@ public final class SiegeKnowledgeScreen extends Screen {
         SiegeMusic.ensurePlaying();
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xC2000000 : 0x96000000);
-        SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.CYAN);
+        SiegeTheme.panel(g, panelX, panelY, panelW, panelH, modeAccent(mode));
 
         String title = label("ENCICLOPEDIA DEL SERVIDOR", "SERVER ENCYCLOPEDIA")
                 + " // " + SiegeRuntimeStatus.version();
         g.drawString(font, fit(title, panelW - 24), panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Guía general: razas, rarezas, progresión, Trials, sistemas y cambios históricos.",
-                "General guide: races, rarities, progression, Trials, systems and historical changes."), panelW - 24),
+                "Elegí una categoría o buscá directamente lo que querés entender.",
+                "Choose a category or search directly for what you want to understand."), panelW - 24),
                 panelX + 12, panelY + 21, SiegeTheme.MUTED, false);
 
         SiegeTheme.panel(g, listX - 3, listY - 3, listW + 6, entryButtons.size() * 22 + 6, SiegeTheme.GOLD);
-        SiegeTheme.panel(g, detailX - 3, detailY - 3, detailW + 6, detailH + 6, SiegeTheme.CYAN);
+        SiegeTheme.panel(g, detailX - 3, detailY - 3, detailW + 6, detailH + 6, modeAccent(mode));
 
         if (visibleEntries.isEmpty()) {
             g.drawString(font, label("No hay temas que coincidan.", "No matching topics."),
@@ -280,34 +278,32 @@ public final class SiegeKnowledgeScreen extends Screen {
         int x = detailX + 8;
         int y = detailY + 7;
         int textW = Math.max(40, detailW - 16);
-        int confidence = SiegeKnowledgeData.confidenceAccent(selected.confidence());
+        int accent = selected.zone() == SiegeKnowledgeData.Zone.HISTORY ? SiegeTheme.ORANGE : modeAccent(mode);
         g.drawString(font, fit(selected.title(spanish()), textW), x, y, SiegeTheme.INK, false);
-        g.drawString(font, fit(selected.domain().label(spanish()) + " · "
-                + SiegeKnowledgeData.sourceLine(selected, spanish()), textW), x, y + 12, confidence, false);
-        SiegeTheme.divider(g, x, y + 24, textW, confidence);
+        String meta = selected.domain().label(spanish());
+        if (selected.zone() == SiegeKnowledgeData.Zone.HISTORY)
+            meta += label(" · PUEDE HABER CAMBIADO", " · MAY HAVE CHANGED");
+        g.drawString(font, fit(meta, textW), x, y + 12, accent, false);
+        SiegeTheme.divider(g, x, y + 24, textW, accent);
 
         List<FormattedCharSequence> lines = new ArrayList<>();
         FormattedCharSequence blank = Component.empty().getVisualOrderText();
+        lines.addAll(font.split(Component.literal(selected.summary(spanish())), textW));
+        lines.add(blank);
         for (String paragraph : selected.body(spanish()).split("\\n", -1)) {
             if (paragraph.isEmpty()) lines.add(blank);
             else lines.addAll(font.split(Component.literal(paragraph), textW));
         }
 
-        if (!selected.related().isEmpty()) {
+        List<String> relatedTitles = selected.related().stream()
+                .map(SiegeKnowledgeRegistry::get)
+                .filter(java.util.Objects::nonNull)
+                .map(e -> e.title(spanish()))
+                .distinct().limit(6).toList();
+        if (!relatedTitles.isEmpty()) {
             lines.add(blank);
-            lines.addAll(font.split(Component.literal(label("RELACIONADO: ", "RELATED: ")
-                    + String.join(" · ", selected.related())), textW));
-        }
-        if (!selected.sources().isEmpty()) {
-            lines.add(blank);
-            lines.addAll(font.split(Component.literal(label("REFERENCIA", "REFERENCE")), textW));
-            for (SiegeKnowledgeData.Source source : selected.sources()) {
-                String sourceText = "• " + source.confidence().label(spanish())
-                        + (source.date().isBlank() ? "" : " · " + source.date())
-                        + (source.section().isBlank() ? "" : " · " + source.section())
-                        + (source.note(spanish()).isBlank() ? "" : " — " + source.note(spanish()));
-                lines.addAll(font.split(Component.literal(sourceText), textW));
-            }
+            lines.addAll(font.split(Component.literal(label("TAMBIÉN VER: ", "SEE ALSO: ")
+                    + String.join(" · ", relatedTitles)), textW));
         }
 
         int first = Math.max(0, Math.min(detailOffset, Math.max(0, lines.size() - 1)));
@@ -321,10 +317,24 @@ public final class SiegeKnowledgeScreen extends Screen {
         g.disableScissor();
     }
 
+    private String modeButtonLabel(Mode value, int width) {
+        String full = modeLabel(value);
+        int usable = Math.max(8, width - 14);
+        if (font.width(full) <= usable) return full;
+        return switch (value) {
+            case START -> label("INICIO", "START");
+            case RACES -> label("RAZAS", "RACES");
+            case PROGRESSION -> label("PROG.", "PROG.");
+            case SYSTEMS -> label("SIST.", "SYSTEMS");
+            case HISTORY -> label("ANTIGUO", "HISTORY");
+        };
+    }
+
     private String modeLabel(Mode value) {
         return switch (value) {
             case START -> label("EMPEZAR", "START");
             case RACES -> label("RAZAS", "RACES");
+            case PROGRESSION -> label("PROGRESIÓN", "PROGRESSION");
             case SYSTEMS -> label("SISTEMAS", "SYSTEMS");
             case HISTORY -> label("HISTÓRICO", "HISTORY");
         };
@@ -332,26 +342,19 @@ public final class SiegeKnowledgeScreen extends Screen {
 
     private String modeDescription(Mode value) {
         return switch (value) {
-            case START -> label(
-                    "Lo principal que conviene entender antes de jugar: progresión, riesgos, Trials, revive, exploración y economía.",
-                    "Core concepts to understand before playing: progression, risks, Trials, revival, exploration and economy.");
-            case RACES -> label(
-                    "Razas documentadas, rarezas, progresión y límites conocidos sin perfiles de jugadores.",
-                    "Documented races, rarities, progression and known limits without player profiles.");
-            case SYSTEMS -> label(
-                    "Executores, bosses, estructuras, habilidades, Assembling, reliquias, dimensiones, raids y otros sistemas.",
-                    "Executors, bosses, structures, abilities, Assembling, relics, dimensions, raids and other systems.");
-            case HISTORY -> label(
-                    "Cambios de versiones anteriores, contradicciones y política de fuentes para no confundir datos viejos con actuales.",
-                    "Older-version changes, contradictions and source policy so old data is not confused with current information.");
+            case START -> label("Lo principal para entrar al servidor sin perderse.", "The essentials for entering the server without getting lost.");
+            case RACES -> label("Razas conocidas, rarezas, variantes y estilos de progresión.", "Known races, rarities, variants and progression styles.");
+            case PROGRESSION -> label("V1→V4, Trials, entrenamiento y rutas especiales.", "V1→V4, Trials, training and special routes.");
+            case SYSTEMS -> label("Executores, bosses, objetos, reliquias, dimensiones, revive, economía y más.", "Executors, bosses, items, relics, dimensions, revival, economy and more.");
+            case HISTORY -> label("Mecánicas antiguas o que cambiaron; no asumir que siguen iguales.", "Older or changed mechanics; do not assume they still work the same way.");
         };
     }
 
     private int modeAccent(Mode value) {
         return switch (value) {
-            case START -> SiegeTheme.GREEN;
-            case RACES -> SiegeTheme.GOLD;
-            case SYSTEMS -> SiegeTheme.CYAN;
+            case START -> SiegeTheme.CYAN;
+            case RACES, PROGRESSION -> SiegeTheme.GOLD;
+            case SYSTEMS -> SiegeTheme.GREEN;
             case HISTORY -> SiegeTheme.ORANGE;
         };
     }
@@ -366,14 +369,7 @@ public final class SiegeKnowledgeScreen extends Screen {
     private boolean spanish() {
         return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_");
     }
-
     private String label(String es, String en) { return spanish() ? es : en; }
-
-    @Override
-    public void onClose() {
-        if (minecraft != null) minecraft.setScreen(parent);
-    }
-
-    @Override
-    public boolean isPauseScreen() { return false; }
+    @Override public void onClose() { if (minecraft != null) minecraft.setScreen(parent); }
+    @Override public boolean isPauseScreen() { return false; }
 }
