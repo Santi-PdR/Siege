@@ -7,7 +7,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** SIEGE 4.00 fast non-personal newcomer briefing. */
+/** SIEGE 4.00 newcomer briefing: short, practical and non-personal. */
 public final class SiegeBriefingScreen extends Screen {
     private static final List<String> STEPS = List.of(
             "server-overview", "newcomer-operational-rule", "server-exploration", "race-catalog",
@@ -45,7 +45,7 @@ public final class SiegeBriefingScreen extends Screen {
 
         int atlasW = compact ? 84 : 118;
         addRenderableWidget(new SiegeButton(panelX + panelW - atlasW - 10, panelY + 8, atlasW, 18,
-                Component.literal(label("ABRIR ATLAS", "OPEN ATLAS")), b -> {
+                Component.literal(compact ? label("ATLAS", "ATLAS") : label("ABRIR ATLAS", "OPEN ATLAS")), b -> {
             SiegeUiSounds.confirm();
             minecraft.setScreen(new SiegeAtlasScreen(this, SiegeAtlasIndex.View.BRIEFING));
         }, SiegeTheme.CYAN).withIcon("overview").setCompactCenter(true));
@@ -97,7 +97,7 @@ public final class SiegeBriefingScreen extends Screen {
             if (!present) continue;
             SiegeKnowledgeData.Entry entry = entries.get(index);
             String number = String.format("%02d", index + 1);
-            button.setMessage(Component.literal(number + " · " + entry.title(spanish())));
+            button.setMessage(Component.literal(fit(number + " · " + entry.title(spanish()), Math.max(20, cardW - 28))));
             button.setTooltip(Tooltip.create(Component.literal(entry.summary(spanish()))));
         }
     }
@@ -131,15 +131,16 @@ public final class SiegeBriefingScreen extends Screen {
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.ORANGE);
 
         int x = panelX + 12;
+        int headerW = Math.max(30, panelW - (compact ? 112 : 160));
         g.drawString(font, fit(label("BRIEFING DE INGRESO", "ENTRY BRIEFING") + " // "
-                + SiegeRuntimeStatus.version(), panelW - 150), x, panelY + 9, SiegeTheme.INK, false);
+                + SiegeRuntimeStatus.version(), headerW), x, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Ruta rápida para entender SIEGE antes de gastar recursos o entrar a sistemas peligrosos.",
-                "Fast route for understanding SIEGE before spending resources or entering dangerous systems."), panelW - 24),
+                "Lo principal que conviene entender antes de jugar, explorar o gastar recursos.",
+                "The essentials to understand before playing, exploring or spending resources."), panelW - 24),
                 x, panelY + 23, SiegeTheme.MUTED, false);
         g.drawString(font, fit(label(
-                "Cada paso abre una ficha con fuente y fecha; lo histórico permanece marcado como histórico.",
-                "Every step opens a sourced, dated file; historical information stays marked as historical."), panelW - 24),
+                "Abrí cualquier paso para ver una explicación simple y completa del tema.",
+                "Open any step for a simple, complete explanation of the topic."), panelW - 24),
                 x, panelY + 35, SiegeTheme.CYAN, false);
         SiegeTheme.divider(g, panelX + 10, startY - 8, panelW - 20, SiegeTheme.ORANGE);
 
