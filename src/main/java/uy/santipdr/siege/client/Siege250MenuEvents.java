@@ -12,7 +12,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import uy.santipdr.siege.SiegeMod;
 
-/** SIEGE 2.50+ home integration and session navigation trail. */
+/** SIEGE 4.0 home integration and session navigation trail. */
 @Mod.EventBusSubscriber(modid = SiegeMod.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class Siege250MenuEvents {
     private Siege250MenuEvents() { }
@@ -30,18 +30,18 @@ public final class Siege250MenuEvents {
             int full = original.getWidth();
             int h = original.getHeight();
             int gap = full >= 150 ? 4 : 2;
-            int opsW = Math.max(1, Math.round((full - gap) * 0.58F));
+            int opsW = Math.max(1, Math.round((full - gap) * 0.60F));
             int settingsW = Math.max(1, full - gap - opsW);
             event.removeListener(original);
 
             SiegeButton operations = new SiegeButton(x, y, opsW, h,
                     Component.literal(full < 165 ? "OPS" : label("OPERACIONES", "OPERATIONS")), b -> {
                 SiegeUiSounds.confirm();
-                Minecraft.getInstance().setScreen(new SiegeOperationsHubScreen(screen));
+                Minecraft.getInstance().setScreen(new SiegeRecruitBriefingScreen(screen));
             }, SiegeTheme.CYAN).setMainMenuStyle(true).withIcon("overview").setCompactCenter(true);
             operations.setTooltip(Tooltip.create(Component.literal(label(
-                    "Rutas, estado, búsqueda global y Enciclopedia del Servidor.",
-                    "Routes, status, global search and the Server Encyclopedia."))));
+                    "Briefing, razas, progresión, amenazas, arsenal, despliegue y multimedia.",
+                    "Briefing, races, progression, threats, armory, deployment and media."))));
 
             SiegeButton settings = new SiegeButton(x + opsW + gap, y, settingsW, h,
                     Component.literal(full < 165 ? label("AJ.", "CFG") : label("AJUSTES", "SETTINGS")), b -> {
@@ -49,8 +49,8 @@ public final class Siege250MenuEvents {
                 Minecraft.getInstance().setScreen(new SiegeSettingsScreen(screen));
             }, SiegeTheme.RED).setMainMenuStyle(true).withIcon("settings").setCompactCenter(true);
             settings.setTooltip(Tooltip.create(Component.literal(label(
-                    "Configuración visual, audio, Intel y accesibilidad.",
-                    "Visual, audio, Intel and accessibility configuration."))));
+                    "Apariencia, movimiento, audio, Intel y accesibilidad.",
+                    "Appearance, motion, audio, Intel and accessibility."))));
 
             event.addListener(operations);
             event.addListener(settings);
@@ -68,15 +68,18 @@ public final class Siege250MenuEvents {
 
     private static SiegeOperationsIndex.Route routeFor(String simple) {
         return switch (simple) {
+            case "SiegeRecruitBriefingScreen", "SiegeOperationsHubScreen" -> SiegeOperationsIndex.Route.KNOWLEDGE;
             case "SiegeMultiplayerScreen", "JoinMultiplayerScreen", "DirectJoinServerScreen", "ConnectScreen" ->
                     SiegeOperationsIndex.Route.DEPLOYMENT;
-            case "IntelScreenV3", "IntelPortraitScreen" -> SiegeOperationsIndex.Route.INTEL;
-            case "SiegeKnowledgeScreen" -> SiegeOperationsIndex.Route.KNOWLEDGE;
+            case "IntelScreenV3", "IntelPortraitScreen", "SiegeThreatBoardScreen" -> SiegeOperationsIndex.Route.INTEL;
+            case "SiegeKnowledgeScreen", "SiegeRaceAtlasScreen", "SiegeProgressionMapScreen", "SiegeProgressionScreen" ->
+                    SiegeOperationsIndex.Route.KNOWLEDGE;
             case "SiegeArchiveScreen" -> SiegeOperationsIndex.Route.FIELD_MANUAL;
+            case "SiegeGuideScreen", "SiegeEvidenceReelScreen" -> SiegeOperationsIndex.Route.ARMORY;
             case "SiegeSystemScreen" -> SiegeOperationsIndex.Route.COMMAND;
             case "SiegeDiagnosticsScreen" -> SiegeOperationsIndex.Route.DIAGNOSTICS;
             case "SiegeSettingsScreen" -> SiegeOperationsIndex.Route.SETTINGS;
-            case "SiegeSceneScreen" -> SiegeOperationsIndex.Route.BACKGROUNDS;
+            case "SiegeSceneScreen", "SiegeMediaRoomScreen" -> SiegeOperationsIndex.Route.BACKGROUNDS;
             default -> null;
         };
     }
