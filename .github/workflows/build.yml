@@ -28,13 +28,13 @@ jobs:
         with:
           gradle-version: '8.8'
 
-      - name: Prepare SIEGE 3.00 visual masters
+      - name: Prepare SIEGE 4.00 visual masters
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow
           python3 scripts/prepare-backgrounds-hd.py
 
-      - name: Verify responsive layouts, server encyclopedia and Operations search
+      - name: Verify responsive layouts, encyclopedia and Operations search
         shell: bash
         run: |
           mkdir -p build/layout-tests
@@ -58,6 +58,7 @@ jobs:
           java -cp build/ops-tests OperationsIndexTest
           python3 tests/test_installer.py
           python3 tests/test_release_014.py
+          python3 tests/test_release_400.py
 
       - name: Verify menu theme scope and drawing bounds
         run: |
@@ -74,31 +75,42 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify SIEGE 3.00 encyclopedia, navigation and easter-egg contracts
+      - name: Verify SIEGE 4.00 product contracts and easter-egg isolation
         shell: bash
         run: |
-          grep -q "version = '3.00.0'" build.gradle
-          grep -q 'class SiegeOperationsHubScreen' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
-          grep -q 'class SiegeKnowledgeScreen' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
-          grep -q 'class SiegeKnowledgeData' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'SiegeOperationsIndex.search' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
-          grep -q 'new SiegeKnowledgeScreen(this, entry.knowledgeId())' src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
-          grep -q 'new SiegeOperationsHubScreen(screen)' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
-          grep -q 'case "SiegeKnowledgeScreen"' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
-          grep -q 'enum Zone { SERVER, HISTORY }' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'STAFF_CONFIRMED' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'HISTORICAL' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'UNCONFIRMED' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'CONTRADICTION' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'Mode { START, RACES, SYSTEMS, HISTORY }' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
-          grep -q 'ENCICLOPEDIA DEL SERVIDOR' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
-          grep -q 'race-catalog' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'rarity-order' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'Obsainan' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q 'Fabled' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
-          grep -q '251.065' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q "version = '4.00.0'" build.gradle
+          grep -q 'class SiegeRecruitBriefingScreen' src/main/java/uy/santipdr/siege/client/SiegeRecruitBriefingScreen.java
+          grep -q 'class SiegeRaceAtlasScreen' src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasScreen.java
+          grep -q 'class SiegeProgressionMapScreen' src/main/java/uy/santipdr/siege/client/SiegeProgressionMapScreen.java
+          grep -q 'class SiegeThreatBoardScreen' src/main/java/uy/santipdr/siege/client/SiegeThreatBoardScreen.java
+          grep -q 'class SiegeMediaRoomScreen' src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java
+          grep -q 'new SiegeRecruitBriefingScreen(screen)' src/main/java/uy/santipdr/siege/client/Siege250MenuEvents.java
+          grep -q 'Mode { START, RACES, PROGRESSION, SYSTEMS, HISTORY }' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java
+          grep -q 'Común → Poco común → Raro → Ultra raro → Legendario → Obsainan → Mítico → Godly → Eternal → Fabled' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java
+          grep -q 'RUTA GENERAL' src/main/java/uy/santipdr/siege/client/SiegeProgressionData.java
+          grep -q 'SISTEMAS AVANZADOS' src/main/java/uy/santipdr/siege/client/SiegeProgressionData.java
+          grep -q 'Geography Table' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
+          grep -q 'Daemonium Kit' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
+          grep -q 'Fallen Angel Halo' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
+          grep -q 'Improbability Scroll' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
+          grep -q 'Assembling Table' src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java
+          grep -q 'Convenience Store' src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java
+          grep -q 'From the Ashes' src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java
+
+          if grep -q 'sourceLine(' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java; then
+            echo "Player-facing encyclopedia must not render source plumbing."
+            exit 1
+          fi
+          if grep -q 'selected.sources()' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java; then
+            echo "Player-facing encyclopedia must not render source lists."
+            exit 1
+          fi
+          if grep -q 'ABRIR FUENTE' src/main/java/uy/santipdr/siege/client/SiegeProgressionMapScreen.java src/main/java/uy/santipdr/siege/client/SiegeThreatBoardScreen.java; then
+            echo "Technical source wording returned to player-facing 4.00 surfaces."
+            exit 1
+          fi
           if grep -nEi 'current-rust-guard|current-deteriorer-snapshot|current-meditation|CURRENT_CONFIRMED|PLAYER_EXPERIENCE|SIEGE current notebook|player notebook|Mi partida actual|mi inventario|mi personaje' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java; then
-            echo "Server Encyclopedia must not contain personal player-state records."
+            echo "Server Encyclopedia must remain non-personal."
             exit 1
           fi
 
@@ -140,8 +152,8 @@ jobs:
           fi
           grep -q 'trackAnnouncementDurationMs' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
           grep -q 'backgroundDarkness' src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
-          if grep -qE "version = '2\.50\.0'" build.gradle; then
-            echo "Stale 2.50 active version found."
+          if grep -qE "version = '(3\.00\.0|2\.50\.0|2\.25\.0)'" build.gradle; then
+            echo "Stale active version found."
             exit 1
           fi
           if grep -qE 'GLFW_KEY_(I|P|G|M|R|HOME|END)([^A-Z0-9_]|$)' src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java; then
