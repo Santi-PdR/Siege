@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SIEGE 4.00 durable release contracts."""
+"""SIEGE 4.00/4.00.1 durable release contracts."""
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,7 +12,10 @@ HUB = read("src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java
 NAV = read("src/main/java/uy/santipdr/siege/client/SiegeNavigationModel.java")
 BASE = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java")
 EXP = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java")
+EXP401 = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion401.java")
 REG = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java")
+SERVER_GUIDE_DATA = read("src/main/java/uy/santipdr/siege/client/SiegeServerGuideData.java")
+SERVER_GUIDE = read("src/main/java/uy/santipdr/siege/client/SiegeServerGuideScreen.java")
 KNOWLEDGE_SCREEN = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java")
 ATLAS = read("src/main/java/uy/santipdr/siege/client/SiegeAtlasScreen.java")
 BRIEF = read("src/main/java/uy/santipdr/siege/client/SiegeBriefingScreen.java")
@@ -35,18 +38,20 @@ EASTER = read("src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java")
 CHANGELOG = read("docs/CHANGELOG-4.0.0.md")
 MEDIA = read("docs/DVN-MEDIA-CANDIDATES-4.0.md")
 
-assert "version = '4.00.0'" in BUILD
+assert "version = '4.00.1'" in BUILD
 assert "SIEGE 4.00" in CHANGELOG
 for cls in ("SiegeAtlasScreen", "SiegeBriefingScreen", "SiegeThreatBoardScreen", "SiegeKnowledgeFileScreen",
-            "SiegeRaceAtlasScreen", "SiegeProgressionMapScreen", "SiegeMediaRoomScreen"):
+            "SiegeRaceAtlasScreen", "SiegeProgressionMapScreen", "SiegeMediaRoomScreen", "SiegeServerGuideScreen"):
     assert f"class {cls}" in read(f"src/main/java/uy/santipdr/siege/client/{cls}.java")
 for route in ("BRIEFING", "ATLAS", "RACES", "PROGRESSION", "THREATS", "MEDIA", "DEPLOYMENT", "INTEL", "KNOWLEDGE", "ARCHIVE", "ARMORY",
               "FIELD_MANUAL", "COMMAND", "DIAGNOSTICS", "SETTINGS", "BACKGROUNDS"):
     assert route in OPS
 assert "SiegeKnowledgeExpansion40.entries" in REG
+assert "SiegeKnowledgeExpansion401.entries" in REG
 assert "SiegeKnowledgeRegistry.entries" in OPS
 for constructor in ("new SiegeBriefingScreen(this)", "new SiegeAtlasScreen(this)", "new SiegeRaceAtlasScreen(this)",
-                    "new SiegeProgressionMapScreen(this)", "new SiegeThreatBoardScreen(this)", "new SiegeMediaRoomScreen(this)"):
+                    "new SiegeProgressionMapScreen(this)", "new SiegeThreatBoardScreen(this)", "new SiegeMediaRoomScreen(this)",
+                    "new SiegeServerGuideScreen(this)"):
     assert constructor in HUB, f"Missing War Room route: {constructor}"
 assert "new SiegeKnowledgeFileScreen" in HUB
 for section in ("BRIEFING", "ATLAS", "RACES", "PROGRESSION", "THREATS", "MEDIA", "KNOWLEDGE", "DEPLOYMENT", "INTEL"):
@@ -56,13 +61,27 @@ for knowledge_id in ("progression-mobility-priority", "combat-adaptation", "prom
                      "revive-repeat-penalties", "deteriorer-re-overflow-history", "research-open-questions",
                      "newcomer-operational-rule"):
     assert knowledge_id in EXP
+for knowledge_id in ("guide-first-hour", "guide-races", "guide-progression", "guide-trials", "guide-executors",
+                     "guide-bosses", "guide-relics", "guide-assembling", "guide-dimensions", "guide-revive",
+                     "guide-economy", "guide-actions"):
+    assert knowledge_id in EXP401
 
-# Encyclopedia 4.00 must expose the complete unified registry rather than only the old 3.00 base list.
+# Simple category guide is now the default player-facing knowledge route.
+for category in ("START", "RACES", "PROGRESSION", "THREATS", "SYSTEMS", "SURVIVAL", "HISTORY"):
+    assert category in SERVER_GUIDE_DATA
+assert "SiegeServerGuideData.entries" in SERVER_GUIDE
+assert "new SiegeServerGuideScreen(this)" in HUB
+assert 'label("GUÍA", "GUIDE")' in HUB
+assert 'label("GUÍA", "GUIDE")' in MENU_EVENTS
+assert "SiegeServerGuideScreen" in NAV and '"GUI"' in NAV
+for technical in ("selected.sources()", "sourceLine(", 'label("FUENTES"', 'label("REFERENCIA"'):
+    assert technical not in SERVER_GUIDE
+
+# Encyclopedia 4.00 still exposes the complete registry for deeper consultation.
 assert "SiegeKnowledgeRegistry.search" in KNOWLEDGE_SCREEN
 assert "Mode { START, RACES, PROGRESSION, SYSTEMS, HISTORY }" in KNOWLEDGE_SCREEN
 for category in ("EMPEZAR", "RAZAS", "PROGRESIÓN", "SISTEMAS", "HISTÓRICO"):
     assert category in KNOWLEDGE_SCREEN
-# Source/provenance stays internal; normal player surfaces should show the information itself.
 for technical in ("sourceLine(", "selected.sources()", 'label("REFERENCIA"', 'label("FUENTES"'):
     assert technical not in KNOWLEDGE_SCREEN
 for technical in ("sourceLine(", "entry.sources()", "SERVER FILE · NO PLAYER PROFILE DATA"):
@@ -101,7 +120,7 @@ assert "sin mezclar sus fuentes" not in THREATS
 # Main-menu split buttons measure actual rendered labels to avoid GUI-scale overlap.
 assert "buttonLabel(" in MENU_EVENTS
 assert "minecraft.font.width(full)" in MENU_EVENTS
-assert '"BRF"' in MENU_EVENTS and '"OPS"' in MENU_EVENTS
+assert '"GUI"' in MENU_EVENTS and '"OPS"' in MENU_EVENTS
 
 # Media Room provides recommendations without exposing development/licensing copy in the normal UI.
 for title in ("Convenience Store", "Music Box", "New Store", "Jazz Music", "From the Ashes", "Sad Choir"):
@@ -118,17 +137,17 @@ for profile in ("CINEMATIC", "TACTICAL", "PERFORMANCE", "CALM", "READING", "CLAS
 assert "SiegeClientProfile.Profile.HIGH_CONTRAST" in PROFILE_SPEC
 assert "SiegeClientProfile.Profile.IMMERSIVE" in PROFILE_SPEC
 
-# Briefing is directly accessible from the main menu without adding another vertical row.
+# Guide is directly accessible from the main menu without adding another vertical row.
 assert '"siege.menu.deployment"' in MENU_EVENTS
-assert "new SiegeBriefingScreen(screen)" in MENU_EVENTS
+assert "new SiegeServerGuideScreen(screen)" in MENU_EVENTS
 assert "new SiegeOperationsHubScreen(screen)" in MENU_EVENTS
 assert "explicación simple y completa" in BRIEF
 
 # Privacy remains a release contract.
-for forbidden in ("mi inventario", "mi personaje", "mi partida actual", "player notebook", "private build"):
-    assert forbidden.lower() not in (BASE + EXP + RACES + PROGRESSION).lower()
+for forbidden in ("mi inventario", "mi personaje", "mi partida actual", "player notebook", "private build", "private progress"):
+    assert forbidden.lower() not in (BASE + EXP + EXP401 + RACES + PROGRESSION + SERVER_GUIDE_DATA).lower()
 
-# Existing high-value contracts survive the major release.
+# Existing high-value contracts survive the completion patch.
 assert "SiegeLacontinuacion.exaroton.me:18736" in MULTI
 assert "GLFW_KEY_S && Screen.hasControlDown()" in TITLE
 for forbidden in ("FAVORITES", "toggleFavoriteIntel", "favoriteButton", "addIndexButton", "copyText", "GUARDAR"):
@@ -136,14 +155,14 @@ for forbidden in ("FAVORITES", "toggleFavoriteIntel", "favoriteButton", "addInde
 assert '"tempest_jutcherson"' in EASTER
 assert '"tempest_jutcherson"' not in SCENES
 
-# External media policy remains documented for development; it does not need to clutter the player UI.
+# External media policy remains documented for development; it does not clutter the player UI.
 assert "768x432" in MEDIA
 assert "no se incorpora" in MEDIA.lower() or "no se incluyen" in MEDIA.lower()
 assert "permiso" in MEDIA.lower()
 
-# CI must validate the completed 4.00 systems and publish only after successful build.
-for test_name in ("AtlasRegressionTest", "RaceAtlasRegressionTest", "ProgressionMapRegressionTest", "MediaReferenceRegressionTest"):
+# CI validates the completed 4.00.1 systems and publishes only after successful build.
+for test_name in ("AtlasRegressionTest", "ServerGuideRegressionTest", "RaceAtlasRegressionTest", "ProgressionMapRegressionTest", "MediaReferenceRegressionTest"):
     assert test_name in WORKFLOW
-assert "version = '4.00.0'" in WORKFLOW
+assert "version = '4.00.1'" in WORKFLOW
 assert "Publish validated jar for installer" in WORKFLOW
-print("SIEGE 4.00 completed readability/content contracts passed")
+print("SIEGE 4.00.1 guide/readability/content completion contracts passed")
