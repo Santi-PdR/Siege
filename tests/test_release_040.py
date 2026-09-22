@@ -14,6 +14,8 @@ BASE = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeData.java")
 EXP = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion40.java")
 REG = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java")
 ATLAS = read("src/main/java/uy/santipdr/siege/client/SiegeAtlasScreen.java")
+ATLAS_INDEX = read("src/main/java/uy/santipdr/siege/client/SiegeAtlasIndex.java")
+KNOWLEDGE = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java")
 BRIEF = read("src/main/java/uy/santipdr/siege/client/SiegeBriefingScreen.java")
 THREATS = read("src/main/java/uy/santipdr/siege/client/SiegeThreatBoardScreen.java")
 DETAIL = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeFileScreen.java")
@@ -65,16 +67,16 @@ for rarity in ("COMMON", "UNCOMMON", "RARE", "ULTRA_RARE", "LEGENDARY", "OBSAINA
 assert "UNKNOWN" in RACES and "HIDDEN" in RACES
 assert "SiegeKnowledgeRegistry.get" in RACE_SCREEN
 
-# Progression remains conceptual/source-aware instead of fabricating one universal recipe.
+# Progression remains conceptual instead of fabricating one universal recipe.
 for track in ('"core"', '"v1v4"', '"special"', '"advanced"'):
     assert track in PROGRESSION
 assert "V1 → V4" in PROGRESSION
 assert "SiegeKnowledgeRegistry.get" in PROGRESSION_SCREEN
 
-# Media Room controls bundled assets but treats discovered DVN material as references only.
+# Media Room controls bundled assets and can recommend DVN material without silently importing it.
 for title in ("Convenience Store", "Music Box", "New Store", "Jazz Music", "From the Ashes", "Sad Choir"):
     assert title in MEDIA_DATA
-assert "Not automatically" in MEDIA_DATA or "not automatically" in MEDIA_DATA.lower()
+assert "clear permission" in MEDIA_DATA.lower() or "distributable resource" in MEDIA_DATA.lower()
 assert "SiegeMusic.previousTrack" in MEDIA_ROOM and "SiegeMusic.nextTrack" in MEDIA_ROOM
 assert "SiegeBackgrounds.rotationState" in MEDIA_ROOM
 assert "selectedScene = -1" in MEDIA_ROOM
@@ -89,6 +91,25 @@ assert "SiegeClientProfile.Profile.IMMERSIVE" in PROFILE_SPEC
 assert '"siege.menu.deployment"' in MENU_EVENTS
 assert "new SiegeBriefingScreen(screen)" in MENU_EVENTS
 assert "new SiegeOperationsHubScreen(screen)" in MENU_EVENTS
+assert "briefingW < 96" in MENU_EVENTS and "deploymentW < 118" in MENU_EVENTS
+assert "opsW < 118" in MENU_EVENTS and "settingsW < 92" in MENU_EVENTS
+
+# Player-facing encyclopedia must stay simple: validation metadata remains internal, not UI chrome.
+for screen in (KNOWLEDGE, ATLAS, DETAIL):
+    assert "sourceLine(" not in screen
+assert "CORPUS " not in ATLAS
+assert "Domain.SOURCES" not in ATLAS_INDEX.split("case RESEARCH ->", 1)[1]
+assert "ABRIR FUENTE" not in RACE_SCREEN
+assert "OPEN SOURCE" not in RACE_SCREEN
+assert "Cada paso abre una ficha con fuente" not in BRIEF
+assert "REFERENCIAS" not in DETAIL and "REFERENCES" not in DETAIL
+assert "TAMBIÉN PODÉS VER" in DETAIL and "SEE ALSO" in DETAIL
+assert "PROGRESIÓN" in KNOWLEDGE and "Mode { START, RACES, PROGRESSION, SYSTEMS, HISTORY }" in KNOWLEDGE
+
+# Search results avoid long metadata in buttons; detail remains available as tooltip.
+assert 'button.setMessage(Component.literal(prefix + " · " + entry.title()))' in HUB
+assert "button.setTooltip(Tooltip.create(Component.literal(entry.subtitle())))" in HUB
+assert "Sin coincidencias" in HUB
 
 # Privacy remains a release contract.
 for forbidden in ("mi inventario", "mi personaje", "mi partida actual", "player notebook", "private build"):
@@ -110,6 +131,7 @@ assert "permiso" in MEDIA.lower()
 # CI must validate the completed 4.00 systems and publish only after successful build.
 for test_name in ("AtlasRegressionTest", "RaceAtlasRegressionTest", "ProgressionMapRegressionTest", "MediaReferenceRegressionTest"):
     assert test_name in WORKFLOW
+assert "test_release_040.py" in WORKFLOW
 assert "version = '4.00.0'" in WORKFLOW
 assert "Publish validated jar for installer" in WORKFLOW
 print("SIEGE 4.00 completed release contracts passed")
