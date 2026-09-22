@@ -1,104 +1,104 @@
-# SIEGE 3.00.0 — Knowledge Overhaul
+# SIEGE 3.00.0 — Server Encyclopedia Overhaul
 
-Este salto convierte la investigación masiva de Eternal Craft en un sistema navegable dentro del mod sin mezclar el estado actual del jugador con conocimiento histórico del Discord.
+SIEGE 3.00 convierte la investigación de Eternal Craft en una enciclopedia útil para cualquier jugador, sin perfiles, inventarios ni progreso personal.
 
 1. Versión activa elevada de 2.50.0 a 3.00.0.
-2. Nuevo **Archivo de Conocimiento** (`KNW`) como dominio propio de la interfaz.
-3. Nueva pantalla `SiegeKnowledgeScreen` integrada al lenguaje visual SIEGE.
-4. Separación explícita entre **SIEGE ACTUAL** y **ETERNAL CRAFT — ENCICLOPEDIA**.
-5. El estado actual deja de mezclarse silenciosamente con datos antiguos del Discord.
-6. Nuevo modelo `SiegeKnowledgeData` independiente del gameplay del servidor.
-7. Cada registro tiene identificador estable.
-8. Cada registro tiene zona: CURRENT o ENCYCLOPEDIA.
-9. Cada registro tiene dominio temático.
-10. Cada registro tiene resumen corto y cuerpo detallado bilingüe.
-11. Cada registro mantiene fecha de fuente cuando está disponible.
-12. Cada registro mantiene canal/contexto de fuente cuando está disponible.
-13. Cada registro mantiene nivel explícito de confianza.
-14. Nueva confianza **ACTUAL CONFIRMADO**.
-15. Nueva confianza **CONFIRMADO POR ALEX**.
-16. Nueva confianza **SISTEMA / OBSERVADO**.
-17. Nueva confianza **JUGADOR / EXPERIENCIA**.
-18. Nueva confianza **HISTÓRICO**.
-19. Nueva confianza **NO CONFIRMADO**.
-20. Nueva confianza **CONTRADICCIÓN** preparada para futuros registros.
-21. Nueva auditoría interna del corpus de Discord: 251.065 mensajes procesados.
-22. La auditoría conserva 72.384 mensajes atribuidos a Alex.
-23. La auditoría conserva 29.605 mensajes atribuidos a Santi.
-24. La auditoría conserva 37.435 replies reconstruidas.
-25. La auditoría conserva la referencia a 153 prompts clasificados.
-26. La auditoría conserva la referencia a 35 documentos temáticos.
-27. Nueva ficha de jerarquía de fuentes para evitar convertir rumores en reglas.
-28. Nuevo snapshot de Deteriorer separado de la enciclopedia histórica.
-29. Snapshot actual conserva rareza registrada como Obsainan.
-30. Snapshot actual conserva 200 HP totales registrados.
-31. Snapshot actual conserva RE / Rust Energy como energía racial.
-32. Oxidación Recta aparece como habilidad actual registrada, no como dato genérico de otra raza.
-33. Rust Guard aparece como habilidad actual registrada.
-34. Rust Guard conserva duración de 25 segundos.
-35. Rust Guard conserva radio de 2 bloques.
-36. Rust Guard conserva coste de 8 RE por segundo.
-37. Rust Guard conserva el snapshot de 1000/1000 RE del momento de registro.
-38. La meditación actual queda registrada como recuperación de RE y entrenamiento del máximo.
-39. La advertencia histórica de sobrecarga al meditar con RE llena queda separada y fechada.
-40. Nueva vista **SUPERVIVENCIA** con registros críticos de varias áreas.
-41. Nueva vista **FUENTES** para auditar el origen y la confianza de la información.
-42. Nueva búsqueda local/accent-insensitive dentro del Archivo de Conocimiento.
-43. La búsqueda distingue títulos, resúmenes, dominios, cuerpos y fuentes.
-44. El Archivo de Conocimiento usa spoiler guard por sesión.
-45. Los registros del Discord que pueden adelantar mecánicas ocultan el cuerpo completo hasta revelarlo.
-46. Los resúmenes de supervivencia siguen visibles aunque el detalle esté oculto.
-47. Nuevo registro histórico de Deteriorer como desgaste progresivo.
-48. La antigua duración extrema de debuffs se conserva como **HISTÓRICO**, nunca como duración actual.
-49. Nuevo consejo de raid: evitar oxidación descontrolada.
-50. Nueva ficha sobre adaptación/counters de bosses ante técnicas repetidas.
-51. Nueva ficha de sobrecarga de RE durante meditación con doble procedencia: Alex + resultado observado.
-52. El valor de +6% RE/5 turnos queda marcado como **NO CONFIRMADO**, no como regla viva.
-53. Filter Rod queda en **MISTERIOS** por evidencia insuficiente.
-54. Geography Table entra como ficha de objeto/investigación.
-55. Fallen Angel Halo entra como ficha de reliquia con precio fechado, no eterno.
-56. Daemonium Kit entra como requisito documentado para extracción de componentes de reliquias.
-57. La progresión V1 → V4 entra como marco histórico respaldado por fecha.
-58. El posible reset posterior a V4 queda separado como **NO CONFIRMADO**.
-59. Assembling de chips entra como sistema de referencia.
-60. La recomendación de planificar partes del cuerpo queda etiquetada como posible/incompleta.
-61. Heridas persistentes y tratamiento de hemorragias entran como referencia fechada.
-62. Respawn Cards entran como referencia de revive con límites no inventados.
-63. Penalizaciones por reanimación repetida quedan marcadas como posibles.
-64. Nueva ficha de diseño seguro de prompts: energía, rango, duración, exclusiones y disipación.
-65. Nueva ficha **Cosas que hicimos mal** para prompts vagos con consecuencias registradas.
-66. `Ver barra` entra como referencia operacional vinculada a meditación/RE.
-67. El posible riesgo de cruce no calibrado con Fallen Angel Halo queda en **MISTERIOS**.
-68. Operations Hub añade nueva ruta **CONOCIMIENTO**.
-69. Operations Hub pasa de 9 a 10 rutas de primer nivel.
-70. Búsqueda global de Operations ahora indexa el Archivo de Conocimiento.
-71. Buscar `Geography Table` puede abrir directamente su ficha.
-72. Buscar `Rust Guard` puede abrir directamente la nota actual.
-73. Buscar términos de meditación/RE puede llevar a advertencias de supervivencia.
-74. Nuevo tipo de resultado `KNOWLEDGE` en el índice global.
-75. Nuevo deep-link por `knowledgeId` desde búsqueda global.
-76. Historial de rutas reconoce `KNOWLEDGE` como destino separado.
-77. Barra de estado de Operations muestra cantidad de conocimiento y alertas de supervivencia.
-78. Layout de Operations gana más espacio vertical para evitar solape entre estado y divisor de rutas.
-79. En pantallas compactas Operations puede pasar a dos columnas de rutas.
-80. El tooltip de OPERACIONES en portada ahora menciona el Archivo de Conocimiento.
-81. Nueva identidad de navegación `KNW // KNOWLEDGE VAULT`.
-82. Nueva regresión `KnowledgeDataRegressionTest` para separación, fuentes, búsqueda y spoilers.
-83. Regression test exige IDs de conocimiento únicos.
-84. Regression test exige al menos una fuente por registro.
-85. Regression test protege el snapshot de Rust Guard.
-86. Regression test protege la clasificación histórica de datos antiguos.
-87. Regression test protege la doble procedencia de la advertencia de meditación.
-88. Regression test protege búsqueda de Fallen Angel Halo y Geography Table.
-89. OperationsIndexTest ahora valida deep-links de conocimiento.
-90. NavigationIdentityTest ahora valida la identidad KNW.
-91. CI compila y ejecuta el corpus de conocimiento sin depender de Minecraft.
-92. CI mantiene las regresiones visuales, Intel, audio, fondos y easter eggs de 2.50.
-93. Tempest Jutcherson sigue fuera del catálogo/galería/rotación normal.
-94. Ningún registro de conocimiento modifica inventario, raza, energía o reglas del servidor.
-95. El sistema evita presentar precios antiguos como valores permanentes.
-96. El sistema evita presentar datos posibles como confirmados.
-97. El sistema conserva relaciones entre entradas mediante IDs estables.
-98. La arquitectura queda preparada para Ejecutores, Trials, Estructuras, Bosses, Misiones, NPCs, Pets, Magia, Rituales y más sin inventar contenido aún no recuperado.
-99. Nuevo documento de arquitectura explica la frontera entre Intel, Archivo, Manual, Arsenal y Knowledge.
-100. Nuevo plan QA de 3.00 exige verificación in-game además del CI automatizado.
+2. Nuevo dominio **ENCICLOPEDIA DEL SERVIDOR**.
+3. Nueva pantalla `SiegeKnowledgeScreen` integrada al lenguaje visual de SIEGE.
+4. La enciclopedia queda explícitamente prohibida para datos personales de jugadores.
+5. No se guardan inventarios personales.
+6. No se guardan builds privadas.
+7. No se guardan estadísticas de una partida concreta.
+8. No se guardan logros personales.
+9. No se guardan perfiles de otros jugadores.
+10. El contenido se limita a información general del servidor y sistemas documentados.
+11. Nueva vista **EMPEZAR** para información básica de nuevos jugadores.
+12. Nueva vista **RAZAS**.
+13. Nueva vista **SISTEMAS**.
+14. Nueva vista **HISTÓRICO**.
+15. Nueva búsqueda interna por tema.
+16. La búsqueda ignora mayúsculas y tildes.
+17. Operations Hub incorpora la nueva ruta **ENCICLOPEDIA**.
+18. Nueva identidad de navegación `ENC // SERVER ENCYCLOPEDIA`.
+19. Operations Hub indexa entradas de la enciclopedia.
+20. Los resultados de enciclopedia admiten deep-link directo a una ficha.
+21. La portada de Operations muestra cantidad de temas de enciclopedia.
+22. La portada de Operations muestra cantidad de temas críticos.
+23. El buscador global puede resolver nombres de razas.
+24. El buscador global puede resolver rarezas.
+25. El buscador global puede resolver Trials.
+26. El buscador global puede resolver Executores.
+27. El buscador global puede resolver objetos y reliquias.
+28. Nuevo modelo `SiegeKnowledgeData` independiente del gameplay.
+29. Cada ficha tiene ID estable.
+30. Cada ficha tiene dominio temático.
+31. Cada ficha tiene resumen ES/EN.
+32. Cada ficha tiene cuerpo ES/EN.
+33. Cada ficha conserva referencias fechadas cuando existen.
+34. Cada ficha conserva relaciones con otros temas.
+35. Cada ficha puede marcarse como crítica para supervivencia/progresión.
+36. Nuevo estado de confianza **STAFF CONFIRMADO**.
+37. Nuevo estado de confianza **SISTEMA / OBSERVADO**.
+38. Nuevo estado de confianza **HISTÓRICO**.
+39. Nuevo estado de confianza **POR VERIFICAR**.
+40. Nuevo estado de confianza **CONTRADICCIÓN**.
+41. Los estados de confianza no se usan como rareza ni nivel de amenaza.
+42. Nueva ficha general de Eternal Craft / SIEGE.
+43. Nueva ficha de cobertura de la investigación.
+44. La cobertura registra 488 archivos encontrados.
+45. La cobertura registra 252/252 JSON procesados íntegramente.
+46. La cobertura registra 251.065 mensajes únicos indexados.
+47. La cobertura registra 0 duplicados.
+48. Se documenta que el export disponible cubre sólo el canal General.
+49. Se documenta que indexación completa no equivale a revisión semántica completa.
+50. Nueva ficha de política de fuentes y huecos de información.
+51. Nuevo catálogo de razas documentadas.
+52. El catálogo incluye Human.
+53. El catálogo incluye Hacker.
+54. El catálogo incluye Shark.
+55. El catálogo incluye Saiyan.
+56. El catálogo incluye Deteriorer.
+57. El catálogo incluye Faraón.
+58. El catálogo incluye Apotheosis.
+59. El catálogo incluye Muerte.
+60. El catálogo incluye Cyborg.
+61. El catálogo incluye Ghoul.
+62. El catálogo incluye Subhuman.
+63. El catálogo incluye Terrariano.
+64. El catálogo incluye Kaioshin.
+65. El catálogo incluye Dragon.
+66. El catálogo incluye Shinigami.
+67. El catálogo incluye Majin.
+68. El catálogo registra razas ocultas de AUs de Undertale sin inventar nombres faltantes.
+69. Nueva ficha del orden de rarezas de raza.
+70. Rarezas: Común → Poco común → Raro → Ultra raro → Legendario → Obsainan → Mítico → Godly → Eternal → Fabled.
+71. Obsainan queda correctamente situado por encima de Legendario.
+72. Se conservan ejemplos fechados de rareza sin tratarlos como balance permanente.
+73. Nueva ficha de slots de raza.
+74. Nueva ficha de obtención general de Fabled mediante pasos/spins especiales.
+75. Nueva ficha de progresión racial V1 → V4.
+76. Se documenta que V1→V4 no es una ruta universal para todas las razas.
+77. Saiyan queda separado del esquema V2/V3/V4 tradicional cuando corresponde.
+78. Nueva ficha general de Trials.
+79. Nueva ficha de Trials de meditación.
+80. Nueva ficha de Trial Spire.
+81. Nueva ficha general de Executores.
+82. Se documenta terror radius de Executores.
+83. Se conservan cambios históricos entre ediciones/contextos de Executores.
+84. Nueva ficha general de estructuras.
+85. Nueva ficha general de bosses.
+86. Nueva ficha general de misiones/NPC.
+87. Nueva ficha general de dimensiones.
+88. Nueva ficha de Room.
+89. Nueva ficha de Gate.
+90. Umbrales contradictorios de meditación quedan en HISTÓRICO/CONTRADICCIÓN en vez de fingir una regla única.
+91. Nueva ficha de Assembling Table.
+92. Nueva ficha de Geography Table con referencia histórica de 120 wins correctamente asociada a la mesa.
+93. Nueva ficha de Daemonium Kit.
+94. Nueva ficha de Improbability Scroll.
+95. Nueva ficha general de reliquias y ficha histórica de Third Justice.
+96. Nuevo bloque de historia del sistema de muerte/revive y Respawn Cards.
+97. Nuevas fichas generales de raids, facciones, economía y diseño seguro de prompts/acciones.
+98. Nuevo test de regresión que bloquea nombres/datos personales dentro de la enciclopedia.
+99. Nuevo documento `KNOWLEDGE-ARCHITECTURE-3.0.md` define separación, fuentes, historial y privacidad.
+100. Nuevo QA 3.00 exige verificar navegación, búsqueda, razas, rarezas, temas históricos y ausencia de información personal antes de publicar.
