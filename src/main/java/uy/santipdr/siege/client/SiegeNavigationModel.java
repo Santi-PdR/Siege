@@ -1,10 +1,10 @@
 package uy.santipdr.siege.client;
 
-/** Minecraft-independent identity map for SIEGE 4.00 surfaces. */
+/** Minecraft-independent identity map for completed SIEGE 4.00 surfaces. */
 public final class SiegeNavigationModel {
     public enum Section {
-        HOME, OPERATIONS, BRIEFING, ATLAS, THREATS, KNOWLEDGE, DEPLOYMENT, INTEL, REFERENCE, FIELD_MANUAL,
-        SETTINGS, COMMAND, DIAGNOSTICS, BACKGROUNDS, INSPECTOR, MEDIA, NATIVE
+        HOME, OPERATIONS, BRIEFING, ATLAS, RACES, PROGRESSION, THREATS, KNOWLEDGE, DEPLOYMENT, INTEL,
+        REFERENCE, FIELD_MANUAL, SETTINGS, COMMAND, DIAGNOSTICS, BACKGROUNDS, INSPECTOR, MEDIA, NATIVE
     }
 
     public record Descriptor(Section section, String es, String en, String code, int accent) {
@@ -20,6 +20,8 @@ public final class SiegeNavigationModel {
             case "SiegeOperationsHubScreen" -> d(Section.OPERATIONS, "SALA DE OPERACIONES", "WAR ROOM", "OPS", 0xFF68C6D8);
             case "SiegeBriefingScreen" -> d(Section.BRIEFING, "BRIEFING DE INGRESO", "ENTRY BRIEFING", "BRF", 0xFFE89B59);
             case "SiegeAtlasScreen" -> d(Section.ATLAS, "ATLAS TÁCTICO", "TACTICAL ATLAS", "ATL", 0xFF72C98B);
+            case "SiegeRaceAtlasScreen" -> d(Section.RACES, "ATLAS DE RAZAS", "RACE ATLAS", "RAC", 0xFFD6AE65);
+            case "SiegeProgressionMapScreen" -> d(Section.PROGRESSION, "MAPA DE PROGRESIÓN", "PROGRESSION MAP", "PRG", 0xFFD6AE65);
             case "SiegeThreatBoardScreen" -> d(Section.THREATS, "TABLERO DE AMENAZAS", "THREAT BOARD", "THR", 0xFFE54852);
             case "SiegeKnowledgeScreen", "SiegeKnowledgeFileScreen" ->
                     d(Section.KNOWLEDGE, "ENCICLOPEDIA DEL SERVIDOR", "SERVER ENCYCLOPEDIA", "ENC", 0xFF72C98B);
@@ -29,6 +31,7 @@ public final class SiegeNavigationModel {
             case "SiegeArchiveScreen" -> d(Section.FIELD_MANUAL, "MANUAL DE CAMPO", "FIELD MANUAL", "FLD", 0xFFE89B59);
             case "SiegeGuideScreen", "SiegeGuideImageScreen" -> d(Section.REFERENCE, "ARCHIVO / ARSENAL", "ARCHIVE / ARMORY", "REF", 0xFFD6AE65);
             case "SiegeEvidenceReelScreen" -> d(Section.MEDIA, "EVIDENCIA", "EVIDENCE", "MED", 0xFF68C6D8);
+            case "SiegeMediaRoomScreen" -> d(Section.MEDIA, "SALA MULTIMEDIA", "MEDIA ROOM", "MED", 0xFF68C6D8);
             case "SiegeSettingsScreen" -> d(Section.SETTINGS, "CONFIGURACIÓN", "SETTINGS", "CFG", 0xFFE54852);
             case "SiegeSystemScreen" -> d(Section.COMMAND, "CENTRO DE COMANDO", "COMMAND CENTER", "CMD", 0xFF68C6D8);
             case "SiegeDiagnosticsScreen" -> d(Section.DIAGNOSTICS, "DIAGNÓSTICO", "DIAGNOSTICS", "DIA", 0xFFE89B59);
