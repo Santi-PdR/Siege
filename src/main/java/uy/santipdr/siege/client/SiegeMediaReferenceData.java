@@ -71,4 +71,9 @@ public final class SiegeMediaReferenceData {
 
     public static List<Track> dvnTracks() { return DVN_TRACKS; }
     public static List<Visual> visualReferences() { return VISUALS; }
+
+    /** Internal release rule; intentionally not rendered as player-facing menu copy. */
+    public static boolean externalBundlingRequiresPermission() { return true; }
+    public static int preferredBackgroundWidth() { return 1920; }
+    public static int preferredBackgroundHeight() { return 1080; }
 }
