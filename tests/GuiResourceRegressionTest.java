@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * SIEGE release gate for visual media. Every GUI PNG/JPG must decode.
- * Existing prepared scenes stay Full HD. Official DVN thumbnails may remain at
- * their native 768x432 instead of being artificially enlarged just to satisfy CI.
+ * SIEGE 5.30 release gate for visual media. Every GUI PNG/JPG must decode.
+ * Menu scenes use their real prepared source dimensions; no CI rule may demand
+ * synthetic 1920x1080 enlargement from a smaller source.
  */
 public final class GuiResourceRegressionTest {
     private static void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
@@ -35,7 +35,7 @@ public final class GuiResourceRegressionTest {
         }
 
         Path backgrounds = gui.resolve("backgrounds");
-        check(SiegeSceneCatalog.count() >= 14, "5.10 scene catalog unexpectedly shrank");
+        check(SiegeSceneCatalog.count() >= 15, "5.30 scene catalog unexpectedly shrank");
         for (int i = 0; i < SiegeSceneCatalog.count(); i++) {
             Path file = backgrounds.resolve(SiegeSceneCatalog.id(i) + ".png");
             int[] size = decode(file);
@@ -43,26 +43,30 @@ public final class GuiResourceRegressionTest {
                     "Scene metadata mismatch for " + SiegeSceneCatalog.id(i) + ": catalog="
                             + SiegeSceneCatalog.width(i) + "x" + SiegeSceneCatalog.height(i)
                             + " file=" + size[0] + "x" + size[1]);
-            check(size[0] >= 768 && size[1] >= 432,
-                    "Menu background below approved native source size: " + SiegeSceneCatalog.id(i)
+            check(size[0] >= 640 && size[1] >= 360,
+                    "Menu background below approved native source floor: " + SiegeSceneCatalog.id(i)
                             + " -> " + size[0] + "x" + size[1]);
             check(size[0] * 9 == size[1] * 16,
-                    "Background must remain 16:9: " + SiegeSceneCatalog.id(i));
+                    "Background must remain exact 16:9: " + SiegeSceneCatalog.id(i));
             check(!SiegeEasterEggVault.reserved(SiegeSceneCatalog.id(i)),
                     "Reserved easter egg leaked into normal menu catalog: " + SiegeSceneCatalog.id(i));
         }
 
-        check(SiegeSceneCatalog.width(indexOf("dvn_official_01")) == 768,
-                "Official DVN scene 01 should stay at native width, not fake-HD");
-        check(SiegeSceneCatalog.width(indexOf("dvn_official_02")) == 768,
-                "Official DVN scene 02 should stay at native width, not fake-HD");
+        for (String id : new String[]{"dvn_official_01", "dvn_official_02", "dvn_official_03"}) {
+            check(SiegeSceneCatalog.width(indexOf(id)) == 768 && SiegeSceneCatalog.height(indexOf(id)) == 432,
+                    "Official DVN scene should stay at native 768x432, not fake-HD: " + id);
+        }
+        check(SiegeSceneCatalog.width(indexOf("dummies_assault")) == 960,
+                "Legacy 960px source must not be fake-upscaled to 1920");
+        check(SiegeSceneCatalog.width(indexOf("night_operation")) == 720,
+                "Compact legacy scene should use its real prepared crop, not fake-HD");
         check(SiegeSceneCatalog.anomalyIndex() < 0, "Normal scene catalog must not expose an anomaly entry");
         check(!SiegeSceneCatalog.containsId(SiegeEasterEggVault.TEMPEST_JUTCHERSON),
                 "Tempest easter egg must stay outside menu/gallery scenes");
         check(SiegeSceneCatalog.featuredIndex() >= 0, "Featured scene metadata missing");
 
         System.out.println("SIEGE GUI resources: " + images.size()
-                + " images decoded; native DVN scenes, 16:9 layout and easter-egg isolation verified");
+                + " images decoded; native-resolution 16:9 scenes and easter-egg isolation verified");
     }
 
     private static int indexOf(String id) {
