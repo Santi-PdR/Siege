@@ -31,8 +31,8 @@ public final class SiegeSceneCatalog {
 
     private static final List<Scene> SCENES = List.of(
             scene("dummies_assault", "Asalto de Dummies", "Dummies Assault", 2),
-            dvn("dvn_arctic_standoff", "DVN · Arctic Standoff", "DVN · Arctic Standoff", 1),
-            dvn("dvn_coastal_assault", "DVN · Asalto costero", "DVN · Coastal Assault", 2),
+            dvn("dvn_official_01", "DVN · Escena oficial 01", "DVN · Official Scene 01", 1),
+            dvn("dvn_official_02", "DVN · Escena oficial 02", "DVN · Official Scene 02", 2),
             scene("anniversary", "Aniversario", "Anniversary", 0),
             scene("frontline_19", "Frente 19", "Frontline 19", 3),
             scene("cyborg", "Cíborg", "Cyborg", 4),
@@ -57,7 +57,7 @@ public final class SiegeSceneCatalog {
         return new Scene(id, es, en, HD_W, HD_H, darknessBias, Kind.STANDARD, true);
     }
 
-    /** Official DVN thumbnails are kept at their native 768x432 instead of fake-upscaled. */
+    /** Official DVN thumbnails stay at their native 768x432 instead of being fake-upscaled. */
     private static Scene dvn(String id, String es, String en, int darknessBias) {
         return new Scene(id, es, en, DVN_W, DVN_H, darknessBias, Kind.STANDARD, true);
     }
