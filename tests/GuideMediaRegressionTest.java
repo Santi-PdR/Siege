@@ -6,11 +6,17 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
-/** SIEGE 5.30 Third Justice visibility and complete-video preparation contract. */
+/** SIEGE 5.30 Third Justice full-color media and complete-video preparation contract. */
 public final class GuideMediaRegressionTest {
+    private record VisualStats(int minLuma, int maxLuma, int distinctColors) {
+        int dynamicRange() { return maxLuma - minLuma; }
+    }
+
     private static void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
 
     private static BufferedImage decode(Path file) {
@@ -23,20 +29,29 @@ public final class GuideMediaRegressionTest {
         }
     }
 
-    private static double meanLuma(BufferedImage image) {
-        long total = 0L;
+    /**
+     * Detect the actual failure 5.30 had: 1-bit/2-bit posterization. A valid image
+     * may intentionally be dark (the item tooltip has a black UI background), so
+     * average brightness is not a quality criterion. We require real tonal range,
+     * bright detail and many distinct sampled colors instead.
+     */
+    private static VisualStats visualStats(BufferedImage image) {
         long pixels = (long) image.getWidth() * image.getHeight();
         int step = Math.max(1, (int)Math.sqrt(Math.max(1L, pixels / 120_000L)));
-        long samples = 0L;
+        int min = 255;
+        int max = 0;
+        Set<Integer> colors = new HashSet<>();
         for (int y = 0; y < image.getHeight(); y += step) {
             for (int x = 0; x < image.getWidth(); x += step) {
-                int rgb = image.getRGB(x, y);
+                int rgb = image.getRGB(x, y) & 0x00FFFFFF;
                 int r = (rgb >> 16) & 255, g = (rgb >> 8) & 255, b = rgb & 255;
-                total += Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
-                samples++;
+                int luma = (int)Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
+                min = Math.min(min, luma);
+                max = Math.max(max, luma);
+                colors.add(rgb);
             }
         }
-        return samples == 0 ? 0.0 : total / (double)samples;
+        return new VisualStats(min, max, colors.size());
     }
 
     public static void main(String[] args) throws Exception {
@@ -63,9 +78,15 @@ public final class GuideMediaRegressionTest {
                     "Declared Third Justice media dimensions changed: " + art.file()
                             + " expected=" + art.width() + "x" + art.height()
                             + " actual=" + decoded.getWidth() + "x" + decoded.getHeight());
-            double mean = meanLuma(decoded);
-            check(mean >= 42.0,
-                    "Third Justice image is still hidden by crushed darkness: " + art.file() + " mean=" + mean);
+
+            VisualStats stats = visualStats(decoded);
+            check(stats.distinctColors() >= 64,
+                    "Third Justice image is still posterized: " + art.file()
+                            + " sampledColors=" + stats.distinctColors());
+            check(stats.dynamicRange() >= 70 && stats.maxLuma() >= 150,
+                    "Third Justice image lost visible tonal detail: " + art.file()
+                            + " range=" + stats.dynamicRange() + " max=" + stats.maxLuma());
+
             if (art.file().startsWith("third_justice_reel_")) {
                 reels++;
                 check(decoded.getWidth() >= 640 && decoded.getHeight() >= 360,
@@ -86,7 +107,7 @@ public final class GuideMediaRegressionTest {
         int height = Integer.parseInt(manifest.getProperty("height", "0"));
         check(width == 640 && height == 360, "Third Justice prepared video must be 640x360");
         if (mode.equals("full")) {
-            check(frames >= 20, "Complete Third Justice test must contain a real frame sequence");
+            check(frames >= 300, "Complete Third Justice test must contain the full ~31 s frame sequence");
             Path videoDir = guide.resolve("third_justice_video");
             long actual;
             try (var stream = Files.list(videoDir)) {
@@ -99,6 +120,7 @@ public final class GuideMediaRegressionTest {
             check(frames == 3, "Fallback manifest must describe the repaired three-frame reel");
         }
 
-        System.out.println("Third Justice media is visible; video manifest mode=" + mode + ", frames=" + frames);
+        System.out.println("Third Justice media is full-color and detailed; video manifest mode="
+                + mode + ", frames=" + frames);
     }
 }
