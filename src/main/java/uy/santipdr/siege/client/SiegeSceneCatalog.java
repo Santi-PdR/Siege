@@ -7,9 +7,9 @@ import java.util.stream.IntStream;
  * Authoritative metadata for every normal SIEGE menu scene.
  * Rendering, gallery labels, contrast bias, scheduling and CI all read the same table.
  *
- * Tempest Jutcherson is deliberately NOT part of this catalog in 2.50. It remains
- * reserved as an easter-egg asset and therefore cannot leak into normal rotation,
- * the background gallery or the home scene label.
+ * Tempest Jutcherson is deliberately NOT part of this catalog. It remains reserved
+ * as an easter-egg asset and therefore cannot leak into normal rotation, the
+ * background gallery or the home scene label.
  */
 public final class SiegeSceneCatalog {
     public enum Kind { STANDARD, FEATURED, ANOMALY }
@@ -26,9 +26,13 @@ public final class SiegeSceneCatalog {
 
     private static final int HD_W = 1920;
     private static final int HD_H = 1080;
+    private static final int DVN_W = 768;
+    private static final int DVN_H = 432;
 
     private static final List<Scene> SCENES = List.of(
             scene("dummies_assault", "Asalto de Dummies", "Dummies Assault", 2),
+            dvn("dvn_arctic_standoff", "DVN · Arctic Standoff", "DVN · Arctic Standoff", 1),
+            dvn("dvn_coastal_assault", "DVN · Asalto costero", "DVN · Coastal Assault", 2),
             scene("anniversary", "Aniversario", "Anniversary", 0),
             scene("frontline_19", "Frente 19", "Frontline 19", 3),
             scene("cyborg", "Cíborg", "Cyborg", 4),
@@ -51,6 +55,11 @@ public final class SiegeSceneCatalog {
 
     private static Scene scene(String id, String es, String en, int darknessBias) {
         return new Scene(id, es, en, HD_W, HD_H, darknessBias, Kind.STANDARD, true);
+    }
+
+    /** Official DVN thumbnails are kept at their native 768x432 instead of fake-upscaled. */
+    private static Scene dvn(String id, String es, String en, int darknessBias) {
+        return new Scene(id, es, en, DVN_W, DVN_H, darknessBias, Kind.STANDARD, true);
     }
 
     public static int count() { return SCENES.size(); }
