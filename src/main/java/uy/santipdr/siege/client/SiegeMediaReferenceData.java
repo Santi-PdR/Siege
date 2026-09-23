@@ -2,7 +2,7 @@ package uy.santipdr.siege.client;
 
 import java.util.List;
 
-/** Curated audiovisual direction for the SIEGE 5.40 Media Room. */
+/** Curated audiovisual direction for the SIEGE 5.50 Media Room. */
 public final class SiegeMediaReferenceData {
     public enum Use {
         LOBBY("LOBBY", "LOBBY"),
@@ -22,7 +22,7 @@ public final class SiegeMediaReferenceData {
         public String note(boolean spanish) { return spanish ? noteEs : noteEn; }
     }
 
-    /** A player-facing audiovisual preset. referenceTracks may include bundled and reference-only songs. */
+    /** A player-facing audiovisual direction. referenceTracks may include reference-only songs. */
     public record Mood(String id, String titleEs, String titleEn,
                        String purposeEs, String purposeEn,
                        String bundledTrack, List<String> referenceTracks) {
@@ -43,8 +43,14 @@ public final class SiegeMediaReferenceData {
 
     private static final List<Track> DVN_TRACKS = List.of(
             new Track("Stronghold 5-5 · Black Signal", Use.BRIEFING,
-                    "Pista original de SIEGE 5.40 generada para la sala de mando: drones industriales, golpes lejanos, ruido de radio y una alarma contenida. Forma parte real de la playlist instalada.",
-                    "Original SIEGE 5.40 track generated for the command room: industrial drones, distant impacts, radio noise and a restrained alarm motif. It is part of the installed playlist."),
+                    "Pista original de SIEGE para la sala de mando: drones industriales, golpes lejanos, ruido de radio y una alarma contenida. Forma parte real de la playlist instalada.",
+                    "Original SIEGE command-room track: industrial drones, distant impacts, radio noise and a restrained alarm motif. It is part of the installed playlist."),
+            new Track("Nucleus · Silent Carrier", Use.BRIEFING,
+                    "Pista original 5.50 para El Núcleo: ambiente electrónico lento, pulsos codificados y una portadora que aparece y desaparece sin voces. Está instalada de verdad.",
+                    "Original 5.50 Nucleus track: slow electronic ambience, coded pulses and a carrier that fades in and out without voices. It is actually installed."),
+            new Track("Tesla Breach", Use.BOSS,
+                    "Pista original 5.50 para amenazas eléctricas y de Nusia: pulso industrial lento, arcos sintetizados y resonancias metálicas. Está instalada de verdad.",
+                    "Original 5.50 track for electrical and Nusia threats: slow industrial pulse, synthesised arcs and metallic resonances. It is actually installed."),
             new Track("Arc - Enemy", Use.COMBAT,
                     "Pista de Potoe dedicada a DVN. SIEGE la integra en la rotación del menú con su atribución incluida.",
                     "Potoe track dedicated to DVN. SIEGE includes it in menu rotation with bundled attribution."),
@@ -52,8 +58,8 @@ public final class SiegeMediaReferenceData {
                     "Entrada tranquila antes del briefing o despliegue.",
                     "Calm entry before briefing or deployment."),
             new Track("Music Box", Use.LOBBY,
-                    "Calma inquietante de lobby; SIEGE ya conserva un recorte preparado dentro de su soundtrack actual.",
-                    "Uneasy lobby calm; SIEGE already keeps a prepared cut inside its current soundtrack."),
+                    "Calma inquietante de lobby; SIEGE conserva un recorte preparado dentro del soundtrack actual.",
+                    "Uneasy lobby calm; SIEGE keeps a prepared cut inside its current soundtrack."),
             new Track("New Store", Use.BRIEFING,
                     "Navegación tranquila para Atlas, Arsenal o preparación.",
                     "Calm navigation for Atlas, Armory or preparation."),
@@ -125,9 +131,9 @@ public final class SiegeMediaReferenceData {
                     "Operations room under pressure: dark, military and restrained.",
                     "Stronghold 5-5 · Black Signal", List.of("Music Box", "From the Ashes", "The Last Flame")),
             new Mood("nucleus-signal", "SEÑAL DEL NÚCLEO", "NUCLEUS SIGNAL",
-                    "Interfaz en estado de observación o cambio: ruido de radio, tensión tecnológica y sensación de que el sistema está reaccionando sin convertirlo en una alarma constante.",
-                    "Interface under observation or change: radio noise, technological tension and the sense that the system is reacting without turning into a constant alarm.",
-                    "Stronghold 5-5 · Black Signal", List.of("Scanning Hostile Biodats", "Dissonant", "Voltaic Dispatch")),
+                    "Observación silenciosa, ruido de datos y sensación de que El Núcleo está reaccionando sin convertir toda la interfaz en una alarma.",
+                    "Silent observation, data noise and the sense that the Nucleus is reacting without turning the entire interface into an alarm.",
+                    "Nucleus · Silent Carrier", List.of("Scanning Hostile Biodats", "Dissonant", "Voltaic Dispatch")),
             new Mood("deployment", "DESPLIEGUE", "DEPLOYMENT",
                     "Preparación antes de entrar al servidor: tensión baja y sensación de partida inminente.",
                     "Pre-server preparation: low tension and a sense of imminent deployment.",
@@ -144,10 +150,14 @@ public final class SiegeMediaReferenceData {
                     "Oleadas, hangares, artillería y zonas industriales con ritmo más agresivo.",
                     "Waves, hangars, artillery and industrial zones with a more aggressive rhythm.",
                     "Arc - Enemy · Potoe", List.of("Grinder", "Hell March (Remastered)", "Fight Through Adversity")),
+            new Mood("tesla-front", "FRENTE TESLA", "TESLA FRONT",
+                    "Amenazas eléctricas, bobinas, ruptura de línea y presión tecnológica de Nusia.",
+                    "Electrical threats, coils, line breaches and Nusia technological pressure.",
+                    "Tesla Breach", List.of("Voltaic Dispatch", "Powerplay", "Scanning Hostile Biodats")),
             new Mood("boss-alert", "BOSS / ALERTA ROJA", "BOSS / RED ALERT",
                     "Peleas donde una sola unidad domina el frente y la interfaz debe sentirse más urgente.",
                     "Fights where one unit dominates the front and the interface should feel more urgent.",
-                    "Heaven's Hell-Sent Gift", List.of("Powerplay", "Voltaic Dispatch", "Ablaze", "Imperishable Valour", "Death Sentence"))
+                    "Tesla Breach", List.of("Powerplay", "Ablaze", "Imperishable Valour", "Death Sentence"))
     );
 
     private static final List<Visual> VISUALS = List.of(
@@ -161,14 +171,23 @@ public final class SiegeMediaReferenceData {
                     "Tercera miniatura oficial recuperada de la galería actual de Dummies vs Noobs; conserva el 16:9 y los 768×432 originales.",
                     "Third official thumbnail recovered from the current Dummies vs Noobs gallery; it keeps the original 16:9 768×432 source.", true),
             new Visual("official-gallery-04", "DVN · Escena oficial 04", "DVN · Official Scene 04",
-                    "Cuarta escena oficial incorporada en 5.40 directamente desde la galería actual de Roblox, sin reescalado artificial.",
-                    "Fourth official scene added in 5.40 directly from the current Roblox gallery, without synthetic upscaling.", true),
+                    "Cuarta escena oficial incorporada directamente desde la galería actual de Roblox, sin reescalado artificial.",
+                    "Fourth official scene loaded directly from the current Roblox gallery, without synthetic upscaling.", true),
             new Visual("official-gallery-05", "DVN · Escena oficial 05", "DVN · Official Scene 05",
                     "Quinta escena oficial incorporada a la rotación para reducir repeticiones y ampliar el tono visual de DVN.",
                     "Fifth official scene added to rotation to reduce repetition and broaden the DVN visual tone.", true),
             new Visual("official-gallery-06", "DVN · Escena oficial 06", "DVN · Official Scene 06",
                     "Sexta escena oficial en 768×432, validada por contraste, detalle y formato 16:9 antes de entrar al build.",
                     "Sixth official 768×432 scene, validated for contrast, detail and 16:9 format before entering the build.", true),
+            new Visual("siege-nucleus-interference", "SIEGE · Interferencia del Núcleo", "SIEGE · Nucleus Interference",
+                    "Tratamiento 5.50 generado desde una miniatura DVN verificada: separación cromática leve, cortes de señal y telemetría sólo en la zona derecha. No se presenta como captura oficial nueva.",
+                    "5.50 treatment generated from a verified DVN thumbnail: mild channel separation, signal-loss slices and right-side telemetry. It is not presented as a new official screenshot.", true),
+            new Visual("siege-tesla-breach", "SIEGE · Ruptura Tesla", "SIEGE · Tesla Breach",
+                    "Tratamiento 5.50 con arcos eléctricos y luz localizada sobre una escena DVN verificada; conserva espacio limpio para la navegación.",
+                    "5.50 treatment with electrical arcs and local lighting over a verified DVN scene; it preserves clean space for navigation.", true),
+            new Visual("siege-stronghold-red-alert", "SIEGE · Stronghold en alerta roja", "SIEGE · Stronghold Red Alert",
+                    "Tratamiento 5.50 de emergencia: iluminación roja localizada, barras de alerta y partículas discretas sin tapar el menú.",
+                    "5.50 emergency treatment: local red lighting, alert bars and restrained particles without covering the menu.", true),
             new Visual("stronghold-defense", "Stronghold / última fortaleza", "Stronghold / last stronghold",
                     "Defensa de fortaleza, escuadra y armamento moderno o futurista. Prioridad alta para portada.",
                     "Stronghold defense, squad and modern or future weaponry. High priority for the main menu.", false),
@@ -205,12 +224,12 @@ public final class SiegeMediaReferenceData {
             new Visual("armory-deployment", "Armería de despliegue", "Deployment armory",
                     "Armas, cajas, luces de emergencia y preparación previa a una misión.",
                     "Weapons, crates, emergency lights and pre-mission preparation.", false),
-            new Visual("nucleus-command", "Interferencia del Núcleo", "Nucleus interference",
-                    "Terminales, monitores y señal degradada para sugerir que El Núcleo está reaccionando sin mostrar una IA humanoide genérica.",
-                    "Terminals, monitors and degraded signal suggesting the Nucleus is reacting without depicting a generic humanoid AI.", false),
-            new Visual("tesla-breach", "Ruptura Tesla", "Tesla breach",
-                    "Bobinas, arcos eléctricos y humo para amenazas de Nusia como Zapper o Tempest, manteniendo espacio libre para la UI.",
-                    "Coils, electrical arcs and smoke for Nusia threats such as Zapper or Tempest, while keeping clear UI space.", false)
+            new Visual("nucleus-command", "Interferencia del Núcleo · concepto", "Nucleus interference · concept",
+                    "Dirección futura para terminales, monitores y señal degradada sin mostrar una IA humanoide genérica.",
+                    "Future direction for terminals, monitors and degraded signal without depicting a generic humanoid AI.", false),
+            new Visual("tesla-breach-concept", "Ruptura Tesla · concepto", "Tesla breach · concept",
+                    "Dirección futura con bobinas, arcos eléctricos y humo para amenazas de Nusia como Zapper o Tempest.",
+                    "Future direction with coils, electrical arcs and smoke for Nusia threats such as Zapper or Tempest.", false)
     );
 
     public static List<Track> dvnTracks() { return DVN_TRACKS; }
