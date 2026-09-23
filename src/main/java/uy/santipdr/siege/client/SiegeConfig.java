@@ -14,8 +14,9 @@ import java.util.Properties;
 
 public final class SiegeConfig {
     // Keep the historical migration revision stable. Raising 801 would rerun an
-    // obsolete migration. 1.25 options load independent defaults instead.
+    // obsolete migration. Newer options load independent defaults instead.
     private static final int SETTINGS_REVISION = 801;
+    private static final int MAX_TRACK_INDEX = 7; // SIEGE 5.60 ships eight installed tracks.
 
     public enum Graphics { PERFORMANCE, BALANCED, CINEMATIC;
         public Graphics next() { return values()[(ordinal() + 1) % values().length]; }
@@ -57,6 +58,9 @@ public final class SiegeConfig {
     public static int backgroundDarkness = 23;
     public static int panelDarkness = 63;
     public static int trackNoticeSeconds = 8;
+    public static int backgroundMotionIntensity = 55;
+    public static int backgroundSceneSeconds = 24;
+    public static int backgroundCrossfadeSeconds = 5;
     public static Graphics graphics = Graphics.CINEMATIC;
 
     private static Properties lastSaved;
@@ -82,7 +86,7 @@ public final class SiegeConfig {
         darkIntelPaper = bool(p, "darkIntelPaper", false);
         inspectorMap = bool(p, "inspectorMap", true);
         inspectorBackground = integer(p, "inspectorBackground", 0, 0, 2);
-        selectedTrack = integer(p, "selectedTrack", -1, -1, 3);
+        selectedTrack = integer(p, "selectedTrack", -1, -1, MAX_TRACK_INDEX);
         selectedScene = integer(p, "selectedScene", -1, -1, SiegeSceneSchedule.COUNT - 1);
         uiVolume = integer(p, "uiVolume", 100, 0, 100);
         hoverSounds = bool(p, "hoverSounds", true);
@@ -112,6 +116,9 @@ public final class SiegeConfig {
         backgroundDarkness = integer(p, "backgroundDarkness", 23, 0, 70);
         panelDarkness = integer(p, "panelDarkness", 63, 20, 90);
         trackNoticeSeconds = integer(p, "trackNoticeSeconds", 8, 3, 15);
+        backgroundMotionIntensity = integer(p, "backgroundMotionIntensity", 55, 0, 100);
+        backgroundSceneSeconds = integer(p, "backgroundSceneSeconds", 24, 12, 60);
+        backgroundCrossfadeSeconds = integer(p, "backgroundCrossfadeSeconds", 5, 0, 10);
         try { graphics = Graphics.valueOf(p.getProperty("graphics", Graphics.CINEMATIC.name()).trim().toUpperCase(java.util.Locale.ROOT)); }
         catch (IllegalArgumentException ignored) { graphics = Graphics.CINEMATIC; }
 
@@ -159,6 +166,9 @@ public final class SiegeConfig {
         p.setProperty("backgroundDarkness", Integer.toString(backgroundDarkness));
         p.setProperty("panelDarkness", Integer.toString(panelDarkness));
         p.setProperty("trackNoticeSeconds", Integer.toString(trackNoticeSeconds));
+        p.setProperty("backgroundMotionIntensity", Integer.toString(backgroundMotionIntensity));
+        p.setProperty("backgroundSceneSeconds", Integer.toString(backgroundSceneSeconds));
+        p.setProperty("backgroundCrossfadeSeconds", Integer.toString(backgroundCrossfadeSeconds));
         p.setProperty("graphics", graphics.name());
 
         if (p.equals(lastSaved) && Files.isRegularFile(FILE)) { lastSaveSucceeded = true; return; }
@@ -187,7 +197,7 @@ public final class SiegeConfig {
 
     private static void normalize() {
         inspectorBackground = Math.max(0, Math.min(2, inspectorBackground));
-        selectedTrack = Math.max(-1, Math.min(3, selectedTrack));
+        selectedTrack = Math.max(-1, Math.min(MAX_TRACK_INDEX, selectedTrack));
         selectedScene = Math.max(-1, Math.min(SiegeSceneSchedule.COUNT - 1, selectedScene));
         uiVolume = clampVolume(uiVolume);
         musicVolume = clampVolume(musicVolume);
@@ -196,6 +206,10 @@ public final class SiegeConfig {
         backgroundDarkness = Math.max(0, Math.min(70, backgroundDarkness));
         panelDarkness = Math.max(20, Math.min(90, panelDarkness));
         trackNoticeSeconds = Math.max(3, Math.min(15, trackNoticeSeconds));
+        backgroundMotionIntensity = clampVolume(backgroundMotionIntensity);
+        backgroundSceneSeconds = Math.max(12, Math.min(60, backgroundSceneSeconds));
+        backgroundCrossfadeSeconds = Math.max(0, Math.min(10, backgroundCrossfadeSeconds));
+        backgroundCrossfadeSeconds = Math.min(backgroundCrossfadeSeconds, backgroundSceneSeconds / 2);
         if (graphics == null) graphics = Graphics.CINEMATIC;
 
         // Flash reduction is a hard accessibility guarantee, not merely a label.
@@ -247,6 +261,9 @@ public final class SiegeConfig {
         backgroundDarkness = 23;
         panelDarkness = 63;
         trackNoticeSeconds = 8;
+        backgroundMotionIntensity = 55;
+        backgroundSceneSeconds = 24;
+        backgroundCrossfadeSeconds = 5;
         graphics = Graphics.CINEMATIC;
         save();
     }
@@ -277,6 +294,9 @@ public final class SiegeConfig {
         interferenceIntensity = 0;
         backgroundDarkness = 42;
         panelDarkness = 84;
+        backgroundMotionIntensity = 0;
+        backgroundSceneSeconds = 36;
+        backgroundCrossfadeSeconds = 0;
         save();
     }
 
@@ -306,6 +326,9 @@ public final class SiegeConfig {
         interferenceIntensity = 0;
         backgroundDarkness = 48;
         panelDarkness = 88;
+        backgroundMotionIntensity = 0;
+        backgroundSceneSeconds = 36;
+        backgroundCrossfadeSeconds = 0;
         save();
     }
 
