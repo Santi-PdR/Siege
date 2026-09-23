@@ -74,7 +74,7 @@ for title in ("Stronghold 5-5 · Black Signal", "Nucleus · Silent Carrier", "Te
     assert title not in MUSIC, title
 
 # Scene presets remain useful but must not silently force music.
-assert "scene-only" in PRESETS.lower()
+assert "change only the scene" in PRESETS.lower()
 assert "SiegeMusic.selectTrack" not in PRESETS
 assert "String track" not in PRESETS
 for scene in ("stronghold_red_alert", "nucleus_interference", "tesla_breach"):
