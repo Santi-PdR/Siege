@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-/** Current, non-personal race catalog used by the SIEGE 5.00 Race Atlas. */
+/** Current, non-personal race catalog used by the SIEGE 5.10 Race Atlas. */
 public final class SiegeRaceAtlasData {
     public enum Rarity {
         COMMON("COMÚN", "COMMON", 0xFFA7B0B6),
@@ -58,23 +58,27 @@ public final class SiegeRaceAtlasData {
 
     private static final List<Race> RACES = List.of(
             known("human", "Human", Rarity.UNKNOWN, Progression.VERSIONED,
-                    "Usa la progresión V1→V4. La ficha muestra sólo pasos confirmados para Human.",
-                    "Uses V1→V4. Its entry only shows confirmed Human-specific steps.", "race-human", "v1", "v2", "v3", "v4"),
+                    "Usa la progresión V1→V4 y es una de las rutas más rápidas para llegar a V4.",
+                    "Uses V1→V4 and is one of the faster routes to V4.", "race-human", "v1", "v2", "v3", "v4", "blox-fruits"),
             known("hacker", "Hacker", Rarity.UNKNOWN, Progression.VERSIONED,
                     "Raza ligada a energía, Room, Gate, sabotaje y una progresión propia por versiones.",
                     "Race tied to energy, Room, Gate, sabotage and its own versioned progression.", "race-hacker", "room", "gate", "v1", "v2", "v3", "v4"),
             known("subhuman", "Subhuman", Rarity.UNKNOWN, Progression.SPECIAL,
-                    "Subhuman es una familia de humanos mutados. Sus variantes conocidas se consultan por separado.",
-                    "Subhuman is a family of mutated humans. Known variants are browsed separately.", "race-subhuman", "variants", "adamantium", "sorcerer", "morty", "rick"),
-            unknown("mink", "Mink"),
+                    "Familia de Human alterados. Incluye Adamantium Human, Sorcerer, Evil Morty y Rick Sanchez.",
+                    "Family of altered Humans. Includes Adamantium Human, Sorcerer, Evil Morty and Rick Sanchez.", "race-subhuman", "variants", "adamantium", "sorcerer", "morty", "rick"),
+            known("mink", "Mink", Rarity.UNKNOWN, Progression.UNKNOWN,
+                    "Variante inspirada en Mink de One Piece; destaca principalmente por movilidad y velocidad para recorrer terreno.",
+                    "Variant inspired by One Piece Mink; mainly associated with movement and speed across terrain.", "", "speed", "mobility", "one-piece"),
             unknown("tsufurujin", "Tsufurujin"),
             historical("shark", "Shark", Progression.VERSIONED,
-                    "Tiene ventajas relacionadas con el agua. Algunos pasos cambiaron con el tiempo, así que la ficha evita recetas antiguas.",
-                    "Has water-related advantages. Some steps changed over time, so its entry avoids old recipes.", "race-shark", "water", "v2"),
-            unknown("angel", "Angel"),
+                    "Inspirada en Shark de Blox Fruits y relacionada con ventajas acuáticas. Algunos pasos cambiaron con el tiempo.",
+                    "Inspired by Blox Fruits Shark and tied to aquatic advantages. Some steps changed over time.", "race-shark", "water", "v2", "blox-fruits"),
+            known("angel", "Angel", Rarity.UNKNOWN, Progression.UNKNOWN,
+                    "La Angel de SIEGE está basada en la raza Angel de Blox Fruits; no se trata como un ángel genérico del lore.",
+                    "SIEGE Angel is based on the Angel race from Blox Fruits; it is not treated as a generic lore angel.", "", "blox-fruits"),
             known("ghoul", "Ghoul", Rarity.UNKNOWN, Progression.SPECIAL,
-                    "Puede mejorar comiendo carne y además tiene evoluciones propias. Hay referencias recientes a V2 y Super Ghoul.",
-                    "Can improve by eating meat and also has its own evolutions. Recent records reference V2 and Super Ghoul.", "race-ghoul", "meat", "v2", "super-ghoul"),
+                    "Puede mejorar mediante su propia progresión y tiene evoluciones conocidas, incluida Super Ghoul.",
+                    "Uses its own progression and has known evolutions, including Super Ghoul.", "race-ghoul", "meat", "v2", "super-ghoul"),
             known("cyborg", "Cyborg", Rarity.UNKNOWN, Progression.ASSEMBLING,
                     "Su progreso se relaciona con implantes, chips, trasplantes y Assembling.",
                     "Its progression is tied to implants, chips, transplants and Assembling.", "race-cyborg", "assembling", "implants", "chips"),
@@ -83,13 +87,16 @@ public final class SiegeRaceAtlasData {
                     "Built around progressive deterioration and oxidation. Its abilities and energy are explained in its own entry.", "race-deteriorer", "oxidation", "rust", "re"),
             unknown("involver", "Involver"),
             known("majin", "Majin", Rarity.UNKNOWN, Progression.UNKNOWN,
-                    "La raza está confirmada, pero sus requisitos, habilidades y etapas todavía no están completos.",
-                    "The race is confirmed, but its requirements, abilities and stages are still incomplete.", "race-majin", "confirmed"),
+                    "La raza existe dentro del catálogo, pero sus requisitos, habilidades y etapas todavía están incompletos.",
+                    "The race exists in the catalog, but its requirements, abilities and stages are still incomplete.", "race-majin", "needs-info"),
             unknown("dark-manor", "Dark Manor"),
             unknown("hermes", "Hermes"),
             known("saiyan", "Saiyan", Rarity.OBSAINAN, Progression.TRANSFORMATIONS,
                     "Progresa sobre todo mediante entrenamiento, zenkai y transformaciones; no se resume como una sola ruta V1→V4.",
-                    "Progresses mainly through training, zenkai and transformations; it is not one simple V1→V4 route.", "race-saiyan", "transformations", "training", "zenkai", "xeno-saiyan"),
+                    "Progresses mainly through training, zenkai and transformations; it is not one simple V1→V4 route.", "race-saiyan", "transformations", "training", "zenkai", "flame-saiyan"),
+            known("xeno-saiyan", "Xeno Saiyan", Rarity.UNKNOWN, Progression.TRANSFORMATIONS,
+                    "Rama Saiyan diferenciada. Se mantiene separada para no copiarle automáticamente requisitos o transformaciones de Saiyan normal.",
+                    "Distinct Saiyan branch. It stays separate so normal Saiyan requirements and transformations are not automatically copied onto it.", "race-xeno-saiyan", "saiyan", "transformations", "variant"),
             unknown("otsutsuki", "Otsutsuki"),
             unknown("ackerman", "Ackerman"),
             unknown("titan", "Titan"),
@@ -106,8 +113,8 @@ public final class SiegeRaceAtlasData {
                     "Raza vinculada con almas de bosses. No debe confundirse con los estados de muerte del jugador.",
                     "Race tied to boss souls. It should not be confused with player death states.", "race-death", "souls", "boss"),
             known("shinigami", "Shinigami", Rarity.UNKNOWN, Progression.UNKNOWN,
-                    "La raza está confirmada, pero todavía falta información suficiente para explicar bien su ruta actual.",
-                    "The race is confirmed, but there is not enough information yet to explain its current path well.", "race-shinigami", "confirmed"),
+                    "Existe como raza conocida, pero todavía falta información suficiente para explicar bien su ruta actual.",
+                    "Known race, but there is not enough information yet to explain its current path well.", "race-shinigami", "needs-info"),
             unknown("fullbringer", "Fullbringer"),
             unknown("arrancar", "Arrancar"),
             unknown("hakaishin", "Hakaishin"),
@@ -120,8 +127,8 @@ public final class SiegeRaceAtlasData {
             unknown("narehate", "Narehate"),
             unknown("arclighter", "Arclighter"),
             historical("pharaoh", "Faraón", Progression.UNKNOWN,
-                    "Está relacionada con una zona o dimensión desértica. No se muestran requisitos que no estén confirmados.",
-                    "Linked to a desert area or dimension. Unconfirmed requirements are not shown.", "race-pharaoh", "desert", "dimension"),
+                    "Está relacionada con una zona o dimensión desértica. No se muestran requisitos que no estén claros.",
+                    "Linked to a desert area or dimension. Unclear requirements are not shown.", "race-pharaoh", "desert", "dimension"),
             unknown("sun", "Sun"),
             unknown("almirante", "Almirante"),
             unknown("archie", "Archie"),
@@ -139,7 +146,7 @@ public final class SiegeRaceAtlasData {
                     "Ghoul evolution or variant. Its exact acquisition is not fixed while current information remains unclear.", "ghoul-progression", "ghoul", "variant"),
             known("terrarian", "Terrariano", Rarity.UNKNOWN, Progression.UNKNOWN,
                     "Existe como raza conocida, pero todavía falta una explicación completa y actual de su progresión.",
-                    "Known race, but a complete current explanation of its progression is still missing.", "race-terrarian", "confirmed"),
+                    "Known race, but a complete current explanation of its progression is still missing.", "race-terrarian", "needs-info"),
             unknown("fenix", "Fénix"),
             unknown("diclonius", "Diclonius"),
             unknown("windwhirl", "Windwhirl"),
@@ -149,7 +156,7 @@ public final class SiegeRaceAtlasData {
             unknown("iluminati", "Iluminati"),
             known("undertale-au", "Undertale AU", Rarity.HIDDEN, Progression.STEPS_TRIALS,
                     "Familia oculta relacionada con Trials y pasos difíciles. Las rutas conocidas siguen incompletas.",
-                    "Hidden family tied to Trials and difficult steps. Known routes are still incomplete.", "race-undertale-au", "hidden", "trial")
+                    "Hidden family tied to Trials and difficult steps. Known routes remain incomplete.", "race-undertale-au", "hidden", "trial")
     );
 
     private static Race known(String id, String name, Rarity rarity, Progression progression,
@@ -164,9 +171,9 @@ public final class SiegeRaceAtlasData {
 
     private static Race unknown(String id, String name) {
         return new Race(id, name, Rarity.UNKNOWN, Progression.UNKNOWN,
-                name + " aparece en la lista de razas conocida, pero todavía no hay información reciente suficiente para explicar sus habilidades o progresión sin inventar.",
-                name + " appears in the known race list, but there is not enough recent information to explain its abilities or progression without guessing.",
-                "", true, List.of("confirmed", "needs-info"));
+                "Aparece en el catálogo de razas de SIEGE, pero todavía no hay información suficiente para explicar sus habilidades o progresión sin inventar.",
+                "Appears in the SIEGE race catalog, but there is not enough information yet to explain its abilities or progression without guessing.",
+                "", true, List.of("needs-info"));
     }
 
     public static List<Race> all() { return RACES; }
