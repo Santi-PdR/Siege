@@ -52,22 +52,16 @@ def percentile(gray: Image.Image, fraction: float) -> int:
 
 
 def remap_visible(image: Image.Image) -> Image.Image:
-    """Lift a dark capture while preserving its existing spatial detail."""
     rgb = image.convert("RGB")
     gray = rgb.convert("L")
     lo = percentile(gray, 0.01)
     hi = percentile(gray, 0.99)
     if hi <= lo:
         return rgb
-
     scale = 210.0 / max(1, hi - lo)
-    lut = []
-    for value in range(256):
-        mapped = round(28 + (value - lo) * scale)
-        lut.append(max(0, min(255, mapped)))
+    lut = [max(0, min(255, round(28 + (value - lo) * scale))) for value in range(256)]
     channels = [channel.point(lut) for channel in rgb.split()]
-    fixed = Image.merge("RGB", channels)
-    return ImageEnhance.Contrast(fixed).enhance(1.06)
+    return ImageEnhance.Contrast(Image.merge("RGB", channels)).enhance(1.06)
 
 
 def check_visible(name: str, image: Image.Image) -> str:
@@ -97,38 +91,43 @@ def repair_static() -> None:
         fixed.save(path, "PNG", optimize=True, compress_level=9)
 
 
-def resolve_video_source() -> Path | None:
-    """Return a playable MP4, decoding the checked-in compact source when needed."""
-    if VIDEO_SRC.is_file() and VIDEO_SRC.stat().st_size > 0:
-        print(f"→ Third Justice: using direct MP4 source ({VIDEO_SRC.stat().st_size} bytes)")
-        return VIDEO_SRC
-
+def decode_embedded_source() -> Path | None:
     if not VIDEO_B64.is_file():
         return None
-
     try:
         encoded = "".join(VIDEO_B64.read_text(encoding="ascii").split())
         payload = base64.b64decode(encoded, validate=True)
     except (ValueError, OSError) as exc:
         raise SystemExit(f"Third Justice embedded video source is invalid: {exc}") from exc
-
     if len(payload) < MIN_EMBEDDED_BYTES:
         raise SystemExit(
             f"Third Justice embedded video source is unexpectedly small ({len(payload)} bytes)"
         )
-
     DECODED_VIDEO.parent.mkdir(parents=True, exist_ok=True)
     DECODED_VIDEO.write_bytes(payload)
     print(f"→ Third Justice: decoded embedded full test ({len(payload)} bytes)")
     return DECODED_VIDEO
 
 
+def resolve_video_source() -> Path | None:
+    """Prefer the validated embedded transport copy over stale direct MP4 remnants."""
+    embedded = decode_embedded_source()
+    if embedded is not None:
+        return embedded
+
+    if VIDEO_SRC.is_file():
+        size = VIDEO_SRC.stat().st_size
+        if size < MIN_EMBEDDED_BYTES:
+            print(f"! Ignoring stale/truncated direct Third Justice MP4 ({size} bytes)")
+            return None
+        print(f"→ Third Justice: using direct MP4 source ({size} bytes)")
+        return VIDEO_SRC
+    return None
+
+
 def ffprobe_duration_ms(path: Path) -> int:
     proc = subprocess.run(
-        [
-            "ffprobe", "-v", "error", "-show_entries", "format=duration",
-            "-of", "default=nw=1:nk=1", str(path),
-        ],
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", str(path)],
         check=True, text=True, capture_output=True,
     )
     seconds = float(proc.stdout.strip())
@@ -147,10 +146,7 @@ def prepare_full_video() -> None:
             "mode=fallback\nframes=3\nfps=1\nduration_ms=3300\nwidth=640\nheight=360\n",
             encoding="utf-8",
         )
-        print(
-            "! Third Justice full source is not present; repaired 3-frame fallback retained.\n"
-            f"  Expected: {VIDEO_SRC} or {VIDEO_B64}"
-        )
+        print("! Third Justice full source is not present; repaired 3-frame fallback retained.")
         return
 
     if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
@@ -180,7 +176,6 @@ def prepare_full_video() -> None:
     frames = sorted(VIDEO_DIR.glob("frame_*.png"))
     if not frames:
         raise SystemExit("Full Third Justice video extraction produced no frames")
-
     expected = max(1, round(duration_ms * FPS / 1000))
     if abs(len(frames) - expected) > 2:
         raise SystemExit(f"Unexpected complete-video frame count: {len(frames)} vs ~{expected}")
