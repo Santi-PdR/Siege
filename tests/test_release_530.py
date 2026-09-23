@@ -17,6 +17,7 @@ REEL = read("src/main/java/uy/santipdr/siege/client/SiegeEvidenceReelScreen.java
 VIDEO = read("src/main/java/uy/santipdr/siege/client/SiegeThirdJusticeVideo.java")
 GUIDE = read("src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java")
 MANIFEST = read("src/main/resources/assets/siege/third_justice_video.properties")
+EMBEDDED_VIDEO = ROOT / "assets-source/third-justice/third_justice_full.b64"
 
 assert "version = '5.30.0'" in BUILD
 
@@ -61,7 +62,12 @@ assert "No darkness/filter overlay is composited over evidence" in REEL
 assert "SiegeBackgrounds.render(g, width, height" not in REEL
 assert "0xE20A0C0F" not in REEL
 
-# The complete original test can be converted into a Forge-native sequence.
+# 5.30 ships the complete supplied ~31 s Third Justice test, not the old 3-frame
+# placeholder. CI has already run the preparation script before this contract test.
+assert EMBEDDED_VIDEO.is_file() and EMBEDDED_VIDEO.stat().st_size > 20_000
+assert "third_justice_full.b64" in PREP_TJ
+assert "base64.b64decode" in PREP_TJ
+assert "MIN_FULL_DURATION_MS = 30_000" in PREP_TJ
 assert "third_justice_full.mp4" in PREP_TJ
 assert "fps=10" in PREP_TJ or "FPS = 10" in PREP_TJ
 assert "frame_%05d.png" in PREP_TJ
@@ -71,10 +77,19 @@ assert "class SiegeThirdJusticeVideo" in VIDEO
 assert "video.full()" in REEL
 assert "third_justice_video/frame_" in REEL
 assert "VIDEO DE PRUEBA" in REEL
-assert "mode=fallback" in MANIFEST  # checked-in safe default until the build has the source MP4
+assert "mode=full" in MANIFEST, "5.30 release build must contain the complete Third Justice reel"
+assert "frames=3" not in MANIFEST, "5.30 release build must not fall back to the old 3-frame reel"
+
+manifest = dict(
+    line.split("=", 1) for line in MANIFEST.splitlines()
+    if line.strip() and "=" in line
+)
+assert int(manifest.get("frames", "0")) >= 300
+assert int(manifest.get("duration_ms", "0")) >= 30_000
+assert manifest.get("width") == "640" and manifest.get("height") == "360"
 
 # Armory still owns the item and its visible evidence.
 assert '"third-justice"' in GUIDE
 assert "third_justice_tooltip.png" in GUIDE and "third_justice_field.png" in GUIDE
 
-print("SIEGE 5.30 DVN backgrounds, cover scaling, night visibility and Third Justice media contracts passed")
+print("SIEGE 5.30 DVN backgrounds, cover scaling, night visibility and complete Third Justice reel passed")
