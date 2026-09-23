@@ -14,13 +14,18 @@ public final class SiegeMod {
     public static final String MOD_ID = "siege";
     public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MOD_ID);
 
-    // Only approved music is registered for SIEGE playback. New candidates are
-    // previewed externally first and are added here only after explicit approval.
+    // Existing approved soundtrack.
     public static final RegistryObject<SoundEvent> TALE_CRUEL_WORLD = sound("music.tale_cruel_world");
     public static final RegistryObject<SoundEvent> DARKEST_OF_DAYS = sound("music.darkest_of_days");
     public static final RegistryObject<SoundEvent> KAPTAIN_MUSIC_BOX = sound("music.kaptain_music_box");
     public static final RegistryObject<SoundEvent> HEAVENS_GIFT = sound("music.heavens_hell_sent_gift");
     public static final RegistryObject<SoundEvent> ARC_ENEMY = sound("music.arc_enemy");
+
+    // SIEGE 5.60: these are the only two new music choices approved by the player.
+    // The events are harmless when their source masters are not bundled; SiegeMusic
+    // exposes them only when the prepared OGG actually exists in the JAR.
+    public static final RegistryObject<SoundEvent> A_STRANGER_I_REMAIN = sound("music.a_stranger_i_remain");
+    public static final RegistryObject<SoundEvent> RECEIVE_YOU_HYPERACTIVE = sound("music.receive_you_the_hyperactive");
 
     public static final RegistryObject<SoundEvent> UI_HOVER = sound("ui.hover");
     public static final RegistryObject<SoundEvent> UI_CLICK = sound("ui.click");
