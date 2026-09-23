@@ -40,6 +40,11 @@ public final class SiegeMediaReferenceData {
 
     private SiegeMediaReferenceData() { }
 
+    /**
+     * DVN soundtrack references verified against current soundtrack indexes.
+     * They are not automatically bundled: binary audio only enters SIEGE when a
+     * redistributable source is available.
+     */
     private static final List<Track> DVN_TRACKS = List.of(
             new Track("Convenience Store", Use.LOBBY,
                     "Entrada tranquila antes del briefing o despliegue.",
@@ -58,26 +63,54 @@ public final class SiegeMediaReferenceData {
                     "Operation completion, victory or major confirmation."),
             new Track("Sad Choir", Use.LOSS,
                     "Estados críticos, derrota o cierre fallido.",
-                    "Critical states, defeat or failed outcomes.")
+                    "Critical states, defeat or failed outcomes."),
+            new Track("Calm Before The Storm A", Use.DEPLOYMENT,
+                    "Buen candidato para la transición entre preparación y entrada al frente.",
+                    "Good candidate for the transition between preparation and deployment."),
+            new Track("The Last Flame", Use.DEPLOYMENT,
+                    "Tensión de epílogo sin entrar todavía en combate abierto.",
+                    "Epilogue tension without moving into full combat yet."),
+            new Track("Into The Storm", Use.COMBAT,
+                    "Escalada fuerte para una operación o frente que ya entró en combate.",
+                    "Strong escalation for an operation or front already in combat."),
+            new Track("Grinder", Use.COMBAT,
+                    "Combate industrial y agresivo; encaja con escenas de maquinaria y oleadas.",
+                    "Aggressive industrial combat; fits machinery and wave-defense scenes."),
+            new Track("Hell March (Remastered)", Use.COMBAT,
+                    "Marcha pesada para guerra abierta; usar sólo si existe una fuente redistribuible válida.",
+                    "Heavy march for open warfare; bundle only if a valid redistributable source exists."),
+            new Track("Fight Through Adversity", Use.COMBAT,
+                    "Combate sostenido con un tono menos caótico que una pista de boss.",
+                    "Sustained combat with a less chaotic tone than a boss track."),
+            new Track("Scanning Hostile Biodats", Use.COMBAT,
+                    "Buen encaje para amenazas tecnológicas, Intel activo o encuentros de alta presión.",
+                    "Fits technological threats, active Intel or high-pressure encounters."),
+            new Track("Full Force", Use.COMBAT,
+                    "Candidato para situaciones de última línea o cierre de una operación grande.",
+                    "Candidate for last-line situations or the end of a major operation.")
     );
 
     private static final List<Mood> MOODS = List.of(
             new Mood("stronghold", "STRONGHOLD", "STRONGHOLD",
                     "Sala de operaciones bajo presión: oscura, militar y contenida.",
                     "Operations room under pressure: dark, military and restrained.",
-                    "The Darkest of Days", List.of("Music Box", "From the Ashes")),
+                    "The Darkest of Days", List.of("Music Box", "From the Ashes", "The Last Flame")),
             new Mood("deployment", "DESPLIEGUE", "DEPLOYMENT",
                     "Preparación antes de entrar al servidor: tensión baja y sensación de partida inminente.",
                     "Pre-server preparation: low tension and a sense of imminent deployment.",
-                    "Dummies vs Noobs Lobby Music", List.of("Convenience Store", "New Store")),
+                    "Dummies vs Noobs Lobby Music", List.of("Convenience Store", "New Store", "Calm Before The Storm A")),
             new Mood("intel", "INTEL / ARCHIVO", "INTEL / ARCHIVE",
                     "Lectura de dossiers y archivos sin competir con el texto.",
                     "Dossier and archive reading without competing with text.",
-                    "Tale of a Cruel World", List.of("Jazz Music", "Music Box")),
+                    "Tale of a Cruel World", List.of("Jazz Music", "Music Box", "Scanning Hostile Biodats")),
             new Mood("last-stand", "ÚLTIMA LÍNEA", "LAST STAND",
                     "Escenas de alto riesgo, bosses y amenazas mayores.",
                     "High-risk scenes, bosses and major threats.",
-                    "Heaven's Hell-Sent Gift", List.of("Sad Choir", "From the Ashes"))
+                    "Heaven's Hell-Sent Gift", List.of("Sad Choir", "From the Ashes", "Into The Storm", "Full Force")),
+            new Mood("industrial-war", "GUERRA INDUSTRIAL", "INDUSTRIAL WAR",
+                    "Oleadas, hangares, artillería y zonas industriales con ritmo más agresivo.",
+                    "Waves, hangars, artillery and industrial zones with a more aggressive rhythm.",
+                    "The Darkest of Days", List.of("Grinder", "Hell March (Remastered)", "Fight Through Adversity"))
     );
 
     private static final List<Visual> VISUALS = List.of(
