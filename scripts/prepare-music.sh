@@ -20,6 +20,8 @@ DARKEST_SOURCE="$SOURCE_DIR/darkest_of_days.ogg"
 DVN_SOURCE="$SOURCE_DIR/dvn_lobby_music.ogg"
 HEAVEN_SOURCE="$SOURCE_DIR/heavens_hell_sent_gift.ogg"
 ARC_SOURCE="$(find "$SOURCE_DIR" -maxdepth 1 -type f -name 'arc_enemy.*' | head -n1 || true)"
+STRANGER_SOURCE="$(find "$SOURCE_DIR" -maxdepth 1 -type f -iname 'a_stranger_i_remain.*' | head -n1 || true)"
+RECEIVE_SOURCE="$(find "$SOURCE_DIR" -maxdepth 1 -type f -iname 'receive_you_the_hyperactive.*' | head -n1 || true)"
 
 KAPTAIN_START="179.599646"
 KAPTAIN_DURATION="139.968604"
@@ -54,7 +56,21 @@ validate_source() {
     echo "Source master $label is truncated: ${duration_ms}ms (expected >= ${minimum_ms}ms)" >&2
     exit 1
   fi
-  printf 'SIEGE source: %-24s %8sms\n' "$label" "$duration_ms"
+  printf 'SIEGE source: %-30s %8sms\n' "$label" "$duration_ms"
+}
+
+validate_optional_source() {
+  local label="$1"
+  local file="$2"
+  local minimum_ms="$3"
+  local maximum_ms="$4"
+  local duration_ms
+  duration_ms="$(probe_ms "$file")"
+  if [ "$duration_ms" -lt "$minimum_ms" ] || [ "$duration_ms" -gt "$maximum_ms" ]; then
+    echo "Approved source $label has an unexpected duration: ${duration_ms}ms (expected ${minimum_ms}-${maximum_ms}ms)." >&2
+    exit 1
+  fi
+  printf 'SIEGE approved source: %-21s %8sms\n' "$label" "$duration_ms"
 }
 
 validate_source "Tale of a Cruel World" "$TALE_SOURCE" 260000
@@ -108,6 +124,30 @@ declare -A max_ms=(
   [heavens_hell_sent_gift]=219000
   [arc_enemy]=600000
 )
+
+# 5.60 player approval: only these two additions are accepted. We do not download
+# commercial OST audio in CI. If the owner supplies a legitimate local master with
+# the exact filename stem below, it is validated, encoded and immediately becomes a
+# real menu track. Missing optional masters simply stay out of the playlist.
+if [ -n "$STRANGER_SOURCE" ] && [ -f "$STRANGER_SOURCE" ]; then
+  validate_optional_source "A Stranger I Remain" "$STRANGER_SOURCE" 135000 160000
+  encode_full "a_stranger_i_remain" "$STRANGER_SOURCE"
+  tracks+=(a_stranger_i_remain)
+  min_ms[a_stranger_i_remain]=135000
+  max_ms[a_stranger_i_remain]=160000
+else
+  echo "SIEGE optional: A Stranger I Remain approved, source master not supplied yet."
+fi
+
+if [ -n "$RECEIVE_SOURCE" ] && [ -f "$RECEIVE_SOURCE" ]; then
+  validate_optional_source "Receive You The Hyperactive" "$RECEIVE_SOURCE" 275000 305000
+  encode_full "receive_you_the_hyperactive" "$RECEIVE_SOURCE"
+  tracks+=(receive_you_the_hyperactive)
+  min_ms[receive_you_the_hyperactive]=275000
+  max_ms[receive_you_the_hyperactive]=305000
+else
+  echo "SIEGE optional: Receive You The Hyperactive approved, source master not supplied yet."
+fi
 
 for key in "${tracks[@]}"; do
   target="$TARGET_DIR/$key.ogg"
