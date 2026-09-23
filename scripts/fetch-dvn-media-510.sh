@@ -7,49 +7,65 @@ MUSIC_SOURCE_DIR="$ROOT/assets-source/music-full"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-ARCTIC_URL='https://tr.rbxcdn.com/180DAY-f57d526d7c860645d35d5f1f6ac81be3/768/432/Image/Webp/noFilter'
-COASTAL_URL='https://tr.rbxcdn.com/180DAY-436fbbe5a341fdb4293653da659ebe0a/768/432/Image/Webp/noFilter'
+DVN_UNIVERSE_ID='3293525400'
+ROBLOX_THUMBNAILS_API="https://thumbnails.roblox.com/v1/games/multiget/thumbnails?universeIds=${DVN_UNIVERSE_ID}&countPerUniverse=10&defaults=true&size=768x432&format=Png&isCircular=false"
 ARC_ENEMY_URL='https://soundcloud.com/potoe-50708490/arc-enemy'
 
 mkdir -p "$BG_DIR" "$MUSIC_SOURCE_DIR"
 
-retry_curl() {
-  local url="$1"
-  local output="$2"
-  curl --fail --location --silent --show-error \
-    --retry 4 --retry-delay 2 --retry-all-errors \
-    -A 'SIEGE/5.10 noncommercial fan project media fetch' \
-    "$url" -o "$output"
-}
-
-echo '→ DVN: downloading official Roblox thumbnails...'
-retry_curl "$ARCTIC_URL" "$TMP/arctic.webp"
-retry_curl "$COASTAL_URL" "$TMP/coastal.webp"
-
-python3 - "$TMP" "$BG_DIR" <<'PY'
+echo '→ DVN: resolving current official Roblox thumbnails...'
+python3 - "$ROBLOX_THUMBNAILS_API" "$TMP" <<'PY'
 from pathlib import Path
+from urllib.request import Request, urlopen
 from PIL import Image
+import io
+import json
 import sys
 
-tmp = Path(sys.argv[1])
-out = Path(sys.argv[2])
-for source_name, target_name in (
-    ("arctic.webp", "dvn_arctic_standoff.png"),
-    ("coastal.webp", "dvn_coastal_assault.png"),
-):
-    src = tmp / source_name
-    target = out / target_name
-    with Image.open(src) as image:
+api = sys.argv[1]
+tmp = Path(sys.argv[2])
+headers = {"User-Agent": "SIEGE/5.10 noncommercial fan project media fetch"}
+
+def get_bytes(url: str) -> bytes:
+    req = Request(url, headers=headers)
+    with urlopen(req, timeout=30) as response:
+        return response.read()
+
+payload = json.loads(get_bytes(api).decode("utf-8"))
+urls = []
+for item in payload.get("data", []):
+    for thumb in item.get("thumbnails", []):
+        if thumb.get("state") == "Completed" and thumb.get("imageUrl"):
+            urls.append(thumb["imageUrl"])
+    if item.get("state") == "Completed" and item.get("imageUrl"):
+        urls.append(item["imageUrl"])
+
+# Preserve order while removing duplicates.
+urls = list(dict.fromkeys(urls))
+if len(urls) < 2:
+    raise SystemExit(f"Roblox returned only {len(urls)} completed DVN thumbnails")
+
+for index, url in enumerate(urls[:2], start=1):
+    raw = get_bytes(url)
+    with Image.open(io.BytesIO(raw)) as image:
         image.load()
         rgb = image.convert("RGB")
         if rgb.size != (768, 432):
-            raise SystemExit(f"Unexpected DVN thumbnail size for {source_name}: {rgb.size}")
+            raise SystemExit(f"Unexpected DVN thumbnail size #{index}: {rgb.size}")
         if rgb.width * 9 != rgb.height * 16:
-            raise SystemExit(f"DVN thumbnail is not 16:9: {source_name} -> {rgb.size}")
-        # Preserve the official source at its native size. Do not invent detail with an upscale.
+            raise SystemExit(f"DVN thumbnail #{index} is not 16:9: {rgb.size}")
+        target = tmp / f"dvn_official_{index:02d}.png"
+        # Keep the official source at native size. Do not invent detail through upscaling.
         rgb.save(target, "PNG", optimize=True, compress_level=9)
-        print(f"✓ {target_name}: {rgb.width}x{rgb.height}")
+        print(f"✓ resolved official DVN thumbnail {index}: {rgb.width}x{rgb.height}")
+        print(f"  source: {url}")
 PY
+
+install -m 0644 "$TMP/dvn_official_01.png" "$BG_DIR/dvn_official_01.png"
+install -m 0644 "$TMP/dvn_official_02.png" "$BG_DIR/dvn_official_02.png"
+
+# Old experimental names must not survive a build and silently duplicate scenes.
+rm -f "$BG_DIR/dvn_arctic_standoff.png" "$BG_DIR/dvn_coastal_assault.png"
 
 if ! command -v yt-dlp >/dev/null 2>&1; then
   echo 'yt-dlp is required to fetch the CC-licensed DVN track.' >&2
