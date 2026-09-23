@@ -10,7 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-/** Current-first player knowledge registry for SIEGE 5.10. */
+/** Current-first player knowledge registry for SIEGE 5.40. */
 public final class SiegeKnowledgeRegistry {
     private static final Set<String> HIDDEN_PLAYER_IDS = Set.of(
             "source-policy", "source-audit", "research-open-questions",
@@ -23,7 +23,7 @@ public final class SiegeKnowledgeRegistry {
     private static final List<SiegeKnowledgeData.Entry> MAINTENANCE = java.util.stream.Stream.of(
             SiegeKnowledgeData.entries(), SiegeKnowledgeExpansion40.entries(),
             SiegeKnowledgeExpansion50.entries(), SiegeKnowledgeCorpus50.entries(),
-            SiegeKnowledgePlayer510.entries())
+            SiegeKnowledgePlayer510.entries(), SiegeKnowledgePlayer540.entries())
             .flatMap(List::stream).toList();
 
     /** One current record per ID. Later files replace older records with the same ID. */
@@ -42,6 +42,7 @@ public final class SiegeKnowledgeRegistry {
         addCurrent(out, SiegeKnowledgeExpansion50.entries());
         addCurrent(out, SiegeKnowledgeCorpus50.entries());
         addCurrent(out, SiegeKnowledgePlayer510.entries());
+        addCurrent(out, SiegeKnowledgePlayer540.entries());
         return Collections.unmodifiableMap(out);
     }
 
@@ -62,7 +63,7 @@ public final class SiegeKnowledgeRegistry {
     /**
      * The old knowledge files keep provenance for maintenance, but normal players should
      * only see the mechanic itself. This copy deliberately drops provenance and removes
-     * leftover research wording from older entries that do not yet have a 5.10 rewrite.
+     * leftover research wording from older entries that do not yet have a current rewrite.
      */
     private static SiegeKnowledgeData.Entry cleanForPlayer(SiegeKnowledgeData.Entry entry) {
         return new SiegeKnowledgeData.Entry(
