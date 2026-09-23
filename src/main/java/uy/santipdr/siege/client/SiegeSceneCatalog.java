@@ -7,8 +7,9 @@ import java.util.stream.IntStream;
  * Authoritative metadata for every normal SIEGE menu scene.
  * Rendering, gallery labels, contrast bias, scheduling and CI all read the same table.
  *
- * SIEGE 5.40 records real prepared dimensions instead of pretending low-resolution
- * art is Full HD and expands the official DVN gallery to six current Roblox scenes.
+ * SIEGE 5.50 keeps the six official DVN thumbnails at their native 768x432 and adds
+ * three clearly-labelled SIEGE treatments generated from those verified sources:
+ * Nucleus interference, Tesla breach and Stronghold red alert. No scene is fake-HD.
  * Tempest Jutcherson is deliberately NOT part of this catalog: it remains an
  * easter-egg asset and cannot leak into normal rotation or the background gallery.
  */
@@ -42,6 +43,9 @@ public final class SiegeSceneCatalog {
             dvn("dvn_official_04", "DVN · Escena oficial 04", "DVN · Official Scene 04", 2),
             dvn("dvn_official_05", "DVN · Escena oficial 05", "DVN · Official Scene 05", 1),
             dvn("dvn_official_06", "DVN · Escena oficial 06", "DVN · Official Scene 06", 2),
+            generated("nucleus_interference", "SIEGE · Interferencia del Núcleo", "SIEGE · Nucleus Interference", 1),
+            generated("tesla_breach", "SIEGE · Ruptura Tesla", "SIEGE · Tesla Breach", 0),
+            generated("stronghold_red_alert", "SIEGE · Stronghold en alerta roja", "SIEGE · Stronghold Red Alert", 1),
             legacy("anniversary", "Aniversario", "Anniversary", 0),
             legacy("frontline_19", "Frente 19", "Frontline 19", 3),
             legacy("cyborg", "Cíborg", "Cyborg", 4),
@@ -75,6 +79,11 @@ public final class SiegeSceneCatalog {
         return new Scene(id, es, en, DVN_W, DVN_H, darknessBias, Kind.STANDARD, true);
     }
 
+    /** SIEGE treatments preserve the same native canvas and remain normal rotation scenes. */
+    private static Scene generated(String id, String es, String en, int darknessBias) {
+        return new Scene(id, es, en, DVN_W, DVN_H, darknessBias, Kind.STANDARD, true);
+    }
+
     public static int count() { return SCENES.size(); }
     public static Scene get(int index) { return SCENES.get(Math.floorMod(index, SCENES.size())); }
     public static String id(int index) { return get(index).id(); }
@@ -94,6 +103,11 @@ public final class SiegeSceneCatalog {
     public static boolean containsId(String id) {
         if (id == null) return false;
         return SCENES.stream().anyMatch(scene -> scene.id().equals(id));
+    }
+    public static int indexOfId(String id) {
+        if (id == null) return -1;
+        for (int i = 0; i < SCENES.size(); i++) if (SCENES.get(i).id().equals(id)) return i;
+        return -1;
     }
 
     private static int indexOf(Kind kind) {
