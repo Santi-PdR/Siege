@@ -9,7 +9,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
-/** SIEGE 4.00 Tactical Atlas: briefing, races, systems and research. */
+/** SIEGE 5.00 Atlas: detailed reference, intentionally separate from the newcomer Briefing. */
 public final class SiegeAtlasScreen extends Screen {
     private static final int ROWS = 8;
 
@@ -26,12 +26,12 @@ public final class SiegeAtlasScreen extends Screen {
     private int detailOffset;
     private boolean compact;
 
-    public SiegeAtlasScreen(Screen parent) { this(parent, SiegeAtlasIndex.View.BRIEFING); }
+    public SiegeAtlasScreen(Screen parent) { this(parent, SiegeAtlasIndex.View.RACES); }
 
     public SiegeAtlasScreen(Screen parent, SiegeAtlasIndex.View view) {
-        super(Component.literal("SIEGE // TACTICAL ATLAS"));
+        super(Component.literal("SIEGE // ATLAS"));
         this.parent = parent;
-        this.view = view == null ? SiegeAtlasIndex.View.BRIEFING : view;
+        this.view = view == null ? SiegeAtlasIndex.View.RACES : view;
     }
 
     @Override
@@ -68,8 +68,8 @@ public final class SiegeAtlasScreen extends Screen {
         search = new EditBox(font, panelX + 10, tabY + 25, panelW - 20, 20,
                 Component.literal(label("Buscar en Atlas", "Search Atlas")));
         search.setHint(Component.literal(label(
-                "Raza, Trial, Executor, reliquia, estructura, revive, objeto…",
-                "Race, Trial, Executor, relic, structure, revive, item…")));
+                "Raza, Trial, Executor, reliquia, desfibrilador, Geography Table…",
+                "Race, Trial, Executor, relic, defibrillator, Geography Table…")));
         search.setResponder(value -> { listOffset = 0; detailOffset = 0; refresh(); });
         addRenderableWidget(search);
 
@@ -104,7 +104,7 @@ public final class SiegeAtlasScreen extends Screen {
 
         openButton = new SiegeButton(detailX + Math.max(0, detailW - (compact ? 108 : 144)),
                 detailY + Math.max(0, detailH - 22), Math.min(compact ? 108 : 144, detailW), 18,
-                Component.literal(label("VER INFORMACIÓN", "OPEN INFO")), b -> openSelected(), SiegeTheme.CYAN)
+                Component.literal(label("ABRIR TEMA", "OPEN TOPIC")), b -> openSelected(), SiegeTheme.CYAN)
                 .withIcon("search").setCompactCenter(true);
         openButton.visible = false;
         addRenderableWidget(openButton);
@@ -142,9 +142,7 @@ public final class SiegeAtlasScreen extends Screen {
             button.active = present;
             if (!present) continue;
             SiegeKnowledgeData.Entry entry = visible.get(index);
-            String status = entry.zone() == SiegeKnowledgeData.Zone.HISTORY
-                    ? label("ANTIGUO", "OLD") : entry.domain().label(spanish());
-            button.setMessage(Component.literal(fit(status + " · " + entry.title(spanish()), Math.max(20, listW - 28))));
+            button.setMessage(Component.literal(fit(entry.title(spanish()), Math.max(20, listW - 28))));
             button.setSelected(selected != null && selected.id().equals(entry.id()));
         }
         if (openButton != null) {
@@ -191,18 +189,16 @@ public final class SiegeAtlasScreen extends Screen {
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, tabAccent(view));
 
         int x = panelX + 12;
-        String title = label("ATLAS TÁCTICO", "TACTICAL ATLAS") + " // " + SiegeRuntimeStatus.version();
+        String title = "ATLAS // " + SiegeRuntimeStatus.version();
         g.drawString(font, fit(title, panelW - 24), x, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(SiegeAtlasIndex.description(view, spanish()), panelW - 24),
                 x, panelY + 21, SiegeTheme.MUTED, false);
-        String metrics = SiegeAtlasIndex.label(view, spanish()) + " · " + visible.size()
-                + label(" TEMAS", " TOPICS");
-        g.drawString(font, fit(metrics, panelW - 24), x, panelY + 32, tabAccent(view), false);
+        g.drawString(font, SiegeAtlasIndex.label(view, spanish()), x, panelY + 32, tabAccent(view), false);
 
         SiegeTheme.panel(g, listX - 3, listY - 3, listW + 6, rows.size() * 22 + 6, SiegeTheme.GOLD);
         SiegeTheme.panel(g, detailX - 3, detailY - 3, detailW + 6, detailH + 6, tabAccent(view));
         if (visible.isEmpty()) {
-            g.drawString(font, label("No hay temas que coincidan.", "No matching topics."),
+            g.drawString(font, label("No hay información que coincida.", "No matching information."),
                     listX + 7, listY + 7, SiegeTheme.MUTED, false);
         }
         renderDetail(g);
@@ -219,19 +215,16 @@ public final class SiegeAtlasScreen extends Screen {
 
     private void renderDetail(GuiGraphics g) {
         if (selected == null) {
-            g.drawString(font, label("Seleccioná un tema del Atlas.", "Select an Atlas topic."),
+            g.drawString(font, label("Elegí un tema del Atlas.", "Choose an Atlas topic."),
                     detailX + 8, detailY + 8, SiegeTheme.MUTED, false);
             return;
         }
         int x = detailX + 8;
         int y = detailY + 7;
         int textW = Math.max(40, detailW - 16);
-        int accent = selected.zone() == SiegeKnowledgeData.Zone.HISTORY ? SiegeTheme.ORANGE : tabAccent(view);
+        int accent = tabAccent(view);
         g.drawString(font, fit(selected.title(spanish()), textW), x, y, SiegeTheme.INK, false);
-        String meta = selected.domain().label(spanish())
-                + (selected.zone() == SiegeKnowledgeData.Zone.HISTORY
-                ? label(" · PUEDE HABER CAMBIADO", " · MAY HAVE CHANGED") : "");
-        g.drawString(font, fit(meta, textW), x, y + 12, accent, false);
+        g.drawString(font, fit(selected.domain().label(spanish()), textW), x, y + 12, accent, false);
         SiegeTheme.divider(g, x, y + 24, textW, accent);
 
         String text = selected.summary(spanish()) + "\n\n" + selected.body(spanish());
@@ -241,20 +234,13 @@ public final class SiegeAtlasScreen extends Screen {
             if (paragraph.isEmpty()) lines.add(blank);
             else lines.addAll(font.split(Component.literal(paragraph), textW));
         }
-        List<String> relatedTitles = selected.related().stream()
-                .map(SiegeKnowledgeRegistry::get)
-                .filter(java.util.Objects::nonNull)
-                .map(e -> e.title(spanish())).distinct().limit(6).toList();
-        if (!relatedTitles.isEmpty()) {
-            lines.add(blank);
-            lines.addAll(font.split(Component.literal(label("TAMBIÉN VER: ", "SEE ALSO: ")
-                    + String.join(" · ", relatedTitles)), textW));
-        }
         int maxY = detailY + detailH - (openButton != null && openButton.visible ? 28 : 8);
-        int first = Math.max(0, Math.min(detailOffset, Math.max(0, lines.size() - 1)));
+        int visibleLines = Math.max(1, (maxY - (y + 31)) / (font.lineHeight + 2));
+        int maxOffset = Math.max(0, lines.size() - visibleLines);
+        detailOffset = Math.max(0, Math.min(detailOffset, maxOffset));
         int yy = y + 31;
         g.enableScissor(detailX, yy - 1, detailX + detailW, maxY);
-        for (int i = first; i < lines.size() && yy + font.lineHeight <= maxY; i++) {
+        for (int i = detailOffset; i < lines.size() && yy + font.lineHeight <= maxY; i++) {
             g.drawString(font, lines.get(i), x, yy, SiegeTheme.INK, false);
             yy += font.lineHeight + 2;
         }
@@ -262,31 +248,22 @@ public final class SiegeAtlasScreen extends Screen {
     }
 
     private String tabButtonLabel(SiegeAtlasIndex.View value, int width) {
-        String full = tabLabel(value);
+        String full = SiegeAtlasIndex.label(value, spanish());
         if (font.width(full) <= Math.max(8, width - 12)) return full;
         return switch (value) {
-            case BRIEFING -> label("INICIO", "START");
             case RACES -> label("RAZAS", "RACES");
+            case PROGRESSION -> label("PROG.", "PROG.");
             case SYSTEMS -> label("SIST.", "SYSTEMS");
-            case RESEARCH -> label("BUSCAR", "RESEARCH");
-        };
-    }
-
-    private String tabLabel(SiegeAtlasIndex.View value) {
-        return switch (value) {
-            case BRIEFING -> label("EMPEZAR", "START");
-            case RACES -> label("RAZAS", "RACES");
-            case SYSTEMS -> label("SISTEMAS", "SYSTEMS");
-            case RESEARCH -> label("INVESTIGAR", "RESEARCH");
+            case ITEMS -> label("OBJ.", "ITEMS");
         };
     }
 
     private int tabAccent(SiegeAtlasIndex.View value) {
         return switch (value) {
-            case BRIEFING -> SiegeTheme.ORANGE;
             case RACES -> SiegeTheme.GREEN;
-            case SYSTEMS -> SiegeTheme.CYAN;
-            case RESEARCH -> SiegeTheme.RED;
+            case PROGRESSION -> SiegeTheme.GOLD;
+            case SYSTEMS -> SiegeTheme.RED;
+            case ITEMS -> SiegeTheme.BLUE;
         };
     }
 

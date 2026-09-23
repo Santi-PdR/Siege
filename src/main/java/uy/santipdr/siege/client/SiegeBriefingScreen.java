@@ -7,13 +7,18 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** SIEGE 4.00 newcomer briefing: short, practical and non-personal. */
+/** SIEGE 5.00 newcomer path: only the things a new player actually needs first. */
 public final class SiegeBriefingScreen extends Screen {
     private static final List<String> STEPS = List.of(
-            "server-overview", "newcomer-operational-rule", "server-exploration", "race-catalog",
-            "rarity-order", "progression-v1-v4", "progression-mobility-priority", "trials-basics",
-            "executors-basics", "structures-basics", "bosses-basics", "respawn-cards",
-            "dimensions-basics", "relic-analysis-workflow", "economy-basics", "prompt-precision-framework"
+            "server-overview",
+            "newcomer-operational-rule",
+            "race-system",
+            "abilities-experience",
+            "progression-v1-v4",
+            "trials-basics",
+            "executors-basics",
+            "bosses-basics",
+            "death-revive-current"
     );
 
     private final Screen parent;
@@ -24,7 +29,7 @@ public final class SiegeBriefingScreen extends Screen {
     private boolean compact;
 
     public SiegeBriefingScreen(Screen parent) {
-        super(Component.literal("SIEGE // ENTRY BRIEFING"));
+        super(Component.literal("SIEGE // BRIEFING"));
         this.parent = parent;
     }
 
@@ -45,9 +50,9 @@ public final class SiegeBriefingScreen extends Screen {
 
         int atlasW = compact ? 84 : 118;
         addRenderableWidget(new SiegeButton(panelX + panelW - atlasW - 10, panelY + 8, atlasW, 18,
-                Component.literal(compact ? label("ATLAS", "ATLAS") : label("ABRIR ATLAS", "OPEN ATLAS")), b -> {
+                Component.literal(compact ? "ATLAS" : label("ABRIR ATLAS", "OPEN ATLAS")), b -> {
             SiegeUiSounds.confirm();
-            minecraft.setScreen(new SiegeAtlasScreen(this, SiegeAtlasIndex.View.BRIEFING));
+            minecraft.setScreen(new SiegeAtlasScreen(this, SiegeAtlasIndex.View.RACES));
         }, SiegeTheme.CYAN).withIcon("overview").setCompactCenter(true));
 
         startY = panelY + (compact ? 58 : 66);
@@ -66,8 +71,8 @@ public final class SiegeBriefingScreen extends Screen {
             int x = panelX + 10 + col * (cardW + gap);
             int y = startY + row * (cardH + gap);
             SiegeButton button = new SiegeButton(x, y, cardW, cardH, Component.empty(),
-                    b -> openSlot(slot), i < 3 ? SiegeTheme.ORANGE : SiegeTheme.GOLD)
-                    .withIcon(i < 3 ? "shield" : "overview");
+                    b -> openSlot(slot), i < 2 ? SiegeTheme.ORANGE : SiegeTheme.GOLD)
+                    .withIcon(i < 2 ? "shield" : "overview");
             button.visible = false;
             button.active = false;
             cards.add(addRenderableWidget(button));
@@ -132,15 +137,15 @@ public final class SiegeBriefingScreen extends Screen {
 
         int x = panelX + 12;
         int headerW = Math.max(30, panelW - (compact ? 112 : 160));
-        g.drawString(font, fit(label("BRIEFING DE INGRESO", "ENTRY BRIEFING") + " // "
+        g.drawString(font, fit(label("PRIMEROS PASOS", "FIRST STEPS") + " // "
                 + SiegeRuntimeStatus.version(), headerW), x, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Lo principal que conviene entender antes de jugar, explorar o gastar recursos.",
-                "The essentials to understand before playing, exploring or spending resources."), panelW - 24),
+                "No es una enciclopedia: es el camino corto para entrar y entender lo que te afecta primero.",
+                "This is not an encyclopedia: it is the short path for joining and understanding what affects you first."), panelW - 24),
                 x, panelY + 23, SiegeTheme.MUTED, false);
         g.drawString(font, fit(label(
-                "Abrí cualquier paso para ver una explicación simple y completa del tema.",
-                "Open any step for a simple, complete explanation of the topic."), panelW - 24),
+                "Empezá por supervivencia y raza; después pasá a Trials, amenazas y reanimación.",
+                "Start with survival and your race; then move into Trials, threats and revival."), panelW - 24),
                 x, panelY + 35, SiegeTheme.CYAN, false);
         SiegeTheme.divider(g, panelX + 10, startY - 8, panelW - 20, SiegeTheme.ORANGE);
 

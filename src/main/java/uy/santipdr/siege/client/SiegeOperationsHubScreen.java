@@ -8,26 +8,28 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** SIEGE 4.00 War Room: operational front door and global local/offline search. */
+/** SIEGE 5.00 Operations: a small set of useful routes instead of a wall of tools. */
 public final class SiegeOperationsHubScreen extends Screen {
     private final Screen parent;
     private final List<SiegeButton> resultButtons = new ArrayList<>();
     private List<SiegeOperationsIndex.Entry> results = List.of();
+    private SiegeCommandNetwork.Lane lane = SiegeCommandNetwork.Lane.DEPLOYMENT;
     private EditBox searchBox;
     private int panelX, panelY, panelW, panelH;
-    private int routeTop, routeButtonH, routeGap;
+    private int laneTop, routeTop, routeButtonH, routeGap;
     private int searchY, resultsY, visibleResultSlots;
     private boolean compact;
 
     public SiegeOperationsHubScreen(Screen parent) {
-        super(Component.literal("SIEGE // WAR ROOM"));
+        super(Component.literal("SIEGE // OPERATIONS"));
         this.parent = parent;
     }
 
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
-        compact = width < 560 || height < 350;
+        resultButtons.clear();
+        compact = width < 600 || height < 360;
         int margin = compact ? 7 : Math.max(12, width / 70);
         panelX = margin;
         panelY = compact ? 31 : 36;
@@ -40,17 +42,37 @@ public final class SiegeOperationsHubScreen extends Screen {
 
         routeButtonH = compact ? 18 : 20;
         routeGap = compact ? 3 : 5;
-        routeTop = panelY + (compact ? 68 : 84);
-        int routeX = panelX + 10;
-        int routeW = panelW - 20;
-        int cols = panelW < 290 ? 2 : (compact ? 3 : (panelW > 900 ? 4 : 3));
-        int cellW = Math.max(1, (routeW - routeGap * (cols - 1)) / cols);
-        SiegeOperationsIndex.Route[] routes = SiegeOperationsIndex.Route.values();
-        for (int i = 0; i < routes.length; i++) {
-            SiegeOperationsIndex.Route route = routes[i];
-            int row = i / cols, col = i % cols;
-            int x = routeX + col * (cellW + routeGap);
-            int w = col == cols - 1 ? routeX + routeW - x : cellW;
+        laneTop = panelY + (compact ? 58 : 66);
+        int contentX = panelX + 10;
+        int contentW = panelW - 20;
+
+        SiegeCommandNetwork.Lane[] lanes = SiegeCommandNetwork.Lane.values();
+        int laneCols = panelW < 340 ? 1 : lanes.length;
+        int laneRows = (lanes.length + laneCols - 1) / laneCols;
+        int laneW = Math.max(1, (contentW - routeGap * (laneCols - 1)) / laneCols);
+        for (int i = 0; i < lanes.length; i++) {
+            SiegeCommandNetwork.Lane value = lanes[i];
+            int row = i / laneCols, col = i % laneCols;
+            int x = contentX + col * (laneW + routeGap);
+            int w = col == laneCols - 1 ? contentX + contentW - x : laneW;
+            int y = laneTop + row * (routeButtonH + routeGap);
+            SiegeButton button = new SiegeButton(x, y, w, routeButtonH,
+                    Component.literal(laneButtonLabel(value, w)), b -> switchLane(value), laneAccent(value))
+                    .withIcon(laneIcon(value)).setCompactCenter(true).setSelected(value == lane);
+            button.setTooltip(Tooltip.create(Component.literal(laneDescription(value))));
+            addRenderableWidget(button);
+        }
+
+        routeTop = laneTop + laneRows * (routeButtonH + routeGap) + (compact ? 20 : 23);
+        List<SiegeOperationsIndex.Route> routes = SiegeCommandNetwork.routes(lane);
+        int routeCols = panelW < 320 ? 1 : Math.min(compact ? 2 : 4, routes.size());
+        int routeRows = (routes.size() + routeCols - 1) / routeCols;
+        int cellW = Math.max(1, (contentW - routeGap * (routeCols - 1)) / routeCols);
+        for (int i = 0; i < routes.size(); i++) {
+            SiegeOperationsIndex.Route route = routes.get(i);
+            int row = i / routeCols, col = i % routeCols;
+            int x = contentX + col * (cellW + routeGap);
+            int w = col == routeCols - 1 ? contentX + contentW - x : cellW;
             int y = routeTop + row * (routeButtonH + routeGap);
             SiegeButton button = new SiegeButton(x, y, w, routeButtonH,
                     Component.literal(routeButtonLabel(route, w)), b -> openRoute(route), routeAccent(route))
@@ -59,15 +81,14 @@ public final class SiegeOperationsHubScreen extends Screen {
             addRenderableWidget(button);
         }
 
-        int rows = (routes.length + cols - 1) / cols;
-        searchY = routeTop + rows * (routeButtonH + routeGap) + (compact ? 7 : 11);
+        searchY = routeTop + routeRows * (routeButtonH + routeGap) + (compact ? 10 : 13);
         int searchX = panelX + 10;
         int searchW = panelW - 20;
         searchBox = new EditBox(font, searchX, searchY, searchW, 20,
                 Component.literal(label("Buscar", "Search")));
         searchBox.setHint(Component.literal(label(
-                "Dossier, raza, rareza, Trial, Executor, reliquia, música o ruta…",
-                "Dossier, race, rarity, Trial, Executor, relic, music or route…")));
+                "Raza, Trial, Executor, unidad, reliquia o tema…",
+                "Race, Trial, Executor, unit, relic or topic…")));
         searchBox.setResponder(value -> refreshResults());
         addRenderableWidget(searchBox);
 
@@ -86,6 +107,13 @@ public final class SiegeOperationsHubScreen extends Screen {
         refreshResults();
     }
 
+    private void switchLane(SiegeCommandNetwork.Lane next) {
+        if (next == null || next == lane) return;
+        lane = next;
+        SiegeUiSounds.category();
+        rebuildWidgets();
+    }
+
     private void refreshResults() {
         if (searchBox == null) return;
         results = SiegeOperationsIndex.search(searchBox.getValue(), spanish(), Math.max(1, visibleResultSlots));
@@ -101,13 +129,12 @@ public final class SiegeOperationsHubScreen extends Screen {
             }
             SiegeOperationsIndex.Entry entry = results.get(i);
             String prefix = switch (entry.kind()) {
-                case ROUTE -> label("RUTA", "ROUTE");
+                case ROUTE -> label("IR", "OPEN");
                 case INTEL -> "INTEL";
-                case ARMORY -> label("ARSENAL", "ARMORY");
                 case KNOWLEDGE -> label("INFO", "INFO");
             };
-            String text = prefix + " · " + entry.title() + "  //  " + entry.subtitle();
-            button.setMessage(Component.literal(fit(text, Math.max(20, button.getWidth() - 30))));
+            button.setMessage(Component.literal(fit(prefix + " · " + entry.title() + "  //  " + entry.subtitle(),
+                    Math.max(20, button.getWidth() - 30))));
         }
     }
 
@@ -132,7 +159,7 @@ public final class SiegeOperationsHubScreen extends Screen {
     }
 
     private void openRoute(SiegeOperationsIndex.Route route) {
-        if (route == null) return;
+        if (route == null || !SiegeCommandNetwork.isVisible(route)) return;
         SiegeRouteHistory.record(route);
         SiegeUiSounds.confirm();
         switch (route) {
@@ -145,13 +172,8 @@ public final class SiegeOperationsHubScreen extends Screen {
             case DEPLOYMENT -> minecraft.setScreen(new SiegeMultiplayerScreen(this));
             case INTEL -> minecraft.setScreen(new IntelScreenV3(this));
             case KNOWLEDGE -> minecraft.setScreen(new SiegeKnowledgeScreen(this));
-            case ARCHIVE -> minecraft.setScreen(new SiegeGuideScreen(this, SiegeGuideScreen.Mode.ARCHIVE));
-            case ARMORY -> minecraft.setScreen(new SiegeGuideScreen(this, SiegeGuideScreen.Mode.ARMORY));
             case FIELD_MANUAL -> minecraft.setScreen(new SiegeArchiveScreen(this));
-            case COMMAND -> minecraft.setScreen(new SiegeSystemScreen(this));
-            case DIAGNOSTICS -> minecraft.setScreen(new SiegeDiagnosticsScreen(this));
-            case SETTINGS -> minecraft.setScreen(new SiegeSettingsScreen(this));
-            case BACKGROUNDS -> minecraft.setScreen(new SiegeSceneScreen(this));
+            default -> { }
         }
     }
 
@@ -163,38 +185,20 @@ public final class SiegeOperationsHubScreen extends Screen {
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.CYAN);
 
         int tx = panelX + 12, ty = panelY + 9;
-        String title = label("SALA DE OPERACIONES", "WAR ROOM") + " // " + SiegeRuntimeStatus.version();
-        g.drawString(font, fit(title, panelW - 24), tx, ty, SiegeTheme.INK, false);
+        g.drawString(font, fit(label("OPERACIONES", "OPERATIONS") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
+                tx, ty, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Entrá directo a razas, progresión, amenazas, multimedia, Intel, despliegue o configuración.",
-                "Open races, progression, threats, media, Intel, deployment or settings directly."), panelW - 24),
-                tx, ty + 12, SiegeTheme.MUTED, false);
+                "Elegí qué querés hacer. Archivo, Arsenal y Ajustes quedan en el menú principal para no repetir accesos.",
+                "Choose what you want to do. Archive, Armory and Settings stay on the main menu to avoid duplicate shortcuts."),
+                panelW - 24), tx, ty + 13, SiegeTheme.MUTED, false);
+        g.drawString(font, fit(laneDescription(lane), panelW - 24), tx, ty + 27, laneAccent(lane), false);
 
-        int statusY = ty + 30;
-        g.drawString(font, fit(label("CLIENTE ", "CLIENT ") + SiegeRuntimeStatus.healthLabel(spanish()) + " · "
-                        + SiegeRuntimeStatus.profileFitLabel(spanish()), panelW - 24),
-                tx, statusY, SiegeRuntimeStatus.healthAccent(), false);
-        g.drawString(font, fit(SiegeRuntimeStatus.intelLabel(spanish()), panelW - 24), tx, statusY + 11, SiegeTheme.GOLD, false);
-        if (!compact) {
-            String knowledge = label("TEMAS ", "TOPICS ") + SiegeKnowledgeRegistry.entries().size()
-                    + " · " + label("RAZAS ", "RACES ") + SiegeRaceAtlasData.all().size();
-            g.drawString(font, fit(knowledge, panelW - 24), tx, statusY + 22, SiegeTheme.GREEN, false);
-            int scene = SiegeBackgrounds.currentIndex(System.currentTimeMillis());
-            String line = SiegeBackgrounds.sceneTag(scene, spanish()) + " · " + SiegeBackgrounds.name(scene, spanish())
-                    + "   |   " + SiegeRuntimeStatus.audioLabel(spanish());
-            g.drawString(font, fit(line, panelW - 24), tx, statusY + 33, SiegeTheme.CYAN, false);
+        SiegeTheme.divider(g, panelX + 10, laneTop - 7, panelW - 20, SiegeTheme.CYAN);
+        if (routeTop - 11 > laneTop) {
+            g.drawString(font, fit(laneLabel(lane), panelW - 24),
+                    panelX + 12, routeTop - 11, laneAccent(lane), false);
         }
 
-        SiegeTheme.divider(g, panelX + 10, routeTop - 7, panelW - 20, SiegeTheme.CYAN);
-        g.drawString(font, label("SECCIONES", "SECTIONS"), panelX + 13, routeTop - 18, SiegeTheme.CYAN, false);
-
-        int recentY = panelY + panelH - 15;
-        List<SiegeOperationsIndex.Route> recent = SiegeRouteHistory.snapshot();
-        if (!recent.isEmpty()) {
-            String recentText = label("RECIENTE: ", "RECENT: ") + recent.stream().limit(4)
-                    .map(this::routeShort).reduce((a, b) -> a + "  ›  " + b).orElse("");
-            g.drawString(font, fit(recentText, panelW - 24), panelX + 12, recentY, SiegeTheme.MUTED, false);
-        }
         if (searchBox != null) SiegeTheme.frame(g, searchBox.getX() - 1, searchBox.getY() - 1,
                 searchBox.getWidth() + 2, searchBox.getHeight() + 2,
                 searchBox.isFocused() ? SiegeTheme.FOCUS : SiegeTheme.CYAN);
@@ -204,6 +208,40 @@ public final class SiegeOperationsHubScreen extends Screen {
         SiegeScreenChrome.renderOverlay(this, g);
     }
 
+    private String laneButtonLabel(SiegeCommandNetwork.Lane value, int width) {
+        String full = laneLabel(value);
+        if (font.width(full) <= Math.max(8, width - 28)) return full;
+        return switch (value) {
+            case DEPLOYMENT -> "DEP";
+            case INTELLIGENCE -> "INTEL";
+            case REFERENCE -> label("INFO", "INFO");
+        };
+    }
+
+    private String laneLabel(SiegeCommandNetwork.Lane value) { return switch (value) {
+        case DEPLOYMENT -> label("ENTRAR Y PREPARARSE", "JOIN & PREPARE");
+        case INTELLIGENCE -> label("AMENAZAS Y PROGRESO", "THREATS & PROGRESS");
+        case REFERENCE -> label("CONSULTAR INFORMACIÓN", "REFERENCE");
+    }; }
+
+    private String laneDescription(SiegeCommandNetwork.Lane value) { return switch (value) {
+        case DEPLOYMENT -> label("Para empezar, revisar lo básico y entrar al servidor.", "Start here, review the basics and join the server.");
+        case INTELLIGENCE -> label("Dossiers, razas, progresión y Atlas.", "Dossiers, races, progression and Atlas.");
+        case REFERENCE -> label("Enciclopedia, manual de campo y multimedia.", "Encyclopedia, field manual and media.");
+    }; }
+
+    private int laneAccent(SiegeCommandNetwork.Lane value) { return switch (value) {
+        case DEPLOYMENT -> SiegeTheme.RED;
+        case INTELLIGENCE -> SiegeTheme.GOLD;
+        case REFERENCE -> SiegeTheme.GREEN;
+    }; }
+
+    private String laneIcon(SiegeCommandNetwork.Lane value) { return switch (value) {
+        case DEPLOYMENT -> "connect";
+        case INTELLIGENCE -> "intel";
+        case REFERENCE -> "search";
+    }; }
+
     private String routeButtonLabel(SiegeOperationsIndex.Route route, int width) {
         String full = routeLabel(route);
         if (font.width(full) <= Math.max(8, width - 28)) return full;
@@ -211,51 +249,50 @@ public final class SiegeOperationsHubScreen extends Screen {
     }
 
     private String routeLabel(SiegeOperationsIndex.Route route) { return switch (route) {
-        case BRIEFING -> "BRIEFING"; case ATLAS -> "ATLAS"; case RACES -> label("RAZAS", "RACES");
-        case PROGRESSION -> label("PROGRESIÓN", "PROGRESSION"); case THREATS -> label("AMENAZAS", "THREATS");
-        case MEDIA -> label("MULTIMEDIA", "MEDIA"); case DEPLOYMENT -> label("DESPLIEGUE", "DEPLOYMENT");
-        case INTEL -> "INTEL"; case KNOWLEDGE -> label("ENCICLOPEDIA", "ENCYCLOPEDIA");
-        case ARCHIVE -> label("ARCHIVO", "ARCHIVE"); case ARMORY -> label("ARSENAL", "ARMORY");
-        case FIELD_MANUAL -> label("MANUAL", "MANUAL"); case COMMAND -> label("COMANDO", "COMMAND");
-        case DIAGNOSTICS -> label("DIAGNÓSTICO", "DIAGNOSTICS"); case SETTINGS -> label("AJUSTES", "SETTINGS");
-        case BACKGROUNDS -> label("FONDOS", "BACKGROUNDS"); }; }
+        case BRIEFING -> label("PRIMEROS PASOS", "FIRST STEPS");
+        case ATLAS -> "ATLAS";
+        case RACES -> label("RAZAS", "RACES");
+        case PROGRESSION -> label("PROGRESIÓN", "PROGRESSION");
+        case THREATS -> label("AMENAZAS", "THREATS");
+        case MEDIA -> label("MULTIMEDIA", "MEDIA");
+        case DEPLOYMENT -> label("ENTRAR AL SERVIDOR", "JOIN SERVER");
+        case INTEL -> "INTEL";
+        case KNOWLEDGE -> label("ENCICLOPEDIA", "ENCYCLOPEDIA");
+        case FIELD_MANUAL -> label("MANUAL DE CAMPO", "FIELD MANUAL");
+        default -> route.name();
+    }; }
 
     private String routeShort(SiegeOperationsIndex.Route route) { return switch (route) {
         case BRIEFING -> "BRF"; case ATLAS -> "ATL"; case RACES -> "RAC"; case PROGRESSION -> "PRG";
         case THREATS -> "THR"; case MEDIA -> "MED"; case DEPLOYMENT -> "DEP"; case INTEL -> "INT";
-        case KNOWLEDGE -> "ENC"; case ARCHIVE -> "ARC"; case ARMORY -> "ARS"; case FIELD_MANUAL -> "FLD";
-        case COMMAND -> "CMD"; case DIAGNOSTICS -> "DIA"; case SETTINGS -> "CFG"; case BACKGROUNDS -> "BG"; }; }
+        case KNOWLEDGE -> "ENC"; case FIELD_MANUAL -> "MAN"; default -> route.name();
+    }; }
 
     private String routeDescription(SiegeOperationsIndex.Route route) { return switch (route) {
-        case BRIEFING -> label("Ruta corta para entender lo esencial antes de jugar.", "Short route to understand the essentials before playing.");
-        case ATLAS -> label("Temas del servidor organizados para consulta rápida.", "Server topics organized for quick reference.");
-        case RACES -> label("Catálogo de razas, rarezas y rutas de progresión.", "Race catalog, rarities and progression routes.");
-        case PROGRESSION -> label("Mapa de V1→V4, rutas especiales y sistemas avanzados.", "Map of V1→V4, special routes and advanced systems.");
-        case THREATS -> label("Dossiers, Executores, bosses, raids y eventos.", "Dossiers, Executors, bosses, raids and events.");
-        case MEDIA -> label("Música, fondos, galería y referencias DVN.", "Music, backgrounds, gallery and DVN references.");
-        case DEPLOYMENT -> label("Servidor oficial, compatibilidad y conexión.", "Official server, compatibility and connection.");
-        case INTEL -> label("Dossiers de unidades y amenazas.", "Unit and threat dossiers.");
-        case KNOWLEDGE -> label("Enciclopedia general del servidor.", "General server encyclopedia.");
-        case ARCHIVE -> label("SIEGE, 2044, facciones, Núcleo, Gates/Rifts e inspiraciones.", "SIEGE, 2044, factions, Core, Gates/Rifts and inspirations.");
-        case ARMORY -> label("Equipamiento, objetos y material de Arsenal.", "Equipment, items and Armory material.");
-        case FIELD_MANUAL -> label("Estados de muerte/heridas, misiones y protocolos.", "Death/injury states, missions and protocols.");
-        case COMMAND -> label("Perfil visual y estado del cliente.", "Visual profile and client state.");
-        case DIAGNOSTICS -> label("Problemas y recuperación del cliente.", "Client problems and recovery.");
-        case SETTINGS -> label("Apariencia, audio, Intel y accesibilidad.", "Appearance, audio, Intel and accessibility.");
-        case BACKGROUNDS -> label("Galería y rotación de escenas del menú.", "Menu scene gallery and rotation."); }; }
+        case BRIEFING -> label("Qué hacer al empezar y qué sistemas conviene conocer primero.", "What to do first and which systems matter early.");
+        case ATLAS -> label("Consulta detallada de razas, progresión, sistemas y objetos.", "Detailed reference for races, progression, systems and items.");
+        case RACES -> label("Rarezas, razas, variantes y rutas conocidas.", "Rarities, races, variants and known paths.");
+        case PROGRESSION -> label("V1→V4, transformaciones, rutas especiales y Trials.", "V1→V4, transformations, special paths and Trials.");
+        case THREATS -> label("Unidades, Executores, bosses y eventos peligrosos.", "Units, Executors, bosses and dangerous events.");
+        case MEDIA -> label("Música, ambientes y fondos.", "Music, moods and backgrounds.");
+        case DEPLOYMENT -> label("Conectarse al servidor oficial.", "Connect to the official server.");
+        case INTEL -> label("Dossiers de unidades y amenazas conocidas.", "Dossiers for known units and threats.");
+        case KNOWLEDGE -> label("Información actual del servidor organizada por tema.", "Current server information organized by topic.");
+        case FIELD_MANUAL -> label("Heridas, muerte, misiones y protocolos útiles.", "Injuries, death, missions and useful protocols.");
+        default -> "";
+    }; }
 
     private int routeAccent(SiegeOperationsIndex.Route route) { return switch (route) {
-        case BRIEFING -> SiegeTheme.ORANGE; case ATLAS, RACES -> SiegeTheme.GREEN; case PROGRESSION -> SiegeTheme.GOLD;
-        case THREATS -> SiegeTheme.RED; case MEDIA -> SiegeTheme.CYAN; case DEPLOYMENT -> SiegeTheme.RED;
-        case INTEL, ARCHIVE, ARMORY, FIELD_MANUAL -> SiegeTheme.GOLD; case KNOWLEDGE -> SiegeTheme.GREEN;
-        case COMMAND -> SiegeTheme.CYAN; case DIAGNOSTICS -> SiegeTheme.ORANGE; case SETTINGS -> SiegeTheme.RED;
-        case BACKGROUNDS -> SiegeTheme.BLUE; }; }
+        case BRIEFING -> SiegeTheme.ORANGE; case ATLAS, RACES, KNOWLEDGE -> SiegeTheme.GREEN;
+        case PROGRESSION -> SiegeTheme.GOLD; case THREATS, DEPLOYMENT -> SiegeTheme.RED;
+        case MEDIA -> SiegeTheme.CYAN; case INTEL, FIELD_MANUAL -> SiegeTheme.GOLD; default -> SiegeTheme.CYAN;
+    }; }
 
     private String routeIcon(SiegeOperationsIndex.Route route) { return switch (route) {
-        case BRIEFING -> "shield"; case ATLAS, PROGRESSION -> "overview"; case RACES, THREATS, INTEL -> "intel";
-        case MEDIA, BACKGROUNDS -> "image"; case DEPLOYMENT -> "connect"; case KNOWLEDGE -> "search";
-        case ARCHIVE, FIELD_MANUAL -> "overview"; case ARMORY -> "package"; case COMMAND, DIAGNOSTICS -> "shield";
-        case SETTINGS -> "settings"; }; }
+        case BRIEFING -> "shield"; case ATLAS, PROGRESSION, FIELD_MANUAL -> "overview";
+        case RACES, THREATS, INTEL -> "intel"; case MEDIA -> "image"; case DEPLOYMENT -> "connect";
+        case KNOWLEDGE -> "search"; default -> "overview";
+    }; }
 
     private String fit(String value, int pixels) {
         if (value == null || pixels <= 0) return "";

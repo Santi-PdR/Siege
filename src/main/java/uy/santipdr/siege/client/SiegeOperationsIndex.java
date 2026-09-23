@@ -6,9 +6,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-/** Cross-domain index for the completed SIEGE 4.00 War Room. */
+/** Search index for routes and information that actually belong in SIEGE Operations. */
 public final class SiegeOperationsIndex {
-    public enum Kind { ROUTE, INTEL, ARMORY, KNOWLEDGE }
+    public enum Kind { ROUTE, INTEL, KNOWLEDGE }
     public enum Route {
         BRIEFING, ATLAS, RACES, PROGRESSION, THREATS, MEDIA,
         DEPLOYMENT, INTEL, KNOWLEDGE, ARCHIVE, ARMORY, FIELD_MANUAL,
@@ -30,26 +30,20 @@ public final class SiegeOperationsIndex {
 
     public static List<Entry> all(boolean spanish) {
         List<Entry> out = new ArrayList<>();
-        addRoutes(out, spanish);
+        addVisibleRoutes(out, spanish);
+
         for (IntelEntry intel : IntelCatalog.files()) {
             IntelEntry.IntelText text = intel.text(spanish);
             String keywords = String.join(" ", intel.category(), intel.hp(), text.origin(), text.armament(),
                     text.variants(), text.status(), text.description(), text.advisory());
             out.add(new Entry(Kind.INTEL, intel.code(), intel.name(),
-                    intel.code() + " · " + intel.category() + " · HP " + intel.hp(),
+                    spanish ? "Unidad / amenaza" : "Unit / threat",
                     keywords, Route.INTEL, intel, ""));
         }
-        for (SiegeGuideData.Entry item : SiegeGuideSupplemental.entries(SiegeGuideData.Category.ITEMS, "", spanish)) {
-            out.add(new Entry(Kind.ARMORY, item.id(), item.title(spanish),
-                    spanish ? "ARSENAL · EQUIPAMIENTO" : "ARMORY · EQUIPMENT",
-                    item.body(spanish), Route.ARMORY, null, ""));
-        }
+
         for (SiegeKnowledgeData.Entry knowledge : SiegeKnowledgeRegistry.entries()) {
-            String zone = knowledge.zone() == SiegeKnowledgeData.Zone.SERVER
-                    ? (spanish ? "SERVIDOR" : "SERVER") : (spanish ? "HISTÓRICO" : "HISTORY");
-            String subtitle = zone + " · " + knowledge.domain().label(spanish)
-                    + " · " + knowledge.confidence().label(spanish);
-            out.add(new Entry(Kind.KNOWLEDGE, knowledge.id(), knowledge.title(spanish), subtitle,
+            out.add(new Entry(Kind.KNOWLEDGE, knowledge.id(), knowledge.title(spanish),
+                    knowledge.domain().label(spanish),
                     SiegeKnowledgeRegistry.searchable(knowledge, spanish), Route.ATLAS, null, knowledge.id()));
         }
         return List.copyOf(out);
@@ -86,49 +80,40 @@ public final class SiegeOperationsIndex {
         return matched == tokens.length && matched > 0 ? 28 + matched * 4 : 0;
     }
 
-    private static void addRoutes(List<Entry> out, boolean es) {
-        route(out, Route.BRIEFING, "BRIEFING",
-                es ? "Ruta rápida para nuevos jugadores" : "Fast route for new players",
-                "start empezar newcomer nuevo new player briefing beginner principiante basics básico supervivencia survival");
-        route(out, Route.ATLAS, es ? "ATLAS TÁCTICO" : "TACTICAL ATLAS",
-                es ? "Sistemas, investigación e histórico" : "Systems, research and history",
-                "atlas knowledge conocimiento wiki encyclopedia enciclopedia systems sistemas trials executors ejecutores structures estructuras relics reliquias research investigar history histórico");
-        route(out, Route.RACES, es ? "ATLAS DE RAZAS" : "RACE ATLAS",
-                es ? "Razas, rarezas, rutas de progresión y fuentes" : "Races, rarities, progression routes and sources",
-                "race races raza razas rarity rareza obsainan fabled eternal saiyan deteriorer hacker cyborg human progression progresion");
-        route(out, Route.PROGRESSION, es ? "PROGRESIÓN" : "PROGRESSION MAP",
-                es ? "V1→V4, rutas especiales, Trials y sistemas avanzados" : "V1→V4, special routes, Trials and advanced systems",
-                "progression progresion v1 v2 v3 v4 trials trial steps pasos special routes ruta assembling relics dimensions raids");
-        route(out, Route.THREATS, es ? "AMENAZAS" : "THREAT BOARD",
-                es ? "Dossiers, Executores, bosses y eventos" : "Dossiers, Executors, bosses and events",
-                "threat threats amenaza amenazas board dossier unit unidad boss bosses executor ejecutor raid event evento intel");
-        route(out, Route.MEDIA, es ? "SALA MULTIMEDIA" : "MEDIA ROOM",
-                es ? "Fondos, soundtrack, controles y referencias DVN" : "Backgrounds, soundtrack, controls and DVN references",
-                "media multimedia music musica soundtrack background fondo backgrounds dvn dummies noobs gallery galeria playlist track pista");
-        route(out, Route.DEPLOYMENT, es ? "DESPLIEGUE" : "DEPLOYMENT",
-                es ? "Servidor oficial, estado y conexión" : "Official server, status and connection",
+    private static void addVisibleRoutes(List<Entry> out, boolean es) {
+        routeIfVisible(out, Route.BRIEFING, "BRIEFING",
+                es ? "Primeros pasos para empezar" : "First steps for getting started",
+                "start empezar newcomer nuevo beginner principiante basics básico survival supervivencia");
+        routeIfVisible(out, Route.ATLAS, "ATLAS",
+                es ? "Razas, progresión, sistemas y objetos" : "Races, progression, systems and items",
+                "atlas knowledge conocimiento wiki encyclopedia enciclopedia systems sistemas trials executors reliquias items objetos");
+        routeIfVisible(out, Route.RACES, es ? "ATLAS DE RAZAS" : "RACE ATLAS",
+                es ? "Rarezas, razas y variantes" : "Rarities, races and variants",
+                "race races raza razas rarity rareza obsainan fabled eternal saiyan ghoul subhuman cyborg human progression progresion");
+        routeIfVisible(out, Route.PROGRESSION, es ? "PROGRESIÓN" : "PROGRESSION",
+                es ? "V1→V4, rutas especiales y Trials" : "V1→V4, special routes and Trials",
+                "progression progresion v1 v2 v3 v4 trials transformations transformaciones ghoul saiyan");
+        routeIfVisible(out, Route.THREATS, es ? "AMENAZAS" : "THREATS",
+                es ? "Unidades, Executores y bosses" : "Units, Executors and bosses",
+                "threat threats amenaza amenazas dossier unit unidad boss bosses executor ejecutor raid event evento intel");
+        routeIfVisible(out, Route.MEDIA, es ? "MULTIMEDIA" : "MEDIA",
+                es ? "Música, ambientes y fondos" : "Music, moods and backgrounds",
+                "media multimedia music musica soundtrack background fondo dvn dummies noobs gallery galeria");
+        routeIfVisible(out, Route.DEPLOYMENT, es ? "DESPLIEGUE" : "DEPLOYMENT",
+                es ? "Entrar al servidor oficial" : "Join the official server",
                 "server servidor online offline ping latency latencia connect conectar destino compatibility compatibilidad");
-        route(out, Route.INTEL, "INTEL", es ? "Dossiers de unidades y amenazas" : "Unit and threat dossiers",
+        routeIfVisible(out, Route.INTEL, "INTEL", es ? "Dossiers de unidades y amenazas" : "Unit and threat dossiers",
                 "dossier unit unidad advanced avanzado tank boss elite super unknown threat hp armament");
-        route(out, Route.KNOWLEDGE, es ? "ENCICLOPEDIA" : "ENCYCLOPEDIA",
-                es ? "Archivo detallado del servidor" : "Detailed server archive",
-                "knowledge conocimiento server servidor detail detalle sources fuentes");
-        route(out, Route.ARCHIVE, es ? "ARCHIVO" : "ARCHIVE",
-                es ? "Qué es SIEGE, 2044, facciones, Núcleo e inspiraciones" : "What SIEGE is, 2044, factions, Core and inspirations",
-                "siege eternal craft 2044 lore nucleo core factions facciones gates rifts inspirations inspiraciones chronicle cronica");
-        route(out, Route.ARMORY, es ? "ARSENAL" : "ARMORY", es ? "Objetos, equipamiento y evidencia" : "Items, equipment and evidence",
-                "items objetos gear equipment equipamiento third justice aerorig riflator holo watch weapon arma");
-        route(out, Route.FIELD_MANUAL, es ? "MANUAL DE CAMPO" : "FIELD MANUAL",
-                es ? "Estados de muerte, trauma, misiones y protocolos" : "Death states, trauma, missions and protocols",
-                "downed mangled mutilated dismembered disfigured bleeding burned erased shellshock death muerte trauma states estados protocol protocolo mission mision");
-        route(out, Route.COMMAND, es ? "CENTRO DE COMANDO" : "COMMAND CENTER", es ? "Perfil visual y estado del cliente" : "Visual profile and client state",
-                "client cliente profile perfil health salud command command center technical tecnico immersive inmersivo contrast contraste classic clasico");
-        route(out, Route.DIAGNOSTICS, es ? "DIAGNÓSTICO" : "DIAGNOSTICS", es ? "Problemas detectados y recuperación segura" : "Detected problems and safe recovery",
-                "diagnostic diagnostico recovery recuperacion repair reparar error warning aviso technical tecnico");
-        route(out, Route.SETTINGS, es ? "AJUSTES" : "SETTINGS", es ? "Apariencia, movimiento, audio, Intel y accesibilidad" : "Appearance, motion, audio, Intel and accessibility",
-                "settings ajustes appearance apariencia motion movimiento audio intel accessibility accesibilidad configuration configuracion");
-        route(out, Route.BACKGROUNDS, es ? "FONDOS" : "BACKGROUNDS", es ? "Galería, rotación y contraste de escenas" : "Scene gallery, rotation and contrast",
-                "background fondos scene escena gallery galeria rotation rotacion contrast contraste");
+        routeIfVisible(out, Route.KNOWLEDGE, es ? "ENCICLOPEDIA" : "ENCYCLOPEDIA",
+                es ? "Información actual del servidor" : "Current server information",
+                "knowledge conocimiento server servidor raza trial executor item reliquia");
+        routeIfVisible(out, Route.FIELD_MANUAL, es ? "MANUAL DE CAMPO" : "FIELD MANUAL",
+                es ? "Heridas, muerte, misiones y protocolos" : "Injuries, death, missions and protocols",
+                "downed mangled mutilated dismembered disfigured bleeding burned death muerte trauma states estados protocol mision");
+    }
+
+    private static void routeIfVisible(List<Entry> out, Route route, String title, String subtitle, String keywords) {
+        if (SiegeCommandNetwork.isVisible(route)) route(out, route, title, subtitle, keywords);
     }
 
     private static void route(List<Entry> out, Route route, String title, String subtitle, String keywords) {

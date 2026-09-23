@@ -9,12 +9,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
-/**
- * Player-facing SIEGE server encyclopedia. Provenance remains in the data model
- * for maintenance, but the normal UI focuses on what a player needs to know.
- */
+/** Current player-facing SIEGE encyclopedia. Old/editorial records stay outside the normal UI. */
 public final class SiegeKnowledgeScreen extends Screen {
-    private enum Mode { START, RACES, PROGRESSION, SYSTEMS, HISTORY }
+    private enum Mode { START, RACES, PROGRESSION, SYSTEMS, ITEMS }
     private static final int ROWS = 7;
 
     private final Screen parent;
@@ -34,7 +31,7 @@ public final class SiegeKnowledgeScreen extends Screen {
     public SiegeKnowledgeScreen(Screen parent) { this(parent, null); }
 
     public SiegeKnowledgeScreen(Screen parent, String requestedId) {
-        super(Component.literal("SIEGE // SERVER ENCYCLOPEDIA"));
+        super(Component.literal("SIEGE // ENCYCLOPEDIA"));
         this.parent = parent;
         this.requestedId = requestedId;
     }
@@ -70,10 +67,10 @@ public final class SiegeKnowledgeScreen extends Screen {
         }
 
         search = new EditBox(font, panelX + 10, modeY + 25, panelW - 20, 20,
-                Component.literal(label("Buscar tema", "Search topic")));
+                Component.literal(label("Buscar", "Search")));
         search.setHint(Component.literal(label(
-                "Raza, rareza, Trial, Executor, reliquia, revive, dimensión…",
-                "Race, rarity, Trial, Executor, relic, revive, dimension…")));
+                "Raza, Trial, Executor, reliquia, desfibrilador, Geography Table…",
+                "Race, Trial, Executor, relic, defibrillator, Geography Table…")));
         search.setResponder(value -> { listOffset = 0; detailOffset = 0; refresh(); });
         addRenderableWidget(search);
 
@@ -125,9 +122,7 @@ public final class SiegeKnowledgeScreen extends Screen {
 
     private void refresh() {
         String query = search == null ? "" : search.getValue();
-        boolean es = spanish();
-        // 4.00.1 uses the unified registry, so Expansion40 content is no longer invisible.
-        List<SiegeKnowledgeData.Entry> searched = SiegeKnowledgeRegistry.search(query, es, 128);
+        List<SiegeKnowledgeData.Entry> searched = SiegeKnowledgeRegistry.search(query, spanish(), 128);
         visibleEntries = searched.stream().filter(this::belongsToMode).toList();
 
         int maxOffset = Math.max(0, visibleEntries.size() - entryButtons.size());
@@ -146,25 +141,28 @@ public final class SiegeKnowledgeScreen extends Screen {
             case RACES -> entry.domain() == SiegeKnowledgeData.Domain.RACES;
             case PROGRESSION -> entry.domain() == SiegeKnowledgeData.Domain.PROGRESSION
                     || entry.domain() == SiegeKnowledgeData.Domain.TRIALS
+                    || entry.domain() == SiegeKnowledgeData.Domain.ABILITIES
                     || entry.domain() == SiegeKnowledgeData.Domain.MEDITATION;
-            case SYSTEMS -> entry.zone() == SiegeKnowledgeData.Zone.SERVER
-                    && entry.domain() != SiegeKnowledgeData.Domain.RACES
-                    && entry.domain() != SiegeKnowledgeData.Domain.PROGRESSION
-                    && entry.domain() != SiegeKnowledgeData.Domain.TRIALS
-                    && entry.domain() != SiegeKnowledgeData.Domain.MEDITATION
-                    && entry.domain() != SiegeKnowledgeData.Domain.SOURCES;
-            case HISTORY -> entry.zone() == SiegeKnowledgeData.Zone.HISTORY
-                    || entry.domain() == SiegeKnowledgeData.Domain.CONTRADICTIONS;
+            case SYSTEMS -> entry.domain() == SiegeKnowledgeData.Domain.EXECUTORS
+                    || entry.domain() == SiegeKnowledgeData.Domain.BOSSES
+                    || entry.domain() == SiegeKnowledgeData.Domain.DEATH_REVIVE
+                    || entry.domain() == SiegeKnowledgeData.Domain.STRUCTURES
+                    || entry.domain() == SiegeKnowledgeData.Domain.MISSIONS
+                    || entry.domain() == SiegeKnowledgeData.Domain.RAIDS_EVENTS
+                    || entry.domain() == SiegeKnowledgeData.Domain.FACTIONS
+                    || entry.domain() == SiegeKnowledgeData.Domain.DIMENSIONS;
+            case ITEMS -> entry.domain() == SiegeKnowledgeData.Domain.ITEMS
+                    || entry.domain() == SiegeKnowledgeData.Domain.RELICS
+                    || entry.domain() == SiegeKnowledgeData.Domain.ASSEMBLING
+                    || entry.domain() == SiegeKnowledgeData.Domain.ECONOMY;
         };
     }
 
     private boolean isBeginnerEntry(SiegeKnowledgeData.Entry entry) {
         return switch (entry.id()) {
-            case "server-overview", "newcomer-operational-rule", "server-exploration", "race-catalog",
-                 "rarity-order", "progression-v1-v4", "progression-mobility-priority", "trials-basics",
-                 "executors-basics", "structures-basics", "bosses-basics", "missions-npcs",
-                 "dimensions-basics", "respawn-cards", "relic-basics", "relic-analysis-workflow",
-                 "economy-basics", "prompt-precision-framework" -> true;
+            case "server-overview", "newcomer-operational-rule", "race-system", "abilities-experience",
+                 "progression-v1-v4", "trials-basics", "executors-basics", "bosses-basics",
+                 "death-revive-current" -> true;
             default -> false;
         };
     }
@@ -178,9 +176,7 @@ public final class SiegeKnowledgeScreen extends Screen {
             button.active = present;
             if (!present) continue;
             SiegeKnowledgeData.Entry entry = visibleEntries.get(index);
-            String prefix = entry.zone() == SiegeKnowledgeData.Zone.HISTORY
-                    ? label("ANTIGUO", "OLD") : entry.domain().label(spanish());
-            button.setMessage(Component.literal(fit(prefix + " · " + entry.title(spanish()), Math.max(20, listW - 28))));
+            button.setMessage(Component.literal(fit(entry.title(spanish()), Math.max(20, listW - 28))));
             button.setSelected(selected != null && selected.id().equals(entry.id()));
         }
     }
@@ -195,7 +191,6 @@ public final class SiegeKnowledgeScreen extends Screen {
     }
 
     private void selectById(String id) {
-        if (id == null) return;
         SiegeKnowledgeData.Entry entry = SiegeKnowledgeRegistry.get(id);
         if (entry == null) return;
         mode = preferredMode(entry);
@@ -212,13 +207,16 @@ public final class SiegeKnowledgeScreen extends Screen {
     }
 
     private Mode preferredMode(SiegeKnowledgeData.Entry entry) {
-        if (entry.zone() == SiegeKnowledgeData.Zone.HISTORY
-                || entry.domain() == SiegeKnowledgeData.Domain.CONTRADICTIONS) return Mode.HISTORY;
+        if (isBeginnerEntry(entry)) return Mode.START;
         if (entry.domain() == SiegeKnowledgeData.Domain.RACES) return Mode.RACES;
         if (entry.domain() == SiegeKnowledgeData.Domain.PROGRESSION
                 || entry.domain() == SiegeKnowledgeData.Domain.TRIALS
+                || entry.domain() == SiegeKnowledgeData.Domain.ABILITIES
                 || entry.domain() == SiegeKnowledgeData.Domain.MEDITATION) return Mode.PROGRESSION;
-        if (isBeginnerEntry(entry)) return Mode.START;
+        if (entry.domain() == SiegeKnowledgeData.Domain.ITEMS
+                || entry.domain() == SiegeKnowledgeData.Domain.RELICS
+                || entry.domain() == SiegeKnowledgeData.Domain.ASSEMBLING
+                || entry.domain() == SiegeKnowledgeData.Domain.ECONOMY) return Mode.ITEMS;
         return Mode.SYSTEMS;
     }
 
@@ -246,19 +244,17 @@ public final class SiegeKnowledgeScreen extends Screen {
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xC2000000 : 0x96000000);
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, modeAccent(mode));
 
-        String title = label("ENCICLOPEDIA DEL SERVIDOR", "SERVER ENCYCLOPEDIA")
-                + " // " + SiegeRuntimeStatus.version();
+        String title = label("ENCICLOPEDIA", "ENCYCLOPEDIA") + " // " + SiegeRuntimeStatus.version();
         g.drawString(font, fit(title, panelW - 24), panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Elegí una categoría o buscá directamente lo que querés entender.",
-                "Choose a category or search directly for what you want to understand."), panelW - 24),
+                "Información actual del servidor, separada por tema y escrita para entenderla jugando.",
+                "Current server information, separated by topic and written to make sense while playing."), panelW - 24),
                 panelX + 12, panelY + 21, SiegeTheme.MUTED, false);
 
         SiegeTheme.panel(g, listX - 3, listY - 3, listW + 6, entryButtons.size() * 22 + 6, SiegeTheme.GOLD);
         SiegeTheme.panel(g, detailX - 3, detailY - 3, detailW + 6, detailH + 6, modeAccent(mode));
-
         if (visibleEntries.isEmpty()) {
-            g.drawString(font, label("No hay temas que coincidan.", "No matching topics."),
+            g.drawString(font, label("No hay información que coincida.", "No matching information."),
                     listX + 7, listY + 7, SiegeTheme.MUTED, false);
         }
 
@@ -270,7 +266,7 @@ public final class SiegeKnowledgeScreen extends Screen {
 
     private void renderDetail(GuiGraphics g) {
         if (selected == null) {
-            g.drawString(font, label("Seleccioná un tema.", "Select a topic."),
+            g.drawString(font, label("Elegí un tema.", "Choose a topic."),
                     detailX + 8, detailY + 8, SiegeTheme.MUTED, false);
             return;
         }
@@ -278,12 +274,9 @@ public final class SiegeKnowledgeScreen extends Screen {
         int x = detailX + 8;
         int y = detailY + 7;
         int textW = Math.max(40, detailW - 16);
-        int accent = selected.zone() == SiegeKnowledgeData.Zone.HISTORY ? SiegeTheme.ORANGE : modeAccent(mode);
+        int accent = modeAccent(mode);
         g.drawString(font, fit(selected.title(spanish()), textW), x, y, SiegeTheme.INK, false);
-        String meta = selected.domain().label(spanish());
-        if (selected.zone() == SiegeKnowledgeData.Zone.HISTORY)
-            meta += label(" · PUEDE HABER CAMBIADO", " · MAY HAVE CHANGED");
-        g.drawString(font, fit(meta, textW), x, y + 12, accent, false);
+        g.drawString(font, fit(selected.domain().label(spanish()), textW), x, y + 12, accent, false);
         SiegeTheme.divider(g, x, y + 24, textW, accent);
 
         List<FormattedCharSequence> lines = new ArrayList<>();
@@ -295,22 +288,13 @@ public final class SiegeKnowledgeScreen extends Screen {
             else lines.addAll(font.split(Component.literal(paragraph), textW));
         }
 
-        List<String> relatedTitles = selected.related().stream()
-                .map(SiegeKnowledgeRegistry::get)
-                .filter(java.util.Objects::nonNull)
-                .map(e -> e.title(spanish()))
-                .distinct().limit(6).toList();
-        if (!relatedTitles.isEmpty()) {
-            lines.add(blank);
-            lines.addAll(font.split(Component.literal(label("TAMBIÉN VER: ", "SEE ALSO: ")
-                    + String.join(" · ", relatedTitles)), textW));
-        }
-
-        int first = Math.max(0, Math.min(detailOffset, Math.max(0, lines.size() - 1)));
-        int maxY = detailY + detailH - 8;
         int yy = y + 31;
+        int maxY = detailY + detailH - 8;
+        int visibleLines = Math.max(1, (maxY - yy) / (font.lineHeight + 2));
+        int maxOffset = Math.max(0, lines.size() - visibleLines);
+        detailOffset = Math.max(0, Math.min(detailOffset, maxOffset));
         g.enableScissor(detailX, yy - 1, detailX + detailW, maxY);
-        for (int i = first; i < lines.size() && yy + font.lineHeight <= maxY; i++) {
+        for (int i = detailOffset; i < lines.size() && yy + font.lineHeight <= maxY; i++) {
             g.drawString(font, lines.get(i), x, yy, SiegeTheme.INK, false);
             yy += font.lineHeight + 2;
         }
@@ -326,7 +310,7 @@ public final class SiegeKnowledgeScreen extends Screen {
             case RACES -> label("RAZAS", "RACES");
             case PROGRESSION -> label("PROG.", "PROG.");
             case SYSTEMS -> label("SIST.", "SYSTEMS");
-            case HISTORY -> label("ANTIGUO", "HISTORY");
+            case ITEMS -> label("OBJ.", "ITEMS");
         };
     }
 
@@ -336,26 +320,27 @@ public final class SiegeKnowledgeScreen extends Screen {
             case RACES -> label("RAZAS", "RACES");
             case PROGRESSION -> label("PROGRESIÓN", "PROGRESSION");
             case SYSTEMS -> label("SISTEMAS", "SYSTEMS");
-            case HISTORY -> label("HISTÓRICO", "HISTORY");
+            case ITEMS -> label("OBJETOS", "ITEMS");
         };
     }
 
     private String modeDescription(Mode value) {
         return switch (value) {
-            case START -> label("Lo principal para entrar al servidor sin perderse.", "The essentials for entering the server without getting lost.");
-            case RACES -> label("Razas conocidas, rarezas, variantes y estilos de progresión.", "Known races, rarities, variants and progression styles.");
-            case PROGRESSION -> label("V1→V4, Trials, entrenamiento y rutas especiales.", "V1→V4, Trials, training and special routes.");
-            case SYSTEMS -> label("Executores, bosses, objetos, reliquias, dimensiones, revive, economía y más.", "Executors, bosses, items, relics, dimensions, revival, economy and more.");
-            case HISTORY -> label("Mecánicas antiguas o que cambiaron; no asumir que siguen iguales.", "Older or changed mechanics; do not assume they still work the same way.");
+            case START -> label("Lo necesario para empezar sin tener que aprender todo el servidor de golpe.", "What you need to start without learning the whole server at once.");
+            case RACES -> label("Razas y variantes conocidas.", "Known races and variants.");
+            case PROGRESSION -> label("V1→V4, transformaciones, habilidades, meditación y Trials.", "V1→V4, transformations, abilities, meditation and Trials.");
+            case SYSTEMS -> label("Executores, unidades, heridas, reanimación, estructuras y eventos.", "Executors, units, injuries, revival, structures and events.");
+            case ITEMS -> label("Objetos, reliquias, herramientas de investigación y Assembling.", "Items, relics, research tools and Assembling.");
         };
     }
 
     private int modeAccent(Mode value) {
         return switch (value) {
             case START -> SiegeTheme.CYAN;
-            case RACES, PROGRESSION -> SiegeTheme.GOLD;
-            case SYSTEMS -> SiegeTheme.GREEN;
-            case HISTORY -> SiegeTheme.ORANGE;
+            case RACES -> SiegeTheme.GREEN;
+            case PROGRESSION -> SiegeTheme.GOLD;
+            case SYSTEMS -> SiegeTheme.RED;
+            case ITEMS -> SiegeTheme.BLUE;
         };
     }
 

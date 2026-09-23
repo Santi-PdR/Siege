@@ -239,8 +239,9 @@ public final class SiegeRaceAtlasScreen extends Screen {
         g.drawString(font, fit(label("PROGRESIÓN: ", "PROGRESSION: ") + selected.progression().label(spanish()), w), x, y,
                 SiegeTheme.CYAN, false);
         y += 12;
-        if (selected.historical()) {
-            g.drawString(font, fit(label("PUEDE HABER CAMBIADO", "MAY HAVE CHANGED"), w), x, y, SiegeTheme.ORANGE, false);
+        if (selected.mayHaveChanged()) {
+            g.drawString(font, fit(label("ALGUNOS PASOS PUEDEN HABER CAMBIADO", "SOME STEPS MAY HAVE CHANGED"), w), x, y,
+                    SiegeTheme.ORANGE, false);
             y += 13;
         }
         SiegeTheme.divider(g, x, y, w, accent);

@@ -35,6 +35,9 @@ public final class SiegeProfileSpec {
             case TACTICAL -> new Spec(false, SiegeConfig.Graphics.BALANCED,
                     false, false, false, true, true, true, true, false, true,
                     true, true, true, true, true, 48, 24, 30, 72);
+            case STRONGHOLD -> new Spec(false, SiegeConfig.Graphics.BALANCED,
+                    false, true, false, true, true, true, true, false, true,
+                    true, true, true, true, true, 38, 0, 34, 78);
             case PERFORMANCE -> new Spec(false, SiegeConfig.Graphics.PERFORMANCE,
                     true, true, false, false, false, false, false, false, false,
                     true, false, false, false, true, 0, 0, 38, 78);
@@ -61,6 +64,7 @@ public final class SiegeProfileSpec {
         return new SiegeClientProfile.Profile[] {
                 SiegeClientProfile.Profile.CINEMATIC,
                 SiegeClientProfile.Profile.TACTICAL,
+                SiegeClientProfile.Profile.STRONGHOLD,
                 SiegeClientProfile.Profile.PERFORMANCE,
                 SiegeClientProfile.Profile.CALM,
                 SiegeClientProfile.Profile.READING,
