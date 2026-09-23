@@ -16,7 +16,7 @@ public final class SiegeConfig {
     // Keep the historical migration revision stable. Raising 801 would rerun an
     // obsolete migration. Newer options load independent defaults instead.
     private static final int SETTINGS_REVISION = 801;
-    private static final int MAX_TRACK_INDEX = 7; // SIEGE 5.60 ships eight installed tracks.
+    private static final int MAX_TRACK_INDEX = 6; // Five required + two optional approved 5.60 tracks.
 
     public enum Graphics { PERFORMANCE, BALANCED, CINEMATIC;
         public Graphics next() { return values()[(ordinal() + 1) % values().length]; }
