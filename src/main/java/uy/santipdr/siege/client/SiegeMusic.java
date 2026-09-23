@@ -18,21 +18,24 @@ public final class SiegeMusic {
             SiegeMod.DARKEST_OF_DAYS,
             SiegeMod.KAPTAIN_MUSIC_BOX,
             SiegeMod.HEAVENS_GIFT,
-            SiegeMod.ARC_ENEMY
+            SiegeMod.ARC_ENEMY,
+            SiegeMod.STRONGHOLD_BLACK_SIGNAL
     );
     private static final List<String> TRACK_KEYS = List.of(
             "tale_cruel_world",
             "darkest_of_days",
             "kaptain_music_box",
             "heavens_hell_sent_gift",
-            "arc_enemy"
+            "arc_enemy",
+            "stronghold_black_signal"
     );
     private static final List<String> TRACK_NAMES = List.of(
             "Tale of a Cruel World",
             "Darkest of Days",
             "Kaptain Music Box",
             "Heaven's Hell-Sent Gift",
-            "Arc - Enemy · Potoe"
+            "Arc - Enemy · Potoe",
+            "Stronghold 5-5 · Black Signal"
     );
 
     /**
@@ -40,7 +43,7 @@ public final class SiegeMusic {
      * The published build writes exact post-Vorbis values for every track.
      */
     private static final long[] FALLBACK_DURATIONS_MS = {
-            261_534L, 281_934L, 139_969L, 217_214L, 180_000L
+            261_534L, 281_934L, 139_969L, 217_214L, 180_000L, 132_000L
     };
     private static final long[] TRACK_DURATIONS_MS = loadDurations();
     private static final List<Integer> queue = new ArrayList<>();
