@@ -31,7 +31,7 @@ public final class SiegeUiSounds {
             hovered = next;
             long now = System.nanoTime() / 1_000_000L;
             if (SiegeConfig.hoverSounds && next != null && now - lastHover > 90L) {
-                play(SiegeMod.UI_HOVER, 1.0f, 0.50F);
+                play(SiegeMod.UI_HOVER, 0.42F);
                 lastHover = now;
             }
         }
@@ -39,31 +39,31 @@ public final class SiegeUiSounds {
 
     public static void preview(int sample) {
         switch (Math.floorMod(sample, 3)) {
-            case 0 -> play(SiegeMod.UI_HOVER, 1.0F, 0.50F);
+            case 0 -> play(SiegeMod.UI_HOVER, 0.42F);
             case 1 -> click();
             default -> nextTrack();
         }
     }
 
-    public static void click() { play(SiegeMod.UI_CLICK, 1.0f, 1.0F); }
-    public static void confirm() { semantic(SiegeMod.UI_TRACK, 0.98f, 0.86F); }
-    public static void back() { semantic(SiegeMod.UI_BACK, 0.96f, 0.72F); }
-    public static void nextTrack() { semantic(SiegeMod.UI_TRACK, 1.04f, 0.86F); }
-    public static void selection() { semantic(SiegeMod.UI_CLICK, 1.04F, 0.72F); }
-    public static void dossier() { semantic(SiegeMod.UI_TRACK, 1.08F, 0.58F); }
-    public static void category() { semantic(SiegeMod.UI_CLICK, 0.92F, 0.64F); }
-    public static void warning() { semantic(SiegeMod.UI_BACK, 0.84F, 0.76F); }
-    public static void error() { semantic(SiegeMod.UI_BACK, 0.72F, 0.82F); }
+    public static void click() { play(SiegeMod.UI_CLICK, 0.82F); }
+    public static void confirm() { semantic(SiegeMod.UI_TRACK, 0.70F); }
+    public static void back() { semantic(SiegeMod.UI_BACK, 0.64F); }
+    public static void nextTrack() { semantic(SiegeMod.UI_TRACK, 0.70F); }
+    public static void selection() { semantic(SiegeMod.UI_CLICK, 0.62F); }
+    public static void dossier() { semantic(SiegeMod.UI_TRACK, 0.52F); }
+    public static void category() { semantic(SiegeMod.UI_CLICK, 0.56F); }
+    public static void warning() { semantic(SiegeMod.UI_BACK, 0.68F); }
+    public static void error() { semantic(SiegeMod.UI_BACK, 0.72F); }
     public static void resetHover() { hovered = null; }
 
-    private static void semantic(RegistryObject<SoundEvent> sound, float pitch, float gain) {
+    private static void semantic(RegistryObject<SoundEvent> sound, float gain) {
         long now = System.nanoTime() / 1_000_000L;
         if (now - lastSemantic < 55L) return;
         lastSemantic = now;
-        play(sound, pitch, gain);
+        play(sound, gain);
     }
 
-    private static void play(RegistryObject<SoundEvent> sound, float pitch, float gain) {
+    private static void play(RegistryObject<SoundEvent> sound, float gain) {
         if (!SiegeConfig.uiSounds || SiegeConfig.uiVolume <= 0) return;
         SoundEvent event;
         if (sound.isPresent()) event = sound.get();
@@ -73,6 +73,8 @@ public final class SiegeUiSounds {
             event = SoundEvent.createVariableRangeEvent(id);
         }
         float volume = SiegeConfig.clampVolume(SiegeConfig.uiVolume) / 100.0F * Math.max(0.0F, Math.min(1.0F, gain));
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(event, pitch, volume));
+        // Keep UI samples at their authored pitch. 4.00 pitch-shifted the same sample for
+        // different actions, which made clicks/back/warnings sound distorted on some setups.
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(event, 1.0F, volume));
     }
 }
