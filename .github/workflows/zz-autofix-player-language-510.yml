@@ -24,21 +24,15 @@ jobs:
           path = Path('src/main/java/uy/santipdr/siege/client/IntelScreenV3.java')
           text = path.read_text(encoding='utf-8')
 
-          old_data = 'String data = reported ? label("REPORTE", "REPORT") : label("DATOS ", "DATA ") + completeness + "%";'
-          new_data = 'String data = reported ? label("DATOS PARCIALES", "PARTIAL DATA") : label("DATOS ", "DATA ") + completeness + "%";'
-          if old_data not in text:
-              raise SystemExit('Expected Intel report label not found')
-          text = text.replace(old_data, new_data, 1)
-
-          old_tip = '''contextualHint = Component.literal(reported
-                    ? label("Fuente: testimonio de jugador. No verificado por staff.", "Source: player testimony. Not staff-verified.")
-                    : label("Campos documentados; no mide la certeza de la información.", "Documented fields; this does not measure information certainty."));'''
-          new_tip = '''contextualHint = Component.literal(reported
-                    ? label("Información incompleta: algunos datos pueden cambiar.", "Incomplete information: some details may change.")
-                    : label("Resumen del expediente disponible.", "Summary of the available dossier."));'''
-          if old_tip not in text:
-              raise SystemExit('Expected Intel technical tooltip not found')
-          text = text.replace(old_tip, new_tip, 1)
+          replacements = {
+              'label("REPORTE", "REPORT")': 'label("DATOS PARCIALES", "PARTIAL DATA")',
+              'label("Fuente: testimonio de jugador. No verificado por staff.", "Source: player testimony. Not staff-verified.")': 'label("Información incompleta: algunos datos pueden cambiar.", "Incomplete information: some details may change.")',
+              'label("Campos documentados; no mide la certeza de la información.", "Documented fields; this does not measure information certainty.")': 'label("Resumen del expediente disponible.", "Summary of the available dossier.")',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Expected Intel wording not found: {old}')
+              text = text.replace(old, new, 1)
 
           path.write_text(text, encoding='utf-8')
           PY
