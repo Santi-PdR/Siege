@@ -62,8 +62,8 @@ assert "DVN_W = 768" in SCENES and "DVN_H = 432" in SCENES
 assert "fake-upscaled" in SCENES
 assert "thumbnails.roblox.com/v1/games/multiget/thumbnails" in FETCH
 assert "DVN_UNIVERSE_ID='3293525400'" in FETCH
-assert "dvn_official_01.png" in FETCH
-assert "dvn_official_02.png" in FETCH
+assert 'for index in 01 02 03' in FETCH
+assert 'dvn_official_${index}.png' in FETCH
 assert "Keep the official source at native size" in FETCH
 
 # Arc - Enemy remains a verified noncommercial DVN addition with attribution in the jar.
