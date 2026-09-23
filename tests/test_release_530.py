@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""SIEGE 5.30 visual-quality, DVN-background and Third Justice contracts."""
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+read = lambda p: (ROOT / p).read_text(encoding="utf-8")
+
+BUILD = read("build.gradle")
+SCENES = read("src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java")
+BACKGROUNDS = read("src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java")
+FETCH = read("scripts/fetch-dvn-media-510.sh")
+PREP_BG = read("scripts/prepare-backgrounds-hd.py")
+AUDIT_BG = read("scripts/audit-backgrounds-530.py")
+PREP_TJ = read("scripts/prepare-third-justice-media.py")
+REEL = read("src/main/java/uy/santipdr/siege/client/SiegeEvidenceReelScreen.java")
+VIDEO = read("src/main/java/uy/santipdr/siege/client/SiegeThirdJusticeVideo.java")
+GUIDE = read("src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java")
+MANIFEST = read("src/main/resources/assets/siege/third_justice_video.properties")
+
+assert "version = '5.30.0'" in BUILD
+
+# Three real official Roblox DVN thumbnails, always native 16:9.
+for scene in ("dvn_official_01", "dvn_official_02", "dvn_official_03"):
+    assert f'"{scene}"' in SCENES, scene
+    assert f"{scene}.png" in FETCH, scene
+assert "urls[:3]" in FETCH
+assert "rgb.size != (768, 432)" in FETCH
+assert "Keep the official source at native size" in FETCH
+assert "need 3" in FETCH
+
+# 5.30 removes the old fake-Full-HD background contract.
+assert "LEGACY_W = 960" in SCENES and "LEGACY_H = 540" in SCENES
+assert "COMPACT_W = 720" in SCENES and "COMPACT_H = 405" in SCENES
+assert "ROOFTOP_W = 896" in SCENES and "ROOFTOP_H = 504" in SCENES
+assert "TARGET = (1920, 1080)" not in PREP_BG
+assert "Refusing to upscale" in PREP_BG
+assert "kept native" in PREP_BG
+assert "background below quality floor" in PREP_BG
+assert "EXPECTED =" in AUDIT_BG and '"dvn_official_03": (768, 432)' in AUDIT_BG
+assert "suspiciously blurred/blank" in AUDIT_BG
+assert "suspiciously posterized" in AUDIT_BG
+assert "scale = cover ? Math.max" in BACKGROUNDS and "Math.min" in BACKGROUNDS
+
+# Third Justice images get a real visibility repair, not another dark overlay.
+assert "remap_visible" in PREP_TJ
+assert "still too dark after repair" in PREP_TJ
+assert "third_justice_field.png" in PREP_TJ and "third_justice_tooltip.png" in PREP_TJ
+assert "No darkness/filter overlay is composited over evidence" in REEL
+assert "SiegeBackgrounds.render(g, width, height" not in REEL
+assert "0xE20A0C0F" not in REEL
+
+# The complete original test can be converted into a Forge-native sequence.
+assert "third_justice_full.mp4" in PREP_TJ
+assert "fps=10" in PREP_TJ or "FPS = 10" in PREP_TJ
+assert "frame_%05d.png" in PREP_TJ
+assert "mode=full" in PREP_TJ
+assert "duration_ms" in PREP_TJ
+assert "class SiegeThirdJusticeVideo" in VIDEO
+assert "video.full()" in REEL
+assert "third_justice_video/frame_" in REEL
+assert "VIDEO DE PRUEBA" in REEL
+assert "mode=fallback" in MANIFEST  # checked-in safe default until the build has the source MP4
+
+# Armory still owns the item and its visible evidence.
+assert '"third-justice"' in GUIDE
+assert "third_justice_tooltip.png" in GUIDE and "third_justice_field.png" in GUIDE
+
+print("SIEGE 5.30 DVN backgrounds, native quality and Third Justice media contracts passed")
