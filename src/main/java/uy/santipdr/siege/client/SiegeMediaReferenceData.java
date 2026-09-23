@@ -2,7 +2,7 @@ package uy.santipdr.siege.client;
 
 import java.util.List;
 
-/** Curated audiovisual direction for the SIEGE 5.00 Media Room. */
+/** Curated audiovisual direction for the SIEGE 5.10 Media Room. */
 public final class SiegeMediaReferenceData {
     public enum Use {
         LOBBY("LOBBY", "LOBBY"),
@@ -22,7 +22,7 @@ public final class SiegeMediaReferenceData {
         public String note(boolean spanish) { return spanish ? noteEs : noteEn; }
     }
 
-    /** A player-facing audiovisual preset. referenceTracks are suggestions, not bundled assets. */
+    /** A player-facing audiovisual preset. referenceTracks may include bundled and reference-only songs. */
     public record Mood(String id, String titleEs, String titleEn,
                        String purposeEs, String purposeEn,
                        String bundledTrack, List<String> referenceTracks) {
@@ -41,12 +41,10 @@ public final class SiegeMediaReferenceData {
 
     private SiegeMediaReferenceData() { }
 
-    /**
-     * DVN soundtrack references verified during the 5.00 pass.
-     * They are not automatically bundled: binary audio only enters SIEGE when a
-     * redistributable source is available.
-     */
     private static final List<Track> DVN_TRACKS = List.of(
+            new Track("Arc - Enemy", Use.COMBAT,
+                    "Pista de Potoe dedicada a DVN. SIEGE 5.10 la integra en la rotación del menú con su atribución incluida.",
+                    "Potoe track dedicated to DVN. SIEGE 5.10 includes it in menu rotation with bundled attribution."),
             new Track("Convenience Store", Use.LOBBY,
                     "Entrada tranquila antes del briefing o despliegue.",
                     "Calm entry before briefing or deployment."),
@@ -89,8 +87,6 @@ public final class SiegeMediaReferenceData {
             new Track("Full Force", Use.COMBAT,
                     "Candidato para situaciones de última línea o cierre de una operación grande.",
                     "Candidate for last-line situations or the end of a major operation."),
-
-            // 2026 Dummies VS Noobs: Boss Original Soundtrack references.
             new Track("Powerplay", Use.BOSS,
                     "Boss de presión frontal o combate con ritmo muy marcado.",
                     "Boss encounter with direct pressure and a strongly marked rhythm."),
@@ -136,11 +132,11 @@ public final class SiegeMediaReferenceData {
             new Mood("last-stand", "ÚLTIMA LÍNEA", "LAST STAND",
                     "Escenas de alto riesgo, bosses y amenazas mayores.",
                     "High-risk scenes, bosses and major threats.",
-                    "Heaven's Hell-Sent Gift", List.of("Sad Choir", "From the Ashes", "Into The Storm", "Full Force")),
+                    "Heaven's Hell-Sent Gift", List.of("Arc - Enemy", "Sad Choir", "From the Ashes", "Into The Storm", "Full Force")),
             new Mood("industrial-war", "GUERRA INDUSTRIAL", "INDUSTRIAL WAR",
                     "Oleadas, hangares, artillería y zonas industriales con ritmo más agresivo.",
                     "Waves, hangars, artillery and industrial zones with a more aggressive rhythm.",
-                    "The Darkest of Days", List.of("Grinder", "Hell March (Remastered)", "Fight Through Adversity")),
+                    "Arc - Enemy · Potoe", List.of("Grinder", "Hell March (Remastered)", "Fight Through Adversity")),
             new Mood("boss-alert", "BOSS / ALERTA ROJA", "BOSS / RED ALERT",
                     "Peleas donde una sola unidad domina el frente y la interfaz debe sentirse más urgente.",
                     "Fights where one unit dominates the front and the interface should feel more urgent.",
@@ -148,18 +144,18 @@ public final class SiegeMediaReferenceData {
     );
 
     private static final List<Visual> VISUALS = List.of(
+            new Visual("arctic-standoff", "Arctic Standoff · DVN", "Arctic Standoff · DVN",
+                    "Miniatura oficial de Dummies vs Noobs usada en la rotación 5.10 a su resolución nativa 768×432.",
+                    "Official Dummies vs Noobs thumbnail used in the 5.10 rotation at its native 768×432 resolution.", true),
+            new Visual("coastal-assault", "Asalto costero · DVN", "Coastal assault · DVN",
+                    "Miniatura oficial de Dummies vs Noobs usada en la rotación 5.10 sin inventar detalle mediante upscale.",
+                    "Official Dummies vs Noobs thumbnail used in the 5.10 rotation without inventing detail through upscaling.", true),
             new Visual("stronghold-defense", "Stronghold / última fortaleza", "Stronghold / last stronghold",
                     "Defensa de fortaleza, escuadra y armamento moderno o futurista. Prioridad alta para portada.",
                     "Stronghold defense, squad and modern or future weaponry. High priority for the main menu.", false),
             new Visual("portal-last-stand", "Última defensa del portal", "Last stand at the portal",
                     "Escena DVN de defensa final alrededor de un portal, con el foco lejos de la zona donde se dibuja la navegación.",
                     "DVN final-defense scene around a portal, keeping the focal point away from navigation text.", false),
-            new Visual("coastal-assault", "Asalto costero DVN", "DVN coastal assault",
-                    "Frente abierto de Dummies vs Noobs con vehículos, costa o grandes líneas de visión para variar la rotación.",
-                    "Open Dummies vs Noobs front with vehicles, coastline or long sight lines to vary the rotation.", false),
-            new Visual("arctic-standoff", "Arctic Standoff", "Arctic Standoff",
-                    "Frente helado, siluetas claras y contraste frío para navegación táctica.",
-                    "Frozen front, clear silhouettes and cold contrast for tactical navigation.", false),
             new Visual("urban-night", "Operación urbana nocturna", "Night urban operation",
                     "Calles oscuras, focos, humo y señalética militar para Operaciones o Despliegue.",
                     "Dark streets, spotlights, smoke and military signage for Operations or Deployment.", false),
