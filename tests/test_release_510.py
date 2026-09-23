@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""SIEGE 5.10 player-language and DVN media contracts."""
+"""Durable SIEGE 5.10 player-language and DVN media contracts."""
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 read = lambda p: (ROOT / p).read_text(encoding="utf-8")
@@ -19,7 +20,10 @@ FETCH = read("scripts/fetch-dvn-media-510.sh")
 PREP = read("scripts/prepare-music.sh")
 LICENSE = read("src/main/resources/assets/siege/licenses/arc_enemy.txt")
 
-assert "version = '5.10.0'" in BUILD
+match = re.search(r"version\s*=\s*'([0-9]+)\.([0-9]+)\.([0-9]+)'", BUILD)
+assert match
+major, minor, patch = map(int, match.groups())
+assert (major, minor) >= (5, 10), "5.10 contracts require SIEGE 5.10+"
 
 # A final player-language layer must override old research-oriented records.
 assert "class SiegeKnowledgePlayer510" in PLAYER
@@ -51,9 +55,9 @@ assert 'known("xeno-saiyan", "Xeno Saiyan"' in RACES
 assert 'known("mink", "Mink"' in RACES
 assert 'known("angel", "Angel"' in RACES
 
-# 5.10 uses real searched DVN media, not generated stand-ins.
-assert '"dvn_official_01"' in SCENES
-assert '"dvn_official_02"' in SCENES
+# Real searched DVN media stays native rather than generated/fake-HD.
+for scene in ("dvn_official_01", "dvn_official_02"):
+    assert f'"{scene}"' in SCENES
 assert "DVN_W = 768" in SCENES and "DVN_H = 432" in SCENES
 assert "fake-upscaled" in SCENES
 assert "thumbnails.roblox.com/v1/games/multiget/thumbnails" in FETCH
@@ -62,7 +66,7 @@ assert "dvn_official_01.png" in FETCH
 assert "dvn_official_02.png" in FETCH
 assert "Keep the official source at native size" in FETCH
 
-# Arc - Enemy is a verified noncommercial DVN addition with attribution shipped in the jar.
+# Arc - Enemy remains a verified noncommercial DVN addition with attribution in the jar.
 assert "soundcloud.com/potoe-50708490/arc-enemy" in FETCH
 assert "arc_enemy" in PREP
 assert "ARC_ENEMY" in MOD
@@ -74,10 +78,10 @@ assert 'new Track("Arc - Enemy"' in MEDIA
 assert 'new Visual("official-gallery-01"' in MEDIA
 assert 'new Visual("official-gallery-02"' in MEDIA
 
-# CI must fetch and validate the new media before packaging.
+# CI must still fetch and validate the DVN media before packaging.
 assert "fetch-dvn-media-510.sh" in WORKFLOW
 assert "test_release_510.py" in WORKFLOW
 assert "SiegeKnowledgePlayer510.java" in WORKFLOW
 assert "dvn_official_01" in WORKFLOW and "dvn_official_02" in WORKFLOW
 
-print("SIEGE 5.10 player language, race coverage and DVN media contracts passed")
+print("Durable SIEGE 5.10 player language, race coverage and DVN media contracts passed")
