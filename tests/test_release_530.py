@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SIEGE 5.30 visual-quality, DVN-background and Third Justice contracts."""
+"""Durable SIEGE 5.30 visual-quality, DVN and Third Justice contracts."""
 import base64
 from pathlib import Path
 
@@ -22,21 +22,22 @@ EMBEDDED_VIDEO = ROOT / "assets-source/third-justice/third_justice_full.b64"
 STATIC_SOURCE = ROOT / "assets-source/third-justice/static-correct"
 GUIDE_TEXTURES = ROOT / "src/main/resources/assets/siege/textures/gui/guide"
 
-assert "version = '5.30.0'" in BUILD
+assert "version = '5.30.0'" in BUILD or "version = '5.40.0'" in BUILD
 
-# Three real official Roblox DVN thumbnails, always native 16:9.
+# The original three official Roblox DVN thumbnails remain guaranteed. Later
+# releases may add more, but native 768x432 and 16:9 quality remain mandatory.
 for scene in ("dvn_official_01", "dvn_official_02", "dvn_official_03"):
     assert f'"{scene}"' in SCENES, scene
-assert "urls[:3]" in FETCH
+assert "urls[:" in FETCH
 assert "rgb.size != (768, 432)" in FETCH
 assert "Keep the official source at native size" in FETCH
-assert "need 3" in FETCH
+assert "need 3" in FETCH or "need 6" in FETCH
 assert 'for index in 01 02 03' in FETCH
 assert 'dvn_official_${index}.png' in FETCH
 for visual in ("official-gallery-01", "official-gallery-02", "official-gallery-03"):
     assert f'"{visual}"' in MEDIA, visual
 
-# 5.30 removes the old fake-Full-HD background contract.
+# 5.30 removed the old fake-Full-HD background contract.
 assert "LEGACY_W = 960" in SCENES and "LEGACY_H = 540" in SCENES
 assert "COMPACT_W = 720" in SCENES and "COMPACT_H = 405" in SCENES
 assert "ROOFTOP_W = 896" in SCENES and "ROOFTOP_H = 504" in SCENES
@@ -59,7 +60,7 @@ assert "no bars, no stretching" in BACKGROUNDS
 
 # Third Justice static screenshots were previously destroyed by 1-bit/2-bit
 # quantization. The build must restore the supplied full-color captures, not try
-# to brighten the already-lost data.
+# to brighten already-lost data.
 assert "restore_static_captures" in PREP_TJ
 assert "static-correct" in PREP_TJ
 assert "third_justice_tooltip.webp.b64.part" in PREP_TJ
@@ -110,9 +111,7 @@ for still in (
     assert_rgb_png(still)
 
 # 5.30 ships the complete supplied ~31 s Third Justice timeline, not the old
-# 3-frame placeholder. Do not use an arbitrary source byte-size as proof: the
-# compact transport copy is intentionally tiny. Duration and generated-frame
-# count below are the release-quality checks that prove the reel is complete.
+# 3-frame placeholder. Duration and generated-frame count prove the reel is complete.
 assert EMBEDDED_VIDEO.is_file() and EMBEDDED_VIDEO.stat().st_size > 10_000
 assert "third_justice_full.b64" in PREP_TJ
 assert "base64.b64decode" in PREP_TJ
@@ -126,15 +125,15 @@ assert "class SiegeThirdJusticeVideo" in VIDEO
 assert "video.full()" in REEL
 assert "third_justice_video/frame_" in REEL
 assert "VIDEO DE PRUEBA" in REEL
-assert "mode=full" in MANIFEST, "5.30 release build must contain the complete Third Justice reel"
+assert "mode=full" in MANIFEST, "release build must contain the complete Third Justice reel"
 
 manifest = dict(
     line.split("=", 1) for line in MANIFEST.splitlines()
     if line.strip() and "=" in line
 )
 frames = int(manifest.get("frames", "0"))
-assert frames >= 300, f"5.30 release reel is incomplete: only {frames} frames"
-assert frames != 3, "5.30 release build must not fall back to the old 3-frame reel"
+assert frames >= 300, f"Third Justice release reel is incomplete: only {frames} frames"
+assert frames != 3, "Release build must not fall back to the old 3-frame reel"
 assert int(manifest.get("duration_ms", "0")) >= 30_000
 assert manifest.get("width") == "640" and manifest.get("height") == "360"
 
@@ -142,4 +141,4 @@ assert manifest.get("width") == "640" and manifest.get("height") == "360"
 assert '"third-justice"' in GUIDE
 assert "third_justice_tooltip.png" in GUIDE and "third_justice_field.png" in GUIDE
 
-print("SIEGE 5.30 DVN backgrounds, full-color Third Justice captures and complete reel passed")
+print("Durable SIEGE 5.30 DVN, full-color Third Justice and complete reel contracts passed")
