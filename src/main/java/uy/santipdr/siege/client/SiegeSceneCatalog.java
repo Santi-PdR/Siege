@@ -7,9 +7,10 @@ import java.util.stream.IntStream;
  * Authoritative metadata for every normal SIEGE menu scene.
  * Rendering, gallery labels, contrast bias, scheduling and CI all read the same table.
  *
- * SIEGE 5.30 records the real prepared dimensions instead of pretending low-resolution
- * art is Full HD. Tempest Jutcherson is deliberately NOT part of this catalog: it remains
- * an easter-egg asset and cannot leak into normal rotation or the background gallery.
+ * SIEGE 5.40 records real prepared dimensions instead of pretending low-resolution
+ * art is Full HD and expands the official DVN gallery to six current Roblox scenes.
+ * Tempest Jutcherson is deliberately NOT part of this catalog: it remains an
+ * easter-egg asset and cannot leak into normal rotation or the background gallery.
  */
 public final class SiegeSceneCatalog {
     public enum Kind { STANDARD, FEATURED, ANOMALY }
@@ -38,6 +39,9 @@ public final class SiegeSceneCatalog {
             dvn("dvn_official_01", "DVN · Escena oficial 01", "DVN · Official Scene 01", 1),
             dvn("dvn_official_02", "DVN · Escena oficial 02", "DVN · Official Scene 02", 2),
             dvn("dvn_official_03", "DVN · Escena oficial 03", "DVN · Official Scene 03", 1),
+            dvn("dvn_official_04", "DVN · Escena oficial 04", "DVN · Official Scene 04", 2),
+            dvn("dvn_official_05", "DVN · Escena oficial 05", "DVN · Official Scene 05", 1),
+            dvn("dvn_official_06", "DVN · Escena oficial 06", "DVN · Official Scene 06", 2),
             legacy("anniversary", "Aniversario", "Anniversary", 0),
             legacy("frontline_19", "Frente 19", "Frontline 19", 3),
             legacy("cyborg", "Cíborg", "Cyborg", 4),
