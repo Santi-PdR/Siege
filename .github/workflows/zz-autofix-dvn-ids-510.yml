@@ -1,0 +1,44 @@
+name: One-shot SIEGE 5.10 DVN ID cleanup
+
+on:
+  push:
+    branches:
+      - chatgpt/siege-5.10-player-facing-media
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chatgpt/siege-5.10-player-facing-media
+      - name: Align build checks with stable DVN IDs
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/workflows/build.yml')
+          text = path.read_text(encoding='utf-8')
+          pairs = {
+              'dvn_arctic_standoff': 'dvn_official_01',
+              'dvn_coastal_assault': 'dvn_official_02',
+          }
+          for old, new in pairs.items():
+              if old not in text:
+                  raise SystemExit(f'Expected old CI scene ID not found: {old}')
+              text = text.replace(old, new)
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit and remove one-shot workflow
+        shell: bash
+        run: |
+          rm -f .github/workflows/zz-autofix-dvn-ids-510.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/build.yml .github/workflows/zz-autofix-dvn-ids-510.yml
+          git commit -m 'fix: align CI with stable DVN scene IDs'
+          git push origin HEAD:chatgpt/siege-5.10-player-facing-media
