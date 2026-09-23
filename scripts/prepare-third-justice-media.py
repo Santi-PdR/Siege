@@ -11,6 +11,10 @@ build it is decoded and converted to a Forge-native 10 fps, 640x360 frame
 sequence. The transport copy is deliberately much smaller than the original
 75 MB upload but preserves the complete ~31 second timeline from start to end.
 A direct third_justice_full.mp4 is still accepted for local development.
+
+Generated reel PNGs are losslessly re-packed at maximum PNG compression before
+the Forge build. This keeps every prepared pixel while leaving enough headroom
+for GitHub's 100 MiB repository-file limit when CI publishes the validated JAR.
 """
 from __future__ import annotations
 
@@ -125,6 +129,24 @@ def resolve_video_source() -> Path | None:
     return None
 
 
+def optimize_video_frames(frames: list[Path]) -> None:
+    """Losslessly re-pack generated PNGs to reduce the final Forge JAR size."""
+    before = sum(frame.stat().st_size for frame in frames)
+    for frame in frames:
+        temporary = frame.with_name(frame.stem + ".optimized.png")
+        with Image.open(frame) as source:
+            source.load()
+            image = source.copy()
+        image.save(temporary, "PNG", optimize=True, compress_level=9)
+        temporary.replace(frame)
+    after = sum(frame.stat().st_size for frame in frames)
+    saved = before - after
+    print(
+        f"→ Third Justice: lossless PNG repack {before / 1024 / 1024:.2f} MiB -> "
+        f"{after / 1024 / 1024:.2f} MiB (saved {saved / 1024 / 1024:.2f} MiB)"
+    )
+
+
 def ffprobe_duration_ms(path: Path) -> int:
     proc = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", str(path)],
@@ -168,7 +190,7 @@ def prepare_full_video() -> None:
             "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
             "-i", str(source),
             "-vf", f"fps={FPS},scale={FRAME_SIZE}:flags=lanczos:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2:black",
-            "-fps_mode", "passthrough", "-compression_level", "8",
+            "-fps_mode", "passthrough", "-compression_level", "9",
             str(VIDEO_DIR / "frame_%05d.png"),
         ],
         check=True,
@@ -176,6 +198,9 @@ def prepare_full_video() -> None:
     frames = sorted(VIDEO_DIR.glob("frame_*.png"))
     if not frames:
         raise SystemExit("Full Third Justice video extraction produced no frames")
+
+    optimize_video_frames(frames)
+
     expected = max(1, round(duration_ms * FPS / 1000))
     if abs(len(frames) - expected) > 2:
         raise SystemExit(f"Unexpected complete-video frame count: {len(frames)} vs ~{expected}")
