@@ -730,14 +730,14 @@ public final class IntelScreenV3 extends Screen {
         IntelEntry.IntelText text = entry.text(spanish());
         int completeness = IntelPresentation.completeness(entry, text);
         boolean reported = AgreementReport.applies(entry);
-        String data = reported ? label("REPORTE", "REPORT") : label("DATOS ", "DATA ") + completeness + "%";
+        String data = reported ? label("DATOS PARCIALES", "PARTIAL DATA") : label("DATOS ", "DATA ") + completeness + "%";
         int titleWidth = Math.max(24, w - font.width(data) - 10);
         g.drawString(font, font.plainSubstrByWidth(label("ADVERTENCIA TÁCTICA", "TACTICAL ADVISORY"), titleWidth), x, y + 5, accent, false);
         g.drawString(font, data, x + w - font.width(data), y + 5, muted, false);
         if (pointerX >= x + w - font.width(data) && pointerX < x + w && pointerY >= y && pointerY < y + 19)
             contextualHint = Component.literal(reported
-                    ? label("Fuente: testimonio de jugador. No verificado por staff.", "Source: player testimony. Not staff-verified.")
-                    : label("Campos documentados; no mide la certeza de la información.", "Documented fields; this does not measure information certainty."));
+                    ? label("Información incompleta: algunos datos pueden cambiar.", "Incomplete information: some details may change.")
+                    : label("Resumen del expediente disponible.", "Summary of the available dossier."));
         int dataWidth = Math.max(1, (w - 2) * completeness / 100);
         g.fill(x, y + 16, x + w, y + 17, 0x33413B32);
         if (!reported) g.fill(x, y + 16, x + dataWidth, y + 17, accent);
