@@ -8,6 +8,7 @@ read = lambda p: (ROOT / p).read_text(encoding="utf-8")
 BUILD = read("build.gradle")
 SCENES = read("src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java")
 BACKGROUNDS = read("src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java")
+MEDIA = read("src/main/java/uy/santipdr/siege/client/SiegeMediaReferenceData.java")
 FETCH = read("scripts/fetch-dvn-media-510.sh")
 PREP_BG = read("scripts/prepare-backgrounds-hd.py")
 AUDIT_BG = read("scripts/audit-backgrounds-530.py")
@@ -28,6 +29,8 @@ assert "Keep the official source at native size" in FETCH
 assert "need 3" in FETCH
 assert 'for index in 01 02 03' in FETCH
 assert 'dvn_official_${index}.png' in FETCH
+for visual in ("official-gallery-01", "official-gallery-02", "official-gallery-03"):
+    assert f'"{visual}"' in MEDIA, visual
 
 # 5.30 removes the old fake-Full-HD background contract.
 assert "LEGACY_W = 960" in SCENES and "LEGACY_H = 540" in SCENES
@@ -37,10 +40,18 @@ assert "TARGET = (1920, 1080)" not in PREP_BG
 assert "Refusing to upscale" in PREP_BG
 assert "kept native" in PREP_BG
 assert "background below quality floor" in PREP_BG
+assert "SHADOW_GAMMA" in PREP_BG
+assert '"night_operation": 0.78' in PREP_BG
+assert '"urban_rendezvous": 0.68' in PREP_BG
 assert "EXPECTED =" in AUDIT_BG and '"dvn_official_03": (768, 432)' in AUDIT_BG
 assert "suspiciously blurred/blank" in AUDIT_BG
 assert "suspiciously posterized" in AUDIT_BG
+
+# Full-screen backgrounds use cover scaling: fill the viewport, keep aspect ratio,
+# crop excess on non-16:9 displays, never geometrically stretch the source.
+assert "renderInternal(graphics, width, height, now, true);" in BACKGROUNDS
 assert "scale = cover ? Math.max" in BACKGROUNDS and "Math.min" in BACKGROUNDS
+assert "no bars, no stretching" in BACKGROUNDS
 
 # Third Justice images get a real visibility repair, not another dark overlay.
 assert "remap_visible" in PREP_TJ
@@ -66,4 +77,4 @@ assert "mode=fallback" in MANIFEST  # checked-in safe default until the build ha
 assert '"third-justice"' in GUIDE
 assert "third_justice_tooltip.png" in GUIDE and "third_justice_field.png" in GUIDE
 
-print("SIEGE 5.30 DVN backgrounds, native quality and Third Justice media contracts passed")
+print("SIEGE 5.30 DVN backgrounds, cover scaling, night visibility and Third Justice media contracts passed")
