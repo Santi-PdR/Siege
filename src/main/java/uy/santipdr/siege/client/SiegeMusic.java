@@ -13,48 +13,38 @@ import java.util.Properties;
 
 /** Menu soundtrack controller. Never owns audio while a world/server is loaded. */
 public final class SiegeMusic {
+    /**
+     * Only tracks explicitly approved for normal playback live in this list.
+     * Experimental/generated tracks stay out until they have been previewed and accepted.
+     */
     private static final List<RegistryObject<SoundEvent>> TRACKS = List.of(
             SiegeMod.TALE_CRUEL_WORLD,
             SiegeMod.DARKEST_OF_DAYS,
             SiegeMod.KAPTAIN_MUSIC_BOX,
             SiegeMod.HEAVENS_GIFT,
-            SiegeMod.ARC_ENEMY,
-            SiegeMod.STRONGHOLD_BLACK_SIGNAL,
-            SiegeMod.NUCLEUS_SILENT_CARRIER,
-            SiegeMod.TESLA_BREACH
+            SiegeMod.ARC_ENEMY
     );
     private static final List<String> TRACK_KEYS = List.of(
             "tale_cruel_world",
             "darkest_of_days",
             "kaptain_music_box",
             "heavens_hell_sent_gift",
-            "arc_enemy",
-            "stronghold_black_signal",
-            "nucleus_silent_carrier",
-            "tesla_breach"
+            "arc_enemy"
     );
     private static final List<String> TRACK_NAMES = List.of(
             "Tale of a Cruel World",
             "Darkest of Days",
             "Kaptain Music Box",
             "Heaven's Hell-Sent Gift",
-            "Arc - Enemy · Potoe",
-            "Stronghold 5-5 · Black Signal",
-            "Nucleus · Silent Carrier",
-            "Tesla Breach"
+            "Arc - Enemy · Potoe"
     );
 
-    /**
-     * Fallbacks are only used when generated duration metadata is unavailable.
-     * The published build writes exact post-Vorbis values for every track.
-     */
     private static final long[] FALLBACK_DURATIONS_MS = {
-            261_534L, 281_934L, 139_969L, 217_214L, 180_000L, 132_000L, 116_000L, 104_000L
+            261_534L, 281_934L, 139_969L, 217_214L, 180_000L
     };
     private static final long[] TRACK_DURATIONS_MS = loadDurations();
     private static final List<Integer> queue = new ArrayList<>();
 
-    /** Natural fade-out begins exactly eight seconds before the encoded track ends. */
     private static final long NATURAL_FADE_OUT_MS = 8_000L;
     private static final long MANUAL_FADE_OUT_MS = 1_250L;
     private static final long FADE_IN_MS = 2_200L;
@@ -79,7 +69,6 @@ public final class SiegeMusic {
 
     private SiegeMusic() { }
 
-    /** Called every client tick so vanilla menu screens keep the SIEGE soundtrack too. */
     public static void tick() {
         if (!shouldPlay()) {
             stop();
@@ -160,7 +149,6 @@ public final class SiegeMusic {
         }
     }
 
-    /** Manual skip uses a short deliberate fade; natural transitions reserve the final eight seconds. */
     public static void nextTrack() {
         requestedNext = -1;
         if (SiegeConfig.selectedTrack >= 0) {
@@ -213,7 +201,6 @@ public final class SiegeMusic {
         return total <= 0L ? 0.0F : Math.max(0.0F, Math.min(1.0F, (total - currentRemainingMs()) / (float) total));
     }
 
-    /** -1 resumes shuffle without restarting the currently playing track. */
     public static void selectTrack(int index) {
         if (index < -1 || index >= TRACKS.size()) return;
         requestedNext = -1;
@@ -227,7 +214,6 @@ public final class SiegeMusic {
             beginFadeOut(MANUAL_FADE_OUT_MS, false);
     }
 
-    /** Select an installed track by its player-facing title. Returns false if it is not installed. */
     public static boolean selectTrackByName(String name) {
         if (name == null) return false;
         for (int i = 0; i < TRACK_NAMES.size(); i++) {
@@ -239,15 +225,12 @@ public final class SiegeMusic {
         return false;
     }
 
-    /** Applies SIEGE's own volume to the active stream without restarting it. */
     public static void setVolumeLive(int percent) {
         SiegeConfig.musicVolume = SiegeConfig.clampVolume(percent);
         applyLiveVolume();
     }
 
-    public static void refreshVolume() {
-        applyLiveVolume();
-    }
+    public static void refreshVolume() { applyLiveVolume(); }
 
     public static String currentTrackName() {
         return previous >= 0 && previous < TRACK_NAMES.size() ? TRACK_NAMES.get(previous) : "--";
@@ -383,11 +366,9 @@ public final class SiegeMusic {
                 try {
                     long parsed = Long.parseLong(raw.trim());
                     if (parsed > 1_000L && parsed <= 3_600_000L) values[i] = parsed;
-                } catch (NumberFormatException ignored) { /* Retain this track's fallback only. */ }
+                } catch (NumberFormatException ignored) { }
             }
-        } catch (Exception ignored) {
-            // A missing/corrupt metadata file must never crash the menu; fallbacks remain usable.
-        }
+        } catch (Exception ignored) { }
         return values;
     }
 
