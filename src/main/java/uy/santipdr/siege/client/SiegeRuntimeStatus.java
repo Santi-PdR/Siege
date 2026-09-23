@@ -72,17 +72,23 @@ public final class SiegeRuntimeStatus {
     }
 
     public static String audioLabel(boolean spanish) {
-        if (!SiegeConfig.music) return spanish ? "MÚSICA OFF" : "MUSIC OFF";
-        if (SiegeConfig.musicVolume == 0) return spanish ? "MÚSICA 0%" : "MUSIC 0%";
+        int tracks = SiegeMusic.trackNames().size();
+        String catalog = tracks + " " + (spanish ? (tracks == 1 ? "PISTA" : "PISTAS") : (tracks == 1 ? "TRACK" : "TRACKS"));
+        if (!SiegeConfig.music) return (spanish ? "MÚSICA OFF" : "MUSIC OFF") + " · " + catalog;
+        if (SiegeConfig.musicVolume == 0) return (spanish ? "MÚSICA 0%" : "MUSIC 0%") + " · " + catalog;
         String state = SiegeMusic.isActuallyPlaying() ? SiegeMusic.currentTrackName() : (spanish ? "EN ESPERA" : "WAITING");
-        return state + " · " + SiegeConfig.musicVolume + "%";
+        return state + " · " + SiegeConfig.musicVolume + "% · " + catalog;
     }
 
     public static String backgroundLabel(boolean spanish) {
         int index = SiegeBackgrounds.currentIndex(System.currentTimeMillis());
         String state = SiegeConfig.selectedScene >= 0 ? (spanish ? "FIJO" : "PINNED")
                 : SiegeConfig.animatedBackgrounds ? (spanish ? "ROTACIÓN" : "ROTATING") : (spanish ? "ESTÁTICO" : "STATIC");
-        return state + " · " + SiegeBackgrounds.sceneTag(index, spanish) + " · " + SiegeBackgrounds.name(index, spanish);
+        String timing = SiegeConfig.backgroundSceneSeconds + "s · "
+                + (spanish ? "FUNDIDO " : "FADE ") + SiegeConfig.backgroundCrossfadeSeconds + "s · "
+                + (spanish ? "MOV " : "MOTION ") + SiegeConfig.backgroundMotionIntensity + "%";
+        return state + " · " + SiegeBackgrounds.sceneTag(index, spanish) + " · "
+                + SiegeBackgrounds.name(index, spanish) + " · " + timing;
     }
 
     public static String intelLabel(boolean spanish) {
