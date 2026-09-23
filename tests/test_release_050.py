@@ -67,17 +67,24 @@ for surface in (ATLAS, ENC, DETAIL):
     assert "TAMBIÉN VER" not in surface and "SEE ALSO" not in surface
 assert "SiegeKnowledgeExpansion50.entries" in REG
 assert "SiegeKnowledgeCorpus50.entries" in REG
+assert REG.index("SiegeKnowledgeExpansion50.entries") < REG.index("SiegeKnowledgeCorpus50.entries")
 assert "maintenanceEntries" in REG
 assert "Zone.SERVER" in REG
 
-# Current recipes/rules override stale information in normal UI.
-assert '"item-defibrillator"' in EXP50
-assert "3 bloques de hierro + 1 mesa de encantamientos" in EXP50
-assert "No se muestran recetas anteriores" in EXP50
-assert '"death-revive-current"' in EXP50
-assert "RCP dejó de ser" in EXP50
-assert '"item-geography-table"' in EXP50
-assert "investigar sus propiedades" in EXP50
+# Current rules/recipes are authoritative in the final corpus layer.
+assert '"death-revive-current"' in CORPUS50
+assert "RCP dejó de ser" in CORPUS50
+assert '"item-defibrillator"' in CORPUS50
+assert "3 bloques de hierro + 1 bloque de oro" in CORPUS50
+assert '"item-medkit"' in CORPUS50
+assert "3 bloques de hierro + 1 mesa de encantamientos" in CORPUS50
+assert "La receta anterior no se muestra" in CORPUS50
+assert '"item-daemonium-kit"' in CORPUS50
+assert '"assembling-table"' in CORPUS50
+assert '"respawn-cards"' in CORPUS50
+assert '"meditation-levels"' in CORPUS50
+assert '"ability-stamina"' in CORPUS50
+assert '"race-spins"' in CORPUS50
 assert "120 wins" not in EXP50 and "220 wins" not in EXP50
 assert "120 wins" not in CORPUS50 and "220 wins" not in CORPUS50
 
@@ -91,8 +98,8 @@ assert '"subhuman-rick-sanchez"' in CORPUS50
 assert '"subhuman-rick-sanchez"' in RACE_VARIANTS
 assert '"executor-maze"' in CORPUS50
 assert '"executor-nearby-warning"' in CORPUS50
-assert '"item-daemonium-kit"' in CORPUS50
 assert '"trial-shrine-global"' in CORPUS50
+assert '"trial-third-justice"' in CORPUS50
 assert '"ability-room"' in CORPUS50 and '"ability-gate"' in CORPUS50
 
 # Race-specific progression is explicit instead of pretending everything is V1→V4.
@@ -140,4 +147,4 @@ assert "Publish validated jar for installer" in WORKFLOW
 assert "python3 tests/test_release_040.py" in WORKFLOW
 assert "python3 tests/test_release_050.py" in WORKFLOW
 
-print("SIEGE 5.00 navigation, corpus knowledge, freshness and audiovisual contracts passed")
+print("SIEGE 5.00 navigation, corpus knowledge, freshness, audio and audiovisual contracts passed")
