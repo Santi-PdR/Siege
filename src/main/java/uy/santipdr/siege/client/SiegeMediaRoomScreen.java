@@ -4,7 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** SIEGE 5.50 audiovisual room: installed media, operational moods and DVN direction. */
+/** SIEGE 5.60 audiovisual room: installed media, approved additions and visual direction. */
 public final class SiegeMediaRoomScreen extends Screen {
     private enum Mode { BUNDLED, MOODS, DVN_AUDIO, VISUALS }
 
@@ -97,7 +97,7 @@ public final class SiegeMediaRoomScreen extends Screen {
                 .withIcon("image").setCompactCenter(true));
     }
 
-    /** 5.50 presets are real controls: they pin a matching scene and switch to its installed track. */
+    /** 5.60 presets deliberately affect only the scene; music remains under explicit player control. */
     private void initMoodControls() {
         var presets = SiegeMediaPresets.presets();
         if (presets.isEmpty()) return;
@@ -113,7 +113,7 @@ public final class SiegeMediaRoomScreen extends Screen {
                         if (SiegeMediaPresets.apply(preset.id())) SiegeUiSounds.confirm();
                         else SiegeUiSounds.back();
                     }, i == 1 ? SiegeTheme.CYAN : (i == 2 ? SiegeTheme.BLUE : SiegeTheme.RED))
-                    .withIcon(i == 1 ? "overview" : "music").setCompactCenter(true));
+                    .withIcon("image").setCompactCenter(true));
         }
     }
 
@@ -130,11 +130,11 @@ public final class SiegeMediaRoomScreen extends Screen {
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xC9000000 : 0xA0000000);
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.CYAN);
-        g.drawString(font, fit(label("SALA MULTIMEDIA 5.50", "MEDIA ROOM 5.50") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
+        g.drawString(font, fit(label("SALA MULTIMEDIA 5.60", "MEDIA ROOM 5.60") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
                 panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Fondos, música y presets del frente actual de SIEGE / Dummies vs Noobs.",
-                "Backgrounds, music and presets for the current SIEGE / Dummies vs Noobs front."), panelW - 24),
+                "Música disponible, escenas y dirección audiovisual del frente actual.",
+                "Available music, scenes and audiovisual direction for the current front."), panelW - 24),
                 panelX + 12, panelY + 21, SiegeTheme.MUTED, false);
 
         SiegeTheme.panel(g, contentX - 3, contentY - 3, contentW + 6, contentH + 6, modeAccent(mode));
@@ -172,7 +172,7 @@ public final class SiegeMediaRoomScreen extends Screen {
 
         int listY = contentY + 127;
         if (listY + 10 < contentY + contentH) {
-            g.drawString(font, label("PLAYLIST ACTUAL", "CURRENT PLAYLIST"), x, listY, SiegeTheme.INK, false);
+            g.drawString(font, label("PLAYLIST DISPONIBLE EN ESTE BUILD", "PLAYLIST AVAILABLE IN THIS BUILD"), x, listY, SiegeTheme.INK, false);
             int yy = listY + 13;
             for (String name : SiegeMusic.trackNames()) {
                 if (yy + font.lineHeight > contentY + contentH - 6) break;
@@ -190,8 +190,8 @@ public final class SiegeMediaRoomScreen extends Screen {
         g.drawString(font, fit(label("AMBIENTES OPERACIONALES", "OPERATIONAL MOODS"), w), x, y, SiegeTheme.GOLD, false);
         y += 14;
         g.drawString(font, fit(label(
-                "Los tres presets inferiores aplican de verdad música + fondo; la lista conserva la dirección completa.",
-                "The three presets below actually apply music + scene; the list keeps the full direction catalog."), w),
+                "Los presets inferiores cambian sólo el fondo; la música siempre queda bajo tu control.",
+                "The presets below change only the scene; music always remains under your control."), w),
                 x, y, SiegeTheme.MUTED, false);
         y += 20;
         var moods = SiegeMediaReferenceData.moods();
@@ -215,12 +215,12 @@ public final class SiegeMediaRoomScreen extends Screen {
         int x = contentX + 9;
         int y = contentY + 8;
         int w = contentW - 18;
-        g.drawString(font, fit(label("MÚSICA DE DUMMIES VS NOOBS QUE ENCAJA CON SIEGE", "DUMMIES VS NOOBS MUSIC THAT FITS SIEGE"), w),
+        g.drawString(font, fit(label("MÚSICA / REFERENCIAS QUE ENCAJAN CON SIEGE", "MUSIC / REFERENCES THAT FIT SIEGE"), w),
                 x, y, SiegeTheme.GOLD, false);
         y += 14;
         g.drawString(font, fit(label(
-                "Incluye pistas instaladas de SIEGE y referencias DVN que sirven para futuras escenas.",
-                "Includes installed SIEGE tracks and DVN references useful for future scenes."), w),
+                "Distingue las pistas ya disponibles de las dos incorporaciones 5.60 aprobadas y otras referencias históricas.",
+                "Separates currently available tracks, the two approved 5.60 additions and historical references."), w),
                 x, y, SiegeTheme.MUTED, false);
         y += 18;
         var tracks = SiegeMediaReferenceData.dvnTracks();
@@ -290,18 +290,20 @@ public final class SiegeMediaRoomScreen extends Screen {
         return switch (value) {
             case BUNDLED -> label("ACTUAL", "CURRENT");
             case MOODS -> label("AMBI.", "MOODS");
-            case DVN_AUDIO -> "DVN OST";
+            case DVN_AUDIO -> label("MÚSICA", "MUSIC");
             case VISUALS -> "DVN BG";
         };
     }
+
     private String modeLabel(Mode value) {
         return switch (value) {
             case BUNDLED -> label("ACTUAL", "CURRENT");
             case MOODS -> label("AMBIENTES", "MOODS");
-            case DVN_AUDIO -> label("MÚSICA DVN", "DVN MUSIC");
+            case DVN_AUDIO -> label("MÚSICA / REF.", "MUSIC / REF.");
             case VISUALS -> label("FONDOS DVN", "DVN VISUALS");
         };
     }
+
     private int modeAccent(Mode value) {
         return switch (value) {
             case BUNDLED -> SiegeTheme.CYAN;
@@ -310,11 +312,13 @@ public final class SiegeMediaRoomScreen extends Screen {
             case VISUALS -> SiegeTheme.BLUE;
         };
     }
+
     private String fit(String text, int px) {
         if (text == null || px <= 0) return "";
         if (font.width(text) <= px) return text;
         return font.plainSubstrByWidth(text, Math.max(1, px - font.width("…"))) + "…";
     }
+
     private boolean spanish() { return minecraft != null && minecraft.getLanguageManager().getSelected().startsWith("es_"); }
     private String label(String es, String en) { return spanish() ? es : en; }
     @Override public void onClose() { SiegeUiSounds.back(); minecraft.setScreen(parent); }
