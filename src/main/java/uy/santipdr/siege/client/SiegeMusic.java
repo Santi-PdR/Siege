@@ -13,35 +13,30 @@ import java.util.Properties;
 
 /** Menu soundtrack controller. Never owns audio while a world/server is loaded. */
 public final class SiegeMusic {
+    private record TrackDef(RegistryObject<SoundEvent> sound, String key, String name,
+                            long fallbackDurationMs, boolean required) { }
+
     /**
-     * Only tracks explicitly approved for normal playback live in this list.
-     * Experimental/generated tracks stay out until they have been previewed and accepted.
+     * SIEGE 5.60 keeps the five existing approved tracks and accepts exactly two new
+     * player-approved songs. The commercial additions only become visible when a
+     * prepared OGG master is actually present in the JAR, so incomplete builds never
+     * offer a silent/broken menu entry.
      */
-    private static final List<RegistryObject<SoundEvent>> TRACKS = List.of(
-            SiegeMod.TALE_CRUEL_WORLD,
-            SiegeMod.DARKEST_OF_DAYS,
-            SiegeMod.KAPTAIN_MUSIC_BOX,
-            SiegeMod.HEAVENS_GIFT,
-            SiegeMod.ARC_ENEMY
-    );
-    private static final List<String> TRACK_KEYS = List.of(
-            "tale_cruel_world",
-            "darkest_of_days",
-            "kaptain_music_box",
-            "heavens_hell_sent_gift",
-            "arc_enemy"
-    );
-    private static final List<String> TRACK_NAMES = List.of(
-            "Tale of a Cruel World",
-            "Darkest of Days",
-            "Kaptain Music Box",
-            "Heaven's Hell-Sent Gift",
-            "Arc - Enemy · Potoe"
+    private static final List<TrackDef> ALL_TRACKS = List.of(
+            new TrackDef(SiegeMod.TALE_CRUEL_WORLD, "tale_cruel_world", "Tale of a Cruel World", 261_534L, true),
+            new TrackDef(SiegeMod.DARKEST_OF_DAYS, "darkest_of_days", "Darkest of Days", 281_934L, true),
+            new TrackDef(SiegeMod.KAPTAIN_MUSIC_BOX, "kaptain_music_box", "Kaptain Music Box", 139_969L, true),
+            new TrackDef(SiegeMod.HEAVENS_GIFT, "heavens_hell_sent_gift", "Heaven's Hell-Sent Gift", 217_214L, true),
+            new TrackDef(SiegeMod.ARC_ENEMY, "arc_enemy", "Arc - Enemy · Potoe", 180_000L, true),
+            new TrackDef(SiegeMod.A_STRANGER_I_REMAIN, "a_stranger_i_remain",
+                    "A Stranger I Remain (Maniac Agenda Mix)", 145_000L, false),
+            new TrackDef(SiegeMod.RECEIVE_YOU_HYPERACTIVE, "receive_you_the_hyperactive",
+                    "Receive You The Hyperactive", 288_000L, false)
     );
 
-    private static final long[] FALLBACK_DURATIONS_MS = {
-            261_534L, 281_934L, 139_969L, 217_214L, 180_000L
-    };
+    private static final List<TrackDef> TRACKS = ALL_TRACKS.stream()
+            .filter(track -> track.required() || hasPreparedAudio(track.key()))
+            .toList();
     private static final long[] TRACK_DURATIONS_MS = loadDurations();
     private static final List<Integer> queue = new ArrayList<>();
 
@@ -68,6 +63,11 @@ public final class SiegeMusic {
     private static int maintenanceTicks;
 
     private SiegeMusic() { }
+
+    private static boolean hasPreparedAudio(String key) {
+        return SiegeMusic.class.getClassLoader()
+                .getResource("assets/siege/sounds/music/" + key + ".ogg") != null;
+    }
 
     public static void tick() {
         if (!shouldPlay()) {
@@ -151,7 +151,7 @@ public final class SiegeMusic {
 
     public static void nextTrack() {
         requestedNext = -1;
-        if (SiegeConfig.selectedTrack >= 0) {
+        if (SiegeConfig.selectedTrack >= 0 && !TRACKS.isEmpty()) {
             SiegeConfig.selectedTrack = (SiegeConfig.selectedTrack + 1) % TRACKS.size();
             SiegeConfig.save();
         }
@@ -168,6 +168,7 @@ public final class SiegeMusic {
     }
 
     public static void previousTrack() {
+        if (TRACKS.isEmpty()) return;
         int fallback = previous < 0 ? 0 : Math.floorMod(previous - 1, TRACKS.size());
         requestedNext = beforePrevious >= 0 ? beforePrevious : fallback;
         if (SiegeConfig.selectedTrack >= 0) { SiegeConfig.selectedTrack = requestedNext; SiegeConfig.save(); }
@@ -194,8 +195,12 @@ public final class SiegeMusic {
         else beginFadeOut(MANUAL_FADE_OUT_MS, false);
     }
 
-    public static List<String> trackNames() { return TRACK_NAMES; }
+    public static List<String> trackNames() {
+        return TRACKS.stream().map(TrackDef::name).toList();
+    }
+
     public static int currentTrackNumber() { return previous < 0 ? 0 : previous + 1; }
+
     public static float currentProgress() {
         long total = currentDurationMs();
         return total <= 0L ? 0.0F : Math.max(0.0F, Math.min(1.0F, (total - currentRemainingMs()) / (float) total));
@@ -216,8 +221,9 @@ public final class SiegeMusic {
 
     public static boolean selectTrackByName(String name) {
         if (name == null) return false;
-        for (int i = 0; i < TRACK_NAMES.size(); i++) {
-            if (TRACK_NAMES.get(i).equalsIgnoreCase(name.trim())) {
+        String wanted = name.trim();
+        for (int i = 0; i < TRACKS.size(); i++) {
+            if (TRACKS.get(i).name().equalsIgnoreCase(wanted)) {
                 selectTrack(i);
                 return true;
             }
@@ -233,7 +239,7 @@ public final class SiegeMusic {
     public static void refreshVolume() { applyLiveVolume(); }
 
     public static String currentTrackName() {
-        return previous >= 0 && previous < TRACK_NAMES.size() ? TRACK_NAMES.get(previous) : "--";
+        return previous >= 0 && previous < TRACKS.size() ? TRACKS.get(previous).name() : "--";
     }
 
     public static long trackAnnouncementAgeMs() {
@@ -281,7 +287,7 @@ public final class SiegeMusic {
     }
 
     private static void startNext(boolean fadeIn) {
-        if (!shouldPlay()) return;
+        if (!shouldPlay() || TRACKS.isEmpty()) return;
         int next;
         if (requestedNext >= 0 && requestedNext < TRACKS.size()) {
             next = requestedNext;
@@ -290,6 +296,7 @@ public final class SiegeMusic {
             next = SiegeConfig.selectedTrack;
         } else {
             if (queue.isEmpty()) refillQueue();
+            if (queue.isEmpty()) return;
             next = queue.remove(0);
         }
         if (previous != next) beforePrevious = previous;
@@ -319,7 +326,7 @@ public final class SiegeMusic {
     }
 
     private static SoundEvent resolveTrack(int index) {
-        RegistryObject<SoundEvent> sound = TRACKS.get(index);
+        RegistryObject<SoundEvent> sound = TRACKS.get(index).sound();
         if (sound.isPresent()) return sound.get();
         return SoundEvent.createVariableRangeEvent(sound.getId());
     }
@@ -354,14 +361,16 @@ public final class SiegeMusic {
     }
 
     private static long[] loadDurations() {
-        long[] values = FALLBACK_DURATIONS_MS.clone();
+        long[] values = new long[TRACKS.size()];
+        for (int i = 0; i < TRACKS.size(); i++) values[i] = TRACKS.get(i).fallbackDurationMs();
+
         Properties props = new Properties();
         try (InputStream in = SiegeMusic.class.getClassLoader()
                 .getResourceAsStream("assets/siege/music_durations.properties")) {
             if (in == null) return values;
             props.load(in);
-            for (int i = 0; i < TRACK_KEYS.size(); i++) {
-                String raw = props.getProperty(TRACK_KEYS.get(i));
+            for (int i = 0; i < TRACKS.size(); i++) {
+                String raw = props.getProperty(TRACKS.get(i).key());
                 if (raw == null) continue;
                 try {
                     long parsed = Long.parseLong(raw.trim());
