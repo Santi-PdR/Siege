@@ -39,11 +39,15 @@ public final class MediaReferenceRegressionTest {
                 "Every visual direction needs readable metadata");
 
         var ready = visuals.stream().filter(SiegeMediaReferenceData.Visual::rotationReady).toList();
-        check(ready.size() == 2, "Only the two sourced DVN thumbnails should be promoted to rotation in 5.10");
+        // 5.10 introduced two sourced official thumbnails. Later releases may add more
+        // official-gallery entries, so this legacy regression must not reject them.
+        check(ready.size() >= 2, "The original sourced DVN thumbnails must remain promoted to rotation");
         check(ready.stream().anyMatch(v -> v.id().equals("official-gallery-01")),
                 "Official DVN gallery scene 01 should be rotation-ready");
         check(ready.stream().anyMatch(v -> v.id().equals("official-gallery-02")),
                 "Official DVN gallery scene 02 should be rotation-ready");
+        check(ready.stream().allMatch(v -> v.id().startsWith("official-gallery-")),
+                "Only sourced official-gallery visuals may be rotation-ready");
         check(visuals.stream().filter(v -> !v.id().startsWith("official-gallery-"))
                         .noneMatch(SiegeMediaReferenceData.Visual::rotationReady),
                 "Reference-only visual ideas must remain outside rotation");
