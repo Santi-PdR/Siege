@@ -1,52 +1,42 @@
-# SIEGE 5.60 — Music candidates (approval required)
+# SIEGE 5.60 — música aprobada
 
-SIEGE no vuelve a generar música sintética propia para rellenar la playlist. Las pistas nuevas deben escucharse primero y sólo entran al mod después de aprobación explícita.
+La selección de música nueva de 5.60 quedó cerrada por decisión del jugador.
 
-## Regla de integración
+## Aprobadas
 
-- `Stronghold 5-5 · Black Signal`, `Nucleus · Silent Carrier` y `Tesla Breach` fueron retiradas de la playlist activa y del pipeline de generación.
-- Ningún candidato de esta lista está instalado todavía.
-- Las pistas comerciales de juegos que inspiran SIEGE sirven para comparar dirección musical, pero no se empaquetan en el JAR salvo que exista permiso/licencia de redistribución.
-- Para pistas realmente distribuibles se priorizan fuentes que indiquen una licencia clara y compatible con un mod público.
+1. **A Stranger I Remain (Maniac Agenda Mix)** — *Metal Gear Rising: Revengeance*
+   - Uso previsto: boss, alerta roja, combate intenso o amenaza individual importante.
+   - Duración de referencia: ~2:25.
+   - Archivo de entrada esperado: `assets-source/music-full/a_stranger_i_remain.<ext>`.
 
-## Candidatos distribuibles para escuchar
+2. **Receive You The Hyperactive** — *Yakuza: Like a Dragon*
+   - Uso previsto: combate especial, boss, personaje importante o escena de alta energía.
+   - Duración de referencia: ~4:48.
+   - Archivo de entrada esperado: `assets-source/music-full/receive_you_the_hyperactive.<ext>`.
 
-Todos los siguientes temas de Scott Buckley están publicados por el compositor bajo **CC BY 4.0**: pueden usarse en proyectos, incluidos comerciales, con la atribución indicada por el autor.
+## Rechazadas para 5.60
 
-### Stronghold / frente militar
+No deben añadirse como música nueva en esta versión:
 
-1. **Legionnaire (2022 Remaster)** — https://www.scottbuckley.com.au/library/legionnaire-2022/
-   - Orquestal militar, metales grandes y sensación de marcha/defensa.
-   - Candidato principal para Stronghold 5-5.
+- A Cup of Liber-Tea
+- The Automaton Legion
+- Legionnaire
+- Catalyst
+- Red
+- Monomyth – The Encounter
+- Simulacra
+- Venom
 
-2. **Catalyst** — https://www.scottbuckley.com.au/library/catalyst/
-   - Synths oscuros + orquesta; empieza contenido y crece a un tema épico.
-   - Alternativa menos marcial y más tecnológica.
+También siguen retiradas las tres pistas sintéticas que no gustaron:
 
-### El Núcleo / tecnología
+- Stronghold 5-5 · Black Signal
+- Nucleus · Silent Carrier
+- Tesla Breach
 
-1. **Red** — https://www.scottbuckley.com.au/library/red/
-   - Híbrido oscuro de electrónica y orquesta inspirado en futuros tipo Deus Ex/Cyberpunk.
-   - Candidato principal para El Núcleo.
+## Integración
 
-2. **Monomyth – The Encounter** — https://www.scottbuckley.com.au/library/the-encounter/
-   - Synth y cuerdas amenazantes que construyen tensión hasta un drop dramático.
-   - Alternativa más inquietante para eventos/reactividad del Núcleo.
+Las dos canciones aprobadas son música comercial existente. El repositorio **no descarga ni ripea audio desde YouTube, Spotify u otros servicios**. El código de 5.60 ya reconoce únicamente esos dos nuevos slots y `scripts/prepare-music.sh` los convierte automáticamente cuando el propietario aporta un master local legítimo con el nombre esperado.
 
-### Tesla / Nusia / boss
+Si el master no está presente, el build continúa correctamente y la canción no aparece en la lista del juego. Esto evita entradas mudas, assets rotos y descargas no autorizadas.
 
-1. **Simulacra** — https://www.scottbuckley.com.au/library/simulacra/
-   - Acción híbrida de alta energía: synth arpegiado, guitarra, cuerdas y metales caóticos.
-   - Candidato principal para amenazas Tesla y bosses.
-
-2. **Venom** — https://www.scottbuckley.com.au/library/venom/
-   - Trailer oscuro y agresivo con guitarras pesadas, synths sucios y batería.
-   - Alternativa más industrial y hostil.
-
-## Referencia directa de una inspiración de SIEGE
-
-- **Helldivers 2 — A Cup of Liber-Tea**, compuesta por Wilbert Roget II, sirve como referencia clara para la escala militar/heroica de despliegue. La publicación oficial de Sony Soundtracks está disponible para escuchar, pero se trata como **referencia comercial**, no como asset redistribuible del mod.
-
-## Próximo paso
-
-Esperar la elección del jugador. Tras aprobar una pista se descarga desde su fuente/licencia original, se convierte a Ogg Vorbis 44.1 kHz estéreo con headroom, se acredita en el mod y recién entonces entra a `SiegeMusic`, `sounds.json` y CI.
+Los masters aceptados se convierten a Ogg Vorbis estéreo, 44.1 kHz, con headroom, validación de duración y comprobación completa de decodificación antes de entrar al JAR.
