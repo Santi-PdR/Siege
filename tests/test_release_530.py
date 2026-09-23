@@ -80,13 +80,14 @@ assert "video.full()" in REEL
 assert "third_justice_video/frame_" in REEL
 assert "VIDEO DE PRUEBA" in REEL
 assert "mode=full" in MANIFEST, "5.30 release build must contain the complete Third Justice reel"
-assert "frames=3" not in MANIFEST, "5.30 release build must not fall back to the old 3-frame reel"
 
 manifest = dict(
     line.split("=", 1) for line in MANIFEST.splitlines()
     if line.strip() and "=" in line
 )
-assert int(manifest.get("frames", "0")) >= 300
+frames = int(manifest.get("frames", "0"))
+assert frames >= 300, f"5.30 release reel is incomplete: only {frames} frames"
+assert frames != 3, "5.30 release build must not fall back to the old 3-frame reel"
 assert int(manifest.get("duration_ms", "0")) >= 30_000
 assert manifest.get("width") == "640" and manifest.get("height") == "360"
 
