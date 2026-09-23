@@ -59,7 +59,6 @@ def silent_carrier() -> tuple[np.ndarray, float]:
     t = np.arange(samples, dtype=np.float32) / RATE
     rng = np.random.default_rng(SEED ^ 0xA1)
 
-    # Command-room sub layer: slow and deliberately non-melodic.
     drift = 0.68 + 0.32 * np.sin(2.0 * np.pi * 0.014 * t + 0.4)
     low = (
         0.120 * np.sin(2.0 * np.pi * 36.71 * t)
@@ -67,7 +66,6 @@ def silent_carrier() -> tuple[np.ndarray, float]:
         + 0.028 * np.sin(2.0 * np.pi * 73.42 * t + 1.7)
     ) * drift
 
-    # A soft upper carrier slowly appears and disappears, suggesting a system listening.
     carrier_gate = 0.5 + 0.5 * np.sin(2.0 * np.pi * 0.009 * t - 1.0)
     carrier = (
         0.014 * np.sin(2.0 * np.pi * 293.66 * t + 0.3)
@@ -76,22 +74,19 @@ def silent_carrier() -> tuple[np.ndarray, float]:
 
     events = np.zeros(samples, dtype=np.float32)
 
-    # Short machine-coded bursts. They are intentionally non-linguistic and sparse.
     pattern = (0.0, 0.16, 0.42, 0.58, 1.02)
     for group, when in enumerate(np.arange(12.0, duration - 8.0, 11.5)):
         base = 880.0 + (group % 3) * 110.0
         for pulse_index, offset in enumerate(pattern):
             freq = base + (pulse_index % 2) * 190.0
-            burst = tone(freq, 0.11, 0.022, decay=17.0, phase=0.4)
-            add(events, float(when + offset), burst)
+            add(events, float(when + offset), tone(freq, 0.11, 0.022, decay=17.0, phase=0.4))
 
-    # Relay thumps provide motion without turning into a drum beat.
+    # Relay thumps use separate event layers so different decay lengths never rely
+    # on NumPy broadcasting between unlike arrays.
     for index, when in enumerate(np.arange(19.0, duration - 7.0, 8.0)):
-        thump = tone(48.0 + (index % 2) * 5.0, 1.1, 0.055, decay=4.6)
-        thump += tone(96.0, 0.8, 0.018, decay=6.0, phase=0.8)
-        add(events, float(when), thump)
+        add(events, float(when), tone(48.0 + (index % 2) * 5.0, 1.1, 0.055, decay=4.6))
+        add(events, float(when), tone(96.0, 0.8, 0.018, decay=6.0, phase=0.8))
 
-    # Interpolated slow noise plus a trace of radio grain.
     control = rng.normal(0.0, 1.0, int(duration * 6) + 3).astype(np.float32)
     slow_noise = np.interp(
         np.arange(samples, dtype=np.float32),
@@ -124,14 +119,11 @@ def tesla_breach() -> tuple[np.ndarray, float]:
 
     events = np.zeros(samples, dtype=np.float32)
 
-    # Slow industrial pulse. Strong enough to feel urgent, but not a full combat song.
     for index, when in enumerate(np.arange(9.0, duration - 6.0, 2.15)):
         amp = 0.075 if index % 4 else 0.115
-        hit = tone(58.0, 0.9, amp, decay=5.2)
-        hit += tone(174.0, 0.55, amp * 0.26, decay=8.0, phase=0.5)
-        add(events, float(when), hit)
+        add(events, float(when), tone(58.0, 0.9, amp, decay=5.2))
+        add(events, float(when), tone(174.0, 0.55, amp * 0.26, decay=8.0, phase=0.5))
 
-    # Electric arc chirps: descending/ascending micro-glissandos synthesized directly.
     for index, when in enumerate(np.arange(15.0, duration - 5.0, 5.6)):
         seconds = 0.44 + 0.08 * (index % 3)
         n = int(seconds * RATE)
@@ -145,12 +137,10 @@ def tesla_breach() -> tuple[np.ndarray, float]:
         chirp += rng.normal(0.0, 1.0, n).astype(np.float32) * env * 0.013
         add(events, float(when + rng.uniform(-0.35, 0.35)), chirp.astype(np.float32))
 
-    # Metallic resonance clusters in the final half.
     for index, when in enumerate(np.arange(55.0, duration - 7.0, 9.3)):
         freq = 520.0 + (index % 4) * 87.0
-        clang = tone(freq, 1.9, 0.026, decay=2.8)
-        clang += tone(freq * 1.51, 1.6, 0.016, decay=3.2, phase=0.7)
-        add(events, float(when), clang)
+        add(events, float(when), tone(freq, 1.9, 0.026, decay=2.8))
+        add(events, float(when), tone(freq * 1.51, 1.6, 0.016, decay=3.2, phase=0.7))
 
     grain = rng.normal(0.0, 1.0, samples).astype(np.float32)
     static_gate = np.clip(0.25 + 0.35 * np.sin(2.0 * np.pi * 0.071 * t + 0.3), 0.0, 1.0)
@@ -160,7 +150,6 @@ def tesla_breach() -> tuple[np.ndarray, float]:
     left = mono * np.sqrt(1.0 - pan)
     right = mono * np.sqrt(pan)
 
-    # High-frequency coil hum offset between channels for width.
     coil_env = np.clip((t - 18.0) / 15.0, 0.0, 1.0) * 0.011
     left += np.sin(2.0 * np.pi * 235.0 * t + 0.3) * coil_env
     right += np.sin(2.0 * np.pi * 242.0 * t + 1.2) * coil_env
