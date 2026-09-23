@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """SIEGE 5.60 release contracts.
 
-5.60 removes the rejected synthetic/interference-like tracks and makes the new
-background timing/motion settings real runtime controls. Replacement music is never
-added by this release gate: every candidate must be previewed and approved first.
+5.60 removes the rejected generated music, accepts exactly two player-approved new
+songs when legitimate source masters are supplied, and makes adaptive background
+settings real runtime controls.
 """
 from pathlib import Path
 
@@ -18,7 +18,8 @@ PREP = read("scripts/prepare-music.sh")
 PRESETS = read("src/main/java/uy/santipdr/siege/client/SiegeMediaPresets.java")
 CONFIG = read("src/main/java/uy/santipdr/siege/client/SiegeConfig.java")
 BACKGROUNDS = read("src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java")
-CANDIDATES = read("docs/MUSIC-CANDIDATES-5.60.md")
+APPROVED = read("docs/MUSIC-CANDIDATES-5.60.md")
+WORKFLOW = read(".github/workflows/build.yml")
 
 assert "version = '5.60.0'" in BUILD
 
@@ -34,9 +35,36 @@ for value in rejected_keys:
 
 assert not (ROOT / "scripts/generate-stronghold-signal.py").exists()
 assert not (ROOT / "scripts/generate-frontline-signal-550.py").exists()
-assert "Only tracks explicitly approved" in MUSIC
 
-# Exactly the five approved tracks remain in the current player-facing rotation.
+# Exactly two NEW music choices were approved by the player.
+approved = (
+    ("A_STRANGER_I_REMAIN", "a_stranger_i_remain", "A Stranger I Remain (Maniac Agenda Mix)"),
+    ("RECEIVE_YOU_HYPERACTIVE", "receive_you_the_hyperactive", "Receive You The Hyperactive"),
+)
+for constant, key, title in approved:
+    assert constant in MOD
+    assert f"SiegeMod.{constant}" in MUSIC
+    assert f'"music.{key}"' in SOUNDS
+    assert key in PREP
+    assert title in MUSIC
+    assert title in APPROVED
+
+# Optional commercial tracks must never become broken/silent entries. They are visible
+# only when a prepared OGG exists in the built resources.
+assert "hasPreparedAudio" in MUSIC
+assert '.filter(track -> track.required() || hasPreparedAudio(track.key()))' in MUSIC
+assert "source master not supplied yet" in PREP
+assert "no descarga ni ripea audio" in APPROVED
+
+# The rejected alternatives from the preview round must remain outside the integration.
+for title in (
+    "A Cup of Liber-Tea", "The Automaton Legion", "Legionnaire", "Catalyst",
+    "Monomyth – The Encounter", "Simulacra", "Venom",
+):
+    assert title not in MUSIC
+    assert title in APPROVED
+
+# Existing five approved tracks stay intact.
 for title in (
     "Tale of a Cruel World", "Darkest of Days", "Kaptain Music Box",
     "Heaven's Hell-Sent Gift", "Arc - Enemy · Potoe",
@@ -45,8 +73,7 @@ for title in (
 for title in ("Stronghold 5-5 · Black Signal", "Nucleus · Silent Carrier", "Tesla Breach"):
     assert title not in MUSIC, title
 
-# Scene presets remain useful while music approval is pending, but must not silently
-# select a track behind the player's back.
+# Scene presets remain useful but must not silently force music.
 assert "scene-only" in PRESETS.lower()
 assert "SiegeMusic.selectTrack" not in PRESETS
 assert "String track" not in PRESETS
@@ -66,10 +93,9 @@ assert "SiegeConfig.reduceFlashes" in BACKGROUNDS
 assert "SiegeConfig.Graphics.PERFORMANCE" in BACKGROUNDS
 assert "Math.max(w / (double)sourceW, h / (double)sourceH)" in BACKGROUNDS
 
-# Candidate policy is explicit: real music may be researched, but nothing gets bundled
-# before the player has listened and approved it.
-assert "Ningún candidato de esta lista está instalado todavía" in CANDIDATES
-assert "CC BY 4.0" in CANDIDATES
-assert "aprobación explícita" in CANDIDATES
+# CI itself must execute the 5.60 contract and must not require deleted generators.
+assert "python3 tests/test_release_560.py" in WORKFLOW
+assert "generate-stronghold-signal.py" not in WORKFLOW
+assert "generate-frontline-signal-550.py" not in WORKFLOW
 
-print("SIEGE 5.60 rejected-music cleanup, approval gate and adaptive backgrounds passed")
+print("SIEGE 5.60 approved-music gate, rejected-music cleanup and adaptive backgrounds passed")
