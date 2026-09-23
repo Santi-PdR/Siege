@@ -30,12 +30,12 @@
 
 ## Fondos DVN reales
 
-- Se añaden dos imágenes reales de Dummies vs Noobs desde la página oficial de Roblox:
-  - `DVN · Arctic Standoff`
-  - `DVN · Asalto costero`
+- Se incorporan dos thumbnails reales del juego Dummies vs Noobs mediante la API oficial de Roblox.
+- Internamente se llaman `DVN · Escena oficial 01` y `DVN · Escena oficial 02` para no inventar nombres de escena cuando Roblox cambia la selección u orden de thumbnails.
 - Las dos entran en la rotación normal y en la galería.
-- Se conservan a `768×432`, su resolución nativa, en vez de aplicar un upscale falso a Full HD.
+- Se conservan a `768×432`, su resolución nativa solicitada a Roblox, en vez de aplicar un upscale falso a Full HD.
 - El renderer y las pruebas aceptan distintas resoluciones de origen siempre que sigan siendo 16:9 y tengan tamaño suficiente.
+- El build usa el universe ID de DVN y la API de thumbnails, evitando depender de enlaces temporales `tr.rbxcdn.com` que caducan.
 - Tempest Jutcherson sigue totalmente fuera de la rotación normal.
 
 ## Música DVN
@@ -50,7 +50,7 @@
 ## Build y pruebas
 
 - Versión: `5.10.0`.
-- CI descarga y valida los dos fondos DVN y la nueva pista antes de compilar.
+- CI resuelve y valida los dos fondos DVN y la nueva pista antes de compilar.
 - Nueva regresión `test_release_510.py` para bloquear lenguaje técnico/personal, recetas actuales, catálogo de razas y medios DVN.
 - `AtlasRegressionTest` comprueba que las fichas públicas no expongan metadatos de fuentes.
 - `MediaReferenceRegressionTest` distingue entre los dos fondos realmente instalados y las ideas que siguen siendo sólo referencias.
