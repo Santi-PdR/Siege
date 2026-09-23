@@ -1,26 +1,33 @@
 #!/usr/bin/env python3
-"""Prepare visible Third Justice captures and, when available, the full test video.
+"""Prepare visible Third Justice captures and the complete 5.30 test reel.
 
 The legacy captures were accidentally exported with an extremely dark two-level
 palette. 5.30 expands their visible luminance range without applying a fake
-cinematic tint. If the original supplied MP4 is present at
-assets-source/third-justice/third_justice_full.mp4, the complete duration is
-converted to a Forge-native 10 fps frame sequence. This avoids shipping a JVM
-video decoder while preserving the entire test from start to finish.
+cinematic tint.
+
+The supplied Third Justice test is kept in the repository as a compact base64
+source (assets-source/third-justice/third_justice_full.b64). During the build it
+is decoded and converted to a Forge-native 10 fps frame sequence. This avoids a
+runtime JVM video decoder while preserving the complete test from start to end.
+A direct third_justice_full.mp4 is still accepted for local development.
 """
 from __future__ import annotations
 
+import base64
 from pathlib import Path
-from PIL import Image, ImageEnhance, ImageOps, ImageStat
+from PIL import Image, ImageEnhance, ImageStat
 import shutil
 import subprocess
 
 GUIDE = Path("src/main/resources/assets/siege/textures/gui/guide")
 VIDEO_SRC = Path("assets-source/third-justice/third_justice_full.mp4")
+VIDEO_B64 = Path("assets-source/third-justice/third_justice_full.b64")
+DECODED_VIDEO = Path("build/third-justice-media/third_justice_full.mp4")
 VIDEO_DIR = GUIDE / "third_justice_video"
 MANIFEST = Path("src/main/resources/assets/siege/third_justice_video.properties")
 FPS = 10
 FRAME_SIZE = "640:360"
+MIN_FULL_DURATION_MS = 30_000
 STATIC = [
     "third_justice_tooltip.png",
     "third_justice_field.png",
@@ -51,8 +58,8 @@ def remap_visible(image: Image.Image) -> Image.Image:
     if hi <= lo:
         return rgb
 
-    # The old assets can occupy only a narrow 55..101-ish luma range. Expand that
-    # into a readable 28..238 range, preserving colours where they still exist.
+    # The old assets can occupy only a narrow luma range. Expand that range into a
+    # readable image while preserving the colours that still exist in the capture.
     scale = 210.0 / max(1, hi - lo)
     lut = []
     for value in range(256):
@@ -61,9 +68,8 @@ def remap_visible(image: Image.Image) -> Image.Image:
     channels = [channel.point(lut) for channel in rgb.split()]
     fixed = Image.merge("RGB", channels)
 
-    # Mild contrast only; no darkness veil and no heavy sharpen/filter.
-    fixed = ImageEnhance.Contrast(fixed).enhance(1.06)
-    return fixed
+    # Mild contrast only: no darkness veil, tint or heavy sharpen/filter.
+    return ImageEnhance.Contrast(fixed).enhance(1.06)
 
 
 def check_visible(name: str, image: Image.Image) -> str:
@@ -93,6 +99,30 @@ def repair_static() -> None:
         fixed.save(path, "PNG", optimize=True, compress_level=9)
 
 
+def resolve_video_source() -> Path | None:
+    """Return a playable MP4, decoding the checked-in compact source when needed."""
+    if VIDEO_SRC.is_file() and VIDEO_SRC.stat().st_size > 0:
+        print(f"→ Third Justice: using direct MP4 source ({VIDEO_SRC.stat().st_size} bytes)")
+        return VIDEO_SRC
+
+    if not VIDEO_B64.is_file():
+        return None
+
+    try:
+        encoded = "".join(VIDEO_B64.read_text(encoding="ascii").split())
+        payload = base64.b64decode(encoded, validate=True)
+    except (ValueError, OSError) as exc:
+        raise SystemExit(f"Third Justice embedded video source is invalid: {exc}") from exc
+
+    if len(payload) < 16_000:
+        raise SystemExit(f"Third Justice embedded video source is unexpectedly small ({len(payload)} bytes)")
+
+    DECODED_VIDEO.parent.mkdir(parents=True, exist_ok=True)
+    DECODED_VIDEO.write_bytes(payload)
+    print(f"→ Third Justice: decoded embedded full test ({len(payload)} bytes)")
+    return DECODED_VIDEO
+
+
 def ffprobe_duration_ms(path: Path) -> int:
     proc = subprocess.run(
         [
@@ -110,31 +140,41 @@ def prepare_full_video() -> None:
     for old in VIDEO_DIR.glob("frame_*.png"):
         old.unlink()
 
-    if not VIDEO_SRC.is_file():
-        # Keep an explicit fallback manifest. Runtime then uses the three repaired
-        # historical reel frames. The build does not pretend the full MP4 exists.
+    source = resolve_video_source()
+    if source is None:
+        # Explicit fallback only for developer checkouts that intentionally omit the
+        # supplied test source. Release CI requires the embedded source to exist.
         MANIFEST.parent.mkdir(parents=True, exist_ok=True)
         MANIFEST.write_text(
             "mode=fallback\nframes=3\nfps=1\nduration_ms=3300\nwidth=640\nheight=360\n",
             encoding="utf-8",
         )
         print(
-            "! Third Justice full MP4 is not present; repaired 3-frame fallback retained.\n"
-            "  Expected: assets-source/third-justice/third_justice_full.mp4"
+            "! Third Justice full source is not present; repaired 3-frame fallback retained.\n"
+            f"  Expected: {VIDEO_SRC} or {VIDEO_B64}"
         )
         return
 
     if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
         raise SystemExit("ffmpeg and ffprobe are required to prepare the complete Third Justice video")
 
-    duration_ms = ffprobe_duration_ms(VIDEO_SRC)
+    try:
+        duration_ms = ffprobe_duration_ms(source)
+    except (subprocess.CalledProcessError, ValueError) as exc:
+        raise SystemExit("Third Justice embedded source could not be decoded as a valid video") from exc
+
+    if duration_ms < MIN_FULL_DURATION_MS:
+        raise SystemExit(
+            f"Third Justice source is incomplete: {duration_ms / 1000:.2f}s; expected the ~31s full test"
+        )
+
     print(f"→ Third Justice: extracting complete {duration_ms / 1000:.2f}s test at {FPS} fps...")
     subprocess.run(
         [
             "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-            "-i", str(VIDEO_SRC),
+            "-i", str(source),
             "-vf", f"fps={FPS},scale={FRAME_SIZE}:flags=lanczos:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2:black",
-            "-vsync", "0", "-compression_level", "8",
+            "-fps_mode", "passthrough", "-compression_level", "8",
             str(VIDEO_DIR / "frame_%05d.png"),
         ],
         check=True,
@@ -147,8 +187,10 @@ def prepare_full_video() -> None:
     # ffmpeg rounding can differ by one frame at the end.
     if abs(len(frames) - expected) > 2:
         raise SystemExit(f"Unexpected complete-video frame count: {len(frames)} vs ~{expected}")
+    if len(frames) < 300:
+        raise SystemExit(f"Third Justice full reel unexpectedly short: only {len(frames)} frames")
 
-    for sample in (frames[0], frames[len(frames)//2], frames[-1]):
+    for sample in (frames[0], frames[len(frames) // 2], frames[-1]):
         with Image.open(sample) as image:
             image.load()
             if image.size != (640, 360):
