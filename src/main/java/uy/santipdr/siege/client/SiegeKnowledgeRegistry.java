@@ -20,10 +20,11 @@ public final class SiegeKnowledgeRegistry {
 
     /** Complete maintenance history, including old/conflicting records. Never rendered directly. */
     private static final List<SiegeKnowledgeData.Entry> MAINTENANCE = java.util.stream.Stream.of(
-            SiegeKnowledgeData.entries(), SiegeKnowledgeExpansion40.entries(), SiegeKnowledgeExpansion50.entries())
+            SiegeKnowledgeData.entries(), SiegeKnowledgeExpansion40.entries(),
+            SiegeKnowledgeExpansion50.entries(), SiegeKnowledgeCorpus50.entries())
             .flatMap(List::stream).toList();
 
-    /** One current record per ID. Newer generations replace older text. */
+    /** One current record per ID. Later generations/corpus corrections replace older text. */
     private static final Map<String, SiegeKnowledgeData.Entry> CURRENT_BY_ID = buildCurrent();
     private static final List<SiegeKnowledgeData.Entry> PUBLIC = CURRENT_BY_ID.values().stream()
             .filter(SiegeKnowledgeRegistry::playerFacing)
@@ -38,6 +39,8 @@ public final class SiegeKnowledgeRegistry {
         for (SiegeKnowledgeData.Entry entry : SiegeKnowledgeExpansion40.entries())
             if (entry.zone() == SiegeKnowledgeData.Zone.SERVER) out.put(entry.id(), entry);
         for (SiegeKnowledgeData.Entry entry : SiegeKnowledgeExpansion50.entries())
+            if (entry.zone() == SiegeKnowledgeData.Zone.SERVER) out.put(entry.id(), entry);
+        for (SiegeKnowledgeData.Entry entry : SiegeKnowledgeCorpus50.entries())
             if (entry.zone() == SiegeKnowledgeData.Zone.SERVER) out.put(entry.id(), entry);
         return Collections.unmodifiableMap(out);
     }
