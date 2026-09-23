@@ -33,6 +33,15 @@ TARGETS = {
     "rooftop_squad": (896, 504),
 }
 
+# Two checked-in captures are genuinely night scenes, but their source shadows are
+# so compressed that the menu readability layer makes them almost disappear. A
+# gentle gamma lift recovers source detail while retaining blacks/highlights and
+# avoids the destructive brightness/contrast filters used by older builds.
+SHADOW_GAMMA = {
+    "night_operation": 0.78,
+    "urban_rendezvous": 0.68,
+}
+
 
 def center_crop(image: Image.Image, target: tuple[int, int]) -> Image.Image:
     tw, th = target
@@ -43,6 +52,13 @@ def center_crop(image: Image.Image, target: tuple[int, int]) -> Image.Image:
     left = (image.width - tw) // 2
     top = (image.height - th) // 2
     return image.crop((left, top, left + tw, top + th))
+
+
+def gamma_lift(image: Image.Image, gamma: float) -> Image.Image:
+    if gamma <= 0.0 or abs(gamma - 1.0) < 0.001:
+        return image
+    lut = [max(0, min(255, round(((value / 255.0) ** gamma) * 255.0))) for value in range(256)]
+    return image.point(lut)
 
 
 def rooftop_composite(image: Image.Image) -> Image.Image:
@@ -99,11 +115,16 @@ def prepare(name: str, target: tuple[int, int]) -> None:
     else:
         out = center_crop(image, target)
 
+    if name in SHADOW_GAMMA:
+        out = gamma_lift(out, SHADOW_GAMMA[name])
+
     if out.size != target:
         raise SystemExit(f"Preparation failed for {name}: {out.size} != {target}")
     quality_check(name, out)
     out.save(path, "PNG", optimize=True, compress_level=9)
     action = "kept native" if original == target else f"prepared {target[0]}x{target[1]}"
+    if name in SHADOW_GAMMA:
+        action += f", shadows lifted γ={SHADOW_GAMMA[name]:.2f}"
     print(f"{name}: {original[0]}x{original[1]} -> {action}")
 
 
