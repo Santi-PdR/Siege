@@ -9,27 +9,30 @@ import net.minecraft.resources.ResourceLocation;
 import uy.santipdr.siege.SiegeMod;
 
 /**
- * Lightweight evidence-reel viewer for supplied reference footage.
- * Minecraft/Forge 1.20.1 does not ship an MP4 playback surface, so SIEGE stores a
- * curated sequence of lossless frames instead of bundling a video decoder and a
- * large H.264 file into the client JAR.
+ * Forge-native viewer for the Third Justice test footage.
+ *
+ * When the complete source video was available during the build, SIEGE plays every
+ * prepared frame across the full source duration. No dark cinematic veil is drawn
+ * over the footage. If the original MP4 was unavailable to the build, the repaired
+ * three-frame historical reel remains as an explicit fallback instead of pretending
+ * a complete video exists.
  */
 public final class SiegeEvidenceReelScreen extends Screen {
-    private static final long FRAME_MS = 1_100L;
     private final Screen parent;
-    private final List<SiegeGuideData.Art> frames;
+    private final List<SiegeGuideData.Art> fallbackFrames;
+    private final SiegeThirdJusticeVideo.Spec video = SiegeThirdJusticeVideo.spec();
     private int index;
     private boolean playing;
     private long changedAt;
     private SiegeButton play;
 
     public SiegeEvidenceReelScreen(Screen parent, List<SiegeGuideData.Art> supplied) {
-        super(Component.literal("SIEGE // EVIDENCE REEL"));
+        super(Component.literal("SIEGE // THIRD JUSTICE VIDEO"));
         this.parent = parent;
         List<SiegeGuideData.Art> reel = supplied == null ? List.of() : supplied.stream()
                 .filter(art -> art.file().startsWith("third_justice_reel_"))
                 .toList();
-        this.frames = reel.size() >= 2 ? reel : supplied == null ? List.of() : List.copyOf(supplied);
+        this.fallbackFrames = reel.size() >= 2 ? reel : supplied == null ? List.of() : List.copyOf(supplied);
     }
 
     private boolean spanish() {
@@ -37,11 +40,15 @@ public final class SiegeEvidenceReelScreen extends Screen {
     }
 
     private String label(String es, String en) { return spanish() ? es : en; }
+    private boolean fullVideo() { return video.full() && video.frames() > 0; }
+    private int frameCount() { return fullVideo() ? video.frames() : fallbackFrames.size(); }
+    private long frameMs() { return fullVideo() ? Math.max(1L, Math.round(1000.0 / video.fps())) : 1100L; }
 
     @Override
     protected void init() {
         changedAt = System.currentTimeMillis();
-        playing = !SiegeConfig.reducedMotion && frames.size() > 1;
+        // Reduced Motion starts paused. A deliberate PLAY click is an explicit opt-in.
+        playing = !SiegeConfig.reducedMotion && frameCount() > 1;
         int y = height - 27;
         int w = Math.min(96, Math.max(62, (width - 34) / 4));
         int total = w * 4 + 12;
@@ -54,17 +61,20 @@ public final class SiegeEvidenceReelScreen extends Screen {
                 .setCompactCenter(true));
         SiegeButton next = addRenderableWidget(new SiegeButton(x + (w + 4) * 3, y, w, 19, Component.literal("→"), b -> step(1), SiegeTheme.GOLD)
                 .setCompactCenter(true));
-        prev.setTooltip(Tooltip.create(Component.literal(label("Fotograma anterior", "Previous frame"))));
-        next.setTooltip(Tooltip.create(Component.literal(label("Fotograma siguiente", "Next frame"))));
-        play.setTooltip(Tooltip.create(Component.literal(label(
-                "La reproducción usa fotogramas recuperados; no decodifica MP4 en tiempo real.",
-                "Playback uses recovered still frames; it does not decode MP4 in real time."))));
+        prev.setTooltip(Tooltip.create(Component.literal(label("Retroceder", "Step back"))));
+        next.setTooltip(Tooltip.create(Component.literal(label("Avanzar", "Step forward"))));
+        play.setTooltip(Tooltip.create(Component.literal(fullVideo()
+                ? label("Reproduce el test completo preparado desde el video original.",
+                        "Plays the complete test prepared from the original video.")
+                : label("El video original no estaba disponible en este build; se muestran los registros recuperados.",
+                        "The original video was unavailable to this build; recovered records are shown."))));
     }
 
     private String playLabel() { return playing ? label("PAUSA", "PAUSE") : label("REPRODUCIR", "PLAY"); }
 
     private void toggle() {
-        if (frames.size() < 2) return;
+        if (frameCount() < 2) return;
+        if (!playing && fullVideo() && index >= frameCount() - 1) index = 0;
         playing = !playing;
         changedAt = System.currentTimeMillis();
         play.setMessage(Component.literal(playLabel()));
@@ -72,53 +82,103 @@ public final class SiegeEvidenceReelScreen extends Screen {
     }
 
     private void step(int direction) {
-        if (frames.isEmpty()) return;
-        index = Math.floorMod(index + direction, frames.size());
+        int count = frameCount();
+        if (count <= 0) return;
+        index = Math.floorMod(index + direction, count);
         changedAt = System.currentTimeMillis();
         SiegeUiSounds.selection();
     }
 
-    private ResourceLocation texture(SiegeGuideData.Art art) {
+    private ResourceLocation textureFor(int frameIndex) {
+        if (fullVideo()) {
+            return new ResourceLocation(SiegeMod.MOD_ID,
+                    "textures/gui/guide/third_justice_video/frame_" + String.format("%05d", frameIndex + 1) + ".png");
+        }
+        SiegeGuideData.Art art = fallbackFrames.get(Math.floorMod(frameIndex, fallbackFrames.size()));
         return new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/guide/" + art.file());
+    }
+
+    private int sourceWidth() {
+        if (fullVideo()) return video.width();
+        return fallbackFrames.isEmpty() ? 640 : fallbackFrames.get(Math.floorMod(index, fallbackFrames.size())).width();
+    }
+
+    private int sourceHeight() {
+        if (fullVideo()) return video.height();
+        return fallbackFrames.isEmpty() ? 360 : fallbackFrames.get(Math.floorMod(index, fallbackFrames.size())).height();
+    }
+
+    private long currentTimeMs() {
+        if (frameCount() <= 1) return 0L;
+        if (fullVideo()) return Math.min(video.durationMs(), Math.round(index * 1000.0 / video.fps()));
+        return index * frameMs();
+    }
+
+    private String clock(long ms) {
+        long totalSeconds = Math.max(0L, ms / 1000L);
+        return String.format("%d:%02d", totalSeconds / 60L, totalSeconds % 60L);
     }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         SiegeMusic.ensurePlaying();
-        SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
-        g.fill(0, 0, width, height, 0xE20A0C0F);
+        // Neutral surround only. No darkness/filter overlay is composited over evidence.
+        g.fill(0, 0, width, height, 0xFF111315);
 
-        if (playing && !SiegeConfig.reducedMotion && frames.size() > 1) {
+        int count = frameCount();
+        if (playing && count > 1) {
             long now = System.currentTimeMillis();
-            if (now - changedAt >= FRAME_MS) {
+            long interval = frameMs();
+            if (now - changedAt >= interval) {
                 long elapsed = now - changedAt;
-                index = Math.floorMod(index + (int)(elapsed / FRAME_MS), frames.size());
-                changedAt += (elapsed / FRAME_MS) * FRAME_MS;
+                int advance = Math.max(1, (int)(elapsed / interval));
+                if (fullVideo()) {
+                    index += advance;
+                    if (index >= count) {
+                        index = count - 1;
+                        playing = false;
+                        if (play != null) play.setMessage(Component.literal(playLabel()));
+                    }
+                } else {
+                    index = Math.floorMod(index + advance, count);
+                }
+                changedAt += (elapsed / interval) * interval;
             }
         }
 
-        int panelX = Math.max(8, width / 12);
-        int panelY = 34;
+        int panelX = Math.max(8, width / 18);
+        int panelY = 32;
         int panelW = Math.max(1, width - panelX * 2);
-        int panelH = Math.max(1, height - panelY - 68);
-        SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.CYAN);
-        g.drawCenteredString(font, label("THIRD JUSTICE // REGISTRO DE EVIDENCIA", "THIRD JUSTICE // EVIDENCE RECORD"),
-                width / 2, 12, SiegeTheme.INK);
+        int panelH = Math.max(1, height - panelY - 66);
+        g.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xFF090B0D);
+        SiegeTheme.frame(g, panelX, panelY, panelW, panelH, SiegeTheme.CYAN);
+        g.drawCenteredString(font,
+                label("THIRD JUSTICE // VIDEO DE PRUEBA", "THIRD JUSTICE // TEST VIDEO"),
+                width / 2, 11, SiegeTheme.INK);
 
-        if (frames.isEmpty()) {
-            g.drawCenteredString(font, label("SIN FOTOGRAMAS RECUPERADOS", "NO RECOVERED FRAMES"), width / 2,
+        if (count <= 0) {
+            g.drawCenteredString(font, label("SIN VIDEO DISPONIBLE", "NO VIDEO AVAILABLE"), width / 2,
                     panelY + panelH / 2, SiegeTheme.MUTED);
         } else {
-            SiegeGuideData.Art art = frames.get(Math.floorMod(index, frames.size()));
-            var box = SiegeGuideLayout.fit(new SiegeGuideLayout.Rect(panelX + 10, panelY + 10,
-                    Math.max(1, panelW - 20), Math.max(1, panelH - 34)), art.width(), art.height());
-            g.blit(texture(art), box.x(), box.y(), box.w(), box.h(), 0, 0,
-                    art.width(), art.height(), art.width(), art.height());
+            int footer = 25;
+            var box = SiegeGuideLayout.fit(new SiegeGuideLayout.Rect(panelX + 8, panelY + 8,
+                    Math.max(1, panelW - 16), Math.max(1, panelH - footer - 10)), sourceWidth(), sourceHeight());
+            g.blit(textureFor(index), box.x(), box.y(), box.w(), box.h(), 0, 0,
+                    sourceWidth(), sourceHeight(), sourceWidth(), sourceHeight());
             SiegeTheme.frame(g, box.x(), box.y(), box.w(), box.h(), SiegeTheme.CYAN);
-            String frame = label("REGISTRO ", "FRAME ") + (index + 1) + "/" + frames.size();
-            g.drawString(font, frame, panelX + 10, panelY + panelH - 16, SiegeTheme.CYAN, false);
-            String caption = font.plainSubstrByWidth(art.caption(spanish()), Math.max(1, panelW - 110));
-            g.drawString(font, caption, panelX + panelW - 10 - font.width(caption), panelY + panelH - 16, SiegeTheme.MUTED, false);
+
+            long duration = fullVideo() ? video.durationMs() : Math.max(frameMs(), count * frameMs());
+            String status = fullVideo()
+                    ? clock(currentTimeMs()) + " / " + clock(duration)
+                    : label("REGISTRO ", "FRAME ") + (index + 1) + "/" + count;
+            g.drawString(font, status, panelX + 9, panelY + panelH - 17, SiegeTheme.CYAN, false);
+
+            int barX = panelX + Math.min(92, Math.max(58, font.width(status) + 16));
+            int barW = Math.max(18, panelW - (barX - panelX) - 10);
+            int barY = panelY + panelH - 14;
+            g.fill(barX, barY, barX + barW, barY + 3, 0xFF2B3035);
+            float progress = count <= 1 ? 0.0F : index / (float)(count - 1);
+            g.fill(barX, barY, barX + Math.round(barW * progress), barY + 3, SiegeTheme.CYAN);
         }
 
         super.render(g, mouseX, mouseY, partialTick);

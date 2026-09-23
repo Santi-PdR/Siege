@@ -118,8 +118,9 @@ public final class SiegeBackgrounds {
         return new ResourceLocation(SiegeMod.MOD_ID, "textures/gui/backgrounds/" + id + ".png");
     }
 
+    /** Normal full-screen menu rendering uses cover: no bars, no stretching. */
     public static void render(GuiGraphics graphics, int width, int height, long now) {
-        renderInternal(graphics, width, height, now, false);
+        renderInternal(graphics, width, height, now, true);
     }
 
     public static void renderCover(GuiGraphics graphics, int width, int height, long now) {

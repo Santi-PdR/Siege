@@ -1,82 +1,141 @@
 #!/usr/bin/env python3
-"""Build 1920x1080 menu masters from the checked-in scene sources.
+"""Prepare SIEGE menu backgrounds without inventing source detail.
 
-This does not pretend that upscaling creates missing source detail. It provides a
-single high-quality resampling/compositing path so low-resolution source art is
-not repeatedly stretched by the runtime. Recent non-16:9 art is handled without
-geometric distortion: Night Operation drops its captured letterbox, while
-Rooftop Squad keeps the full illustration over a softened 16:9 extension.
+SIEGE 5.30 stops turning every checked-in image into a synthetic 1920x1080
+master. Native 16:9 sources remain at their real resolution. Near-16:9 captures
+are cropped slightly instead of enlarged. Rooftop Squad keeps the full 4:3
+illustration over a softened 16:9 extension while the foreground is never
+upscaled.
 
-Tempest Jutcherson is intentionally excluded: as of SIEGE 2.50 it is reserved as
-an easter-egg asset, not a normal menu background/gallery entry.
+DVN official thumbnails are fetched separately and deliberately remain at their
+native 768x432 resolution. Tempest Jutcherson remains an easter egg and is never
+processed by this normal-background pipeline.
 """
 from pathlib import Path
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageStat
+import runpy
 
 ROOT = Path("src/main/resources/assets/siege/textures/gui/backgrounds")
-TARGET = (1920, 1080)
-SCENES = [
-    "dummies_assault", "anniversary", "frontline_19", "cyborg", "last_stand",
-    "vought_siege", "earth_orbit", "canyon_engagement", "night_battle",
-    "night_operation", "urban_rendezvous", "rooftop_squad",
-]
+
+# Real prepared dimensions used by SiegeSceneCatalog.
+TARGETS = {
+    "dummies_assault": (960, 540),
+    "anniversary": (960, 540),
+    "frontline_19": (960, 540),
+    "cyborg": (960, 540),
+    "last_stand": (960, 540),
+    "vought_siege": (960, 540),
+    "earth_orbit": (960, 540),
+    "canyon_engagement": (960, 540),
+    "night_battle": (960, 540),
+    "night_operation": (720, 405),
+    "urban_rendezvous": (720, 405),
+    "rooftop_squad": (896, 504),
+}
+
+# Two checked-in captures are genuinely night scenes, but their source shadows are
+# so compressed that the menu readability layer makes them almost disappear. A
+# gentle gamma lift recovers source detail while retaining blacks/highlights and
+# avoids the destructive brightness/contrast filters used by older builds.
+SHADOW_GAMMA = {
+    "night_operation": 0.78,
+    "urban_rendezvous": 0.68,
+}
 
 
-def crop_cover(image: Image.Image, target_ratio: float) -> Image.Image:
-    w, h = image.size
-    ratio = w / h
-    if abs(ratio - target_ratio) < 0.002:
+def center_crop(image: Image.Image, target: tuple[int, int]) -> Image.Image:
+    tw, th = target
+    if image.width < tw or image.height < th:
+        raise SystemExit(
+            f"Refusing to upscale {image.size} into {target}; better source required"
+        )
+    left = (image.width - tw) // 2
+    top = (image.height - th) // 2
+    return image.crop((left, top, left + tw, top + th))
+
+
+def gamma_lift(image: Image.Image, gamma: float) -> Image.Image:
+    if gamma <= 0.0 or abs(gamma - 1.0) < 0.001:
         return image
-    if ratio > target_ratio:
-        nw = max(1, round(h * target_ratio))
-        left = (w - nw) // 2
-        return image.crop((left, 0, left + nw, h))
-    nh = max(1, round(w / target_ratio))
-    top = (h - nh) // 2
-    return image.crop((0, top, w, top + nh))
-
-
-def upscale_16_9(image: Image.Image) -> Image.Image:
-    image = crop_cover(image, 16 / 9)
-    image = image.resize(TARGET, Image.Resampling.LANCZOS)
-    return image.filter(ImageFilter.UnsharpMask(radius=0.8, percent=55, threshold=3))
+    lut = [max(0, min(255, round(((value / 255.0) ** gamma) * 255.0))) for value in range(256)]
+    # Pillow expects one LUT per RGB channel. Applying the same curve channel by
+    # channel preserves the original colour balance instead of flattening to gray.
+    channels = [channel.point(lut) for channel in image.split()]
+    return Image.merge(image.mode, channels)
 
 
 def rooftop_composite(image: Image.Image) -> Image.Image:
-    bg = crop_cover(image, 16 / 9).resize(TARGET, Image.Resampling.LANCZOS)
-    bg = bg.filter(ImageFilter.GaussianBlur(radius=18))
-    shade = Image.new("RGBA", TARGET, (0, 0, 0, 72))
-    bg = Image.alpha_composite(bg.convert("RGBA"), shade)
+    target = TARGETS["rooftop_squad"]
+    # Background extension may be soft because it is decorative only. The actual
+    # illustration stays sharp, fully visible and is downscaled rather than enlarged.
+    bg = image.resize(target, Image.Resampling.LANCZOS).filter(
+        ImageFilter.GaussianBlur(radius=14)
+    )
+    bg = bg.convert("RGBA")
+    shade = Image.new("RGBA", target, (0, 0, 0, 46))
+    bg = Image.alpha_composite(bg, shade)
 
     fg = image.copy()
-    fg.thumbnail(TARGET, Image.Resampling.LANCZOS)
-    x = (TARGET[0] - fg.width) // 2
-    y = (TARGET[1] - fg.height) // 2
+    fg.thumbnail((672, 504), Image.Resampling.LANCZOS)
+    x = (target[0] - fg.width) // 2
+    y = (target[1] - fg.height) // 2
     bg.alpha_composite(fg.convert("RGBA"), (x, y))
-    return bg.convert("RGB").filter(ImageFilter.UnsharpMask(radius=0.7, percent=45, threshold=3))
+    return bg.convert("RGB")
 
 
-def prepare(name: str) -> None:
+def quality_check(name: str, image: Image.Image) -> None:
+    w, h = image.size
+    if w * 9 != h * 16:
+        raise SystemExit(f"{name}: prepared image is not exact 16:9 ({w}x{h})")
+    if w < 640 or h < 360:
+        raise SystemExit(f"{name}: background below quality floor ({w}x{h})")
+
+    gray = image.convert("L")
+    stat = ImageStat.Stat(gray)
+    mean = stat.mean[0]
+    deviation = stat.stddev[0]
+    # These are conservative corruption checks, not aesthetic grading. Dark scenes
+    # are allowed; a nearly blank/flat export is not.
+    if deviation < 7.0:
+        raise SystemExit(f"{name}: suspiciously flat image (luma stddev={deviation:.2f})")
+    if mean < 10.0:
+        raise SystemExit(f"{name}: suspiciously black image (mean luma={mean:.2f})")
+
+
+def prepare(name: str, target: tuple[int, int]) -> None:
     path = ROOT / f"{name}.png"
     if not path.is_file():
         raise SystemExit(f"Missing background source: {path}")
     with Image.open(path) as source:
+        source.load()
         image = source.convert("RGB")
+        original = image.size
 
-    if name == "night_operation" and image.size == (735, 490):
-        image = image.crop((0, 38, 735, 452))
-
-    if name == "rooftop_squad" and image.width * 9 != image.height * 16:
+    if name == "rooftop_squad":
         out = rooftop_composite(image)
+    elif image.size == target:
+        out = image
     else:
-        out = upscale_16_9(image)
+        out = center_crop(image, target)
 
-    if out.size != TARGET:
-        raise SystemExit(f"HD preparation failed for {name}: {out.size}")
+    if name in SHADOW_GAMMA:
+        out = gamma_lift(out, SHADOW_GAMMA[name])
+
+    if out.size != target:
+        raise SystemExit(f"Preparation failed for {name}: {out.size} != {target}")
+    quality_check(name, out)
     out.save(path, "PNG", optimize=True, compress_level=9)
-    print(f"{name}: {image.size[0]}x{image.size[1]} -> {TARGET[0]}x{TARGET[1]}")
+    action = "kept native" if original == target else f"prepared {target[0]}x{target[1]}"
+    if name in SHADOW_GAMMA:
+        action += f", shadows lifted γ={SHADOW_GAMMA[name]:.2f}"
+    print(f"{name}: {original[0]}x{original[1]} -> {action}")
 
 
 if __name__ == "__main__":
-    for scene in SCENES:
-        prepare(scene)
+    for scene, target in TARGETS.items():
+        prepare(scene, target)
+
+    # Keep all player-facing visual repair in the same CI stage. This brightens the
+    # accidentally crushed Third Justice captures and prepares the complete supplied
+    # video whenever its original MP4 is present.
+    runpy.run_path("scripts/prepare-third-justice-media.py", run_name="__main__")

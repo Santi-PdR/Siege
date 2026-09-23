@@ -28,17 +28,25 @@ jobs:
         with:
           gradle-version: '8.8'
 
-      - name: Fetch verified DVN 5.10 media
+      - name: Fetch verified DVN 5.30 media
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow yt-dlp
           bash scripts/fetch-dvn-media-510.sh
 
-      - name: Prepare SIEGE 5.10 visual masters
+      - name: Prepare and audit SIEGE 5.30 visual media
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow
+          if test -f assets-source/third-justice/third_justice_full.mp4 && { ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; }; then
+            while IFS= read -r source_file; do
+              sudo mv "$source_file" "$source_file.disabled"
+            done < <(grep -rl 'dl\.google\.com/linux/chrome' /etc/apt/sources.list.d 2>/dev/null || true)
+            sudo apt-get update -o Acquire::Retries=3
+            sudo apt-get install -y --no-install-recommends ffmpeg
+          fi
           python3 scripts/prepare-backgrounds-hd.py
+          python3 scripts/audit-backgrounds-530.py
 
       - name: Verify responsive layouts, current knowledge and Operations search
         shell: bash
@@ -74,6 +82,7 @@ jobs:
           python3 tests/test_release_040.py
           python3 tests/test_release_050.py
           python3 tests/test_release_510.py
+          python3 tests/test_release_530.py
 
       - name: Verify menu theme scope and drawing bounds
         run: |
@@ -90,10 +99,10 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify SIEGE 5.10 player-facing contracts
+      - name: Verify SIEGE 5.30 player-facing contracts
         shell: bash
         run: |
-          grep -q "version = '5.10.0'" build.gradle
+          grep -q "version = '5.30.0'" build.gradle
           grep -q 'class SiegeKnowledgeExpansion50' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java
           grep -q 'class SiegeKnowledgeCorpus50' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeCorpus50.java
           grep -q 'class SiegeKnowledgePlayer510' src/main/java/uy/santipdr/siege/client/SiegeKnowledgePlayer510.java
@@ -110,6 +119,9 @@ jobs:
           grep -q 'SimpleSoundInstance.forUI(event, 1.0F, volume)' src/main/java/uy/santipdr/siege/client/SiegeUiSounds.java
           grep -q 'dvn_official_01' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
           grep -q 'dvn_official_02' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
+          grep -q 'dvn_official_03' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
+          grep -q 'SiegeThirdJusticeVideo' src/main/java/uy/santipdr/siege/client/SiegeEvidenceReelScreen.java
+          grep -q 'third_justice_full.mp4' scripts/prepare-third-justice-media.py
           grep -q 'SiegeMod.ARC_ENEMY' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
           if grep -nE 'TAMBIÉN VER|SEE ALSO' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeFileScreen.java src/main/java/uy/santipdr/siege/client/SiegeAtlasScreen.java; then
             echo "Generic see-also text must not return to player surfaces."

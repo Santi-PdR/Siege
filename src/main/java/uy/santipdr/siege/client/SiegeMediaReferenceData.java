@@ -2,7 +2,7 @@ package uy.santipdr.siege.client;
 
 import java.util.List;
 
-/** Curated audiovisual direction for the SIEGE 5.10 Media Room. */
+/** Curated audiovisual direction for the SIEGE 5.30 Media Room. */
 public final class SiegeMediaReferenceData {
     public enum Use {
         LOBBY("LOBBY", "LOBBY"),
@@ -43,8 +43,8 @@ public final class SiegeMediaReferenceData {
 
     private static final List<Track> DVN_TRACKS = List.of(
             new Track("Arc - Enemy", Use.COMBAT,
-                    "Pista de Potoe dedicada a DVN. SIEGE 5.10 la integra en la rotación del menú con su atribución incluida.",
-                    "Potoe track dedicated to DVN. SIEGE 5.10 includes it in menu rotation with bundled attribution."),
+                    "Pista de Potoe dedicada a DVN. SIEGE la integra en la rotación del menú con su atribución incluida.",
+                    "Potoe track dedicated to DVN. SIEGE includes it in menu rotation with bundled attribution."),
             new Track("Convenience Store", Use.LOBBY,
                     "Entrada tranquila antes del briefing o despliegue.",
                     "Calm entry before briefing or deployment."),
@@ -145,11 +145,14 @@ public final class SiegeMediaReferenceData {
 
     private static final List<Visual> VISUALS = List.of(
             new Visual("official-gallery-01", "DVN · Escena oficial 01", "DVN · Official Scene 01",
-                    "Miniatura oficial de Dummies vs Noobs cargada en la rotación 5.10 a su resolución nativa 768×432.",
-                    "Official Dummies vs Noobs thumbnail loaded into the 5.10 rotation at its native 768×432 resolution.", true),
+                    "Miniatura oficial de Dummies vs Noobs cargada en la rotación a su resolución nativa 768×432.",
+                    "Official Dummies vs Noobs thumbnail loaded into rotation at its native 768×432 resolution.", true),
             new Visual("official-gallery-02", "DVN · Escena oficial 02", "DVN · Official Scene 02",
                     "Segunda miniatura oficial de Dummies vs Noobs cargada en la rotación sin inventar detalle mediante upscale.",
                     "Second official Dummies vs Noobs thumbnail loaded into rotation without inventing detail through upscaling.", true),
+            new Visual("official-gallery-03", "DVN · Escena oficial 03", "DVN · Official Scene 03",
+                    "Tercera miniatura oficial recuperada de la galería actual de Dummies vs Noobs; conserva el 16:9 y los 768×432 originales.",
+                    "Third official thumbnail recovered from the current Dummies vs Noobs gallery; it keeps the original 16:9 768×432 source.", true),
             new Visual("stronghold-defense", "Stronghold / última fortaleza", "Stronghold / last stronghold",
                     "Defensa de fortaleza, escuadra y armamento moderno o futurista. Prioridad alta para portada.",
                     "Stronghold defense, squad and modern or future weaponry. High priority for the main menu.", false),
