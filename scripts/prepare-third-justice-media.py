@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""Prepare visible Third Justice captures and the complete 5.30 test reel.
+"""Prepare the corrected Third Justice captures and complete 5.30 test reel.
 
-The legacy captures were accidentally exported with an extremely dark two-level
-palette. 5.30 expands their visible luminance range without applying a fake
-cinematic tint.
+The original static captures that reached the repository were accidentally
+quantized to 1-bit/2-bit PNGs. Brightness/contrast remapping cannot recover
+colors or detail that no longer exist, so the two canonical screenshots are
+stored as compact full-color WebP transport sources under
+assets-source/third-justice/static-correct/ and restored to RGB PNGs at build
+time.
 
-The supplied Third Justice test is kept in the repository as a compact base64
-transport source (assets-source/third-justice/third_justice_full.b64). During the
-build it is decoded and converted to a Forge-native 10 fps, 640x360 frame
-sequence. The transport copy is deliberately much smaller than the original
-75 MB upload but preserves the complete ~31 second timeline from start to end.
-A direct third_justice_full.mp4 is still accepted for local development.
+The supplied Third Justice test is kept as a compact base64 transport source
+(assets-source/third-justice/third_justice_full.b64). During the build it is
+decoded and converted to a Forge-native 10 fps, 640x360 frame sequence. Three
+static reel previews are regenerated from that full-color sequence instead of
+reusing the old posterized placeholders.
 
 Generated reel PNGs are losslessly re-packed at maximum PNG compression before
 the Forge build. This keeps every prepared pixel while leaving enough headroom
@@ -19,12 +21,14 @@ for GitHub's 100 MiB repository-file limit when CI publishes the validated JAR.
 from __future__ import annotations
 
 import base64
+from io import BytesIO
 from pathlib import Path
-from PIL import Image, ImageEnhance, ImageStat
+from PIL import Image
 import shutil
 import subprocess
 
 GUIDE = Path("src/main/resources/assets/siege/textures/gui/guide")
+STATIC_SOURCE_DIR = Path("assets-source/third-justice/static-correct")
 VIDEO_SRC = Path("assets-source/third-justice/third_justice_full.mp4")
 VIDEO_B64 = Path("assets-source/third-justice/third_justice_full.b64")
 DECODED_VIDEO = Path("build/third-justice-media/third_justice_full.mp4")
@@ -34,65 +38,63 @@ FPS = 10
 FRAME_SIZE = "640:360"
 MIN_FULL_DURATION_MS = 30_000
 MIN_EMBEDDED_BYTES = 10_000
-STATIC = [
-    "third_justice_tooltip.png",
-    "third_justice_field.png",
+
+CORRECT_STATIC = {
+    "third_justice_tooltip.png": ("third_justice_tooltip.webp.b64.part", (762, 207)),
+    "third_justice_field.png": ("third_justice_field.webp.b64.part", (1024, 579)),
+}
+REEL_STATIC = (
     "third_justice_reel_01.png",
     "third_justice_reel_02.png",
     "third_justice_reel_03.png",
-]
+)
 
 
-def percentile(gray: Image.Image, fraction: float) -> int:
-    hist = gray.histogram()
-    total = sum(hist)
-    target = max(0, min(total - 1, round((total - 1) * fraction)))
-    running = 0
-    for value, count in enumerate(hist):
-        running += count
-        if running > target:
-            return value
-    return 255
+def _joined_transport(prefix: str) -> bytes:
+    parts = sorted(STATIC_SOURCE_DIR.glob(prefix + "*"))
+    if not parts:
+        raise SystemExit(f"Missing corrected Third Justice transport source: {prefix}*")
+    try:
+        encoded = "".join(part.read_text(encoding="ascii").strip() for part in parts)
+        payload = base64.b64decode(encoded, validate=True)
+    except (ValueError, OSError) as exc:
+        raise SystemExit(f"Invalid corrected Third Justice transport source {prefix}: {exc}") from exc
+    if len(payload) < 4_000:
+        raise SystemExit(f"Corrected Third Justice source {prefix} is unexpectedly small")
+    return payload
 
 
-def remap_visible(image: Image.Image) -> Image.Image:
-    rgb = image.convert("RGB")
-    gray = rgb.convert("L")
-    lo = percentile(gray, 0.01)
-    hi = percentile(gray, 0.99)
-    if hi <= lo:
-        return rgb
-    scale = 210.0 / max(1, hi - lo)
-    lut = [max(0, min(255, round(28 + (value - lo) * scale))) for value in range(256)]
-    channels = [channel.point(lut) for channel in rgb.split()]
-    return ImageEnhance.Contrast(Image.merge("RGB", channels)).enhance(1.06)
+def _color_count_probe(image: Image.Image) -> int:
+    probe = image.convert("RGB").resize((96, 96))
+    return len(set(probe.getdata()))
 
 
-def check_visible(name: str, image: Image.Image) -> str:
-    probe = image.convert("L")
-    stat = ImageStat.Stat(probe)
-    mean = stat.mean[0]
-    contrast = stat.stddev[0]
-    lo = percentile(probe, 0.05)
-    hi = percentile(probe, 0.95)
-    if mean < 42:
-        raise SystemExit(f"{name}: still too dark after repair (mean luma={mean:.1f})")
-    if hi - lo < 38:
-        raise SystemExit(f"{name}: still too flat after repair (range={hi-lo})")
-    return f"{name}: mean={mean:.1f} contrast={contrast:.1f} p05-p95={hi-lo}"
+def _verify_full_color(name: str, image: Image.Image, expected_size: tuple[int, int]) -> None:
+    if image.size != expected_size:
+        raise SystemExit(f"{name}: wrong size {image.size}; expected {expected_size}")
+    colors = _color_count_probe(image)
+    if colors < 64:
+        raise SystemExit(
+            f"{name}: still looks posterized ({colors} sampled colors); "
+            "refusing to ship another 1-bit/2-bit capture"
+        )
+    print(f"✓ {name}: {image.size[0]}x{image.size[1]}, sampled colors={colors}")
 
 
-def repair_static() -> None:
-    print("→ Third Justice: removing legacy darkness from captures...")
-    for name in STATIC:
-        path = GUIDE / name
-        if not path.is_file():
-            raise SystemExit(f"Missing Third Justice image: {path}")
-        with Image.open(path) as source:
-            source.load()
-            fixed = remap_visible(source)
-        print("✓", check_visible(name, fixed))
-        fixed.save(path, "PNG", optimize=True, compress_level=9)
+def restore_static_captures() -> None:
+    """Restore the two user-supplied screenshots from full-color transport data."""
+    print("→ Third Justice: restoring canonical full-color screenshots...")
+    GUIDE.mkdir(parents=True, exist_ok=True)
+    for name, (prefix, expected_size) in CORRECT_STATIC.items():
+        payload = _joined_transport(prefix)
+        try:
+            with Image.open(BytesIO(payload)) as source:
+                source.load()
+                fixed = source.convert("RGB")
+        except OSError as exc:
+            raise SystemExit(f"{name}: corrected source could not be decoded: {exc}") from exc
+        _verify_full_color(name, fixed, expected_size)
+        fixed.save(GUIDE / name, "PNG", optimize=True, compress_level=9)
 
 
 def decode_embedded_source() -> Path | None:
@@ -147,10 +149,35 @@ def optimize_video_frames(frames: list[Path]) -> None:
     )
 
 
+def generate_reel_previews(frames: list[Path]) -> None:
+    """Replace the old 2-bit reel stills with representative full-color video frames."""
+    if len(frames) < 3:
+        raise SystemExit("Not enough Third Justice video frames for reel previews")
+    indices = (
+        min(len(frames) - 1, max(0, round((len(frames) - 1) * 0.10))),
+        min(len(frames) - 1, max(0, round((len(frames) - 1) * 0.50))),
+        min(len(frames) - 1, max(0, round((len(frames) - 1) * 0.90))),
+    )
+    print("→ Third Justice: regenerating full-color reel previews...")
+    for name, index in zip(REEL_STATIC, indices):
+        with Image.open(frames[index]) as source:
+            source.load()
+            preview = source.convert("RGB")
+        _verify_full_color(name, preview, (640, 360))
+        preview.save(GUIDE / name, "PNG", optimize=True, compress_level=9)
+
+
 def ffprobe_duration_ms(path: Path) -> int:
     proc = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", str(path)],
-        check=True, text=True, capture_output=True,
+        [
+            "ffprobe", "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "default=nw=1:nk=1",
+            str(path),
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
     )
     seconds = float(proc.stdout.strip())
     return max(1, round(seconds * 1000))
@@ -168,7 +195,7 @@ def prepare_full_video() -> None:
             "mode=fallback\nframes=3\nfps=1\nduration_ms=3300\nwidth=640\nheight=360\n",
             encoding="utf-8",
         )
-        print("! Third Justice full source is not present; repaired 3-frame fallback retained.")
+        print("! Third Justice full source is not present; historical reel fallback retained.")
         return
 
     if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
@@ -181,20 +208,26 @@ def prepare_full_video() -> None:
 
     if duration_ms < MIN_FULL_DURATION_MS:
         raise SystemExit(
-            f"Third Justice source is incomplete: {duration_ms / 1000:.2f}s; expected the ~31s full test"
+            f"Third Justice source is incomplete: {duration_ms / 1000:.2f}s; "
+            "expected the ~31s full test"
         )
 
     print(f"→ Third Justice: extracting complete {duration_ms / 1000:.2f}s test at {FPS} fps...")
     subprocess.run(
         [
-            "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+            "ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
             "-i", str(source),
-            "-vf", f"fps={FPS},scale={FRAME_SIZE}:flags=lanczos:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2:black",
-            "-fps_mode", "passthrough", "-compression_level", "9",
+            "-vf",
+            f"fps={FPS},scale={FRAME_SIZE}:flags=lanczos:"
+            "force_original_aspect_ratio=decrease,"
+            "pad=640:360:(ow-iw)/2:(oh-ih)/2:black",
+            "-fps_mode", "passthrough",
+            "-compression_level", "9",
             str(VIDEO_DIR / "frame_%05d.png"),
         ],
         check=True,
     )
+
     frames = sorted(VIDEO_DIR.glob("frame_*.png"))
     if not frames:
         raise SystemExit("Full Third Justice video extraction produced no frames")
@@ -213,6 +246,8 @@ def prepare_full_video() -> None:
             if image.size != (640, 360):
                 raise SystemExit(f"Unexpected video frame size: {sample} -> {image.size}")
 
+    generate_reel_previews(frames)
+
     MANIFEST.parent.mkdir(parents=True, exist_ok=True)
     MANIFEST.write_text(
         "mode=full\n"
@@ -226,5 +261,5 @@ def prepare_full_video() -> None:
 
 
 if __name__ == "__main__":
-    repair_static()
+    restore_static_captures()
     prepare_full_video()

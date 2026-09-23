@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """SIEGE 5.30 visual-quality, DVN-background and Third Justice contracts."""
+import base64
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,6 +19,8 @@ VIDEO = read("src/main/java/uy/santipdr/siege/client/SiegeThirdJusticeVideo.java
 GUIDE = read("src/main/java/uy/santipdr/siege/client/SiegeGuideSupplemental.java")
 MANIFEST = read("src/main/resources/assets/siege/third_justice_video.properties")
 EMBEDDED_VIDEO = ROOT / "assets-source/third-justice/third_justice_full.b64"
+STATIC_SOURCE = ROOT / "assets-source/third-justice/static-correct"
+GUIDE_TEXTURES = ROOT / "src/main/resources/assets/siege/textures/gui/guide"
 
 assert "version = '5.30.0'" in BUILD
 
@@ -54,13 +57,57 @@ assert "renderInternal(graphics, width, height, now, true);" in BACKGROUNDS
 assert "scale = cover ? Math.max" in BACKGROUNDS and "Math.min" in BACKGROUNDS
 assert "no bars, no stretching" in BACKGROUNDS
 
-# Third Justice images get a real visibility repair, not another dark overlay.
-assert "remap_visible" in PREP_TJ
-assert "still too dark after repair" in PREP_TJ
-assert "third_justice_field.png" in PREP_TJ and "third_justice_tooltip.png" in PREP_TJ
+# Third Justice static screenshots were previously destroyed by 1-bit/2-bit
+# quantization. The build must restore the supplied full-color captures, not try
+# to brighten the already-lost data.
+assert "restore_static_captures" in PREP_TJ
+assert "static-correct" in PREP_TJ
+assert "third_justice_tooltip.webp.b64.part" in PREP_TJ
+assert "third_justice_field.webp.b64.part" in PREP_TJ
+assert "remap_visible" not in PREP_TJ
+assert '"-nostdin"' in PREP_TJ
+assert "regenerating full-color reel previews" in PREP_TJ
 assert "No darkness/filter overlay is composited over evidence" in REEL
 assert "SiegeBackgrounds.render(g, width, height" not in REEL
 assert "0xE20A0C0F" not in REEL
+
+
+def decode_transport(prefix: str) -> bytes:
+    parts = sorted(STATIC_SOURCE.glob(prefix + "*"))
+    assert parts, f"missing corrected Third Justice source: {prefix}*"
+    payload = base64.b64decode(
+        "".join(part.read_text(encoding="ascii").strip() for part in parts),
+        validate=True,
+    )
+    assert payload[:4] == b"RIFF" and payload[8:12] == b"WEBP", prefix
+    assert len(payload) > 4_000, prefix
+    return payload
+
+
+tooltip_source = decode_transport("third_justice_tooltip.webp.b64.part")
+field_source = decode_transport("third_justice_field.webp.b64.part")
+assert len(tooltip_source) > 20_000
+assert len(field_source) > 20_000
+
+
+def assert_rgb_png(name: str) -> None:
+    data = (GUIDE_TEXTURES / name).read_bytes()
+    assert data.startswith(b"\x89PNG\r\n\x1a\n"), name
+    # IHDR: bit depth byte 24, color type byte 25.
+    assert data[24] == 8, f"{name}: expected 8-bit PNG, got {data[24]}-bit"
+    assert data[25] in (2, 6), f"{name}: expected RGB/RGBA PNG, color type={data[25]}"
+
+
+# The visual-prep stage runs before this test, so all five player-facing stills
+# must now be real 8-bit RGB/RGBA images instead of grayscale/palette placeholders.
+for still in (
+    "third_justice_tooltip.png",
+    "third_justice_field.png",
+    "third_justice_reel_01.png",
+    "third_justice_reel_02.png",
+    "third_justice_reel_03.png",
+):
+    assert_rgb_png(still)
 
 # 5.30 ships the complete supplied ~31 s Third Justice timeline, not the old
 # 3-frame placeholder. Do not use an arbitrary source byte-size as proof: the
@@ -95,4 +142,4 @@ assert manifest.get("width") == "640" and manifest.get("height") == "360"
 assert '"third-justice"' in GUIDE
 assert "third_justice_tooltip.png" in GUIDE and "third_justice_field.png" in GUIDE
 
-print("SIEGE 5.30 DVN backgrounds, cover scaling, night visibility and complete Third Justice reel passed")
+print("SIEGE 5.30 DVN backgrounds, full-color Third Justice captures and complete reel passed")
