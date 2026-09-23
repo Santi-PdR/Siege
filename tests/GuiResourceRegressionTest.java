@@ -52,10 +52,10 @@ public final class GuiResourceRegressionTest {
                     "Reserved easter egg leaked into normal menu catalog: " + SiegeSceneCatalog.id(i));
         }
 
-        check(SiegeSceneCatalog.width(indexOf("dvn_arctic_standoff")) == 768,
-                "Official Arctic Standoff should stay at native width, not fake-HD");
-        check(SiegeSceneCatalog.width(indexOf("dvn_coastal_assault")) == 768,
-                "Official coastal DVN art should stay at native width, not fake-HD");
+        check(SiegeSceneCatalog.width(indexOf("dvn_official_01")) == 768,
+                "Official DVN scene 01 should stay at native width, not fake-HD");
+        check(SiegeSceneCatalog.width(indexOf("dvn_official_02")) == 768,
+                "Official DVN scene 02 should stay at native width, not fake-HD");
         check(SiegeSceneCatalog.anomalyIndex() < 0, "Normal scene catalog must not expose an anomaly entry");
         check(!SiegeSceneCatalog.containsId(SiegeEasterEggVault.TEMPEST_JUTCHERSON),
                 "Tempest easter egg must stay outside menu/gallery scenes");
