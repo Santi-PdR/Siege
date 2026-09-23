@@ -3,6 +3,7 @@
   "music.darkest_of_days": {"sounds":[{"name":"siege:music/darkest_of_days","stream":true}]},
   "music.kaptain_music_box": {"sounds":[{"name":"siege:music/kaptain_music_box","stream":true}]},
   "music.heavens_hell_sent_gift": {"sounds":[{"name":"siege:music/heavens_hell_sent_gift","stream":true}]},
+  "music.arc_enemy": {"sounds":[{"name":"siege:music/arc_enemy","stream":true}]},
   "ui.hover": {"sounds":[{"name":"siege:ui/hover"}]},
   "ui.click": {"sounds":[{"name":"siege:ui/click"}]},
   "ui.back": {"sounds":[{"name":"siege:ui/back"}]},
