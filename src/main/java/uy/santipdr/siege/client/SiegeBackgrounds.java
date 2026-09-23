@@ -12,14 +12,22 @@ public final class SiegeBackgrounds {
     private static final List<ResourceLocation> SCENES = IntStream.range(0, SiegeSceneCatalog.count())
             .mapToObj(index -> scene(SiegeSceneCatalog.id(index))).toList();
 
-    private static final long SCENE_MS = 24_000L;
-    private static final long CROSSFADE_MS = 4_800L;
-
     private SiegeBackgrounds() { }
+
+    /** 5.60 reads timing live so Settings/config changes do not require a restart. */
+    private static long sceneMs() {
+        return Math.max(12_000L, Math.min(60_000L, SiegeConfig.backgroundSceneSeconds * 1_000L));
+    }
+
+    private static long crossfadeMs() {
+        long requested = Math.max(0L, Math.min(10_000L, SiegeConfig.backgroundCrossfadeSeconds * 1_000L));
+        return Math.min(requested, sceneMs() / 2L);
+    }
 
     public static int currentIndex(long now) {
         if (SiegeConfig.selectedScene >= 0) return Math.floorMod(SiegeConfig.selectedScene, SCENES.size());
-        return SiegeConfig.animatedBackgrounds ? rotationIndex(Math.floorDiv(now, SCENE_MS)) : 0;
+        long sceneMs = sceneMs();
+        return SiegeConfig.animatedBackgrounds ? rotationIndex(Math.floorDiv(now, sceneMs)) : 0;
     }
 
     private static int rotationIndex(long slot) {
@@ -31,8 +39,9 @@ public final class SiegeBackgrounds {
 
     public static long rotationRemainingMs(long now) {
         if (SiegeConfig.selectedScene >= 0 || !SiegeConfig.animatedBackgrounds) return -1L;
-        long local = Math.floorMod(now, SCENE_MS);
-        return SCENE_MS - local;
+        long duration = sceneMs();
+        long local = Math.floorMod(now, duration);
+        return duration - local;
     }
 
     public static String rotationState(boolean spanish, long now) {
@@ -130,23 +139,27 @@ public final class SiegeBackgrounds {
     private static void renderInternal(GuiGraphics graphics, int width, int height, long now, boolean cover) {
         if (width <= 0 || height <= 0) return;
         graphics.fill(0, 0, width, height, 0xFF080A0C);
+
+        long duration = sceneMs();
+        long fadeDuration = crossfadeMs();
         boolean animated = SiegeConfig.animatedBackgrounds && SiegeConfig.selectedScene < 0;
-        long slot = animated ? Math.floorDiv(now, SCENE_MS) : 0L;
-        long localMs = animated ? Math.floorMod(now, SCENE_MS) : 0L;
-        float local = animated ? localMs / (float)SCENE_MS : 0.0F;
+        long slot = animated ? Math.floorDiv(now, duration) : 0L;
+        long localMs = animated ? Math.floorMod(now, duration) : 0L;
+        float local = animated ? localMs / (float)duration : 0.5F;
         int current = currentIndex(now);
         int next = rotationIndex(slot + 1);
 
         boolean allowPan = !SiegeConfig.reducedMotion && !SiegeConfig.reduceFlashes
-                && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE;
+                && SiegeConfig.graphics != SiegeConfig.Graphics.PERFORMANCE
+                && SiegeConfig.backgroundMotionIntensity > 0;
         float currentProgress = allowPan ? local : 0.5F;
         drawScene(graphics, SCENES.get(current), width, height, 1.0F, current, currentProgress, allowPan, cover);
 
         int darknessBias = SiegeSceneCatalog.darknessBias(current);
-        if (animated) {
-            long fadeStart = SCENE_MS - CROSSFADE_MS;
+        if (animated && fadeDuration > 0L) {
+            long fadeStart = duration - fadeDuration;
             if (localMs >= fadeStart) {
-                float raw = (localMs - fadeStart) / (float)CROSSFADE_MS;
+                float raw = Math.max(0.0F, Math.min(1.0F, (localMs - fadeStart) / (float)fadeDuration));
                 float alpha = smoother(raw);
                 if (alpha > 0.01F) {
                     float incomingProgress = allowPan ? Math.min(0.18F, raw * 0.18F) : 0.5F;
@@ -154,7 +167,7 @@ public final class SiegeBackgrounds {
                     darknessBias = Math.max(darknessBias, Math.round(SiegeSceneCatalog.darknessBias(next) * alpha));
                 }
                 if (!SiegeConfig.reduceFlashes) {
-                    int veilAlpha = Math.round((float)Math.sin(alpha * Math.PI) * 20.0F);
+                    int veilAlpha = Math.round((float)Math.sin(alpha * Math.PI) * 16.0F);
                     if (veilAlpha > 0) graphics.fill(0, 0, width, height, veilAlpha << 24);
                 }
             }
@@ -190,12 +203,33 @@ public final class SiegeBackgrounds {
         int sourceW = sourceWidth(sceneIndex), sourceH = sourceHeight(sceneIndex);
         double scale = cover ? Math.max(w / (double)sourceW, h / (double)sourceH)
                 : Math.min(w / (double)sourceW, h / (double)sourceH);
-        int drawW = Math.max(1, (int)Math.floor(sourceW * scale));
-        int drawH = Math.max(1, (int)Math.floor(sourceH * scale));
-        int x = (w - drawW) / 2;
-        int y = (h - drawH) / 2;
-        g.blit(texture, x, y, drawW, drawH, 0, 0, sourceW, sourceH, sourceW, sourceH);
 
+        // A tiny safe overscan creates real cinematic drift while preserving aspect ratio.
+        // It is disabled completely by reduced-motion, flash-reduction and Performance mode.
+        double motion = allowPan ? SiegeConfig.backgroundMotionIntensity / 100.0D : 0.0D;
+        if (SiegeConfig.graphics == SiegeConfig.Graphics.BALANCED) motion *= 0.65D;
+        double overscan = cover && allowPan ? 1.0D + 0.045D * motion : 1.0D;
+
+        int drawW = Math.max(1, (int)Math.ceil(sourceW * scale * overscan));
+        int drawH = Math.max(1, (int)Math.ceil(sourceH * scale * overscan));
+        int centerX = (w - drawW) / 2;
+        int centerY = (h - drawH) / 2;
+        int x = centerX;
+        int y = centerY;
+
+        if (cover && allowPan) {
+            float eased = smoother(progress);
+            float travel = (eased - 0.5F) * 2.0F;
+            int availableX = Math.max(0, (drawW - w) / 2);
+            int availableY = Math.max(0, (drawH - h) / 2);
+            int dirX = ((sceneIndex * 37) % 3) - 1;
+            int dirY = ((sceneIndex * 53 + 1) % 3) - 1;
+            if (dirX == 0 && dirY == 0) dirX = 1;
+            x += Math.round(travel * availableX * dirX * 0.72F);
+            y += Math.round(travel * availableY * dirY * 0.58F);
+        }
+
+        g.blit(texture, x, y, drawW, drawH, 0, 0, sourceW, sourceH, sourceW, sourceH);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
