@@ -52,14 +52,15 @@ assert 'known("mink", "Mink"' in RACES
 assert 'known("angel", "Angel"' in RACES
 
 # 5.10 uses real searched DVN media, not generated stand-ins.
-assert '"dvn_arctic_standoff"' in SCENES
-assert '"dvn_coastal_assault"' in SCENES
+assert '"dvn_official_01"' in SCENES
+assert '"dvn_official_02"' in SCENES
 assert "DVN_W = 768" in SCENES and "DVN_H = 432" in SCENES
 assert "fake-upscaled" in SCENES
-assert "tr.rbxcdn.com" in FETCH
-assert "dvn_arctic_standoff.png" in FETCH
-assert "dvn_coastal_assault.png" in FETCH
-assert "Preserve the official source at its native size" in FETCH
+assert "thumbnails.roblox.com/v1/games/multiget/thumbnails" in FETCH
+assert "DVN_UNIVERSE_ID='3293525400'" in FETCH
+assert "dvn_official_01.png" in FETCH
+assert "dvn_official_02.png" in FETCH
+assert "Keep the official source at native size" in FETCH
 
 # Arc - Enemy is a verified noncommercial DVN addition with attribution shipped in the jar.
 assert "soundcloud.com/potoe-50708490/arc-enemy" in FETCH
@@ -70,11 +71,13 @@ assert "SiegeMod.ARC_ENEMY" in MUSIC
 assert '"Arc - Enemy · Potoe"' in MUSIC
 assert "CC BY-NC-SA" in LICENSE and "Potoe" in LICENSE
 assert 'new Track("Arc - Enemy"' in MEDIA
-assert 'new Visual("arctic-standoff"' in MEDIA and "true)" in MEDIA
+assert 'new Visual("official-gallery-01"' in MEDIA
+assert 'new Visual("official-gallery-02"' in MEDIA
 
 # CI must fetch and validate the new media before packaging.
 assert "fetch-dvn-media-510.sh" in WORKFLOW
 assert "test_release_510.py" in WORKFLOW
 assert "SiegeKnowledgePlayer510.java" in WORKFLOW
+assert "dvn_official_01" in WORKFLOW and "dvn_official_02" in WORKFLOW
 
 print("SIEGE 5.10 player language, race coverage and DVN media contracts passed")
