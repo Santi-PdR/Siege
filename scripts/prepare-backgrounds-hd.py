@@ -13,6 +13,7 @@ processed by this normal-background pipeline.
 """
 from pathlib import Path
 from PIL import Image, ImageFilter, ImageStat
+import runpy
 
 ROOT = Path("src/main/resources/assets/siege/textures/gui/backgrounds")
 
@@ -109,3 +110,8 @@ def prepare(name: str, target: tuple[int, int]) -> None:
 if __name__ == "__main__":
     for scene, target in TARGETS.items():
         prepare(scene, target)
+
+    # Keep all player-facing visual repair in the same CI stage. This brightens the
+    # accidentally crushed Third Justice captures and prepares the complete supplied
+    # video whenever its original MP4 is present.
+    runpy.run_path("scripts/prepare-third-justice-media.py", run_name="__main__")
