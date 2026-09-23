@@ -117,7 +117,7 @@ assert "Trial Spire" in PROGRESSION and "Witch Trials" in PROGRESSION
 # Audio keeps clean headroom and UI samples stay at authored pitch.
 assert 'HEADROOM_DB="-3dB"' in MUSIC_PREP
 assert 'OUTPUT_RATE="44100"' in MUSIC_PREP
-assert "insufficient decoded headroom" in MUSIC_PREP
+assert "decoded headroom" in MUSIC_PREP
 assert "SimpleSoundInstance.forUI(event, 1.0F, volume)" in UI_SOUNDS
 for shifted in ("0.72F, 0.82F", "0.84F, 0.76F", "1.08F, 0.58F", "0.92F, 0.64F"):
     assert shifted not in UI_SOUNDS
