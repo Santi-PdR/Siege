@@ -7,9 +7,9 @@ import java.util.stream.IntStream;
  * Authoritative metadata for every normal SIEGE menu scene.
  * Rendering, gallery labels, contrast bias, scheduling and CI all read the same table.
  *
- * Tempest Jutcherson is deliberately NOT part of this catalog. It remains reserved
- * as an easter-egg asset and therefore cannot leak into normal rotation, the
- * background gallery or the home scene label.
+ * SIEGE 5.30 records the real prepared dimensions instead of pretending low-resolution
+ * art is Full HD. Tempest Jutcherson is deliberately NOT part of this catalog: it remains
+ * an easter-egg asset and cannot leak into normal rotation or the background gallery.
  */
 public final class SiegeSceneCatalog {
     public enum Kind { STANDARD, FEATURED, ANOMALY }
@@ -24,27 +24,32 @@ public final class SiegeSceneCatalog {
         public String label(boolean spanish) { return spanish ? es : en; }
     }
 
-    private static final int HD_W = 1920;
-    private static final int HD_H = 1080;
+    private static final int LEGACY_W = 960;
+    private static final int LEGACY_H = 540;
+    private static final int COMPACT_W = 720;
+    private static final int COMPACT_H = 405;
+    private static final int ROOFTOP_W = 896;
+    private static final int ROOFTOP_H = 504;
     private static final int DVN_W = 768;
     private static final int DVN_H = 432;
 
     private static final List<Scene> SCENES = List.of(
-            scene("dummies_assault", "Asalto de Dummies", "Dummies Assault", 2),
+            legacy("dummies_assault", "Asalto de Dummies", "Dummies Assault", 2),
             dvn("dvn_official_01", "DVN · Escena oficial 01", "DVN · Official Scene 01", 1),
             dvn("dvn_official_02", "DVN · Escena oficial 02", "DVN · Official Scene 02", 2),
-            scene("anniversary", "Aniversario", "Anniversary", 0),
-            scene("frontline_19", "Frente 19", "Frontline 19", 3),
-            scene("cyborg", "Cíborg", "Cyborg", 4),
-            scene("last_stand", "Última resistencia", "Last Stand", 1),
-            scene("vought_siege", "Asedio Vought", "Vought Siege", 5),
-            scene("earth_orbit", "Órbita terrestre", "Earth Orbit", 6),
-            scene("canyon_engagement", "Combate en el cañón", "Canyon Engagement", 4),
-            scene("night_battle", "Batalla nocturna", "Night Battle", 0),
-            scene("night_operation", "Operación nocturna", "Night Operation", 0),
-            scene("urban_rendezvous", "Encuentro urbano", "Urban Rendezvous", 2),
+            dvn("dvn_official_03", "DVN · Escena oficial 03", "DVN · Official Scene 03", 1),
+            legacy("anniversary", "Aniversario", "Anniversary", 0),
+            legacy("frontline_19", "Frente 19", "Frontline 19", 3),
+            legacy("cyborg", "Cíborg", "Cyborg", 4),
+            legacy("last_stand", "Última resistencia", "Last Stand", 1),
+            legacy("vought_siege", "Asedio Vought", "Vought Siege", 5),
+            legacy("earth_orbit", "Órbita terrestre", "Earth Orbit", 6),
+            legacy("canyon_engagement", "Combate en el cañón", "Canyon Engagement", 4),
+            legacy("night_battle", "Batalla nocturna", "Night Battle", 0),
+            compact("night_operation", "Operación nocturna", "Night Operation", 0),
+            compact("urban_rendezvous", "Encuentro urbano", "Urban Rendezvous", 2),
             new Scene("rooftop_squad", "Escuadrón en azotea · Especial", "Rooftop Squad · Special",
-                    HD_W, HD_H, 3, Kind.FEATURED, true)
+                    ROOFTOP_W, ROOFTOP_H, 3, Kind.FEATURED, true)
     );
 
     private static final List<Integer> STANDARD_INDICES = IntStream.range(0, SCENES.size())
@@ -53,8 +58,12 @@ public final class SiegeSceneCatalog {
 
     private SiegeSceneCatalog() { }
 
-    private static Scene scene(String id, String es, String en, int darknessBias) {
-        return new Scene(id, es, en, HD_W, HD_H, darknessBias, Kind.STANDARD, true);
+    private static Scene legacy(String id, String es, String en, int darknessBias) {
+        return new Scene(id, es, en, LEGACY_W, LEGACY_H, darknessBias, Kind.STANDARD, true);
+    }
+
+    private static Scene compact(String id, String es, String en, int darknessBias) {
+        return new Scene(id, es, en, COMPACT_W, COMPACT_H, darknessBias, Kind.STANDARD, true);
     }
 
     /** Official DVN thumbnails stay at their native 768x432 instead of being fake-upscaled. */
