@@ -9,6 +9,7 @@ public final class SiegeMediaReferenceData {
         BRIEFING("BRIEFING", "BRIEFING"),
         DEPLOYMENT("DESPLIEGUE", "DEPLOYMENT"),
         COMBAT("COMBATE", "COMBAT"),
+        BOSS("BOSS", "BOSS"),
         VICTORY("VICTORIA", "VICTORY"),
         LOSS("DERROTA", "LOSS"),
         REFERENCE("REFERENCIA", "REFERENCE");
@@ -41,7 +42,7 @@ public final class SiegeMediaReferenceData {
     private SiegeMediaReferenceData() { }
 
     /**
-     * DVN soundtrack references verified against current soundtrack indexes.
+     * DVN soundtrack references verified during the 5.00 pass.
      * They are not automatically bundled: binary audio only enters SIEGE when a
      * redistributable source is available.
      */
@@ -77,8 +78,8 @@ public final class SiegeMediaReferenceData {
                     "Combate industrial y agresivo; encaja con escenas de maquinaria y oleadas.",
                     "Aggressive industrial combat; fits machinery and wave-defense scenes."),
             new Track("Hell March (Remastered)", Use.COMBAT,
-                    "Marcha pesada para guerra abierta; usar sólo si existe una fuente redistribuible válida.",
-                    "Heavy march for open warfare; bundle only if a valid redistributable source exists."),
+                    "Marcha pesada para guerra abierta.",
+                    "Heavy march for open warfare."),
             new Track("Fight Through Adversity", Use.COMBAT,
                     "Combate sostenido con un tono menos caótico que una pista de boss.",
                     "Sustained combat with a less chaotic tone than a boss track."),
@@ -87,7 +88,36 @@ public final class SiegeMediaReferenceData {
                     "Fits technological threats, active Intel or high-pressure encounters."),
             new Track("Full Force", Use.COMBAT,
                     "Candidato para situaciones de última línea o cierre de una operación grande.",
-                    "Candidate for last-line situations or the end of a major operation.")
+                    "Candidate for last-line situations or the end of a major operation."),
+
+            // 2026 Dummies VS Noobs: Boss Original Soundtrack references.
+            new Track("Powerplay", Use.BOSS,
+                    "Boss de presión frontal o combate con ritmo muy marcado.",
+                    "Boss encounter with direct pressure and a strongly marked rhythm."),
+            new Track("Bewitched", Use.BOSS,
+                    "Encuentros extraños o con una amenaza menos militar y más anómala.",
+                    "Unusual encounters with a less military and more anomalous threat."),
+            new Track("Dissonant", Use.BOSS,
+                    "Bosses impredecibles, fallas, anomalías o combates que necesitan incomodidad constante.",
+                    "Unpredictable bosses, failures, anomalies or fights that need constant unease."),
+            new Track("Voltaic Dispatch", Use.BOSS,
+                    "Encaja especialmente con amenazas eléctricas, Tesla o tecnológicas.",
+                    "Especially suitable for electrical, Tesla or technological threats."),
+            new Track("Ablaze", Use.BOSS,
+                    "Combate de alta intensidad, incendios o una fase que ya está fuera de control.",
+                    "High-intensity combat, fire or a phase that has gone out of control."),
+            new Track("Dweller's Fury", Use.BOSS,
+                    "Amenaza pesada, criatura grande o pelea cerrada con sensación de persecución.",
+                    "Heavy threat, large creature or enclosed fight with a pursuit feel."),
+            new Track("Dead Center", Use.BOSS,
+                    "Boss directo y limpio para una pelea donde el objetivo principal domina toda la escena.",
+                    "Direct boss track for a fight where the main target dominates the whole scene."),
+            new Track("Imperishable Valour", Use.BOSS,
+                    "Última fase, defensa desesperada o pelea donde el equipo aguanta contra una amenaza superior.",
+                    "Final phase, desperate defense or a fight where the squad holds against a superior threat."),
+            new Track("Death Sentence", Use.BOSS,
+                    "Para encuentros de máximo riesgo, Executores o situaciones donde un error puede cerrar la pelea.",
+                    "For maximum-risk encounters, Executors or situations where one mistake can end the fight.")
     );
 
     private static final List<Mood> MOODS = List.of(
@@ -110,13 +140,23 @@ public final class SiegeMediaReferenceData {
             new Mood("industrial-war", "GUERRA INDUSTRIAL", "INDUSTRIAL WAR",
                     "Oleadas, hangares, artillería y zonas industriales con ritmo más agresivo.",
                     "Waves, hangars, artillery and industrial zones with a more aggressive rhythm.",
-                    "The Darkest of Days", List.of("Grinder", "Hell March (Remastered)", "Fight Through Adversity"))
+                    "The Darkest of Days", List.of("Grinder", "Hell March (Remastered)", "Fight Through Adversity")),
+            new Mood("boss-alert", "BOSS / ALERTA ROJA", "BOSS / RED ALERT",
+                    "Peleas donde una sola unidad domina el frente y la interfaz debe sentirse más urgente.",
+                    "Fights where one unit dominates the front and the interface should feel more urgent.",
+                    "Heaven's Hell-Sent Gift", List.of("Powerplay", "Voltaic Dispatch", "Ablaze", "Imperishable Valour", "Death Sentence"))
     );
 
     private static final List<Visual> VISUALS = List.of(
             new Visual("stronghold-defense", "Stronghold / última fortaleza", "Stronghold / last stronghold",
                     "Defensa de fortaleza, escuadra y armamento moderno o futurista. Prioridad alta para portada.",
                     "Stronghold defense, squad and modern or future weaponry. High priority for the main menu.", false),
+            new Visual("portal-last-stand", "Última defensa del portal", "Last stand at the portal",
+                    "Escena DVN de defensa final alrededor de un portal, con el foco lejos de la zona donde se dibuja la navegación.",
+                    "DVN final-defense scene around a portal, keeping the focal point away from navigation text.", false),
+            new Visual("coastal-assault", "Asalto costero DVN", "DVN coastal assault",
+                    "Frente abierto de Dummies vs Noobs con vehículos, costa o grandes líneas de visión para variar la rotación.",
+                    "Open Dummies vs Noobs front with vehicles, coastline or long sight lines to vary the rotation.", false),
             new Visual("arctic-standoff", "Arctic Standoff", "Arctic Standoff",
                     "Frente helado, siluetas claras y contraste frío para navegación táctica.",
                     "Frozen front, clear silhouettes and cold contrast for tactical navigation.", false),
