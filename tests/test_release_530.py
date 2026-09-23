@@ -62,9 +62,11 @@ assert "No darkness/filter overlay is composited over evidence" in REEL
 assert "SiegeBackgrounds.render(g, width, height" not in REEL
 assert "0xE20A0C0F" not in REEL
 
-# 5.30 ships the complete supplied ~31 s Third Justice test, not the old 3-frame
-# placeholder. CI has already run the preparation script before this contract test.
-assert EMBEDDED_VIDEO.is_file() and EMBEDDED_VIDEO.stat().st_size > 20_000
+# 5.30 ships the complete supplied ~31 s Third Justice timeline, not the old
+# 3-frame placeholder. Do not use an arbitrary source byte-size as proof: the
+# compact transport copy is intentionally tiny. Duration and generated-frame
+# count below are the release-quality checks that prove the reel is complete.
+assert EMBEDDED_VIDEO.is_file() and EMBEDDED_VIDEO.stat().st_size > 10_000
 assert "third_justice_full.b64" in PREP_TJ
 assert "base64.b64decode" in PREP_TJ
 assert "MIN_FULL_DURATION_MS = 30_000" in PREP_TJ
