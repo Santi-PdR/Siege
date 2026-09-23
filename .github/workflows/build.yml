@@ -108,8 +108,8 @@ jobs:
           grep -q 'subhuman-rick-sanchez' src/main/java/uy/santipdr/siege/client/SiegeRaceVariantsScreen.java
           grep -q 'class SiegeNavigationCleanupEvents' src/main/java/uy/santipdr/siege/client/SiegeNavigationCleanupEvents.java
           grep -q 'SimpleSoundInstance.forUI(event, 1.0F, volume)' src/main/java/uy/santipdr/siege/client/SiegeUiSounds.java
-          grep -q 'dvn_arctic_standoff' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
-          grep -q 'dvn_coastal_assault' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
+          grep -q 'dvn_official_01' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
+          grep -q 'dvn_official_02' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
           grep -q 'SiegeMod.ARC_ENEMY' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
           if grep -nE 'TAMBIÉN VER|SEE ALSO' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeFileScreen.java src/main/java/uy/santipdr/siege/client/SiegeAtlasScreen.java; then
             echo "Generic see-also text must not return to player surfaces."
