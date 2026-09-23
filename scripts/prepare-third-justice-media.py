@@ -6,9 +6,10 @@ palette. 5.30 expands their visible luminance range without applying a fake
 cinematic tint.
 
 The supplied Third Justice test is kept in the repository as a compact base64
-source (assets-source/third-justice/third_justice_full.b64). During the build it
-is decoded and converted to a Forge-native 10 fps frame sequence. This avoids a
-runtime JVM video decoder while preserving the complete test from start to end.
+transport source (assets-source/third-justice/third_justice_full.b64). During the
+build it is decoded and converted to a Forge-native 10 fps, 640x360 frame
+sequence. The transport copy is deliberately much smaller than the original
+75 MB upload but preserves the complete ~31 second timeline from start to end.
 A direct third_justice_full.mp4 is still accepted for local development.
 """
 from __future__ import annotations
@@ -28,6 +29,7 @@ MANIFEST = Path("src/main/resources/assets/siege/third_justice_video.properties"
 FPS = 10
 FRAME_SIZE = "640:360"
 MIN_FULL_DURATION_MS = 30_000
+MIN_EMBEDDED_BYTES = 10_000
 STATIC = [
     "third_justice_tooltip.png",
     "third_justice_field.png",
@@ -58,8 +60,6 @@ def remap_visible(image: Image.Image) -> Image.Image:
     if hi <= lo:
         return rgb
 
-    # The old assets can occupy only a narrow luma range. Expand that range into a
-    # readable image while preserving the colours that still exist in the capture.
     scale = 210.0 / max(1, hi - lo)
     lut = []
     for value in range(256):
@@ -67,8 +67,6 @@ def remap_visible(image: Image.Image) -> Image.Image:
         lut.append(max(0, min(255, mapped)))
     channels = [channel.point(lut) for channel in rgb.split()]
     fixed = Image.merge("RGB", channels)
-
-    # Mild contrast only: no darkness veil, tint or heavy sharpen/filter.
     return ImageEnhance.Contrast(fixed).enhance(1.06)
 
 
@@ -114,8 +112,10 @@ def resolve_video_source() -> Path | None:
     except (ValueError, OSError) as exc:
         raise SystemExit(f"Third Justice embedded video source is invalid: {exc}") from exc
 
-    if len(payload) < 16_000:
-        raise SystemExit(f"Third Justice embedded video source is unexpectedly small ({len(payload)} bytes)")
+    if len(payload) < MIN_EMBEDDED_BYTES:
+        raise SystemExit(
+            f"Third Justice embedded video source is unexpectedly small ({len(payload)} bytes)"
+        )
 
     DECODED_VIDEO.parent.mkdir(parents=True, exist_ok=True)
     DECODED_VIDEO.write_bytes(payload)
@@ -142,8 +142,6 @@ def prepare_full_video() -> None:
 
     source = resolve_video_source()
     if source is None:
-        # Explicit fallback only for developer checkouts that intentionally omit the
-        # supplied test source. Release CI requires the embedded source to exist.
         MANIFEST.parent.mkdir(parents=True, exist_ok=True)
         MANIFEST.write_text(
             "mode=fallback\nframes=3\nfps=1\nduration_ms=3300\nwidth=640\nheight=360\n",
@@ -184,7 +182,6 @@ def prepare_full_video() -> None:
         raise SystemExit("Full Third Justice video extraction produced no frames")
 
     expected = max(1, round(duration_ms * FPS / 1000))
-    # ffmpeg rounding can differ by one frame at the end.
     if abs(len(frames) - expected) > 2:
         raise SystemExit(f"Unexpected complete-video frame count: {len(frames)} vs ~{expected}")
     if len(frames) < 300:
