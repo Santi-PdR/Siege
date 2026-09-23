@@ -10,24 +10,27 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-/** Current-first player knowledge registry for SIEGE 5.00. */
+/** Current-first player knowledge registry for SIEGE 5.10. */
 public final class SiegeKnowledgeRegistry {
     private static final Set<String> HIDDEN_PLAYER_IDS = Set.of(
             "source-policy", "source-audit", "research-open-questions",
             "progression-mobility-priority", "prompt-precision-framework",
-            "assembling-planning", "revive-repeat-penalties", "deteriorer-re-overflow-history"
+            "assembling-planning", "revive-repeat-penalties", "deteriorer-re-overflow-history",
+            "raid-area-discipline"
     );
 
-    /** Complete maintenance history, including old/conflicting records. Never rendered directly. */
+    /** Complete maintenance history. This is internal data and is never rendered directly. */
     private static final List<SiegeKnowledgeData.Entry> MAINTENANCE = java.util.stream.Stream.of(
             SiegeKnowledgeData.entries(), SiegeKnowledgeExpansion40.entries(),
-            SiegeKnowledgeExpansion50.entries(), SiegeKnowledgeCorpus50.entries())
+            SiegeKnowledgeExpansion50.entries(), SiegeKnowledgeCorpus50.entries(),
+            SiegeKnowledgePlayer510.entries())
             .flatMap(List::stream).toList();
 
-    /** One current record per ID. Later files replace stale records with the same ID. */
+    /** One current record per ID. Later files replace older records with the same ID. */
     private static final Map<String, SiegeKnowledgeData.Entry> CURRENT_BY_ID = buildCurrent();
     private static final List<SiegeKnowledgeData.Entry> PUBLIC = CURRENT_BY_ID.values().stream()
             .filter(SiegeKnowledgeRegistry::playerFacing)
+            .map(SiegeKnowledgeRegistry::cleanForPlayer)
             .toList();
 
     private SiegeKnowledgeRegistry() { }
@@ -38,6 +41,7 @@ public final class SiegeKnowledgeRegistry {
         addCurrent(out, SiegeKnowledgeExpansion40.entries());
         addCurrent(out, SiegeKnowledgeExpansion50.entries());
         addCurrent(out, SiegeKnowledgeCorpus50.entries());
+        addCurrent(out, SiegeKnowledgePlayer510.entries());
         return Collections.unmodifiableMap(out);
     }
 
@@ -55,6 +59,76 @@ public final class SiegeKnowledgeRegistry {
         return !HIDDEN_PLAYER_IDS.contains(entry.id());
     }
 
+    /**
+     * The old knowledge files keep provenance for maintenance, but normal players should
+     * only see the mechanic itself. This copy deliberately drops provenance and removes
+     * leftover research wording from older entries that do not yet have a 5.10 rewrite.
+     */
+    private static SiegeKnowledgeData.Entry cleanForPlayer(SiegeKnowledgeData.Entry entry) {
+        return new SiegeKnowledgeData.Entry(
+                entry.id(), entry.zone(), entry.domain(),
+                cleanText(entry.titleEs()), cleanText(entry.titleEn()),
+                cleanText(entry.summaryEs()), cleanText(entry.summaryEn()),
+                cleanText(entry.bodyEs()), cleanText(entry.bodyEn()),
+                entry.critical(), entry.related(), List.of());
+    }
+
+    private static String cleanText(String value) {
+        if (value == null || value.isBlank()) return value == null ? "" : value;
+        String out = value;
+
+        // Spanish player-facing cleanup.
+        out = out.replace("El staff recomendó", "Se recomienda")
+                .replace("El staff describió", "Se ha descrito")
+                .replace("El staff aclaró", "Se aclaró")
+                .replace("Staff la describió", "Se describe")
+                .replace("Staff lo describió", "Se describe")
+                .replace("confirmado por staff", "confirmado")
+                .replace("confirmada por staff", "confirmada")
+                .replace("según staff", "según la información actual")
+                .replace("del staff", "del servidor")
+                .replace("de staff", "del servidor")
+                .replace("staff", "servidor")
+                .replace("Discord", "servidor")
+                .replace("corpus", "información disponible")
+                .replace("export", "información disponible")
+                .replace("JSON", "datos")
+                .replace("251.065 mensajes", "información disponible")
+                .replace("251,065 messages", "available information")
+                .replace("auditoría", "guía")
+                .replace("Auditoría", "Guía")
+                .replace("revisión semántica", "guía")
+                .replace("la revisión", "la información disponible")
+                .replace("La revisión", "La información disponible")
+                .replace("en la revisión", "en la información disponible")
+                .replace("del análisis", "de la información disponible")
+                .replace("reconstruirse", "quedar claro")
+                .replace("reconstruidos", "conocidos")
+                .replace("reconstruidas", "conocidas")
+                .replace("reconstruido", "conocido")
+                .replace("reconstruida", "conocida");
+
+        // English player-facing cleanup.
+        out = out.replace("Staff recommended", "It is recommended to")
+                .replace("Staff described", "The system describes")
+                .replace("staff-confirmed", "confirmed")
+                .replace("staff confirmed", "confirmed")
+                .replace("by staff", "in the current system")
+                .replace("staff", "server")
+                .replace("Discord", "server")
+                .replace("corpus", "available information")
+                .replace("export", "available information")
+                .replace("JSON", "data")
+                .replace("semantic review", "guide")
+                .replace("the review", "the available information")
+                .replace("The review", "The available information")
+                .replace("in the review", "in the available information")
+                .replace("reconstructed", "known")
+                .replace("reconstruction", "description");
+
+        return out;
+    }
+
     public static List<SiegeKnowledgeData.Entry> entries() { return PUBLIC; }
     public static List<SiegeKnowledgeData.Entry> maintenanceEntries() { return MAINTENANCE; }
 
@@ -62,7 +136,7 @@ public final class SiegeKnowledgeRegistry {
     public static SiegeKnowledgeData.Entry get(String id) {
         if (id == null) return null;
         SiegeKnowledgeData.Entry entry = CURRENT_BY_ID.get(id);
-        return playerFacing(entry) ? entry : null;
+        return playerFacing(entry) ? cleanForPlayer(entry) : null;
     }
 
     public static List<SiegeKnowledgeData.Entry> critical() {
