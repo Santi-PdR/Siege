@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Durable SIEGE 4.00 contracts that must survive the 5.00 redesign."""
+"""Durable SIEGE 4.00 contracts that must survive later 5.x redesigns."""
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 read = lambda p: (ROOT / p).read_text(encoding="utf-8")
@@ -29,12 +30,16 @@ INTEL = read("src/main/java/uy/santipdr/siege/client/IntelScreenV3.java")
 SCENES = read("src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java")
 EASTER = read("src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java")
 
-assert "version = '5.00.0'" in BUILD
+match = re.search(r"version\s*=\s*'([0-9]+)\.([0-9]+)\.([0-9]+)'", BUILD)
+assert match, "Missing semantic version in build.gradle"
+major, minor, patch = map(int, match.groups())
+assert major >= 5, "Durable 4.00 contracts are only expected on SIEGE 5.x+ releases"
+
 for cls in ("SiegeAtlasScreen", "SiegeBriefingScreen", "SiegeThreatBoardScreen", "SiegeKnowledgeFileScreen",
             "SiegeRaceAtlasScreen", "SiegeProgressionMapScreen", "SiegeMediaRoomScreen"):
     assert f"class {cls}" in read(f"src/main/java/uy/santipdr/siege/client/{cls}.java")
 
-# The 4.00 information surfaces still exist, but 5.00 is allowed to simplify their navigation and wording.
+# The 4.00 information surfaces still exist, but later 5.x versions may simplify navigation and wording.
 assert "SiegeKnowledgeExpansion40.entries" in REG
 assert "SiegeKnowledgeExpansion50.entries" in REG
 assert "SiegeKnowledgeRegistry.entries" in OPS
@@ -69,7 +74,7 @@ assert "DEPENDE DE LA RAZA" in PROGRESSION
 assert "SiegeKnowledgeRegistry.get" in PROGRESSION_SCREEN
 assert "trackButtonLabel(" in PROGRESSION_SCREEN
 
-# Media, profiles and accessibility survive the redesign.
+# Media, profiles and accessibility survive later redesigns.
 for title in ("Convenience Store", "Music Box", "New Store", "Jazz Music", "From the Ashes", "Sad Choir"):
     assert title in MEDIA_DATA
 assert "SiegeMusic.previousTrack" in MEDIA_ROOM and "SiegeMusic.nextTrack" in MEDIA_ROOM
@@ -96,4 +101,4 @@ for forbidden in ("mi inventario", "mi personaje", "mi partida actual", "player 
 for test_name in ("AtlasRegressionTest", "RaceAtlasRegressionTest", "ProgressionMapRegressionTest", "MediaReferenceRegressionTest"):
     assert test_name in WORKFLOW
 assert "Publish validated jar for installer" in WORKFLOW
-print("Durable SIEGE 4.00 gameplay/UI contracts preserved under 5.00")
+print(f"Durable SIEGE 4.00 gameplay/UI contracts preserved under {major}.{minor}.{patch}")

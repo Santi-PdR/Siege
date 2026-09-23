@@ -19,6 +19,7 @@ TALE_SOURCE="$SOURCE_DIR/tale_cruel_world.ogg"
 DARKEST_SOURCE="$SOURCE_DIR/darkest_of_days.ogg"
 DVN_SOURCE="$SOURCE_DIR/dvn_lobby_music.ogg"
 HEAVEN_SOURCE="$SOURCE_DIR/heavens_hell_sent_gift.ogg"
+ARC_SOURCE="$(find "$SOURCE_DIR" -maxdepth 1 -type f -name 'arc_enemy.*' | head -n1 || true)"
 
 KAPTAIN_START="179.599646"
 KAPTAIN_END="319.568250"
@@ -32,6 +33,10 @@ for source in "$TALE_SOURCE" "$DARKEST_SOURCE" "$DVN_SOURCE" "$HEAVEN_SOURCE"; d
     exit 1
   fi
 done
+if [ -z "$ARC_SOURCE" ] || [ ! -f "$ARC_SOURCE" ]; then
+  echo "Missing DVN Arc - Enemy source. Run scripts/fetch-dvn-media-510.sh first." >&2
+  exit 1
+fi
 
 probe_ms() {
   local file="$1"
@@ -57,33 +62,34 @@ validate_source "Tale of a Cruel World" "$TALE_SOURCE" 260000
 validate_source "Darkest of Days" "$DARKEST_SOURCE" 280000
 validate_source "DVN lobby mix" "$DVN_SOURCE" 535000
 validate_source "Heaven's Hell-Sent Gift" "$HEAVEN_SOURCE" 215000
+validate_source "Arc - Enemy" "$ARC_SOURCE" 60000
 
 encode_full() {
   local key="$1"
   local source="$2"
   local target="$TARGET_DIR/$key.ogg"
 
-  # 5.00 deliberately leaves headroom before Vorbis encoding. The 4.00 build
-  # decoded several tracks above 0 dBFS, which can turn into harsh crackling on
-  # some OpenAL/device combinations. 44.1 kHz also matches the SIEGE UI sounds.
+  # Leave decoded headroom before Vorbis encoding. This avoids inter-sample
+  # clipping that can sound harsh on some OpenAL/device combinations.
   ffmpeg -hide_banner -loglevel error -y \
     -i "$source" \
     -map_metadata -1 -vn \
     -af "volume=$HEADROOM_DB" \
-    -ar "$OUTPUT_RATE" -c:a libvorbis -q:a 5 \
+    -ar "$OUTPUT_RATE" -ac 2 -c:a libvorbis -q:a 5 \
     "$target"
 }
 
 encode_full "tale_cruel_world" "$TALE_SOURCE"
 encode_full "darkest_of_days" "$DARKEST_SOURCE"
 encode_full "heavens_hell_sent_gift" "$HEAVEN_SOURCE"
+encode_full "arc_enemy" "$ARC_SOURCE"
 
 ffmpeg -hide_banner -loglevel error -y \
   -ss "$KAPTAIN_START" -i "$DVN_SOURCE" \
   -t "$KAPTAIN_DURATION" \
   -map_metadata -1 -vn \
   -af "volume=$HEADROOM_DB" \
-  -ar "$OUTPUT_RATE" -c:a libvorbis -q:a 5 \
+  -ar "$OUTPUT_RATE" -ac 2 -c:a libvorbis -q:a 5 \
   "$TARGET_DIR/kaptain_music_box.ogg"
 
 tracks=(
@@ -91,6 +97,7 @@ tracks=(
   darkest_of_days
   kaptain_music_box
   heavens_hell_sent_gift
+  arc_enemy
 )
 
 declare -A min_ms=(
@@ -98,12 +105,14 @@ declare -A min_ms=(
   [darkest_of_days]=280000
   [kaptain_music_box]=139000
   [heavens_hell_sent_gift]=215000
+  [arc_enemy]=60000
 )
 declare -A max_ms=(
   [tale_cruel_world]=263000
   [darkest_of_days]=283000
   [kaptain_music_box]=141000
   [heavens_hell_sent_gift]=219000
+  [arc_enemy]=600000
 )
 
 for key in "${tracks[@]}"; do
@@ -124,7 +133,6 @@ for key in "${tracks[@]}"; do
     exit 1
   fi
 
-  # Decode the whole file once. Corrupt packets must fail CI instead of reaching Minecraft.
   ffmpeg -v error -xerror -i "$target" -f null -
 
   duration_ms="$(probe_ms "$target")"
@@ -133,7 +141,6 @@ for key in "${tracks[@]}"; do
     exit 1
   fi
 
-  # Check the decoded stream rather than trusting source/container metadata.
   peak="$(ffmpeg -hide_banner -nostats -i "$target" -af volumedetect -f null - 2>&1 \
     | sed -n 's/.*max_volume: \([-0-9.]*\) dB.*/\1/p' | tail -n1)"
   if [ -z "$peak" ]; then
