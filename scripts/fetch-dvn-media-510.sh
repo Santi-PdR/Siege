@@ -13,7 +13,7 @@ ARC_ENEMY_URL='https://soundcloud.com/potoe-50708490/arc-enemy'
 
 mkdir -p "$BG_DIR" "$MUSIC_SOURCE_DIR"
 
-echo '→ DVN 5.30: resolving current official Roblox thumbnails...'
+echo '→ DVN 5.40: resolving current official Roblox thumbnails...'
 python3 - "$ROBLOX_THUMBNAILS_API" "$TMP" <<'PY'
 from pathlib import Path
 from urllib.request import Request, urlopen
@@ -24,7 +24,7 @@ import sys
 
 api = sys.argv[1]
 tmp = Path(sys.argv[2])
-headers = {"User-Agent": "SIEGE/5.30 noncommercial fan project media fetch"}
+headers = {"User-Agent": "SIEGE/5.40 noncommercial fan project media fetch"}
 
 
 def get_bytes(url: str) -> bytes:
@@ -45,10 +45,10 @@ for item in payload.get("data", []):
 # Preserve Roblox ordering while removing duplicates. Generic scene IDs are used
 # because the official gallery can be reordered by Roblox without warning.
 urls = list(dict.fromkeys(urls))
-if len(urls) < 3:
-    raise SystemExit(f"Roblox returned only {len(urls)} completed DVN thumbnails; need 3")
+if len(urls) < 6:
+    raise SystemExit(f"Roblox returned only {len(urls)} completed DVN thumbnails; need 6")
 
-for index, url in enumerate(urls[:3], start=1):
+for index, url in enumerate(urls[:6], start=1):
     raw = get_bytes(url)
     with Image.open(io.BytesIO(raw)) as image:
         image.load()
@@ -70,7 +70,7 @@ for index, url in enumerate(urls[:3], start=1):
         print(f"  source: {url}")
 PY
 
-for index in 01 02 03; do
+for index in 01 02 03 04 05 06; do
   install -m 0644 "$TMP/dvn_official_${index}.png" "$BG_DIR/dvn_official_${index}.png"
 done
 
@@ -96,4 +96,4 @@ if [ -z "$ARC_SOURCE" ] || [ ! -s "$ARC_SOURCE" ]; then
 fi
 
 echo "✓ Arc - Enemy source: $(basename "$ARC_SOURCE")"
-echo 'DVN 5.30 media sources prepared.'
+echo 'DVN 5.40 media sources prepared.'
