@@ -15,9 +15,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: chatgpt/siege-5.10-player-facing-media
+          fetch-depth: 0
       - name: Align build checks with stable DVN IDs
         shell: bash
         run: |
+          git pull --ff-only origin chatgpt/siege-5.10-player-facing-media
           python3 - <<'PY'
           from pathlib import Path
           path = Path('.github/workflows/build.yml')
@@ -27,8 +29,8 @@ jobs:
               'dvn_coastal_assault': 'dvn_official_02',
           }
           for old, new in pairs.items():
-              if old not in text:
-                  raise SystemExit(f'Expected old CI scene ID not found: {old}')
+              if old not in text and new not in text:
+                  raise SystemExit(f'Neither old nor new CI scene ID found: {old} / {new}')
               text = text.replace(old, new)
           path.write_text(text, encoding='utf-8')
           PY
