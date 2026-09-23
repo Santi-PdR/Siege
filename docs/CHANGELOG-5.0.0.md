@@ -1,109 +1,108 @@
 # SIEGE 5.00.0 — Command Network
 
-Estado: desarrollo activo en `chatgpt/siege-5.00.0-nextgen`.
+Estado: candidato final. La rama `chatgpt/siege-5.00.0-nextgen` conserva Forge 1.20.1 / Java 17 y prepara el salto completo desde 4.00.0.
 
-5.00 no se plantea como una suma de parches sobre 4.00. La base es convertir SIEGE en una experiencia más coherente, fácil de entender y mucho más audiovisual, manteniendo Forge 1.20.1 / Java 17 y los contratos de privacidad, Intel, Deployment y accesibilidad existentes.
+5.00 no es una suma de botones o textos nuevos. Reorganiza navegación, Briefing, Atlas, razas, progresión, información actual, audio y Multimedia a partir de los errores detectados jugando 4.00 y del export completo de Eternal Craft / SIEGE.
 
-## Bloques ya implementados
-
-### Operations simplificado
-- Operations deja de mostrar una pared de accesos repetidos.
+## Operations simplificado
+- Operations deja de ser una pared de accesos repetidos.
 - Quedan tres frentes: **Entrar y prepararse**, **Amenazas y progreso** y **Consultar información**.
-- Archivo y Arsenal permanecen en el menú principal y dejan de ser rutas de Operations.
+- Archivo y Arsenal siguen en el menú principal y ya no se duplican desde Operations o Intel.
 - Comando, Diagnóstico, Ajustes y Fondos dejan de duplicarse dentro de Operations.
-- La búsqueda de Operations sigue encontrando dossiers, razas, Trials, reliquias y temas, pero ya no vuelve a introducir las rutas que se quitaron.
-- El encabezado deja de mostrar estado técnico del cliente, “profile fit” y otros datos que no ayudan a jugar.
+- Diagnóstico deja de ser una ruta visible normal.
+- El encabezado elimina estado técnico del cliente, `profile fit` y textos que no ayudan a jugar.
+- La búsqueda sigue encontrando dossiers, razas, Trials, reliquias y temas reales.
 
-### Briefing rehecho para nuevos
-- El Briefing pasa a llamarse **Primeros pasos** dentro de la propia pantalla.
-- Se reduce a nueve temas útiles: qué es SIEGE, cómo empezar, razas, habilidades, V1→V4, Trials, Executores, unidades/bosses y heridas/reanimación.
-- El comienzo explica que se puede arrancar como un survival normal: comida, herramientas, armadura, refugio y recursos antes de meterse con sistemas complejos.
-- Se eliminan frases de auditoría, “evidencia”, “revisión”, “corpus” y otras expresiones técnicas de las pantallas normales.
-- Los enlaces entre fichas dejan de ser un “También ver” automático. Sólo aparecen siguientes pasos concretos cuando realmente ayudan.
+## Briefing rehecho para nuevos
+- El Briefing se presenta como **Primeros pasos**.
+- Nueve temas: qué es SIEGE, cómo empezar, razas, habilidades/experiencia, V1→V4, Trials, Executores, unidades/bosses y heridas/reanimación.
+- Explica primero que se puede arrancar como un survival normal: comida, herramientas, armadura, refugio y recursos.
+- Después introduce los sistemas especiales sin asumir que el jugador ya conoce nombres o abreviaciones.
+- Se quitan frases de auditoría, “evidencia”, “revisión”, “corpus” y lenguaje técnico innecesario de las pantallas normales.
+- Desaparece el “También ver” automático. Sólo quedan siguientes pasos concretos cuando ayudan de verdad, por ejemplo bosses → Intel o razas → Atlas de Razas.
 
-### Atlas y Enciclopedia separados del Briefing
-- Atlas queda para consulta detallada, no como una copia del Briefing.
-- Cuatro áreas claras: **Razas**, **Progresión**, **Sistemas** y **Objetos**.
-- La Enciclopedia usa categorías equivalentes y sólo muestra información actual destinada a jugadores.
-- Los registros viejos o editoriales pueden seguir existiendo internamente para mantenimiento, pero no aparecen como fichas normales ni pueden abrirse mediante deep-link público.
-- La información más nueva reemplaza a la vieja cuando comparten el mismo tema.
+## Atlas y Enciclopedia
+- Atlas queda para consultar a fondo, no para repetir el Briefing.
+- Áreas principales: **Razas**, **Progresión**, **Sistemas** y **Objetos**.
+- La Enciclopedia usa categorías equivalentes y sólo expone información actual destinada a jugadores.
+- Registros viejos/editoriales pueden quedar internamente para mantenimiento, pero no se muestran como fichas normales.
+- Cuando un mismo tema cambió, la capa más nueva reemplaza la anterior en la interfaz.
 
-### Razas y progresión
-- V1, V2, V3 y V4 ahora se explican como etapas de evolución para las razas que usan ese sistema; ya no se da a entender que todas las razas progresan igual.
-- Saiyan tiene su propia ruta basada en entrenamiento y transformaciones.
-- Ghoul separa progreso por carne, V2 y Super Ghoul para no mezclar mecanismos distintos.
-- Subhuman pasa a explicarse como una familia de variantes. Existen fichas separadas para **Adamantium Human**, **Sorcerer**, **Evil Morty** y **Rick Sanchez**.
-- Las fichas de Subhuman, Saiyan y Ghoul pueden abrir una pantalla de rutas/variantes propia.
-- El Atlas de Razas se amplió con el catálogo grande recuperado del chat: Human, Mink, Tsufurujin, Shark, Angel, Ghoul, Cyborg, Deteriorer, Involver, Majin, Dark Manor, Hermes, Saiyan, Otsutsuki, Ackerman, Titan, Exceed, Cold Demon, Kaioshin, Dragon, Gas, Muerte, Shinigami, Fullbringer, Arrancar, Hakaishin, Zeno, Quincy, Divine, Namekian, Angel Guía, Aryano, Narehate, Arclighter, Faraón, Sun, Almirante, Archie, Emperador, Glitch Core, Jiren, Winter Hunter, Apotheosis, Lunarian, Virtud, Super Ghoul, Terrariano, Fénix, Diclonius, Windwhirl, Void Master, SOBRINO, Oni, Iluminati y Undertale AU.
-- Una raza encontrada en el registro no recibe habilidades inventadas. Cuando sólo está confirmado el nombre, la ficha lo dice y queda preparada para completar más adelante.
-- El mapa de progresión se organiza en: cómo progresar, V1→V4, rutas de raza y Trials.
-- Trial Spire, Trials de meditación, Trials de raza, Trials de armas, Witch Trials y Third Justice quedan separados en lugar de mezclarse en una regla genérica.
+## Razas y progresión
+- V1, V2, V3 y V4 se explican como etapas de evolución para las razas que usan ese sistema; ya no se finge que todas progresan igual.
+- Saiyan usa entrenamiento, dojos y transformaciones como parte central de su progreso.
+- Ghoul separa progreso por carne, V2 y Super Ghoul.
+- Subhuman se trata como una familia. Hay fichas separadas para **Adamantium Human**, **Sorcerer**, **Evil Morty** y **Rick Sanchez**.
+- Las fichas de Subhuman, Saiyan y Ghoul pueden abrir rutas/variantes propias.
+- Los giros de raza se explican como resultados aleatorios y se aclara que algunas razas usan pasos o spins especiales.
+- El Atlas de Razas se amplía con el catálogo grande recuperado del chat: Human, Mink, Tsufurujin, Shark, Angel, Ghoul, Cyborg, Deteriorer, Involver, Majin, Dark Manor, Hermes, Saiyan, Otsutsuki, Ackerman, Titan, Exceed, Cold Demon, Kaioshin, Dragon, Gas, Muerte, Shinigami, Fullbringer, Arrancar, Hakaishin, Zeno, Quincy, Divine, Namekian, Angel Guía, Aryano, Narehate, Arclighter, Faraón, Sun, Almirante, Archie, Emperador, Glitch Core, Jiren, Winter Hunter, Apotheosis, Lunarian, Virtud, Super Ghoul, Terrariano, Fénix, Diclonius, Windwhirl, Void Master, SOBRINO, Oni, Iluminati y Undertale AU.
+- Si sólo está confirmado el nombre de una raza, la ficha lo dice. No se inventan habilidades, rareza o requisitos.
 
-### Información recuperada del export completo
-- El export dividido enviado para 5.00 se reconstruyó e indexó: **251.065 mensajes** disponibles para búsquedas y revisión por tema.
-- Se añadieron datos reutilizables que no dependan de la partida de una persona: variantes de raza, tipos de Executor, herramientas de reliquias y Trials.
-- Maze Executor queda identificado como una variante de Executor; la guía ya no trata a todos los Executores como si fueran iguales.
-- Se incorpora el aviso de proximidad de Executor como ayuda del cliente, aclarando que no reemplaza el dossier de Intel.
-- Se añadió la variante Subhuman **Rick Sanchez** sin inventar rareza, habilidades o progresión que el chat no confirme.
-- El Trial del santuario queda documentado como evento global, pero sus cifras antiguas no se fijan como requisitos permanentes porque pueden cambiar con balance.
+## Sistemas recuperados del export
+El export dividido enviado para 5.00 fue reconstruido e indexado: **251.065 mensajes**, desde noviembre de 2025 hasta septiembre de 2026, disponibles para buscar por tema y fecha.
 
-### Información actual y recetas
-- La interfaz normal conserva sólo la regla más nueva conocida cuando algo cambió.
-- El desfibrilador reemplaza a RCP como método actual de reanimación general.
-- Crafteo actual del desfibrilador en la guía: **3 bloques de hierro + 1 mesa de encantamientos**.
-- Las recetas anteriores no se muestran en la ficha normal.
-- Geography Table se explica por su función: investigar propiedades ocultas de objetos y reliquias.
-- Daemonium Kit se separa de Geography Table: sirve en el proceso de desmontar reliquias y extraer componentes.
-- Se eliminan precios, compras personales y anécdotas de jugadores de estas fichas.
+Se incorporó información reutilizable y no personal sobre:
+- Room y Gate de Hacker;
+- niveles y usos de meditación sin congelar números viejos como permanentes;
+- stamina de habilidades añadida en septiembre;
+- dojos y entrenamiento Saiyan;
+- Maze Executor y aviso de Executor cercano;
+- Respawn Cards y su función separada del sistema médico;
+- Assembling, implantes, chips y relación con Cyborg;
+- Geography Table y Daemonium Kit con funciones separadas;
+- Trial Spire, Trials de meditación, Trials de raza, Trials de armas, Witch Trials, Trial de Third Justice y Trial global del santuario;
+- dimensiones sólo al nivel que puede confirmarse, sin rellenar huecos con consejos genéricos.
 
-### Navegación duplicada
-- Intel deja de ser un acceso alternativo a Archivo/Arsenal mediante un pase final de limpieza de navegación.
-- Diagnóstico deja de ser una ruta visible para el jugador.
-- Comando permanece como opción dentro de Ajustes, sin duplicarse en Operations.
+No se importan inventarios personales, progreso privado, precios de una persona ni anécdotas como reglas del servidor.
 
-### Audio 5.0
-- El soundtrack se vuelve a generar desde los masters limpios con **44.1 kHz** y **3 dB de headroom** antes de codificar a Vorbis.
-- La razón es práctica: el artefacto 4.0 decodificaba varias pistas llegando o superando 0 dBFS, algo que puede producir crackling/interferencia en ciertas combinaciones OpenAL/dispositivo.
-- CI decodifica completamente cada OGG y rechaza pistas corruptas, tasas de muestreo incorrectas o música sin margen suficiente.
-- Los sonidos de interfaz también se verifican como Vorbis 44.1 kHz.
-- Los clics, volver, avisos y cambios de categoría dejan de reutilizar el mismo sample con pitch artificial distinto: se reproducen al pitch original `1.0` para evitar que la interfaz suene deformada.
+## Información actual y recetas
+- La interfaz normal conserva únicamente la versión más nueva que puede confirmarse.
+- **Medkit / Botiquín:** crafteo actual indicado durante la revisión 5.00 del 22/09/2026: **3 bloques de hierro + 1 mesa de encantamientos**.
+- **Desfibrilador:** el export más reciente mantiene **3 bloques de hierro + 1 bloque de oro**.
+- RCP deja de mostrarse como método general actual de reanimación; el desfibrilador es la herramienta normal del sistema de muerte actual.
+- Respawn Cards se explican como una vía separada de revive.
+- Las recetas anteriores no aparecen en la ficha normal.
+- Geography Table se explica por su utilidad: investigar información o propiedades ocultas de objetos/reliquias.
+- Daemonium Kit se usa para extraer componentes al desarmar reliquias.
 
-### Media Room 5.0
-- Nueva sección **Ambientes / Moods**.
-- Los ambientes conectan una pista ya instalada con referencias temáticas para una situación concreta.
-- Ambientes actuales: **Stronghold**, **Deployment**, **Intel / Archive**, **Last Stand** y **Industrial War**.
-- Los catálogos DVN y de dirección visual tienen scroll.
-- La dirección visual incluye Stronghold, Arctic Standoff, combate urbano nocturno, ciudad sitiada, frente desértico, zona industrial, hangar/briefing, wave defense, boss assault y armería de despliegue.
-- La búsqueda web del pase 5.00 amplió referencias musicales DVN con Convenience Store, Music Box, New Store, Jazz Music, From the Ashes, Sad Choir, Calm Before The Storm A, The Last Flame, Into The Storm, Grinder, Hell March (Remastered), Fight Through Adversity, Scanning Hostile Biodats y Full Force.
-- Las referencias externas siguen siendo referencias. No se incluye audio de terceros sin una fuente válida para redistribuirlo.
-- El material oficial localizado en Roblox sigue llegando a resolución de miniatura (por ejemplo 768×432), por lo que no se hace upscale barato para fingir un fondo HD.
+## Navegación duplicada
+- Intel deja de ser un acceso alternativo a Archivo/Arsenal.
+- Diagnóstico desaparece de la navegación normal.
+- Comando/Cine permanece como opción de Ajustes, sin duplicarse en Operations.
 
-### Perfil STRONGHOLD
+## Audio 5.00
+- El soundtrack se regenera desde los masters limpios a **Ogg Vorbis 44.1 kHz**.
+- Se aplica **3 dB de headroom** antes de codificar para evitar clipping/crackling que podía sentirse como interferencia en 4.00.
+- CI decodifica completamente cada OGG y rechaza audio corrupto o con tasa incorrecta.
+- Las pistas preparadas también pasan comprobación de pico decodificado.
+- Los sonidos de interfaz se verifican como Vorbis 44.1 kHz.
+- Click, volver, advertencias, categoría y otros sonidos dejan de deformar el mismo sample cambiando artificialmente el pitch: se reproducen al pitch original `1.0`.
+
+## Dummies vs Noobs / Multimedia
+- Media Room incorpora **Ambientes / Moods**: Stronghold, Deployment, Intel / Archive, Last Stand, Industrial War y Boss / Red Alert.
+- Los catálogos tienen scroll.
+- La dirección musical DVN incluye las referencias anteriores y amplía bosses con el álbum 2026: **Powerplay, Bewitched, Dissonant, Voltaic Dispatch, Ablaze, Dweller's Fury, Dead Center, Imperishable Valour y Death Sentence**.
+- Esas pistas son referencias de dirección: no se introducen archivos externos en el JAR sin una fuente que permita redistribuirlos.
+- La dirección de fondos DVN suma Stronghold, portal/last stand, frente costero, Arctic, urbano nocturno, industrial, wave defense, boss assault y deployment.
+- Las miniaturas oficiales localizadas a resolución baja, como 768×432, no se inflan artificialmente para fingir un master HD.
+
+## Perfil STRONGHOLD
 - Perfil visual inspirado en la identidad militar de Dummies vs Noobs / Stronghold.
 - Mantiene fondos e Intel animados y scanlines suaves.
-- Reduce flashes y elimina la interferencia de título para no sacrificar legibilidad por estética.
+- Reduce flashes y elimina interferencia del título para no sacrificar legibilidad.
 
-## Fuente de contenido para el pase 5.00
-La revisión de contenido usa el export completo de Eternal Craft / SIEGE, con mensajes desde 2025 hasta septiembre de 2026. El export se indexó completo para localizar sistemas, razas, objetos, Trials, recetas y correcciones recientes. Eso no significa copiar conversaciones a la interfaz: se extrae información reutilizable, se descartan datos personales y se compara la fecha cuando hay versiones distintas de una misma mecánica.
-
-La regla para la interfaz normal es conservar el dato más reciente que pueda confirmarse y no mezclarlo con recetas, precios o requisitos anteriores. Cuando la información sigue incompleta, se indica de forma sencilla en vez de inventar el paso que falta.
-
-## Contratos que siguen siendo obligatorios
+## Contratos que 5.00 conserva
 - Forge 1.20.1 / Java 17.
-- Singleplayer sólo mediante Ctrl+S.
-- servidor oficial y callbacks vanilla autoritativos.
-- UNKNOWN permanece en Intel cuando realmente no se sabe algo.
-- sin Favoritos / Índice / Guardar / Copiar en Intel.
-- dossier a la derecha.
-- música aleatoria sin repetición.
-- Tempest Jutcherson continúa aislado como easter egg, fuera de fondos y galería normales.
-- pantallas de Embeddium/Sodium/otros mods no se tematizan accidentalmente.
-- reduce flashes / reduce motion / high contrast siguen siendo contratos de accesibilidad.
-- la información general nunca debe convertirse en perfil, inventario, build o progreso personal de un jugador.
+- Singleplayer sólo con Ctrl+S.
+- Servidor oficial y callbacks vanilla autoritativos.
+- UNKNOWN permanece cuando realmente falta información.
+- Sin Favoritos / Índice / Guardar / Copiar en Intel.
+- Dossier a la derecha.
+- Música aleatoria sin repetición.
+- Tempest Jutcherson aislado como easter egg, fuera de fondos y galería normales.
+- Pantallas de Embeddium/Sodium/otros mods no se tematizan accidentalmente.
+- Reduce flashes / reduce motion / high contrast siguen siendo controles reales.
+- Información general del servidor nunca se transforma en perfil, inventario, build o progreso personal de un jugador.
 
-## Todavía pendiente antes de considerar 5.00 terminado
-- seguir revisando por tema los 251.065 mensajes para razas, sistemas, Trials, objetos y consejos que todavía no tengan ficha actual;
-- completar las rutas de razas sólo cuando haya información suficientemente clara y reciente;
-- continuar buscando masters de fondos de Dummies vs Noobs con calidad suficiente y procedencia adecuada para entrar en la rotación normal;
-- probar en juego el nuevo build, especialmente audio, GUI Scale, Intel, Atlas, Briefing y Operations;
-- mantener el PR como draft hasta que el CI final y la prueba real del JAR estén verdes.
+## Cierre del release
+5.00 queda listo para merge cuando el CI final del PR esté verde. La publicación del JAR ocurre únicamente desde `main`, después de compilar y validar los recursos, audio, layouts y contratos de la versión.
