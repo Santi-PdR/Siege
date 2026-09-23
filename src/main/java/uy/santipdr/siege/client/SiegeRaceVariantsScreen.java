@@ -48,7 +48,11 @@ public final class SiegeRaceVariantsScreen extends Screen {
 
     private List<String> entries() {
         return switch (raceId) {
-            case "subhuman" -> List.of("subhuman-adamantium-human", "subhuman-sorcerer", "subhuman-evil-morty");
+            case "subhuman" -> List.of(
+                    "subhuman-adamantium-human",
+                    "subhuman-sorcerer",
+                    "subhuman-evil-morty",
+                    "subhuman-rick-sanchez");
             case "saiyan" -> List.of("saiyan-transformations");
             case "ghoul" -> List.of("ghoul-progression");
             default -> List.of();
@@ -67,8 +71,8 @@ public final class SiegeRaceVariantsScreen extends Screen {
     private String description() {
         return switch (raceId) {
             case "subhuman" -> label(
-                    "Subhuman es una familia. Cada variante tiene su propia ficha y no se mezcla con Human normal.",
-                    "Subhuman is a family. Each variant has its own entry and is not mixed with normal Human.");
+                    "Subhuman es una familia. Cada variante conocida tiene su propia ficha y no se mezcla con Human normal.",
+                    "Subhuman is a family. Each known variant has its own entry and is not mixed with normal Human.");
             case "saiyan" -> label(
                     "Saiyan progresa mediante entrenamiento y transformaciones conocidas, no con una única receta V1→V4.",
                     "Saiyan progresses through training and known transformations rather than one V1→V4 recipe.");
