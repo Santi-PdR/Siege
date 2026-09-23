@@ -2,7 +2,7 @@ package uy.santipdr.siege.client;
 
 import java.util.List;
 
-/** Curated audiovisual direction for the SIEGE 5.50 Media Room. */
+/** Curated audiovisual direction for the SIEGE Media Room. */
 public final class SiegeMediaReferenceData {
     public enum Use {
         LOBBY("LOBBY", "LOBBY"),
@@ -42,15 +42,12 @@ public final class SiegeMediaReferenceData {
     private SiegeMediaReferenceData() { }
 
     private static final List<Track> DVN_TRACKS = List.of(
-            new Track("Stronghold 5-5 · Black Signal", Use.BRIEFING,
-                    "Pista original de SIEGE para la sala de mando: drones industriales, golpes lejanos, ruido de radio y una alarma contenida. Forma parte real de la playlist instalada.",
-                    "Original SIEGE command-room track: industrial drones, distant impacts, radio noise and a restrained alarm motif. It is part of the installed playlist."),
-            new Track("Nucleus · Silent Carrier", Use.BRIEFING,
-                    "Pista original 5.50 para El Núcleo: ambiente electrónico lento, pulsos codificados y una portadora que aparece y desaparece sin voces. Está instalada de verdad.",
-                    "Original 5.50 Nucleus track: slow electronic ambience, coded pulses and a carrier that fades in and out without voices. It is actually installed."),
-            new Track("Tesla Breach", Use.BOSS,
-                    "Pista original 5.50 para amenazas eléctricas y de Nusia: pulso industrial lento, arcos sintetizados y resonancias metálicas. Está instalada de verdad.",
-                    "Original 5.50 track for electrical and Nusia threats: slow industrial pulse, synthesised arcs and metallic resonances. It is actually installed."),
+            new Track("A Stranger I Remain (Maniac Agenda Mix)", Use.BOSS,
+                    "Aprobada para SIEGE 5.60. Encaja con boss, alerta roja y combates donde una amenaza domina la escena. Sólo aparece como pista jugable cuando el master preparado está presente en el build.",
+                    "Approved for SIEGE 5.60. Fits boss fights, red alerts and encounters dominated by one threat. It only becomes playable when the prepared master is present in the build."),
+            new Track("Receive You The Hyperactive", Use.COMBAT,
+                    "Aprobada para SIEGE 5.60. Pensada para combates especiales, personajes importantes y escenas de alta energía. Sólo se activa cuando el master preparado existe.",
+                    "Approved for SIEGE 5.60. Intended for special combat, important characters and high-energy scenes. It activates only when the prepared master exists."),
             new Track("Arc - Enemy", Use.COMBAT,
                     "Pista de Potoe dedicada a DVN. SIEGE la integra en la rotación del menú con su atribución incluida.",
                     "Potoe track dedicated to DVN. SIEGE includes it in menu rotation with bundled attribution."),
@@ -129,11 +126,11 @@ public final class SiegeMediaReferenceData {
             new Mood("stronghold", "STRONGHOLD", "STRONGHOLD",
                     "Sala de operaciones bajo presión: oscura, militar y contenida.",
                     "Operations room under pressure: dark, military and restrained.",
-                    "Stronghold 5-5 · Black Signal", List.of("Music Box", "From the Ashes", "The Last Flame")),
+                    "Arc - Enemy · Potoe", List.of("A Stranger I Remain (Maniac Agenda Mix)", "Music Box", "From the Ashes", "The Last Flame")),
             new Mood("nucleus-signal", "SEÑAL DEL NÚCLEO", "NUCLEUS SIGNAL",
                     "Observación silenciosa, ruido de datos y sensación de que El Núcleo está reaccionando sin convertir toda la interfaz en una alarma.",
                     "Silent observation, data noise and the sense that the Nucleus is reacting without turning the entire interface into an alarm.",
-                    "Nucleus · Silent Carrier", List.of("Scanning Hostile Biodats", "Dissonant", "Voltaic Dispatch")),
+                    "Tale of a Cruel World", List.of("Scanning Hostile Biodats", "Dissonant", "Voltaic Dispatch")),
             new Mood("deployment", "DESPLIEGUE", "DEPLOYMENT",
                     "Preparación antes de entrar al servidor: tensión baja y sensación de partida inminente.",
                     "Pre-server preparation: low tension and a sense of imminent deployment.",
@@ -145,19 +142,19 @@ public final class SiegeMediaReferenceData {
             new Mood("last-stand", "ÚLTIMA LÍNEA", "LAST STAND",
                     "Escenas de alto riesgo, bosses y amenazas mayores.",
                     "High-risk scenes, bosses and major threats.",
-                    "Heaven's Hell-Sent Gift", List.of("Arc - Enemy", "Sad Choir", "From the Ashes", "Into The Storm", "Full Force")),
+                    "Heaven's Hell-Sent Gift", List.of("A Stranger I Remain (Maniac Agenda Mix)", "Arc - Enemy", "Sad Choir", "From the Ashes", "Into The Storm", "Full Force")),
             new Mood("industrial-war", "GUERRA INDUSTRIAL", "INDUSTRIAL WAR",
                     "Oleadas, hangares, artillería y zonas industriales con ritmo más agresivo.",
                     "Waves, hangars, artillery and industrial zones with a more aggressive rhythm.",
-                    "Arc - Enemy · Potoe", List.of("Grinder", "Hell March (Remastered)", "Fight Through Adversity")),
+                    "Arc - Enemy · Potoe", List.of("Receive You The Hyperactive", "Grinder", "Hell March (Remastered)", "Fight Through Adversity")),
             new Mood("tesla-front", "FRENTE TESLA", "TESLA FRONT",
                     "Amenazas eléctricas, bobinas, ruptura de línea y presión tecnológica de Nusia.",
                     "Electrical threats, coils, line breaches and Nusia technological pressure.",
-                    "Tesla Breach", List.of("Voltaic Dispatch", "Powerplay", "Scanning Hostile Biodats")),
+                    "Heaven's Hell-Sent Gift", List.of("A Stranger I Remain (Maniac Agenda Mix)", "Voltaic Dispatch", "Powerplay", "Scanning Hostile Biodats")),
             new Mood("boss-alert", "BOSS / ALERTA ROJA", "BOSS / RED ALERT",
                     "Peleas donde una sola unidad domina el frente y la interfaz debe sentirse más urgente.",
                     "Fights where one unit dominates the front and the interface should feel more urgent.",
-                    "Tesla Breach", List.of("Powerplay", "Ablaze", "Imperishable Valour", "Death Sentence"))
+                    "Heaven's Hell-Sent Gift", List.of("A Stranger I Remain (Maniac Agenda Mix)", "Receive You The Hyperactive", "Powerplay", "Ablaze", "Imperishable Valour", "Death Sentence"))
     );
 
     private static final List<Visual> VISUALS = List.of(
