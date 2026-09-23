@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * SIEGE 5.30 release gate for visual media. Every GUI PNG/JPG must decode.
+ * SIEGE 5.40 release gate for visual media. Every GUI PNG/JPG must decode.
  * Menu scenes use their real prepared source dimensions; no CI rule may demand
  * synthetic 1920x1080 enlargement from a smaller source.
  */
@@ -35,7 +35,7 @@ public final class GuiResourceRegressionTest {
         }
 
         Path backgrounds = gui.resolve("backgrounds");
-        check(SiegeSceneCatalog.count() >= 15, "5.30 scene catalog unexpectedly shrank");
+        check(SiegeSceneCatalog.count() >= 18, "5.40 scene catalog unexpectedly shrank");
         for (int i = 0; i < SiegeSceneCatalog.count(); i++) {
             Path file = backgrounds.resolve(SiegeSceneCatalog.id(i) + ".png");
             int[] size = decode(file);
@@ -52,7 +52,8 @@ public final class GuiResourceRegressionTest {
                     "Reserved easter egg leaked into normal menu catalog: " + SiegeSceneCatalog.id(i));
         }
 
-        for (String id : new String[]{"dvn_official_01", "dvn_official_02", "dvn_official_03"}) {
+        for (String id : new String[]{"dvn_official_01", "dvn_official_02", "dvn_official_03",
+                "dvn_official_04", "dvn_official_05", "dvn_official_06"}) {
             check(SiegeSceneCatalog.width(indexOf(id)) == 768 && SiegeSceneCatalog.height(indexOf(id)) == 432,
                     "Official DVN scene should stay at native 768x432, not fake-HD: " + id);
         }
@@ -66,7 +67,7 @@ public final class GuiResourceRegressionTest {
         check(SiegeSceneCatalog.featuredIndex() >= 0, "Featured scene metadata missing");
 
         System.out.println("SIEGE GUI resources: " + images.size()
-                + " images decoded; native-resolution 16:9 scenes and easter-egg isolation verified");
+                + " images decoded; 5.40 native-resolution scenes and easter-egg isolation verified");
     }
 
     private static int indexOf(String id) {

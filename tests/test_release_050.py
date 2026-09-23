@@ -51,13 +51,16 @@ assert "CLIENTE " not in HUB and "profileFitLabel" not in HUB
 assert "Kind.ARMORY" not in OPS
 assert "confidence().label" not in OPS
 
-# Briefing is a newcomer path, not a second encyclopedia.
+# Briefing remains a newcomer path, not a second encyclopedia. The exact title may
+# evolve across later 5.x releases; the durable contract is the guided sequence and
+# a clearly identified briefing/first-steps surface.
 for required in ("server-overview", "newcomer-operational-rule", "race-system", "abilities-experience",
                  "progression-v1-v4", "trials-basics", "executors-basics", "bosses-basics", "death-revive-current"):
     assert f'"{required}"' in BRIEF
 for removed in ("progression-mobility-priority", "dimensions-basics", "economy-basics", "prompt-precision-framework"):
     assert removed not in BRIEF
-assert "PRIMEROS PASOS" in BRIEF
+assert "PRIMEROS PASOS" in BRIEF or "BRIEFING 5.40" in BRIEF
+assert 'Component.literal("SIEGE // BRIEFING")' in BRIEF
 
 # Atlas/Encyclopedia expose current information in natural categories; no historical/editorial tab or generic see-also.
 assert "enum View { RACES, PROGRESSION, SYSTEMS, ITEMS }" in ATLAS_INDEX

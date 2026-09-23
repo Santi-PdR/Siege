@@ -3,7 +3,8 @@
 
 This is intentionally a source-quality audit, not an AI/aesthetic score. It protects
 aspect ratio, real dimensions, visible dynamic range and basic edge detail while
-allowing naturally dark/night scenes.
+allowing naturally dark/night scenes. SIEGE 5.40 validates all six current official
+DVN gallery images at their native 768x432 resolution.
 """
 from pathlib import Path
 from PIL import Image, ImageFilter, ImageStat
@@ -14,6 +15,9 @@ EXPECTED = {
     "dvn_official_01": (768, 432),
     "dvn_official_02": (768, 432),
     "dvn_official_03": (768, 432),
+    "dvn_official_04": (768, 432),
+    "dvn_official_05": (768, 432),
+    "dvn_official_06": (768, 432),
     "anniversary": (960, 540),
     "frontline_19": (960, 540),
     "cyborg": (960, 540),
@@ -82,6 +86,6 @@ def audit(name: str, expected: tuple[int, int]) -> str:
 
 if __name__ == "__main__":
     lines = [audit(name, expected) for name, expected in EXPECTED.items()]
-    print("SIEGE 5.30 background quality audit")
+    print("SIEGE 5.40 background quality audit")
     print("\n".join(lines))
-    print(f"PASS: {len(lines)} normal backgrounds checked; no fake-HD requirement.")
+    print(f"PASS: {len(lines)} normal backgrounds checked; native sources preserved without fake HD.")

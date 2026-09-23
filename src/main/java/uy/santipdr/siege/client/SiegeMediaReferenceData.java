@@ -2,7 +2,7 @@ package uy.santipdr.siege.client;
 
 import java.util.List;
 
-/** Curated audiovisual direction for the SIEGE 5.30 Media Room. */
+/** Curated audiovisual direction for the SIEGE 5.40 Media Room. */
 public final class SiegeMediaReferenceData {
     public enum Use {
         LOBBY("LOBBY", "LOBBY"),
@@ -42,6 +42,9 @@ public final class SiegeMediaReferenceData {
     private SiegeMediaReferenceData() { }
 
     private static final List<Track> DVN_TRACKS = List.of(
+            new Track("Stronghold 5-5 · Black Signal", Use.BRIEFING,
+                    "Pista original de SIEGE 5.40 generada para la sala de mando: drones industriales, golpes lejanos, ruido de radio y una alarma contenida. Forma parte real de la playlist instalada.",
+                    "Original SIEGE 5.40 track generated for the command room: industrial drones, distant impacts, radio noise and a restrained alarm motif. It is part of the installed playlist."),
             new Track("Arc - Enemy", Use.COMBAT,
                     "Pista de Potoe dedicada a DVN. SIEGE la integra en la rotación del menú con su atribución incluida.",
                     "Potoe track dedicated to DVN. SIEGE includes it in menu rotation with bundled attribution."),
@@ -120,11 +123,15 @@ public final class SiegeMediaReferenceData {
             new Mood("stronghold", "STRONGHOLD", "STRONGHOLD",
                     "Sala de operaciones bajo presión: oscura, militar y contenida.",
                     "Operations room under pressure: dark, military and restrained.",
-                    "The Darkest of Days", List.of("Music Box", "From the Ashes", "The Last Flame")),
+                    "Stronghold 5-5 · Black Signal", List.of("Music Box", "From the Ashes", "The Last Flame")),
+            new Mood("nucleus-signal", "SEÑAL DEL NÚCLEO", "NUCLEUS SIGNAL",
+                    "Interfaz en estado de observación o cambio: ruido de radio, tensión tecnológica y sensación de que el sistema está reaccionando sin convertirlo en una alarma constante.",
+                    "Interface under observation or change: radio noise, technological tension and the sense that the system is reacting without turning into a constant alarm.",
+                    "Stronghold 5-5 · Black Signal", List.of("Scanning Hostile Biodats", "Dissonant", "Voltaic Dispatch")),
             new Mood("deployment", "DESPLIEGUE", "DEPLOYMENT",
                     "Preparación antes de entrar al servidor: tensión baja y sensación de partida inminente.",
                     "Pre-server preparation: low tension and a sense of imminent deployment.",
-                    "Dummies vs Noobs Lobby Music", List.of("Convenience Store", "New Store", "Calm Before The Storm A")),
+                    "Kaptain Music Box", List.of("Convenience Store", "New Store", "Calm Before The Storm A")),
             new Mood("intel", "INTEL / ARCHIVO", "INTEL / ARCHIVE",
                     "Lectura de dossiers y archivos sin competir con el texto.",
                     "Dossier and archive reading without competing with text.",
@@ -153,6 +160,15 @@ public final class SiegeMediaReferenceData {
             new Visual("official-gallery-03", "DVN · Escena oficial 03", "DVN · Official Scene 03",
                     "Tercera miniatura oficial recuperada de la galería actual de Dummies vs Noobs; conserva el 16:9 y los 768×432 originales.",
                     "Third official thumbnail recovered from the current Dummies vs Noobs gallery; it keeps the original 16:9 768×432 source.", true),
+            new Visual("official-gallery-04", "DVN · Escena oficial 04", "DVN · Official Scene 04",
+                    "Cuarta escena oficial incorporada en 5.40 directamente desde la galería actual de Roblox, sin reescalado artificial.",
+                    "Fourth official scene added in 5.40 directly from the current Roblox gallery, without synthetic upscaling.", true),
+            new Visual("official-gallery-05", "DVN · Escena oficial 05", "DVN · Official Scene 05",
+                    "Quinta escena oficial incorporada a la rotación para reducir repeticiones y ampliar el tono visual de DVN.",
+                    "Fifth official scene added to rotation to reduce repetition and broaden the DVN visual tone.", true),
+            new Visual("official-gallery-06", "DVN · Escena oficial 06", "DVN · Official Scene 06",
+                    "Sexta escena oficial en 768×432, validada por contraste, detalle y formato 16:9 antes de entrar al build.",
+                    "Sixth official 768×432 scene, validated for contrast, detail and 16:9 format before entering the build.", true),
             new Visual("stronghold-defense", "Stronghold / última fortaleza", "Stronghold / last stronghold",
                     "Defensa de fortaleza, escuadra y armamento moderno o futurista. Prioridad alta para portada.",
                     "Stronghold defense, squad and modern or future weaponry. High priority for the main menu.", false),
@@ -188,7 +204,13 @@ public final class SiegeMediaReferenceData {
                     "A dominant threat in the distance and a small squad in front to sell scale.", false),
             new Visual("armory-deployment", "Armería de despliegue", "Deployment armory",
                     "Armas, cajas, luces de emergencia y preparación previa a una misión.",
-                    "Weapons, crates, emergency lights and pre-mission preparation.", false)
+                    "Weapons, crates, emergency lights and pre-mission preparation.", false),
+            new Visual("nucleus-command", "Interferencia del Núcleo", "Nucleus interference",
+                    "Terminales, monitores y señal degradada para sugerir que El Núcleo está reaccionando sin mostrar una IA humanoide genérica.",
+                    "Terminals, monitors and degraded signal suggesting the Nucleus is reacting without depicting a generic humanoid AI.", false),
+            new Visual("tesla-breach", "Ruptura Tesla", "Tesla breach",
+                    "Bobinas, arcos eléctricos y humo para amenazas de Nusia como Zapper o Tempest, manteniendo espacio libre para la UI.",
+                    "Coils, electrical arcs and smoke for Nusia threats such as Zapper or Tempest, while keeping clear UI space.", false)
     );
 
     public static List<Track> dvnTracks() { return DVN_TRACKS; }

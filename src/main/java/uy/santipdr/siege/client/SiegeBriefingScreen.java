@@ -7,16 +7,21 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** SIEGE 5.00 newcomer path: only the things a new player actually needs first. */
+/** SIEGE 5.40 newcomer path: current context first, then the systems a player needs. */
 public final class SiegeBriefingScreen extends Screen {
     private static final List<String> STEPS = List.of(
             "server-overview",
+            "el-nucleo",
+            "stronghold-55",
+            "factions-current-front",
+            "warfare-pillars",
             "newcomer-operational-rule",
             "race-system",
             "abilities-experience",
             "progression-v1-v4",
             "trials-basics",
             "executors-basics",
+            "threat-classes",
             "bosses-basics",
             "death-revive-current"
     );
@@ -137,15 +142,15 @@ public final class SiegeBriefingScreen extends Screen {
 
         int x = panelX + 12;
         int headerW = Math.max(30, panelW - (compact ? 112 : 160));
-        g.drawString(font, fit(label("PRIMEROS PASOS", "FIRST STEPS") + " // "
+        g.drawString(font, fit(label("BRIEFING 5.40", "BRIEFING 5.40") + " // "
                 + SiegeRuntimeStatus.version(), headerW), x, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "No es una enciclopedia: es el camino corto para entrar y entender lo que te afecta primero.",
-                "This is not an encyclopedia: it is the short path for joining and understanding what affects you first."), panelW - 24),
+                "Primero entendé el frente, El Núcleo y Stronghold 5-5; después pasá a tu progresión.",
+                "Understand the front, the Nucleus and Stronghold 5-5 first; then move into your progression."), panelW - 24),
                 x, panelY + 23, SiegeTheme.MUTED, false);
         g.drawString(font, fit(label(
-                "Empezá por supervivencia y raza; después pasá a Trials, amenazas y reanimación.",
-                "Start with survival and your race; then move into Trials, threats and revival."), panelW - 24),
+                "La Enciclopedia explica sistemas; Intel manda cuando necesitás identificar una amenaza concreta.",
+                "The Encyclopedia explains systems; Intel is the reference when you need to identify a specific threat."), panelW - 24),
                 x, panelY + 35, SiegeTheme.CYAN, false);
         SiegeTheme.divider(g, panelX + 10, startY - 8, panelW - 20, SiegeTheme.ORANGE);
 

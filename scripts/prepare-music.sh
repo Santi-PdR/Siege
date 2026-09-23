@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOURCE_DIR="$ROOT/assets-source/music-full"
+GENERATED_DIR="$ROOT/build/generated-music"
 TARGET_DIR="$ROOT/src/main/resources/assets/siege/sounds/music"
 DURATION_FILE="$ROOT/src/main/resources/assets/siege/music_durations.properties"
 
@@ -11,7 +12,7 @@ if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; 
   exit 1
 fi
 
-mkdir -p "$TARGET_DIR"
+mkdir -p "$TARGET_DIR" "$GENERATED_DIR"
 rm -f "$TARGET_DIR"/*.ogg
 : > "$DURATION_FILE"
 
@@ -20,6 +21,7 @@ DARKEST_SOURCE="$SOURCE_DIR/darkest_of_days.ogg"
 DVN_SOURCE="$SOURCE_DIR/dvn_lobby_music.ogg"
 HEAVEN_SOURCE="$SOURCE_DIR/heavens_hell_sent_gift.ogg"
 ARC_SOURCE="$(find "$SOURCE_DIR" -maxdepth 1 -type f -name 'arc_enemy.*' | head -n1 || true)"
+STRONGHOLD_SOURCE="$GENERATED_DIR/stronghold_black_signal.wav"
 
 KAPTAIN_START="179.599646"
 KAPTAIN_END="319.568250"
@@ -37,6 +39,10 @@ if [ -z "$ARC_SOURCE" ] || [ ! -f "$ARC_SOURCE" ]; then
   echo "Missing DVN Arc - Enemy source. Run scripts/fetch-dvn-media-510.sh first." >&2
   exit 1
 fi
+
+# 5.40 adds one fully original SIEGE track generated deterministically during the
+# build, so the new music does not depend on another third-party master.
+python3 "$ROOT/scripts/generate-stronghold-signal.py" "$STRONGHOLD_SOURCE"
 
 probe_ms() {
   local file="$1"
@@ -63,6 +69,7 @@ validate_source "Darkest of Days" "$DARKEST_SOURCE" 280000
 validate_source "DVN lobby mix" "$DVN_SOURCE" 535000
 validate_source "Heaven's Hell-Sent Gift" "$HEAVEN_SOURCE" 215000
 validate_source "Arc - Enemy" "$ARC_SOURCE" 60000
+validate_source "Stronghold Black Signal" "$STRONGHOLD_SOURCE" 131000
 
 encode_full() {
   local key="$1"
@@ -83,6 +90,7 @@ encode_full "tale_cruel_world" "$TALE_SOURCE"
 encode_full "darkest_of_days" "$DARKEST_SOURCE"
 encode_full "heavens_hell_sent_gift" "$HEAVEN_SOURCE"
 encode_full "arc_enemy" "$ARC_SOURCE"
+encode_full "stronghold_black_signal" "$STRONGHOLD_SOURCE"
 
 ffmpeg -hide_banner -loglevel error -y \
   -ss "$KAPTAIN_START" -i "$DVN_SOURCE" \
@@ -98,6 +106,7 @@ tracks=(
   kaptain_music_box
   heavens_hell_sent_gift
   arc_enemy
+  stronghold_black_signal
 )
 
 declare -A min_ms=(
@@ -106,6 +115,7 @@ declare -A min_ms=(
   [kaptain_music_box]=139000
   [heavens_hell_sent_gift]=215000
   [arc_enemy]=60000
+  [stronghold_black_signal]=131000
 )
 declare -A max_ms=(
   [tale_cruel_world]=263000
@@ -113,6 +123,7 @@ declare -A max_ms=(
   [kaptain_music_box]=141000
   [heavens_hell_sent_gift]=219000
   [arc_enemy]=600000
+  [stronghold_black_signal]=133000
 )
 
 for key in "${tracks[@]}"; do

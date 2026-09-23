@@ -4,7 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** SIEGE 5.00 audiovisual room: current media, operational moods and DVN direction. */
+/** SIEGE 5.40 audiovisual room: current media, operational moods and DVN direction. */
 public final class SiegeMediaRoomScreen extends Screen {
     private enum Mode { BUNDLED, MOODS, DVN_AUDIO, VISUALS }
 
@@ -109,11 +109,11 @@ public final class SiegeMediaRoomScreen extends Screen {
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xC9000000 : 0xA0000000);
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.CYAN);
-        g.drawString(font, fit(label("SALA MULTIMEDIA 5.0", "MEDIA ROOM 5.0") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
+        g.drawString(font, fit(label("SALA MULTIMEDIA 5.40", "MEDIA ROOM 5.40") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
                 panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
-                "Escenas, música y ambientes operacionales con identidad SIEGE / Dummies vs Noobs.",
-                "Scenes, music and operational moods with a SIEGE / Dummies vs Noobs identity."), panelW - 24),
+                "Fondos, música y ambientes del frente actual de SIEGE / Dummies vs Noobs.",
+                "Backgrounds, music and operational moods for the current SIEGE / Dummies vs Noobs front."), panelW - 24),
                 panelX + 12, panelY + 21, SiegeTheme.MUTED, false);
 
         SiegeTheme.panel(g, contentX - 3, contentY - 3, contentW + 6, contentH + 6, modeAccent(mode));
