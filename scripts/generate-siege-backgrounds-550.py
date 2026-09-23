@@ -43,8 +43,6 @@ def nucleus_interference(base: Image.Image) -> Image.Image:
     work = ImageEnhance.Contrast(base).enhance(1.08)
     work = ImageEnhance.Brightness(work).enhance(0.83)
 
-    # Mild chromatic separation. It reads as a signal failure without making the
-    # scene unreadable or turning the whole image into a noisy glitch filter.
     r, g, b = work.split()
     r = ImageChops.offset(r, 3, 0)
     b = ImageChops.offset(b, -3, 0)
@@ -56,7 +54,6 @@ def nucleus_interference(base: Image.Image) -> Image.Image:
         alpha = 11 if (y // 5) % 2 == 0 else 5
         draw.rectangle((0, y, SIZE[0], min(SIZE[1], y + 1)), fill=(70, 210, 195, alpha))
 
-    # A handful of horizontal data-loss slices, biased away from the left-side menu.
     for _ in range(13):
         y = rng.randint(12, SIZE[1] - 18)
         h = rng.randint(2, 9)
@@ -67,7 +64,6 @@ def nucleus_interference(base: Image.Image) -> Image.Image:
         if rng.random() < 0.55:
             draw.rectangle((x1 - 7, y + h + 1, x2 + 12, y + h + 2), fill=(255, 255, 255, alpha // 2))
 
-    # Thin right-edge telemetry column keeps the left navigation region calm.
     draw.rectangle((724, 30, 731, 402), fill=(60, 210, 190, 26))
     for y in range(42, 397, 18):
         width = rng.randint(10, 26)
@@ -87,8 +83,6 @@ def tesla_breach(base: Image.Image) -> Image.Image:
     glow_draw = ImageDraw.Draw(glow)
     sharp_draw = ImageDraw.Draw(sharp)
 
-    # Electrical arcs occupy the right two-thirds, preserving clean space where the
-    # main menu usually lives. Each arc is a deterministic jagged polyline.
     starts = [(700, 46), (655, 116), (742, 192), (676, 285)]
     for sx, sy in starts:
         points = [(sx, sy)]
@@ -103,7 +97,6 @@ def tesla_breach(base: Image.Image) -> Image.Image:
         glow_draw.line(points, fill=(80, 190, 255, 150), width=11, joint="curve")
         sharp_draw.line(points, fill=(205, 240, 255, 235), width=2, joint="curve")
 
-        # Short forks sell the Tesla look without covering the whole image.
         if len(points) >= 4:
             px, py = points[len(points) // 2]
             fork = [(px, py), (px - rng.randint(26, 54), py + rng.randint(-42, 42)),
@@ -115,13 +108,13 @@ def tesla_breach(base: Image.Image) -> Image.Image:
     composite = Image.alpha_composite(work.convert("RGBA"), glow)
     composite = Image.alpha_composite(composite, sharp)
 
-    # Local blue illumination around the right side, not a global tint.
     light = Image.new("L", SIZE, 0)
     light_draw = ImageDraw.Draw(light)
     light_draw.ellipse((430, -40, 880, 470), fill=110)
     light = light.filter(ImageFilter.GaussianBlur(65))
     blue = Image.new("RGB", SIZE, (20, 105, 170))
-    return Image.composite(blue, composite.convert("RGB"), light).blend(composite.convert("RGB"), 0.72)
+    lit = Image.composite(blue, composite.convert("RGB"), light)
+    return Image.blend(lit, composite.convert("RGB"), 0.72)
 
 
 def stronghold_red_alert(base: Image.Image) -> Image.Image:
@@ -131,8 +124,6 @@ def stronghold_red_alert(base: Image.Image) -> Image.Image:
 
     haze = Image.new("RGBA", SIZE, (0, 0, 0, 0))
     haze_draw = ImageDraw.Draw(haze)
-    # Emergency illumination comes from top/right so the navigation column remains
-    # readable. The scene still looks like the same operation, now under alarm.
     haze_draw.ellipse((430, -180, 880, 250), fill=(210, 42, 28, 105))
     haze_draw.ellipse((560, 120, 900, 520), fill=(180, 28, 24, 64))
     haze = haze.filter(ImageFilter.GaussianBlur(58))
@@ -145,7 +136,6 @@ def stronghold_red_alert(base: Image.Image) -> Image.Image:
     for x in range(510, 768, 42):
         if rng.random() < 0.82:
             draw.rectangle((x, 22, min(767, x + 18), 26), fill=(255, 84, 60, rng.randint(50, 85)))
-    # Fine dust/spark specks on the right half only.
     for _ in range(70):
         x = rng.randint(330, 755)
         y = rng.randint(24, 418)
