@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * SIEGE 5.40 release gate for visual media. Every GUI PNG/JPG must decode.
+ * SIEGE 5.50 release gate for visual media. Every GUI PNG/JPG must decode.
  * Menu scenes use their real prepared source dimensions; no CI rule may demand
  * synthetic 1920x1080 enlargement from a smaller source.
  */
@@ -35,7 +35,7 @@ public final class GuiResourceRegressionTest {
         }
 
         Path backgrounds = gui.resolve("backgrounds");
-        check(SiegeSceneCatalog.count() >= 18, "5.40 scene catalog unexpectedly shrank");
+        check(SiegeSceneCatalog.count() >= 21, "5.50 scene catalog unexpectedly shrank");
         for (int i = 0; i < SiegeSceneCatalog.count(); i++) {
             Path file = backgrounds.resolve(SiegeSceneCatalog.id(i) + ".png");
             int[] size = decode(file);
@@ -57,6 +57,10 @@ public final class GuiResourceRegressionTest {
             check(SiegeSceneCatalog.width(indexOf(id)) == 768 && SiegeSceneCatalog.height(indexOf(id)) == 432,
                     "Official DVN scene should stay at native 768x432, not fake-HD: " + id);
         }
+        for (String id : new String[]{"nucleus_interference", "tesla_breach", "stronghold_red_alert"}) {
+            check(SiegeSceneCatalog.width(indexOf(id)) == 768 && SiegeSceneCatalog.height(indexOf(id)) == 432,
+                    "SIEGE tactical treatment must preserve the verified DVN 768x432 canvas: " + id);
+        }
         check(SiegeSceneCatalog.width(indexOf("dummies_assault")) == 960,
                 "Legacy 960px source must not be fake-upscaled to 1920");
         check(SiegeSceneCatalog.width(indexOf("night_operation")) == 720,
@@ -67,7 +71,7 @@ public final class GuiResourceRegressionTest {
         check(SiegeSceneCatalog.featuredIndex() >= 0, "Featured scene metadata missing");
 
         System.out.println("SIEGE GUI resources: " + images.size()
-                + " images decoded; 5.40 native-resolution scenes and easter-egg isolation verified");
+                + " images decoded; 5.50 native-resolution official/generated scenes and easter-egg isolation verified");
     }
 
     private static int indexOf(String id) {

@@ -19,6 +19,8 @@ public final class SiegeMod {
     public static final RegistryObject<SoundEvent> HEAVENS_GIFT = sound("music.heavens_hell_sent_gift");
     public static final RegistryObject<SoundEvent> ARC_ENEMY = sound("music.arc_enemy");
     public static final RegistryObject<SoundEvent> STRONGHOLD_BLACK_SIGNAL = sound("music.stronghold_black_signal");
+    public static final RegistryObject<SoundEvent> NUCLEUS_SILENT_CARRIER = sound("music.nucleus_silent_carrier");
+    public static final RegistryObject<SoundEvent> TESLA_BREACH = sound("music.tesla_breach");
     public static final RegistryObject<SoundEvent> UI_HOVER = sound("ui.hover");
     public static final RegistryObject<SoundEvent> UI_CLICK = sound("ui.click");
     public static final RegistryObject<SoundEvent> UI_BACK = sound("ui.back");

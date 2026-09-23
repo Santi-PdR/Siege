@@ -19,7 +19,9 @@ public final class SiegeMusic {
             SiegeMod.KAPTAIN_MUSIC_BOX,
             SiegeMod.HEAVENS_GIFT,
             SiegeMod.ARC_ENEMY,
-            SiegeMod.STRONGHOLD_BLACK_SIGNAL
+            SiegeMod.STRONGHOLD_BLACK_SIGNAL,
+            SiegeMod.NUCLEUS_SILENT_CARRIER,
+            SiegeMod.TESLA_BREACH
     );
     private static final List<String> TRACK_KEYS = List.of(
             "tale_cruel_world",
@@ -27,7 +29,9 @@ public final class SiegeMusic {
             "kaptain_music_box",
             "heavens_hell_sent_gift",
             "arc_enemy",
-            "stronghold_black_signal"
+            "stronghold_black_signal",
+            "nucleus_silent_carrier",
+            "tesla_breach"
     );
     private static final List<String> TRACK_NAMES = List.of(
             "Tale of a Cruel World",
@@ -35,7 +39,9 @@ public final class SiegeMusic {
             "Kaptain Music Box",
             "Heaven's Hell-Sent Gift",
             "Arc - Enemy · Potoe",
-            "Stronghold 5-5 · Black Signal"
+            "Stronghold 5-5 · Black Signal",
+            "Nucleus · Silent Carrier",
+            "Tesla Breach"
     );
 
     /**
@@ -43,7 +49,7 @@ public final class SiegeMusic {
      * The published build writes exact post-Vorbis values for every track.
      */
     private static final long[] FALLBACK_DURATIONS_MS = {
-            261_534L, 281_934L, 139_969L, 217_214L, 180_000L, 132_000L
+            261_534L, 281_934L, 139_969L, 217_214L, 180_000L, 132_000L, 116_000L, 104_000L
     };
     private static final long[] TRACK_DURATIONS_MS = loadDurations();
     private static final List<Integer> queue = new ArrayList<>();
@@ -52,7 +58,6 @@ public final class SiegeMusic {
     private static final long NATURAL_FADE_OUT_MS = 8_000L;
     private static final long MANUAL_FADE_OUT_MS = 1_250L;
     private static final long FADE_IN_MS = 2_200L;
-    private static final long ACTIVATION_GRACE_MS = 5_000L;
     public static final long TRACK_ANNOUNCEMENT_MS = 8_500L;
 
     private static SiegeTrackSound active;
@@ -220,6 +225,18 @@ public final class SiegeMusic {
         if (active == null) startNext(true);
         else if (index >= 0 && (previous != index || fadeState == FadeState.OUT))
             beginFadeOut(MANUAL_FADE_OUT_MS, false);
+    }
+
+    /** Select an installed track by its player-facing title. Returns false if it is not installed. */
+    public static boolean selectTrackByName(String name) {
+        if (name == null) return false;
+        for (int i = 0; i < TRACK_NAMES.size(); i++) {
+            if (TRACK_NAMES.get(i).equalsIgnoreCase(name.trim())) {
+                selectTrack(i);
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Applies SIEGE's own volume to the active stream without restarting it. */

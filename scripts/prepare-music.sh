@@ -22,9 +22,10 @@ DVN_SOURCE="$SOURCE_DIR/dvn_lobby_music.ogg"
 HEAVEN_SOURCE="$SOURCE_DIR/heavens_hell_sent_gift.ogg"
 ARC_SOURCE="$(find "$SOURCE_DIR" -maxdepth 1 -type f -name 'arc_enemy.*' | head -n1 || true)"
 STRONGHOLD_SOURCE="$GENERATED_DIR/stronghold_black_signal.wav"
+NUCLEUS_SOURCE="$GENERATED_DIR/nucleus_silent_carrier.wav"
+TESLA_SOURCE="$GENERATED_DIR/tesla_breach.wav"
 
 KAPTAIN_START="179.599646"
-KAPTAIN_END="319.568250"
 KAPTAIN_DURATION="139.968604"
 OUTPUT_RATE="44100"
 HEADROOM_DB="-3dB"
@@ -40,9 +41,10 @@ if [ -z "$ARC_SOURCE" ] || [ ! -f "$ARC_SOURCE" ]; then
   exit 1
 fi
 
-# 5.40 adds one fully original SIEGE track generated deterministically during the
-# build, so the new music does not depend on another third-party master.
+# Original SIEGE material is synthesized deterministically during the build so the
+# installed soundtrack can grow without depending on additional third-party masters.
 python3 "$ROOT/scripts/generate-stronghold-signal.py" "$STRONGHOLD_SOURCE"
+python3 "$ROOT/scripts/generate-frontline-signal-550.py" "$NUCLEUS_SOURCE" "$TESLA_SOURCE"
 
 probe_ms() {
   local file="$1"
@@ -61,7 +63,7 @@ validate_source() {
     echo "Source master $label is truncated: ${duration_ms}ms (expected >= ${minimum_ms}ms)" >&2
     exit 1
   fi
-  printf 'SIEGE source: %-24s %8sms\n' "$label" "$duration_ms"
+  printf 'SIEGE source: %-26s %8sms\n' "$label" "$duration_ms"
 }
 
 validate_source "Tale of a Cruel World" "$TALE_SOURCE" 260000
@@ -70,14 +72,14 @@ validate_source "DVN lobby mix" "$DVN_SOURCE" 535000
 validate_source "Heaven's Hell-Sent Gift" "$HEAVEN_SOURCE" 215000
 validate_source "Arc - Enemy" "$ARC_SOURCE" 60000
 validate_source "Stronghold Black Signal" "$STRONGHOLD_SOURCE" 131000
+validate_source "Nucleus Silent Carrier" "$NUCLEUS_SOURCE" 115000
+validate_source "Tesla Breach" "$TESLA_SOURCE" 103000
 
 encode_full() {
   local key="$1"
   local source="$2"
   local target="$TARGET_DIR/$key.ogg"
 
-  # Leave decoded headroom before Vorbis encoding. This avoids inter-sample
-  # clipping that can sound harsh on some OpenAL/device combinations.
   ffmpeg -hide_banner -loglevel error -y \
     -i "$source" \
     -map_metadata -1 -vn \
@@ -91,6 +93,8 @@ encode_full "darkest_of_days" "$DARKEST_SOURCE"
 encode_full "heavens_hell_sent_gift" "$HEAVEN_SOURCE"
 encode_full "arc_enemy" "$ARC_SOURCE"
 encode_full "stronghold_black_signal" "$STRONGHOLD_SOURCE"
+encode_full "nucleus_silent_carrier" "$NUCLEUS_SOURCE"
+encode_full "tesla_breach" "$TESLA_SOURCE"
 
 ffmpeg -hide_banner -loglevel error -y \
   -ss "$KAPTAIN_START" -i "$DVN_SOURCE" \
@@ -107,6 +111,8 @@ tracks=(
   heavens_hell_sent_gift
   arc_enemy
   stronghold_black_signal
+  nucleus_silent_carrier
+  tesla_breach
 )
 
 declare -A min_ms=(
@@ -116,6 +122,8 @@ declare -A min_ms=(
   [heavens_hell_sent_gift]=215000
   [arc_enemy]=60000
   [stronghold_black_signal]=131000
+  [nucleus_silent_carrier]=115000
+  [tesla_breach]=103000
 )
 declare -A max_ms=(
   [tale_cruel_world]=263000
@@ -124,6 +132,8 @@ declare -A max_ms=(
   [heavens_hell_sent_gift]=219000
   [arc_enemy]=600000
   [stronghold_black_signal]=133000
+  [nucleus_silent_carrier]=117000
+  [tesla_breach]=105000
 )
 
 for key in "${tracks[@]}"; do
@@ -164,7 +174,7 @@ for key in "${tracks[@]}"; do
   fi
 
   printf '%s=%s\n' "$key" "$duration_ms" >> "$DURATION_FILE"
-  printf 'SIEGE music: %-28s %8sms  codec=%s rate=%s peak=%sdB\n' "$key" "$duration_ms" "$codec" "$rate" "$peak"
+  printf 'SIEGE music: %-30s %8sms  codec=%s rate=%s peak=%sdB\n' "$key" "$duration_ms" "$codec" "$rate" "$peak"
 done
 
 printf '\nGenerated duration metadata:\n'

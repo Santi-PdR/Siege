@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Durable SIEGE 5.30 visual-quality, DVN and Third Justice contracts."""
 import base64
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,7 +23,10 @@ EMBEDDED_VIDEO = ROOT / "assets-source/third-justice/third_justice_full.b64"
 STATIC_SOURCE = ROOT / "assets-source/third-justice/static-correct"
 GUIDE_TEXTURES = ROOT / "src/main/resources/assets/siege/textures/gui/guide"
 
-assert "version = '5.30.0'" in BUILD or "version = '5.40.0'" in BUILD
+match = re.search(r"version\s*=\s*'([0-9]+)\.([0-9]+)\.([0-9]+)'", BUILD)
+assert match
+major, minor, patch = map(int, match.groups())
+assert (major, minor) >= (5, 30), "5.30 contracts require SIEGE 5.30+"
 
 # The original three official Roblox DVN thumbnails remain guaranteed. Later
 # releases may add more, but native 768x432 and 16:9 quality remain mandatory.
@@ -94,13 +98,10 @@ assert len(field_source) > 20_000
 def assert_rgb_png(name: str) -> None:
     data = (GUIDE_TEXTURES / name).read_bytes()
     assert data.startswith(b"\x89PNG\r\n\x1a\n"), name
-    # IHDR: bit depth byte 24, color type byte 25.
     assert data[24] == 8, f"{name}: expected 8-bit PNG, got {data[24]}-bit"
     assert data[25] in (2, 6), f"{name}: expected RGB/RGBA PNG, color type={data[25]}"
 
 
-# The visual-prep stage runs before this test, so all five player-facing stills
-# must now be real 8-bit RGB/RGBA images instead of grayscale/palette placeholders.
 for still in (
     "third_justice_tooltip.png",
     "third_justice_field.png",
@@ -110,8 +111,7 @@ for still in (
 ):
     assert_rgb_png(still)
 
-# 5.30 ships the complete supplied ~31 s Third Justice timeline, not the old
-# 3-frame placeholder. Duration and generated-frame count prove the reel is complete.
+# Complete supplied ~31 s Third Justice timeline, not the old 3-frame placeholder.
 assert EMBEDDED_VIDEO.is_file() and EMBEDDED_VIDEO.stat().st_size > 10_000
 assert "third_justice_full.b64" in PREP_TJ
 assert "base64.b64decode" in PREP_TJ
@@ -137,7 +137,6 @@ assert frames != 3, "Release build must not fall back to the old 3-frame reel"
 assert int(manifest.get("duration_ms", "0")) >= 30_000
 assert manifest.get("width") == "640" and manifest.get("height") == "360"
 
-# Armory still owns the item and its visible evidence.
 assert '"third-justice"' in GUIDE
 assert "third_justice_tooltip.png" in GUIDE and "third_justice_field.png" in GUIDE
 

@@ -7,11 +7,11 @@ real resolution. Near-16:9 captures are cropped slightly instead of enlarged. Ro
 Squad keeps the full 4:3 illustration over a softened 16:9 extension while the
 foreground is never upscaled.
 
-SIEGE 5.40 fetches six official DVN thumbnails separately and deliberately keeps them
-at their native 768x432 resolution. Tempest Jutcherson remains an easter egg and is
-never processed by this normal-background pipeline. Third Justice is prepared by its
-own script at the end of this stage so the corrected full-color captures and complete
-reel are always regenerated before validation.
+SIEGE 5.50 keeps six official DVN thumbnails at native 768x432 and then generates
+three clearly-labelled tactical treatments from those verified sources. They are
+variants, not fake new official screenshots. Tempest Jutcherson remains an easter egg
+and is never processed by this normal-background pipeline. Third Justice is prepared
+at the end so corrected full-color captures and the complete reel remain protected.
 """
 from pathlib import Path
 from PIL import Image, ImageFilter, ImageStat
@@ -35,10 +35,6 @@ TARGETS = {
     "rooftop_squad": (896, 504),
 }
 
-# Two checked-in captures are genuinely night scenes, but their source shadows are
-# so compressed that the menu readability layer makes them almost disappear. A
-# gentle gamma lift recovers source detail while retaining blacks/highlights and
-# avoids the destructive brightness/contrast filters used by older builds.
 SHADOW_GAMMA = {
     "night_operation": 0.78,
     "urban_rendezvous": 0.68,
@@ -60,16 +56,12 @@ def gamma_lift(image: Image.Image, gamma: float) -> Image.Image:
     if gamma <= 0.0 or abs(gamma - 1.0) < 0.001:
         return image
     lut = [max(0, min(255, round(((value / 255.0) ** gamma) * 255.0))) for value in range(256)]
-    # Pillow expects one LUT per RGB channel. Applying the same curve channel by
-    # channel preserves the original colour balance instead of flattening to gray.
     channels = [channel.point(lut) for channel in image.split()]
     return Image.merge(image.mode, channels)
 
 
 def rooftop_composite(image: Image.Image) -> Image.Image:
     target = TARGETS["rooftop_squad"]
-    # Background extension may be soft because it is decorative only. The actual
-    # illustration stays sharp, fully visible and is downscaled rather than enlarged.
     bg = image.resize(target, Image.Resampling.LANCZOS).filter(
         ImageFilter.GaussianBlur(radius=14)
     )
@@ -96,8 +88,6 @@ def quality_check(name: str, image: Image.Image) -> None:
     stat = ImageStat.Stat(gray)
     mean = stat.mean[0]
     deviation = stat.stddev[0]
-    # These are conservative corruption checks, not aesthetic grading. Dark scenes
-    # are allowed; a nearly blank/flat export is not.
     if deviation < 7.0:
         raise SystemExit(f"{name}: suspiciously flat image (luma stddev={deviation:.2f})")
     if mean < 10.0:
@@ -136,6 +126,10 @@ def prepare(name: str, target: tuple[int, int]) -> None:
 if __name__ == "__main__":
     for scene, target in TARGETS.items():
         prepare(scene, target)
+
+    # The six verified DVN thumbnails are already present at this point. Build three
+    # SIEGE-specific variants from them while preserving their native resolution.
+    runpy.run_path("scripts/generate-siege-backgrounds-550.py", run_name="__main__")
 
     # Keep player-facing visual repair in one CI stage. Third Justice restores the
     # canonical full-color screenshots and prepares the complete supplied video reel.

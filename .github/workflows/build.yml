@@ -28,13 +28,13 @@ jobs:
         with:
           gradle-version: '8.8'
 
-      - name: Fetch verified DVN 5.40 media
+      - name: Fetch verified DVN 5.50 media
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow yt-dlp
           bash scripts/fetch-dvn-media-510.sh
 
-      - name: Prepare and audit SIEGE 5.40 visual media
+      - name: Prepare and audit SIEGE 5.50 visual media
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow
@@ -84,6 +84,7 @@ jobs:
           python3 tests/test_release_510.py
           python3 tests/test_release_530.py
           python3 tests/test_release_540.py
+          python3 tests/test_release_550.py
 
       - name: Verify menu theme scope and drawing bounds
         run: |
@@ -100,10 +101,10 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify SIEGE 5.40 player-facing contracts
+      - name: Verify SIEGE 5.50 player-facing contracts
         shell: bash
         run: |
-          grep -q "version = '5.40.0'" build.gradle
+          grep -q "version = '5.50.0'" build.gradle
           grep -q 'class SiegeKnowledgeExpansion50' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java
           grep -q 'class SiegeKnowledgeCorpus50' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeCorpus50.java
           grep -q 'class SiegeKnowledgePlayer510' src/main/java/uy/santipdr/siege/client/SiegeKnowledgePlayer510.java
@@ -122,14 +123,21 @@ jobs:
           grep -q 'subhuman-rick-sanchez' src/main/java/uy/santipdr/siege/client/SiegeRaceVariantsScreen.java
           grep -q 'class SiegeNavigationCleanupEvents' src/main/java/uy/santipdr/siege/client/SiegeNavigationCleanupEvents.java
           grep -q 'SimpleSoundInstance.forUI(event, 1.0F, volume)' src/main/java/uy/santipdr/siege/client/SiegeUiSounds.java
-          for scene in dvn_official_01 dvn_official_02 dvn_official_03 dvn_official_04 dvn_official_05 dvn_official_06; do
+          for scene in dvn_official_01 dvn_official_02 dvn_official_03 dvn_official_04 dvn_official_05 dvn_official_06 nucleus_interference tesla_breach stronghold_red_alert; do
             grep -q "$scene" src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
           done
+          grep -q 'generate-siege-backgrounds-550.py' scripts/prepare-backgrounds-hd.py
           grep -q 'SiegeThirdJusticeVideo' src/main/java/uy/santipdr/siege/client/SiegeEvidenceReelScreen.java
           grep -q 'third_justice_full.mp4' scripts/prepare-third-justice-media.py
           grep -q 'SiegeMod.ARC_ENEMY' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
           grep -q 'SiegeMod.STRONGHOLD_BLACK_SIGNAL' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
+          grep -q 'SiegeMod.NUCLEUS_SILENT_CARRIER' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
+          grep -q 'SiegeMod.TESLA_BREACH' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
           grep -q 'music.stronghold_black_signal' src/main/resources/assets/siege/sounds.json
+          grep -q 'music.nucleus_silent_carrier' src/main/resources/assets/siege/sounds.json
+          grep -q 'music.tesla_breach' src/main/resources/assets/siege/sounds.json
+          grep -q 'class SiegeMediaPresets' src/main/java/uy/santipdr/siege/client/SiegeMediaPresets.java
+          grep -q 'SiegeMediaPresets.apply' src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java
           if grep -nE 'TAMBIÉN VER|SEE ALSO' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeFileScreen.java src/main/java/uy/santipdr/siege/client/SiegeAtlasScreen.java; then
             echo "Generic see-also text must not return to player surfaces."
             exit 1
@@ -176,7 +184,7 @@ jobs:
           path: |
             src/main/resources/assets/siege/sounds/music
             src/main/resources/assets/siege/music_durations.properties
-          key: music-v4-${{ runner.os }}-${{ hashFiles('assets-source/music-full/**', 'scripts/prepare-music.sh', 'scripts/generate-stronghold-signal.py', 'scripts/fetch-dvn-media-510.sh') }}
+          key: music-v5-${{ runner.os }}-${{ hashFiles('assets-source/music-full/**', 'scripts/prepare-music.sh', 'scripts/generate-stronghold-signal.py', 'scripts/generate-frontline-signal-550.py', 'scripts/fetch-dvn-media-510.sh') }}
       - name: Prepare clean SIEGE soundtrack
         if: steps.music-cache.outputs.cache-hit != 'true'
         shell: bash
@@ -208,6 +216,8 @@ jobs:
           done
           test -s src/main/resources/assets/siege/sounds/music/arc_enemy.ogg
           test -s src/main/resources/assets/siege/sounds/music/stronghold_black_signal.ogg
+          test -s src/main/resources/assets/siege/sounds/music/nucleus_silent_carrier.ogg
+          test -s src/main/resources/assets/siege/sounds/music/tesla_breach.ogg
 
       - name: Verify clean boss frames
         shell: bash

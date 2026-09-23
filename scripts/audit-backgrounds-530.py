@@ -3,8 +3,8 @@
 
 This is intentionally a source-quality audit, not an AI/aesthetic score. It protects
 aspect ratio, real dimensions, visible dynamic range and basic edge detail while
-allowing naturally dark/night scenes. SIEGE 5.40 validates all six current official
-DVN gallery images at their native 768x432 resolution.
+allowing naturally dark/night scenes. SIEGE 5.50 validates the six official DVN
+images plus three generated SIEGE tactical treatments at native 768x432.
 """
 from pathlib import Path
 from PIL import Image, ImageFilter, ImageStat
@@ -18,6 +18,9 @@ EXPECTED = {
     "dvn_official_04": (768, 432),
     "dvn_official_05": (768, 432),
     "dvn_official_06": (768, 432),
+    "nucleus_interference": (768, 432),
+    "tesla_breach": (768, 432),
+    "stronghold_red_alert": (768, 432),
     "anniversary": (960, 540),
     "frontline_19": (960, 540),
     "cyborg": (960, 540),
@@ -52,7 +55,6 @@ def audit(name: str, expected: tuple[int, int]) -> str:
     if image.width < 640 or image.height < 360:
         raise SystemExit(f"{name}: background below 640x360 quality floor")
 
-    # Downsample only for analysis. This does not touch the game asset.
     probe = image.copy()
     probe.thumbnail((320, 180), Image.Resampling.BILINEAR)
     gray = probe.convert("L")
@@ -78,7 +80,7 @@ def audit(name: str, expected: tuple[int, int]) -> str:
         raise SystemExit(f"{name}: suspiciously posterized export ({unique} probe colors)")
 
     return (
-        f"{name:22s} {image.width:4d}x{image.height:<4d} "
+        f"{name:24s} {image.width:4d}x{image.height:<4d} "
         f"mean={mean:6.1f} contrast={contrast:5.1f} dynamic={dynamic:3d} "
         f"edge={edge:5.1f} colors={unique:5d}"
     )
@@ -86,6 +88,6 @@ def audit(name: str, expected: tuple[int, int]) -> str:
 
 if __name__ == "__main__":
     lines = [audit(name, expected) for name, expected in EXPECTED.items()]
-    print("SIEGE 5.40 background quality audit")
+    print("SIEGE 5.50 background quality audit")
     print("\n".join(lines))
     print(f"PASS: {len(lines)} normal backgrounds checked; native sources preserved without fake HD.")
