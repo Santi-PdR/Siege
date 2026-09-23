@@ -85,14 +85,15 @@ assert "120 wins" not in CORPUS50 and "220 wins" not in CORPUS50
 for race in ("Mink", "Tsufurujin", "Otsutsuki", "Cold Demon", "Lunarian", "Diclonius",
              "Void Master", "SOBRINO", "Oni", "Iluminati", "Fullbringer", "Arrancar", "Hakaishin"):
     assert f'"{race}"' in RACES
-assert RACES.count("needs-info") >= 20
-assert '"subhuman"' in RACES and '"saiyan"' in RACES and '"ghoul"' in RACES
+assert RACES.count("unknown(") >= 20
+assert '"hacker"' in RACES and '"subhuman"' in RACES and '"saiyan"' in RACES and '"ghoul"' in RACES
 assert '"subhuman-rick-sanchez"' in CORPUS50
 assert '"subhuman-rick-sanchez"' in RACE_VARIANTS
 assert '"executor-maze"' in CORPUS50
 assert '"executor-nearby-warning"' in CORPUS50
 assert '"item-daemonium-kit"' in CORPUS50
 assert '"trial-shrine-global"' in CORPUS50
+assert '"ability-room"' in CORPUS50 and '"ability-gate"' in CORPUS50
 
 # Race-specific progression is explicit instead of pretending everything is V1→V4.
 for key in ('"race-saiyan"', '"saiyan-transformations"', '"race-ghoul"', '"ghoul-progression"',
