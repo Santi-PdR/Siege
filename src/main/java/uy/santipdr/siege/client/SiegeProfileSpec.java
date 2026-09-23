@@ -22,40 +22,43 @@ public final class SiegeProfileSpec {
             int scanlineIntensity,
             int interferenceIntensity,
             int backgroundDarkness,
-            int panelDarkness) { }
+            int panelDarkness,
+            int backgroundMotionIntensity,
+            int backgroundSceneSeconds,
+            int backgroundCrossfadeSeconds) { }
 
-    private static final int FIELDS = 22;
+    private static final int FIELDS = 25;
     private SiegeProfileSpec() { }
 
     public static Spec of(SiegeClientProfile.Profile profile) {
         return switch (profile) {
             case CINEMATIC -> new Spec(false, SiegeConfig.Graphics.CINEMATIC,
                     false, false, false, true, true, true, true, true, true,
-                    true, true, true, true, true, 66, 64, 18, 58);
+                    true, true, true, true, true, 66, 64, 18, 58, 70, 28, 6);
             case TACTICAL -> new Spec(false, SiegeConfig.Graphics.BALANCED,
                     false, false, false, true, true, true, true, false, true,
-                    true, true, true, true, true, 48, 24, 30, 72);
+                    true, true, true, true, true, 48, 24, 30, 72, 40, 30, 4);
             case STRONGHOLD -> new Spec(false, SiegeConfig.Graphics.BALANCED,
                     false, true, false, true, true, true, true, false, true,
-                    true, true, true, true, true, 38, 0, 34, 78);
+                    true, true, true, true, true, 38, 0, 34, 78, 45, 32, 5);
             case PERFORMANCE -> new Spec(false, SiegeConfig.Graphics.PERFORMANCE,
                     true, true, false, false, false, false, false, false, false,
-                    true, false, false, false, true, 0, 0, 38, 78);
+                    true, false, false, false, true, 0, 0, 38, 78, 0, 36, 0);
             case CALM -> new Spec(false, SiegeConfig.Graphics.BALANCED,
                     true, true, true, false, false, false, false, false, false,
-                    true, false, false, false, true, 0, 0, 42, 84);
+                    true, false, false, false, true, 0, 0, 42, 84, 0, 36, 0);
             case READING -> new Spec(true, SiegeConfig.Graphics.BALANCED,
                     true, true, true, false, false, false, false, false, false,
-                    false, false, false, false, true, 0, 0, 48, 88);
+                    false, false, false, false, true, 0, 0, 48, 88, 0, 36, 0);
             case CLASSIC -> new Spec(false, SiegeConfig.Graphics.BALANCED,
                     false, false, false, true, true, true, false, false, true,
-                    true, true, true, true, true, 0, 0, 28, 70);
+                    true, true, true, true, true, 0, 0, 28, 70, 20, 28, 3);
             case HIGH_CONTRAST -> new Spec(false, SiegeConfig.Graphics.BALANCED,
                     true, true, true, false, false, false, false, false, false,
-                    true, false, true, false, true, 0, 0, 52, 90);
+                    true, false, true, false, true, 0, 0, 52, 90, 0, 36, 0);
             case IMMERSIVE -> new Spec(false, SiegeConfig.Graphics.CINEMATIC,
                     false, false, false, true, true, true, true, true, true,
-                    true, true, true, true, true, 58, 42, 20, 62);
+                    true, true, true, true, true, 58, 42, 20, 62, 85, 24, 6);
             case CUSTOM -> throw new IllegalArgumentException("CUSTOM has no fixed specification");
         };
     }
@@ -101,6 +104,9 @@ public final class SiegeProfileSpec {
         SiegeConfig.interferenceIntensity = s.interferenceIntensity();
         SiegeConfig.backgroundDarkness = s.backgroundDarkness();
         SiegeConfig.panelDarkness = s.panelDarkness();
+        SiegeConfig.backgroundMotionIntensity = s.backgroundMotionIntensity();
+        SiegeConfig.backgroundSceneSeconds = s.backgroundSceneSeconds();
+        SiegeConfig.backgroundCrossfadeSeconds = s.backgroundCrossfadeSeconds();
     }
 
     public static boolean matches(SiegeClientProfile.Profile profile) { return distance(profile) == 0; }
@@ -131,6 +137,9 @@ public final class SiegeProfileSpec {
         distance += diff(SiegeConfig.interferenceIntensity, s.interferenceIntensity());
         distance += diff(SiegeConfig.backgroundDarkness, s.backgroundDarkness());
         distance += diff(SiegeConfig.panelDarkness, s.panelDarkness());
+        distance += diff(SiegeConfig.backgroundMotionIntensity, s.backgroundMotionIntensity());
+        distance += diff(SiegeConfig.backgroundSceneSeconds, s.backgroundSceneSeconds());
+        distance += diff(SiegeConfig.backgroundCrossfadeSeconds, s.backgroundCrossfadeSeconds());
         return distance;
     }
 
