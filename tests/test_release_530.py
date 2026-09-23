@@ -22,11 +22,12 @@ assert "version = '5.30.0'" in BUILD
 # Three real official Roblox DVN thumbnails, always native 16:9.
 for scene in ("dvn_official_01", "dvn_official_02", "dvn_official_03"):
     assert f'"{scene}"' in SCENES, scene
-    assert f"{scene}.png" in FETCH, scene
 assert "urls[:3]" in FETCH
 assert "rgb.size != (768, 432)" in FETCH
 assert "Keep the official source at native size" in FETCH
 assert "need 3" in FETCH
+assert 'for index in 01 02 03' in FETCH
+assert 'dvn_official_${index}.png' in FETCH
 
 # 5.30 removes the old fake-Full-HD background contract.
 assert "LEGACY_W = 960" in SCENES and "LEGACY_H = 540" in SCENES
