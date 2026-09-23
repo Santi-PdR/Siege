@@ -31,8 +31,8 @@ public final class MediaReferenceRegressionTest {
 
         var visuals = SiegeMediaReferenceData.visualReferences();
         check(visuals.size() >= 12, "5.10 visual direction list unexpectedly small");
-        for (String id : new String[] {"stronghold-defense", "portal-last-stand", "coastal-assault",
-                "arctic-standoff", "industrial-zone", "boss-assault"}) {
+        for (String id : new String[] {"official-gallery-01", "official-gallery-02", "stronghold-defense",
+                "portal-last-stand", "coastal-assault", "arctic-standoff", "industrial-zone", "boss-assault"}) {
             check(visuals.stream().anyMatch(v -> v.id().equals(id)), "Missing visual direction: " + id);
         }
         check(visuals.stream().allMatch(v -> !v.id().isBlank() && !v.title(false).isBlank() && !v.note(false).isBlank()),
@@ -40,11 +40,11 @@ public final class MediaReferenceRegressionTest {
 
         var ready = visuals.stream().filter(SiegeMediaReferenceData.Visual::rotationReady).toList();
         check(ready.size() == 2, "Only the two sourced DVN thumbnails should be promoted to rotation in 5.10");
-        check(ready.stream().anyMatch(v -> v.id().equals("arctic-standoff")),
-                "Arctic Standoff should be rotation-ready");
-        check(ready.stream().anyMatch(v -> v.id().equals("coastal-assault")),
-                "Coastal assault should be rotation-ready");
-        check(visuals.stream().filter(v -> !v.id().equals("arctic-standoff") && !v.id().equals("coastal-assault"))
+        check(ready.stream().anyMatch(v -> v.id().equals("official-gallery-01")),
+                "Official DVN gallery scene 01 should be rotation-ready");
+        check(ready.stream().anyMatch(v -> v.id().equals("official-gallery-02")),
+                "Official DVN gallery scene 02 should be rotation-ready");
+        check(visuals.stream().filter(v -> !v.id().startsWith("official-gallery-"))
                         .noneMatch(SiegeMediaReferenceData.Visual::rotationReady),
                 "Reference-only visual ideas must remain outside rotation");
         check(new HashSet<>(visuals.stream().map(SiegeMediaReferenceData.Visual::id).toList()).size() == visuals.size(),
