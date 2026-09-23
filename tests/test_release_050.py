@@ -19,9 +19,14 @@ ENC = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java")
 DETAIL = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeFileScreen.java")
 REG = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeRegistry.java")
 EXP50 = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java")
+CORPUS50 = read("src/main/java/uy/santipdr/siege/client/SiegeKnowledgeCorpus50.java")
+RACES = read("src/main/java/uy/santipdr/siege/client/SiegeRaceAtlasData.java")
+RACE_VARIANTS = read("src/main/java/uy/santipdr/siege/client/SiegeRaceVariantsScreen.java")
 PROGRESSION = read("src/main/java/uy/santipdr/siege/client/SiegeProgressionData.java")
 PROFILES = read("src/main/java/uy/santipdr/siege/client/SiegeClientProfile.java")
 PROFILE_SPEC = read("src/main/java/uy/santipdr/siege/client/SiegeProfileSpec.java")
+UI_SOUNDS = read("src/main/java/uy/santipdr/siege/client/SiegeUiSounds.java")
+MUSIC_PREP = read("scripts/prepare-music.sh")
 TITLE = read("src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java")
 MULTI = read("src/main/java/uy/santipdr/siege/client/SiegeMultiplayerScreen.java")
 SCENES = read("src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java")
@@ -61,6 +66,7 @@ assert "Mode { START, RACES, PROGRESSION, SYSTEMS, ITEMS }" in ENC
 for surface in (ATLAS, ENC, DETAIL):
     assert "TAMBIÉN VER" not in surface and "SEE ALSO" not in surface
 assert "SiegeKnowledgeExpansion50.entries" in REG
+assert "SiegeKnowledgeCorpus50.entries" in REG
 assert "maintenanceEntries" in REG
 assert "Zone.SERVER" in REG
 
@@ -73,6 +79,20 @@ assert "RCP dejó de ser" in EXP50
 assert '"item-geography-table"' in EXP50
 assert "investigar sus propiedades" in EXP50
 assert "120 wins" not in EXP50 and "220 wins" not in EXP50
+assert "120 wins" not in CORPUS50 and "220 wins" not in CORPUS50
+
+# Full-corpus pass expands the Race Atlas without making up missing mechanics.
+for race in ("Mink", "Tsufurujin", "Otsutsuki", "Cold Demon", "Lunarian", "Diclonius",
+             "Void Master", "SOBRINO", "Oni", "Iluminati", "Fullbringer", "Arrancar", "Hakaishin"):
+    assert f'"{race}"' in RACES
+assert RACES.count("needs-info") >= 20
+assert '"subhuman"' in RACES and '"saiyan"' in RACES and '"ghoul"' in RACES
+assert '"subhuman-rick-sanchez"' in CORPUS50
+assert '"subhuman-rick-sanchez"' in RACE_VARIANTS
+assert '"executor-maze"' in CORPUS50
+assert '"executor-nearby-warning"' in CORPUS50
+assert '"item-daemonium-kit"' in CORPUS50
+assert '"trial-shrine-global"' in CORPUS50
 
 # Race-specific progression is explicit instead of pretending everything is V1→V4.
 for key in ('"race-saiyan"', '"saiyan-transformations"', '"race-ghoul"', '"ghoul-progression"',
@@ -82,6 +102,14 @@ for track in ('"core"', '"v1v4"', '"special"', '"trials"'):
     assert track in PROGRESSION
 assert "DEPENDE DE LA RAZA" in PROGRESSION
 assert "Trial Spire" in PROGRESSION and "Witch Trials" in PROGRESSION
+
+# 4.00 audio regression: music gets clean headroom and UI samples stay at authored pitch.
+assert 'HEADROOM_DB="-3dB"' in MUSIC_PREP
+assert 'OUTPUT_RATE="44100"' in MUSIC_PREP
+assert "insufficient decoded headroom" in MUSIC_PREP
+assert "SimpleSoundInstance.forUI(event, 1.0F, volume)" in UI_SOUNDS
+for shifted in ("0.72F, 0.82F", "0.84F, 0.76F", "1.08F, 0.58F", "0.92F, 0.64F"):
+    assert shifted not in UI_SOUNDS
 
 # Media Room 5.0 remains a real audiovisual surface.
 assert "Mode { BUNDLED, MOODS, DVN_AUDIO, VISUALS }" in MEDIA_ROOM
@@ -111,4 +139,4 @@ assert "Publish validated jar for installer" in WORKFLOW
 assert "python3 tests/test_release_040.py" in WORKFLOW
 assert "python3 tests/test_release_050.py" in WORKFLOW
 
-print("SIEGE 5.00 navigation, natural-language knowledge, freshness and audiovisual contracts passed")
+print("SIEGE 5.00 navigation, corpus knowledge, freshness and audiovisual contracts passed")
