@@ -58,7 +58,10 @@ def gamma_lift(image: Image.Image, gamma: float) -> Image.Image:
     if gamma <= 0.0 or abs(gamma - 1.0) < 0.001:
         return image
     lut = [max(0, min(255, round(((value / 255.0) ** gamma) * 255.0))) for value in range(256)]
-    return image.point(lut)
+    # Pillow expects one LUT per RGB channel. Applying the same curve channel by
+    # channel preserves the original colour balance instead of flattening to gray.
+    channels = [channel.point(lut) for channel in image.split()]
+    return Image.merge(image.mode, channels)
 
 
 def rooftop_composite(image: Image.Image) -> Image.Image:
