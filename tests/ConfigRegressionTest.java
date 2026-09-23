@@ -22,6 +22,9 @@ public class ConfigRegressionTest {
             SiegeConfig.autoContrast = false;
             SiegeConfig.scanlineIntensity = 37;
             SiegeConfig.interferenceIntensity = 91;
+            SiegeConfig.backgroundMotionIntensity = 73;
+            SiegeConfig.backgroundSceneSeconds = 41;
+            SiegeConfig.backgroundCrossfadeSeconds = 7;
             SiegeConfig.save();
             SiegeConfig.load();
             check(!SiegeConfig.autoRotateIntel, "New settings must not rerun the legacy auto-rotate migration");
@@ -32,16 +35,24 @@ public class ConfigRegressionTest {
                     "Flash reduction must suppress title interference and its intensity");
             check(!SiegeConfig.autoContrast && SiegeConfig.scanlineIntensity == 37,
                     "Visual controls round trip independently");
+            check(SiegeConfig.backgroundMotionIntensity == 73 && SiegeConfig.backgroundSceneSeconds == 41
+                            && SiegeConfig.backgroundCrossfadeSeconds == 7,
+                    "5.60 background motion and timing round trip");
 
             SiegeConfig.resetDefaults();
             SiegeConfig.load();
             check(SiegeConfig.autoContrast && SiegeConfig.scanlineIntensity == 55 && SiegeConfig.interferenceIntensity == 55,
                     "Visual defaults");
+            check(SiegeConfig.backgroundMotionIntensity == 55 && SiegeConfig.backgroundSceneSeconds == 24
+                            && SiegeConfig.backgroundCrossfadeSeconds == 5,
+                    "5.60 adaptive-background defaults");
             SiegeConfig.applyCalmPreset();
             check(SiegeConfig.reducedMotion && SiegeConfig.reduceFlashes && SiegeConfig.highContrast
                     && !SiegeConfig.scanlines && SiegeConfig.scanlineIntensity == 0
                     && !SiegeConfig.titleInterference && SiegeConfig.interferenceIntensity == 0
-                    && !SiegeConfig.hoverSounds && SiegeConfig.autoContrast, "Calm preset");
+                    && !SiegeConfig.hoverSounds && SiegeConfig.autoContrast
+                    && SiegeConfig.backgroundMotionIntensity == 0 && SiegeConfig.backgroundCrossfadeSeconds == 0,
+                    "Calm preset");
 
             SiegeConfig.resetDefaults();
             for (int scene = 0; scene < SiegeSceneCatalog.count(); scene++) {
@@ -52,7 +63,8 @@ public class ConfigRegressionTest {
             SiegeConfig.applyReadingPreset();
             check(SiegeConfig.intelReadingMode && SiegeConfig.comfortableReading && SiegeConfig.darkIntelPaper
                     && SiegeConfig.highContrast && SiegeConfig.reducedMotion && SiegeConfig.reduceFlashes
-                    && !SiegeConfig.scanlines && !SiegeConfig.titleInterference && SiegeConfig.autoContrast,
+                    && !SiegeConfig.scanlines && !SiegeConfig.titleInterference && SiegeConfig.autoContrast
+                    && SiegeConfig.backgroundMotionIntensity == 0 && SiegeConfig.backgroundCrossfadeSeconds == 0,
                     "Reading preset");
 
             Files.writeString(folder.resolve("siege-client.properties"), "settingsRevision=801\nindexOrder=99\ninspectorBackground=-9\nautoRotateIntel=false\n");
@@ -62,9 +74,12 @@ public class ConfigRegressionTest {
             check(!SiegeConfig.highContrast && !SiegeConfig.reduceFlashes, "New options use independent defaults");
             check(SiegeConfig.autoContrast && SiegeConfig.scanlineIntensity == 55 && SiegeConfig.interferenceIntensity == 55,
                     "Visual options load independent defaults without a migration revision");
+            check(SiegeConfig.backgroundMotionIntensity == 55 && SiegeConfig.backgroundSceneSeconds == 24
+                            && SiegeConfig.backgroundCrossfadeSeconds == 5,
+                    "Adaptive-background options load independent defaults without migration");
 
             Path config = folder.resolve("siege-client.properties");
-            Files.writeString(config, "settingsRevision=801\nuiVolume= 44 \nmusic= false \ngraphics= balanced \nhighContrast= true \nreduceFlashes= true \ntitleInterference=true\nscanlineIntensity=250\ninterferenceIntensity=-9\n");
+            Files.writeString(config, "settingsRevision=801\nuiVolume= 44 \nmusic= false \ngraphics= balanced \nhighContrast= true \nreduceFlashes= true \ntitleInterference=true\nscanlineIntensity=250\ninterferenceIntensity=-9\nbackgroundMotionIntensity=250\nbackgroundSceneSeconds=4\nbackgroundCrossfadeSeconds=99\n");
             SiegeConfig.load();
             check(SiegeConfig.uiVolume == 44 && !SiegeConfig.music, "Trimmed settings");
             check(SiegeConfig.graphics == SiegeConfig.Graphics.BALANCED, "Case-insensitive graphics");
@@ -72,6 +87,9 @@ public class ConfigRegressionTest {
                     "Accessibility normalization on load");
             check(SiegeConfig.scanlineIntensity == 100 && SiegeConfig.interferenceIntensity == 0,
                     "Intensity values clamp safely");
+            check(SiegeConfig.backgroundMotionIntensity == 100 && SiegeConfig.backgroundSceneSeconds == 12
+                            && SiegeConfig.backgroundCrossfadeSeconds == 6,
+                    "Adaptive-background values clamp safely and crossfade never exceeds half the scene");
             SiegeConfig.save();
             var savedTime = Files.getLastModifiedTime(config);
             SiegeConfig.save();
