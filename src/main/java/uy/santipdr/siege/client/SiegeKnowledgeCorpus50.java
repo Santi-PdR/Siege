@@ -3,8 +3,11 @@ package uy.santipdr.siege.client;
 import java.util.List;
 
 /**
- * Extra current player-facing knowledge recovered from the full SIEGE Discord export.
- * Personal inventories, one-player prices/progress and old superseded recipes are intentionally excluded.
+ * Current reusable knowledge recovered from the complete Eternal Craft / SIEGE Discord export.
+ *
+ * The export contains 251,065 messages from 2025-11-02 through 2026-09-20. This file keeps
+ * only information that is useful to any player. Personal inventories, one-player prices,
+ * purchases, private progression and superseded recipes are deliberately excluded.
  */
 public final class SiegeKnowledgeCorpus50 {
     private SiegeKnowledgeCorpus50() { }
@@ -27,6 +30,17 @@ public final class SiegeKnowledgeCorpus50 {
     }
 
     private static final List<SiegeKnowledgeData.Entry> ENTRIES = List.of(
+            e("race-spins", SiegeKnowledgeData.Domain.RACES,
+                    "Giros de raza", "Race spins",
+                    "Los giros cambian tu raza por un resultado aleatorio; algunas razas especiales usan otros pasos o spins especiales.",
+                    "Spins replace your race with a random result; some special races use other steps or special spins.",
+                    "Los giros de raza son una de las formas de cambiar de raza. El resultado es aleatorio, puede repetirse y no garantiza que la siguiente rareza sea mejor. Tampoco todo se reduce a pagar por giros: en el registro aparecen otras formas de obtenerlos y razas que directamente usan pasos o spins especiales.\n\nSi una raza no aparece en los giros comunes, mirá su ficha antes de gastar recursos. No hay que asumir que todas se consiguen de la misma manera.",
+                    "Race spins are one way to change race. The result is random, can repeat and does not guarantee a better rarity. Spins are not only a paid mechanic either: the records mention other ways to obtain them, while some races use special steps or special spins instead.\n\nIf a race is not part of common spins, check its entry before spending resources. Do not assume every race is obtained in the same way.",
+                    true, List.of("race-system", "rarity-order"),
+                    src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "31/08/2026", "Razas / spins",
+                            "Los giros no dependen siempre de dinero y existen rutas especiales.",
+                            "Spins are not always tied to money and special routes exist.")),
+
             e("subhuman-rick-sanchez", SiegeKnowledgeData.Domain.RACES,
                     "Rick Sanchez · Subhuman", "Rick Sanchez · Subhuman",
                     "Una variante Subhuman mencionada de forma directa; se trata como una rama de Subhuman y no como Human normal.",
@@ -36,6 +50,27 @@ public final class SiegeKnowledgeCorpus50 {
                     false, List.of("race-subhuman"),
                     src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "30/08/2026", "Subhuman",
                             "Variante Subhuman mencionada directamente.", "Subhuman variant directly mentioned.")),
+
+            e("meditation-levels", SiegeKnowledgeData.Domain.MEDITATION,
+                    "Meditación", "Meditation",
+                    "La meditación tiene niveles propios y puede servir para entrenar habilidades concretas o crear nuevas capacidades.",
+                    "Meditation has its own levels and can train specific abilities or help create new capabilities.",
+                    "Meditación no es un aumento automático de estadísticas. Puede enfocarse en capacidades concretas, como Room, y en niveles altos permite trabajar con habilidades más complejas. El servidor ha cambiado varias veces los niveles necesarios, por eso esta ficha no convierte un número viejo en una regla permanente.\n\nTambién hay límites: no todo atributo básico se puede convertir directamente en una habilidad de velocidad, fuerza o similares sólo por tener meditación. Cuando una habilidad tenga un requisito reciente y claro, ese requisito pertenece a su propia ficha.",
+                    "Meditation is not an automatic stat increase. It can focus on specific abilities such as Room, and higher progression can be used for more complex abilities. Required levels have changed several times, so this entry does not turn an old number into a permanent rule.\n\nThere are also limits: basic attributes such as speed or strength cannot automatically be turned into abilities just by having meditation. When an ability has a recent, clear requirement, it belongs in that ability's entry.",
+                    true, List.of("abilities-experience", "ability-room", "trials-basics"),
+                    src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "07/09/2026", "Meditación",
+                            "Los niveles y capacidades de meditación fueron ajustados varias veces.",
+                            "Meditation levels and capabilities were adjusted multiple times.")),
+
+            e("ability-stamina", SiegeKnowledgeData.Domain.ABILITIES,
+                    "Stamina de habilidades", "Ability stamina",
+                    "Las habilidades usan stamina; quedarse sin margen puede dejarte lento o sin capacidad de responder.",
+                    "Abilities use stamina; running out of room can leave you slowed or unable to respond.",
+                    "En septiembre se añadió stamina para las habilidades. Eso significa que no conviene pensar una habilidad sólo por su efecto: también importa cuánto podés sostenerla y qué pasa después de usarla.\n\nLa cantidad exacta depende del sistema y puede cambiar. La regla práctica es reservar stamina para escapar, defenderte o encadenar una segunda acción en vez de gastar todo en una sola habilidad.",
+                    "Ability stamina was added in September. This means an ability is not only about its effect: how long you can sustain it and what happens afterward also matter.\n\nExact amounts depend on the system and can change. A practical rule is to keep stamina for escape, defense or a second action rather than spending everything on one ability.",
+                    false, List.of("abilities-experience", "meditation-levels"),
+                    src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "17/09/2026", "Habilidades",
+                            "Stamina añadida al uso de habilidades.", "Stamina added to ability use.")),
 
             e("ability-room", SiegeKnowledgeData.Domain.ABILITIES,
                     "Room", "Room",
@@ -51,11 +86,23 @@ public final class SiegeKnowledgeCorpus50 {
                     "Gate", "Gate",
                     "Habilidad de transporte de Hacker; versiones superiores pueden alcanzar distancias mucho mayores.",
                     "Hacker transportation ability; higher versions can reach much greater distances.",
-                    "Gate permite desplazarse entre puntos y forma parte de la progresión de Hacker. En V2 fue descrito con alcance suficiente para llegar al espacio, pero todavía no hay una tabla completa y actual de distancia, coste y seguridad para cada versión. También existe una variante mejorada llamada Rate. Mientras esos límites no estén claros, la guía explica lo que hace sin inventar cifras ni tratar experiencias de un jugador como una regla general.",
-                    "Gate allows travel between points and is part of Hacker progression. At V2 it was described as having enough range to reach space, but there is still no complete current table for distance, cost and safety at every stage. An improved variant called Rate also exists. Until those limits are clear, the guide explains the ability without inventing numbers or treating one player's experience as a universal rule.",
+                    "Gate permite desplazarse entre puntos y forma parte de la progresión de Hacker. El alcance aumenta mucho con versiones superiores; en septiembre se describieron Gates capaces de viajar decenas de miles de bloques. También existe una variante mejorada llamada Rate.\n\nLos límites concretos cambian con progresión y balance, así que la ficha no fija una distancia universal ni convierte el resultado de una sola persona en regla para todos.",
+                    "Gate allows travel between points and is part of Hacker progression. Range grows substantially at higher stages; September discussions described Gates travelling tens of thousands of blocks. An improved variant called Rate also exists.\n\nExact limits vary with progression and balance, so this entry does not set one universal distance or turn one player's result into a rule for everyone.",
                     true, List.of("race-hacker", "ability-room"),
-                    src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "18/08/2026", "Hacker · Gate",
-                            "Alcance general de Gate V2 y existencia de Rate mencionados.", "General V2 Gate range and the existence of Rate were mentioned.")),
+                    src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "20/09/2026", "Hacker · Gate",
+                            "Gate seguía activo y con alcance muy alto en la revisión más reciente.",
+                            "Gate remained active with very high range in the newest review.")),
+
+            e("dojo-training", SiegeKnowledgeData.Domain.PROGRESSION,
+                    "Dojos y entrenamiento", "Dojos and training",
+                    "Los dojos aceleran entrenamiento y funcionan especialmente bien con Saiyan.",
+                    "Dojos accelerate training and work especially well with Saiyan.",
+                    "Los dojos son lugares de entrenamiento con multiplicadores. El registro describe un núcleo de propano como parte del sistema que activa ese multiplicador y confirma que los Saiyan aprovechan especialmente bien los dojos.\n\nEl multiplicador exacto depende del dojo; no se usa un número viejo como si todos fueran iguales. Para Saiyan, entrenar sigue siendo parte central de la progresión y explica por qué dos jugadores con la misma raza pueden tener capacidades muy distintas.",
+                    "Dojos are training locations with multipliers. The records describe a propane core as part of the system that activates the multiplier and confirm that Saiyans benefit especially well from dojos.\n\nThe exact multiplier depends on the dojo; an old number is not treated as universal. For Saiyan, training remains a core part of progression and explains why two players with the same race can have very different capabilities.",
+                    false, List.of("race-saiyan", "saiyan-transformations"),
+                    src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "20/08/2026", "Dojos",
+                            "Dojos confirmados como entrenamiento y con mejor rendimiento para Saiyan.",
+                            "Dojos confirmed as training locations with especially good Saiyan performance.")),
 
             e("executor-maze", SiegeKnowledgeData.Domain.EXECUTORS,
                     "Maze Executor", "Maze Executor",
@@ -77,25 +124,101 @@ public final class SiegeKnowledgeCorpus50 {
                     src(SiegeKnowledgeData.Confidence.SYSTEM_OBSERVED, "09/2026", "Executores",
                             "Aviso de proximidad mencionado durante las pruebas recientes.", "Proximity warning mentioned during recent testing.")),
 
+            e("respawn-cards", SiegeKnowledgeData.Domain.DEATH_REVIVE,
+                    "Respawn Cards", "Respawn Cards",
+                    "Las Respawn Cards son una forma separada de conseguir un revive; Silver y Diamond fueron descritas como revive gratis.",
+                    "Respawn Cards are a separate way to obtain a revival; Silver and Diamond were described as a free revive.",
+                    "Respawn Cards no sustituyen al sistema médico normal: funcionan como una vía aparte de revive. En SIEGE se confirmó que una Respawn Card se activa con un lingote de cobre. Las variantes Silver y Diamond fueron descritas como un revive gratis.\n\nEsto no convierte cualquier objeto de cobre ni cualquier carta en un desfibrilador. Son sistemas distintos: desfibrilador para reanimación médica normal y Respawn Card como recurso especial de revive.",
+                    "Respawn Cards do not replace the normal medical system: they are a separate revival path. In SIEGE, a Respawn Card was confirmed to activate with a copper ingot. Silver and Diamond variants were described as a free revive.\n\nThis does not turn every copper item or every card into a defibrillator. They are separate systems: defibrillator for normal medical revival and Respawn Card as a special revival resource.",
+                    true, List.of("death-revive-current", "item-defibrillator"),
+                    src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "17/09/2026", "Respawn Cards",
+                            "Activación con lingote de cobre y función de Silver/Diamond descritas directamente.",
+                            "Copper-ingot activation and Silver/Diamond function described directly.")),
+
+            e("death-revive-current", SiegeKnowledgeData.Domain.DEATH_REVIVE,
+                    "Estados de heridas y reanimación", "Injury states and revival",
+                    "Los estados de caída no son iguales; el sistema actual ya no usa RCP como método general.",
+                    "Downed states are not all the same; the current system no longer uses CPR as the general method.",
+                    "El servidor puede dejar estados como Injured, Incapacitated, Dead, Mangled, Mutilated o Disfigured según lo que haya ocurrido. No todos representan la misma gravedad.\n\nLa regla actual cambió en septiembre: RCP dejó de ser el método general y los desfibriladores pasaron a ser la herramienta normal para reanimar los estados de muerte. El Medkit sigue siendo un objeto médico, pero no es la regla universal de reanimación.\n\nAlgunas situaciones pueden necesitar tratamiento especial y también existen Respawn Cards como vía separada de revive. Si una excepción cambia, se explica en su propia ficha en vez de volver a usar la vieja escala de RCP/botiquín/desfibrilador.",
+                    "The server can apply states such as Injured, Incapacitated, Dead, Mangled, Mutilated or Disfigured depending on what happened. They are not all equally severe.\n\nThe current rule changed in September: CPR stopped being the general method and defibrillators became the normal tool for reviving death states. The Medkit remains a medical item, but it is not the universal revival rule.\n\nSome situations may require special treatment, and Respawn Cards also exist as a separate revival path. If an exception changes, it is explained in its own entry instead of restoring the old CPR/medkit/defibrillator ladder.",
+                    true, List.of("item-defibrillator", "item-medkit", "respawn-cards"),
+                    src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "17/09/2026", "Muerte / Revive",
+                            "RCP retirado; desfibriladores y Respawn Cards separados según su función.",
+                            "CPR removed; defibrillators and Respawn Cards kept as separate revival systems.")),
+
+            e("item-defibrillator", SiegeKnowledgeData.Domain.ITEMS,
+                    "Desfibrilador", "Defibrillator",
+                    "Es la herramienta normal de reanimación del sistema actual.",
+                    "It is the normal revival tool in the current system.",
+                    "Después del cambio de septiembre, RCP dejó de ser el método general y el desfibrilador pasó a usarse para reanimar los estados de muerte actuales.\n\nCrafteo más reciente dentro del export: 3 bloques de hierro + 1 bloque de oro. Ese dato aparece de nuevo el 12/09/2026.\n\nNo se muestran recetas anteriores en la ficha normal. Si este crafteo vuelve a cambiar, sólo debe quedar el nuevo.",
+                    "After the September change, CPR stopped being the general method and the defibrillator became the normal tool for reviving the current death states.\n\nNewest recipe in the export: 3 iron blocks + 1 gold block. The same recipe appears again on 2026-09-12.\n\nOlder recipes are not shown in the normal entry. If the recipe changes again, only the new one should remain.",
+                    true, List.of("death-revive-current", "item-medkit"),
+                    src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "12/09/2026", "Desfibrilador",
+                            "3 bloques de hierro + 1 bloque de oro es la receta más reciente del export.",
+                            "3 iron blocks + 1 gold block is the newest recipe in the export.")),
+
+            e("item-medkit", SiegeKnowledgeData.Domain.ITEMS,
+                    "Medkit / Botiquín", "Medkit",
+                    "Objeto médico para curación; su receta actual cambió después de las versiones guardadas en el export.",
+                    "Medical item for healing; its current recipe changed after the versions preserved in the export.",
+                    "El Medkit sirve como objeto médico y aparece repetidamente como forma de curarse. El sistema actual de reanimación general usa desfibriladores, así que no se presenta el Medkit como sustituto universal para revivir.\n\nCrafteo actual confirmado durante la revisión 5.00 del 22/09/2026: 3 bloques de hierro + 1 mesa de encantamientos.\n\nLa receta anterior no se muestra porque ya no es la vigente.",
+                    "The Medkit is a medical item and repeatedly appears as a way to heal. The current general revival system uses defibrillators, so the Medkit is not presented as a universal revival replacement.\n\nCurrent recipe confirmed during the 5.00 review on 2026-09-22: 3 iron blocks + 1 enchanting table.\n\nThe previous recipe is not shown because it is no longer current.",
+                    false, List.of("death-revive-current", "item-defibrillator"),
+                    src(SiegeKnowledgeData.Confidence.SYSTEM_OBSERVED, "22/09/2026", "Crafteos actuales",
+                            "Corrección actual aportada durante la revisión 5.00.",
+                            "Current correction supplied during the 5.00 review.")),
+
             e("item-daemonium-kit", SiegeKnowledgeData.Domain.ITEMS,
                     "Daemonium Kit", "Daemonium Kit",
-                    "Herramienta usada para recuperar componentes al desarmar ciertas reliquias.",
-                    "Tool used to recover components when dismantling certain relics.",
-                    "El Daemonium Kit cumple una función distinta a la Geography Table. La Geography Table sirve para investigar propiedades o información oculta; el Daemonium Kit se usa cuando querés extraer componentes de una reliquia al desarmarla. No se fija un precio ni una receta mientras no haya una versión reciente suficientemente clara.",
-                    "The Daemonium Kit has a different purpose from the Geography Table. The Geography Table is used to investigate properties or hidden information; the Daemonium Kit is used when extracting components from a relic during dismantling. No price or recipe is fixed unless a sufficiently recent version is clear.",
+                    "Herramienta usada para recuperar componentes al desarmar reliquias.",
+                    "Tool used to recover components when dismantling relics.",
+                    "El Daemonium Kit cumple una función distinta a la Geography Table. La Geography Table sirve para investigar propiedades o información oculta; el Daemonium Kit se usa cuando querés extraer componentes de una reliquia al desarmarla.\n\nEl 19/09 se confirmó que se usa con cualquier reliquia cuando el objetivo es sacar su material. No se fija un precio ni un crafteo mientras no haya una versión reciente suficientemente clara.",
+                    "The Daemonium Kit has a different purpose from the Geography Table. The Geography Table investigates properties or hidden information; the Daemonium Kit is used when extracting components from a relic during dismantling.\n\nOn 2026-09-19 it was confirmed for relics when the goal is to recover their material. No price or recipe is fixed unless a sufficiently recent version is clear.",
                     false, List.of("item-geography-table", "relic-basics"),
                     src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "19/09/2026", "Reliquias",
                             "Uso de extracción confirmado recientemente.", "Extraction use recently confirmed.")),
 
+            e("assembling-table", SiegeKnowledgeData.Domain.ASSEMBLING,
+                    "Assembling Table", "Assembling Table",
+                    "Mesa para tecnología avanzada, reservas, implantes, chips y otras mejoras que no pertenecen al crafteo normal.",
+                    "Table for advanced technology, reserves, implants, chips and other upgrades outside normal crafting.",
+                    "Assembling es un sistema distinto al crafteo vanilla. Se usa para tecnología avanzada y aparece ligada a reservas, jetpacks, implantes, trasplantes y chips. Instalar trasplantes y chips mediante Assembling es parte de lo que convierte a alguien en Cyborg; no todo jugador es Cyborg por tener tecnología.\n\nLas recetas concretas cambian y muchas no están completas en el registro, así que el Atlas no inventa materiales. Cuando se conoce una receta actual, se muestra en la ficha del objeto correspondiente.",
+                    "Assembling is separate from vanilla crafting. It is used for advanced technology and is tied to reserves, jetpacks, implants, transplants and chips. Installing transplants and chips through Assembling is part of becoming a Cyborg; simply using technology does not make every player a Cyborg.\n\nSpecific recipes change and many are incomplete in the records, so the Atlas does not invent materials. When a current recipe is known, it belongs in the item's own entry.",
+                    true, List.of("race-cyborg"),
+                    src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "08/09/2026", "Assembling / Cyborg",
+                            "Trasplantes y chips mediante Assembling confirmados como parte de Cyborg.",
+                            "Transplants and chips through Assembling confirmed as part of Cyborg.")),
+
             e("trial-shrine-global", SiegeKnowledgeData.Domain.TRIALS,
                     "Trial del santuario", "Shrine Trial",
-                    "Un Trial global activado desde un santuario; algunos requisitos y recompensas fueron descritos en agosto.",
-                    "A global Trial activated from a shrine; some requirements and rewards were described in August.",
-                    "Este Trial fue descrito como un evento global iniciado desde un santuario. En agosto se hablaron de bajas, niveles de experiencia y coleccionables verdes repartidos por el Overworld, además de una duración limitada del santuario. Como esos números pueden cambiar con el balance, la guía no los presenta como requisitos permanentes. Si vuelve a activarse, los valores mostrados por el servidor o una confirmación reciente tienen prioridad.",
-                    "This Trial was described as a global event started from a shrine. August discussions mentioned kills, experience levels and green collectibles spread around the Overworld, plus a limited shrine duration. Because those numbers can change with balance, the guide does not present them as permanent requirements. If it becomes active again, values shown by the server or a recent confirmation take priority.",
+                    "Un Trial global activado desde un santuario; sus números pueden cambiar entre versiones.",
+                    "A global Trial activated from a shrine; its numbers can change between versions.",
+                    "Este Trial fue descrito como un evento global iniciado desde un santuario. En agosto se hablaron de bajas, niveles de experiencia y coleccionables verdes repartidos por el Overworld, además de una duración limitada del santuario.\n\nComo esos números pueden cambiar con el balance, la guía no los presenta como requisitos permanentes. Si vuelve a activarse, los valores mostrados por el servidor o una confirmación reciente tienen prioridad.",
+                    "This Trial was described as a global event started from a shrine. August discussions mentioned kills, experience levels and green collectibles around the Overworld, plus a limited shrine duration.\n\nBecause those numbers can change with balance, the guide does not present them as permanent requirements. If it becomes active again, values shown by the server or a recent confirmation take priority.",
                     false, List.of("trials-basics"),
                     src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "12/08/2026", "Trials",
-                            "Evento de santuario descrito; sus cifras se consideran variables.", "Shrine event described; its numeric requirements are treated as changeable."))
+                            "Evento de santuario descrito; sus cifras se consideran variables.", "Shrine event described; numeric requirements are treated as changeable.")),
+
+            e("trial-third-justice", SiegeKnowledgeData.Domain.TRIALS,
+                    "Trial de Third Justice", "Third Justice Trial",
+                    "Trial asociado al escudo Third Justice; el parry puede rechazar con fuerza a Executores.",
+                    "Trial tied to the Third Justice shield; its parry can knock Executors away strongly.",
+                    "Third Justice se obtiene mediante su Trial. El dato más reciente del export que da un requisito concreto menciona 20 discos de Nightdream, el 30/08/2026. Como los requisitos de Trials pueden cambiar, ese valor se muestra como el último conocido y no como una regla eterna.\n\nEl escudo tiene un parry corto: acertarlo puede rechazar incluso a Executores. Para usarlo bien importa más el timing que mantenerlo levantado como un escudo normal.",
+                    "Third Justice is obtained through its Trial. The newest export record with a concrete requirement mentions 20 Nightdream discs on 2026-08-30. Because Trial requirements can change, this is shown as the latest known value rather than a permanent rule.\n\nThe shield has a short parry window: landing it can knock even Executors away. Timing matters more than simply holding it like a normal shield.",
+                    false, List.of("trials-basics", "executors-basics"),
+                    src(SiegeKnowledgeData.Confidence.STAFF_CONFIRMED, "30/08/2026", "Third Justice",
+                            "20 discos de Nightdream y función de parry son los datos concretos más recientes del export.",
+                            "20 Nightdream discs and the parry function are the newest concrete export data.")),
+
+            e("dimensions-basics", SiegeKnowledgeData.Domain.DIMENSIONS,
+                    "Dimensiones", "Dimensions",
+                    "Existen zonas y dimensiones distintas, pero no hay una guía actual completa que justifique inventar rutas o requisitos.",
+                    "Different areas and dimensions exist, but there is no complete current guide that justifies inventing routes or requirements.",
+                    "SIEGE usa más de un lugar o dimensión además del Overworld, y algunas razas, Trials o eventos pueden estar relacionados con ellos. La información disponible está demasiado repartida para dar una lista actual completa de accesos y salidas.\n\nPor eso el Atlas no repite consejos genéricos como 'entrar con un método de escape confirmado' como si fueran una mecánica. Cuando una dimensión concreta tenga información útil y reciente, tendrá su propia ficha.",
+                    "SIEGE uses more than one area or dimension beyond the Overworld, and some races, Trials or events can be related to them. Available information is too scattered for a complete current list of entrances and exits.\n\nFor that reason the Atlas does not repeat generic advice such as 'enter with a confirmed escape method' as if it were a mechanic. When a specific dimension has useful, recent information, it should get its own entry.",
+                    false, List.of(),
+                    src(SiegeKnowledgeData.Confidence.SYSTEM_OBSERVED, "20/09/2026", "Dimensiones",
+                            "Se conserva sólo lo confirmado a nivel general.", "Only general confirmed information is retained."))
     );
 
     public static List<SiegeKnowledgeData.Entry> entries() { return ENTRIES; }
