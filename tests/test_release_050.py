@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SIEGE 5.00 major-jump contracts."""
+"""Durable SIEGE 5.00 generation contracts kept across later 5.x releases."""
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,7 +34,7 @@ EASTER = read("src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java")
 CHANGELOG = read("docs/CHANGELOG-5.0.0.md")
 MEDIA_DOC = read("docs/DVN-MEDIA-CANDIDATES-5.0.md")
 
-assert "version = '5.00.0'" in BUILD
+assert "version = '5." in BUILD
 assert "SIEGE 5.00.0" in CHANGELOG
 
 # Operations is intentionally smaller than 4.00.
@@ -71,7 +71,7 @@ assert REG.index("SiegeKnowledgeExpansion50.entries") < REG.index("SiegeKnowledg
 assert "maintenanceEntries" in REG
 assert "Zone.SERVER" in REG
 
-# Current rules/recipes are authoritative in the final corpus layer.
+# Current rules/recipes introduced by 5.00 remain present.
 assert '"death-revive-current"' in CORPUS50
 assert "RCP dejó de ser" in CORPUS50
 assert '"item-defibrillator"' in CORPUS50
@@ -102,7 +102,7 @@ assert '"trial-shrine-global"' in CORPUS50
 assert '"trial-third-justice"' in CORPUS50
 assert '"ability-room"' in CORPUS50 and '"ability-gate"' in CORPUS50
 
-# Race-specific progression is explicit instead of pretending everything is V1→V4.
+# Race-specific progression remains explicit instead of pretending everything is V1→V4.
 for key in ('"race-saiyan"', '"saiyan-transformations"', '"race-ghoul"', '"ghoul-progression"',
             '"race-subhuman"', '"subhuman-adamantium-human"', '"subhuman-sorcerer"', '"subhuman-evil-morty"'):
     assert key in EXP50
@@ -111,7 +111,7 @@ for track in ('"core"', '"v1v4"', '"special"', '"trials"'):
 assert "DEPENDE DE LA RAZA" in PROGRESSION
 assert "Trial Spire" in PROGRESSION and "Witch Trials" in PROGRESSION
 
-# 4.00 audio regression: music gets clean headroom and UI samples stay at authored pitch.
+# Audio keeps clean headroom and UI samples stay at authored pitch.
 assert 'HEADROOM_DB="-3dB"' in MUSIC_PREP
 assert 'OUTPUT_RATE="44100"' in MUSIC_PREP
 assert "insufficient decoded headroom" in MUSIC_PREP
@@ -119,7 +119,7 @@ assert "SimpleSoundInstance.forUI(event, 1.0F, volume)" in UI_SOUNDS
 for shifted in ("0.72F, 0.82F", "0.84F, 0.76F", "1.08F, 0.58F", "0.92F, 0.64F"):
     assert shifted not in UI_SOUNDS
 
-# Media Room 5.0 remains a real audiovisual surface.
+# Media Room remains a real audiovisual surface.
 assert "Mode { BUNDLED, MOODS, DVN_AUDIO, VISUALS }" in MEDIA_ROOM
 assert "renderMoods" in MEDIA_ROOM and "mouseScrolled" in MEDIA_ROOM
 for mood in ('"stronghold"', '"deployment"', '"intel"', '"last-stand"'):
@@ -147,4 +147,4 @@ assert "Publish validated jar for installer" in WORKFLOW
 assert "python3 tests/test_release_040.py" in WORKFLOW
 assert "python3 tests/test_release_050.py" in WORKFLOW
 
-print("SIEGE 5.00 navigation, corpus knowledge, freshness, audio and audiovisual contracts passed")
+print("SIEGE 5.00 generation contracts still pass on the current 5.x release")
