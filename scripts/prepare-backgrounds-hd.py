@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """Prepare SIEGE menu backgrounds without inventing source detail.
 
-SIEGE 5.30 stops turning every checked-in image into a synthetic 1920x1080
-master. Native 16:9 sources remain at their real resolution. Near-16:9 captures
-are cropped slightly instead of enlarged. Rooftop Squad keeps the full 4:3
-illustration over a softened 16:9 extension while the foreground is never
-upscaled.
+SIEGE keeps checked-in art at honest native/prepared resolutions instead of turning
+small images into synthetic 1920x1080 masters. Native 16:9 sources remain at their
+real resolution. Near-16:9 captures are cropped slightly instead of enlarged. Rooftop
+Squad keeps the full 4:3 illustration over a softened 16:9 extension while the
+foreground is never upscaled.
 
-DVN official thumbnails are fetched separately and deliberately remain at their
-native 768x432 resolution. Tempest Jutcherson remains an easter egg and is never
-processed by this normal-background pipeline.
+SIEGE 5.40 fetches six official DVN thumbnails separately and deliberately keeps them
+at their native 768x432 resolution. Tempest Jutcherson remains an easter egg and is
+never processed by this normal-background pipeline. Third Justice is prepared by its
+own script at the end of this stage so the corrected full-color captures and complete
+reel are always regenerated before validation.
 """
 from pathlib import Path
 from PIL import Image, ImageFilter, ImageStat
@@ -135,7 +137,6 @@ if __name__ == "__main__":
     for scene, target in TARGETS.items():
         prepare(scene, target)
 
-    # Keep all player-facing visual repair in the same CI stage. This brightens the
-    # accidentally crushed Third Justice captures and prepares the complete supplied
-    # video whenever its original MP4 is present.
+    # Keep player-facing visual repair in one CI stage. Third Justice restores the
+    # canonical full-color screenshots and prepares the complete supplied video reel.
     runpy.run_path("scripts/prepare-third-justice-media.py", run_name="__main__")
