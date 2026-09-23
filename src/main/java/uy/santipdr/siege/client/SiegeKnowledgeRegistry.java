@@ -21,11 +21,10 @@ public final class SiegeKnowledgeRegistry {
     /** Complete maintenance history, including old/conflicting records. Never rendered directly. */
     private static final List<SiegeKnowledgeData.Entry> MAINTENANCE = java.util.stream.Stream.of(
             SiegeKnowledgeData.entries(), SiegeKnowledgeExpansion40.entries(),
-            SiegeKnowledgeExpansion50.entries(), SiegeKnowledgeCorpus50.entries(),
-            SiegeKnowledgeCorrections50.entries())
+            SiegeKnowledgeExpansion50.entries(), SiegeKnowledgeCorpus50.entries())
             .flatMap(List::stream).toList();
 
-    /** One current record per ID. The last source wins, so late corrections replace stale recipes/rules. */
+    /** One current record per ID. Later files replace stale records with the same ID. */
     private static final Map<String, SiegeKnowledgeData.Entry> CURRENT_BY_ID = buildCurrent();
     private static final List<SiegeKnowledgeData.Entry> PUBLIC = CURRENT_BY_ID.values().stream()
             .filter(SiegeKnowledgeRegistry::playerFacing)
@@ -39,7 +38,6 @@ public final class SiegeKnowledgeRegistry {
         addCurrent(out, SiegeKnowledgeExpansion40.entries());
         addCurrent(out, SiegeKnowledgeExpansion50.entries());
         addCurrent(out, SiegeKnowledgeCorpus50.entries());
-        addCurrent(out, SiegeKnowledgeCorrections50.entries());
         return Collections.unmodifiableMap(out);
     }
 
