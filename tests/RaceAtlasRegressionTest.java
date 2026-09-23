@@ -18,11 +18,18 @@ public final class RaceAtlasRegressionTest {
                 check(!haystack.contains(forbidden), "Personal data leaked into race atlas: " + race.id());
 
             if (race.knowledgeId().isBlank()) {
-                unresolved++;
-                check(race.progression() == SiegeRaceAtlasData.Progression.UNKNOWN,
-                        "Race without a deep-link must not claim a detailed progression: " + race.id());
-                check(haystack.contains("no hay información") || haystack.contains("not enough recent information"),
-                        "Race without a deep-link must explain that current information is incomplete: " + race.id());
+                if (race.tags().contains("needs-info")) {
+                    unresolved++;
+                    check(race.progression() == SiegeRaceAtlasData.Progression.UNKNOWN,
+                            "Unresolved race must not claim a detailed progression: " + race.id());
+                    check(haystack.contains("no hay información suficiente")
+                                    || haystack.contains("falta información suficiente")
+                                    || haystack.contains("not enough information"),
+                            "Unresolved race must explain that current information is incomplete: " + race.id());
+                } else {
+                    check(!race.summaryEs().isBlank() && !race.summaryEn().isBlank(),
+                            "Known race without a deep-link still needs a useful bilingual summary: " + race.id());
+                }
             }
         }
         check(unresolved >= 20, "Expected unresolved corpus races to remain explicitly unknown rather than invented");
@@ -42,10 +49,14 @@ public final class RaceAtlasRegressionTest {
                 "Assembling search should surface Cyborg");
         check(SiegeRaceAtlasData.search("Mink", 5).stream().anyMatch(r -> r.id().equals("mink")),
                 "Full-corpus race search should surface Mink");
+        check(SiegeRaceAtlasData.search("Angel", 5).stream().anyMatch(r -> r.id().equals("angel")),
+                "5.10 race search should surface Angel");
+        check(SiegeRaceAtlasData.search("Xeno Saiyan", 5).stream().anyMatch(r -> r.id().equals("xeno-saiyan")),
+                "5.10 race search should surface Xeno Saiyan");
         check(SiegeRaceAtlasData.search("Void Master", 5).stream().anyMatch(r -> r.id().equals("void-master")),
                 "Full-corpus race search should surface Void Master");
         check(SiegeRaceAtlasData.search("", 5).size() == 5, "Blank search limit contract");
 
-        System.out.println("SIEGE 5.00 race atlas: expanded catalog, explicit unknowns, rarity ladder, search and privacy passed");
+        System.out.println("SIEGE 5.10 race atlas: expanded catalog, explicit unknowns, recovered summaries, rarity ladder, search and privacy passed");
     }
 }
