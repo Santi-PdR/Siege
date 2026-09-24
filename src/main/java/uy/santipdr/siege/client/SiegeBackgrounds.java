@@ -14,7 +14,7 @@ public final class SiegeBackgrounds {
 
     private SiegeBackgrounds() { }
 
-    /** 5.60 reads timing live so Settings/config changes do not require a restart. */
+    /** Timing is read live so Settings/config changes do not require a restart. */
     private static long sceneMs() {
         return Math.max(12_000L, Math.min(60_000L, SiegeConfig.backgroundSceneSeconds * 1_000L));
     }
@@ -28,6 +28,12 @@ public final class SiegeBackgrounds {
         if (SiegeConfig.selectedScene >= 0) return Math.floorMod(SiegeConfig.selectedScene, SCENES.size());
         long sceneMs = sceneMs();
         return SiegeConfig.animatedBackgrounds ? rotationIndex(Math.floorDiv(now, sceneMs)) : 0;
+    }
+
+    public static int nextIndex(long now) {
+        int current = currentIndex(now);
+        if (SiegeConfig.selectedScene >= 0 || !SiegeConfig.animatedBackgrounds) return current;
+        return rotationIndex(Math.floorDiv(now, sceneMs()) + 1L);
     }
 
     private static int rotationIndex(long slot) {
@@ -44,12 +50,25 @@ public final class SiegeBackgrounds {
         return duration - local;
     }
 
+    public static float rotationProgress(long now) {
+        if (SiegeConfig.selectedScene >= 0 || !SiegeConfig.animatedBackgrounds) return 0.0F;
+        long duration = sceneMs();
+        return Math.max(0.0F, Math.min(1.0F, Math.floorMod(now, duration) / (float)duration));
+    }
+
     public static String rotationState(boolean spanish, long now) {
         if (SiegeConfig.selectedScene >= 0) return spanish ? "Fondo fijado" : "Background pinned";
         if (!SiegeConfig.animatedBackgrounds) return spanish ? "Rotación desactivada" : "Rotation disabled";
         long remaining = rotationRemainingMs(now);
         long seconds = Math.max(0, (remaining + 999L) / 1000L);
         return (spanish ? "Siguiente escena en " : "Next scene in ") + seconds + " s";
+    }
+
+    public static String rotationDetail(boolean spanish, long now) {
+        if (SiegeConfig.selectedScene >= 0 || !SiegeConfig.animatedBackgrounds) return rotationState(spanish, now);
+        int next = nextIndex(now);
+        long seconds = Math.max(0, (rotationRemainingMs(now) + 999L) / 1000L);
+        return (spanish ? "SIGUIENTE: " : "NEXT: ") + name(next, spanish) + " · " + seconds + " s";
     }
 
     public static void renderContainedRegion(GuiGraphics g, int x, int y, int w, int h, int index, float alpha) {
@@ -72,6 +91,10 @@ public final class SiegeBackgrounds {
             case FEATURED -> spanish ? "DESTACADO" : "FEATURED";
             case ANOMALY -> spanish ? "ANOMALÍA VISUAL" : "VISUAL ANOMALY";
         };
+    }
+
+    public static String sourceTag(int index, boolean spanish) {
+        return SiegeSceneCatalog.sourceLabel(index, spanish);
     }
 
     public static void renderPreview(GuiGraphics graphics, int width, int height, int index) {
