@@ -184,7 +184,8 @@ public final class SiegeMediaRoomScreen extends Screen {
         g.drawString(font, fit(label("PISTA: ", "TRACK: ") + SiegeMusic.currentTrackName(), w), x, y, SiegeTheme.GOLD, false);
         y += 12;
         String progress = label("ESTADO: ", "STATE: ") + SiegeMusic.transitionLabel(spanish())
-                + " · " + SiegeMusic.currentTrackNumber() + "/" + SiegeMusic.trackNames().size();
+                + " · " + SiegeMusic.currentTrackNumber() + "/" + SiegeMusic.trackNames().size()
+                + " · " + SiegeMusic.currentTimeLabel();
         g.drawString(font, fit(progress, w), x, y, SiegeTheme.MUTED, false);
         y += 12;
         g.fill(x, y, x + w, y + 3, 0xFF272C30);
