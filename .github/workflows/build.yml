@@ -19,22 +19,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.8'
 
-      - name: Fetch verified DVN 5.50 media
+      - name: Fetch verified DVN media
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow yt-dlp
           bash scripts/fetch-dvn-media-510.sh
 
-      - name: Prepare and audit SIEGE 5.50 visual media
+      - name: Prepare and audit SIEGE visual media
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pillow
@@ -48,7 +48,7 @@ jobs:
           python3 scripts/prepare-backgrounds-hd.py
           python3 scripts/audit-backgrounds-530.py
 
-      - name: Verify responsive layouts, current knowledge and Operations search
+      - name: Verify responsive layouts, knowledge and Operations search
         shell: bash
         run: |
           mkdir -p build/layout-tests build/guide-tests build/guide-media-tests build/archive-tests build/config-tests build/scene-tests build/knowledge-tests build/atlas-tests build/race-atlas-tests build/progression-tests build/media-tests build/ops-tests
@@ -85,6 +85,7 @@ jobs:
           python3 tests/test_release_530.py
           python3 tests/test_release_540.py
           python3 tests/test_release_550.py
+          python3 tests/test_release_560.py
 
       - name: Verify menu theme scope and drawing bounds
         run: |
@@ -101,10 +102,10 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify SIEGE 5.50 player-facing contracts
+      - name: Verify SIEGE 5.60 player-facing contracts
         shell: bash
         run: |
-          grep -q "version = '5.50.0'" build.gradle
+          grep -q "version = '5.60.0'" build.gradle
           grep -q 'class SiegeKnowledgeExpansion50' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java
           grep -q 'class SiegeKnowledgeCorpus50' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeCorpus50.java
           grep -q 'class SiegeKnowledgePlayer510' src/main/java/uy/santipdr/siege/client/SiegeKnowledgePlayer510.java
@@ -130,12 +131,14 @@ jobs:
           grep -q 'SiegeThirdJusticeVideo' src/main/java/uy/santipdr/siege/client/SiegeEvidenceReelScreen.java
           grep -q 'third_justice_full.mp4' scripts/prepare-third-justice-media.py
           grep -q 'SiegeMod.ARC_ENEMY' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
-          grep -q 'SiegeMod.STRONGHOLD_BLACK_SIGNAL' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
-          grep -q 'SiegeMod.NUCLEUS_SILENT_CARRIER' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
-          grep -q 'SiegeMod.TESLA_BREACH' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
-          grep -q 'music.stronghold_black_signal' src/main/resources/assets/siege/sounds.json
-          grep -q 'music.nucleus_silent_carrier' src/main/resources/assets/siege/sounds.json
-          grep -q 'music.tesla_breach' src/main/resources/assets/siege/sounds.json
+          grep -q 'SiegeMod.A_STRANGER_I_REMAIN' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
+          grep -q 'SiegeMod.RECEIVE_YOU_HYPERACTIVE' src/main/java/uy/santipdr/siege/client/SiegeMusic.java
+          grep -q 'a_stranger_i_remain' scripts/prepare-music.sh
+          grep -q 'receive_you_the_hyperactive' scripts/prepare-music.sh
+          if grep -nE 'STRONGHOLD_BLACK_SIGNAL|NUCLEUS_SILENT_CARRIER|TESLA_BREACH' src/main/java/uy/santipdr/siege/SiegeMod.java src/main/java/uy/santipdr/siege/client/SiegeMusic.java; then
+            echo "Rejected generated music must not return to SIEGE."
+            exit 1
+          fi
           grep -q 'class SiegeMediaPresets' src/main/java/uy/santipdr/siege/client/SiegeMediaPresets.java
           grep -q 'SiegeMediaPresets.apply' src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java
           if grep -nE 'TAMBIÉN VER|SEE ALSO' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeScreen.java src/main/java/uy/santipdr/siege/client/SiegeKnowledgeFileScreen.java src/main/java/uy/santipdr/siege/client/SiegeAtlasScreen.java; then
@@ -166,7 +169,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: intel-cache
         with:
           path: src/main/resources/assets/siege/textures/gui/intel
@@ -178,18 +181,17 @@ jobs:
           python3 -m pip install --disable-pip-version-check --quiet pillow numpy
           python3 scripts/prepare-intel-assets.py
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: music-cache
         with:
           path: |
             src/main/resources/assets/siege/sounds/music
             src/main/resources/assets/siege/music_durations.properties
-          key: music-v5-${{ runner.os }}-${{ hashFiles('assets-source/music-full/**', 'scripts/prepare-music.sh', 'scripts/generate-stronghold-signal.py', 'scripts/generate-frontline-signal-550.py', 'scripts/fetch-dvn-media-510.sh') }}
+          key: music-v6-${{ runner.os }}-${{ hashFiles('assets-source/music-full/**', 'scripts/prepare-music.sh', 'scripts/fetch-dvn-media-510.sh') }}
       - name: Prepare clean SIEGE soundtrack
         if: steps.music-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          python3 -m pip install --disable-pip-version-check --quiet numpy
           if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
             while IFS= read -r source_file; do
               sudo mv "$source_file" "$source_file.disabled"
@@ -214,10 +216,17 @@ jobs:
             test "$codec" = "vorbis"
             test "$rate" = "44100"
           done
+          test -s src/main/resources/assets/siege/sounds/music/tale_cruel_world.ogg
+          test -s src/main/resources/assets/siege/sounds/music/darkest_of_days.ogg
+          test -s src/main/resources/assets/siege/sounds/music/kaptain_music_box.ogg
+          test -s src/main/resources/assets/siege/sounds/music/heavens_hell_sent_gift.ogg
           test -s src/main/resources/assets/siege/sounds/music/arc_enemy.ogg
-          test -s src/main/resources/assets/siege/sounds/music/stronghold_black_signal.ogg
-          test -s src/main/resources/assets/siege/sounds/music/nucleus_silent_carrier.ogg
-          test -s src/main/resources/assets/siege/sounds/music/tesla_breach.ogg
+          for optional in a_stranger_i_remain receive_you_the_hyperactive; do
+            if test -f "src/main/resources/assets/siege/sounds/music/$optional.ogg"; then
+              test -s "src/main/resources/assets/siege/sounds/music/$optional.ogg"
+              grep -q "^$optional=" src/main/resources/assets/siege/music_durations.properties
+            fi
+          done
 
       - name: Verify clean boss frames
         shell: bash
@@ -241,7 +250,7 @@ jobs:
       - name: Compile and verify
         run: gradle --no-daemon reportBuildTools clean build
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: siege-menu-${{ github.sha }}
           path: build/libs/*.jar

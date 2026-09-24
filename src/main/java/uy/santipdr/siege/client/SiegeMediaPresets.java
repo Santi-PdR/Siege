@@ -2,19 +2,20 @@ package uy.santipdr.siege.client;
 
 import java.util.List;
 
-/** Small player-facing audiovisual presets used by the 5.50 Media Room. */
+/** Small player-facing visual presets used by the Media Room. */
 public final class SiegeMediaPresets {
-    public record Preset(String id, String titleEs, String titleEn, String track, String sceneId) {
+    public record Preset(String id, String titleEs, String titleEn, String sceneId) {
         public String title(boolean spanish) { return spanish ? titleEs : titleEn; }
     }
 
+    /**
+     * These presets intentionally change only the scene. Music is not attached here
+     * until the corresponding candidate has been previewed and explicitly approved.
+     */
     private static final List<Preset> PRESETS = List.of(
-            new Preset("stronghold", "STRONGHOLD", "STRONGHOLD",
-                    "Stronghold 5-5 · Black Signal", "stronghold_red_alert"),
-            new Preset("nucleus", "NÚCLEO", "NUCLEUS",
-                    "Nucleus · Silent Carrier", "nucleus_interference"),
-            new Preset("tesla", "TESLA", "TESLA",
-                    "Tesla Breach", "tesla_breach")
+            new Preset("stronghold", "STRONGHOLD", "STRONGHOLD", "stronghold_red_alert"),
+            new Preset("nucleus", "NÚCLEO", "NUCLEUS", "nucleus_interference"),
+            new Preset("tesla", "TESLA", "TESLA", "tesla_breach")
     );
 
     private SiegeMediaPresets() { }
@@ -30,7 +31,6 @@ public final class SiegeMediaPresets {
             SiegeConfig.selectedScene = scene;
             SiegeConfig.animatedBackgrounds = true;
             SiegeConfig.save();
-            SiegeMusic.selectTrackByName(preset.track());
             return true;
         }
         return false;

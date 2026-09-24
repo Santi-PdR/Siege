@@ -3,7 +3,6 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOURCE_DIR="$ROOT/assets-source/music-full"
-GENERATED_DIR="$ROOT/build/generated-music"
 TARGET_DIR="$ROOT/src/main/resources/assets/siege/sounds/music"
 DURATION_FILE="$ROOT/src/main/resources/assets/siege/music_durations.properties"
 
@@ -12,7 +11,7 @@ if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; 
   exit 1
 fi
 
-mkdir -p "$TARGET_DIR" "$GENERATED_DIR"
+mkdir -p "$TARGET_DIR"
 rm -f "$TARGET_DIR"/*.ogg
 : > "$DURATION_FILE"
 
@@ -21,9 +20,8 @@ DARKEST_SOURCE="$SOURCE_DIR/darkest_of_days.ogg"
 DVN_SOURCE="$SOURCE_DIR/dvn_lobby_music.ogg"
 HEAVEN_SOURCE="$SOURCE_DIR/heavens_hell_sent_gift.ogg"
 ARC_SOURCE="$(find "$SOURCE_DIR" -maxdepth 1 -type f -name 'arc_enemy.*' | head -n1 || true)"
-STRONGHOLD_SOURCE="$GENERATED_DIR/stronghold_black_signal.wav"
-NUCLEUS_SOURCE="$GENERATED_DIR/nucleus_silent_carrier.wav"
-TESLA_SOURCE="$GENERATED_DIR/tesla_breach.wav"
+STRANGER_SOURCE="$(find "$SOURCE_DIR" -maxdepth 1 -type f -iname 'a_stranger_i_remain.*' | head -n1 || true)"
+RECEIVE_SOURCE="$(find "$SOURCE_DIR" -maxdepth 1 -type f -iname 'receive_you_the_hyperactive.*' | head -n1 || true)"
 
 KAPTAIN_START="179.599646"
 KAPTAIN_DURATION="139.968604"
@@ -40,11 +38,6 @@ if [ -z "$ARC_SOURCE" ] || [ ! -f "$ARC_SOURCE" ]; then
   echo "Missing DVN Arc - Enemy source. Run scripts/fetch-dvn-media-510.sh first." >&2
   exit 1
 fi
-
-# Original SIEGE material is synthesized deterministically during the build so the
-# installed soundtrack can grow without depending on additional third-party masters.
-python3 "$ROOT/scripts/generate-stronghold-signal.py" "$STRONGHOLD_SOURCE"
-python3 "$ROOT/scripts/generate-frontline-signal-550.py" "$NUCLEUS_SOURCE" "$TESLA_SOURCE"
 
 probe_ms() {
   local file="$1"
@@ -63,7 +56,21 @@ validate_source() {
     echo "Source master $label is truncated: ${duration_ms}ms (expected >= ${minimum_ms}ms)" >&2
     exit 1
   fi
-  printf 'SIEGE source: %-26s %8sms\n' "$label" "$duration_ms"
+  printf 'SIEGE source: %-30s %8sms\n' "$label" "$duration_ms"
+}
+
+validate_optional_source() {
+  local label="$1"
+  local file="$2"
+  local minimum_ms="$3"
+  local maximum_ms="$4"
+  local duration_ms
+  duration_ms="$(probe_ms "$file")"
+  if [ "$duration_ms" -lt "$minimum_ms" ] || [ "$duration_ms" -gt "$maximum_ms" ]; then
+    echo "Approved source $label has an unexpected duration: ${duration_ms}ms (expected ${minimum_ms}-${maximum_ms}ms)." >&2
+    exit 1
+  fi
+  printf 'SIEGE approved source: %-21s %8sms\n' "$label" "$duration_ms"
 }
 
 validate_source "Tale of a Cruel World" "$TALE_SOURCE" 260000
@@ -71,18 +78,13 @@ validate_source "Darkest of Days" "$DARKEST_SOURCE" 280000
 validate_source "DVN lobby mix" "$DVN_SOURCE" 535000
 validate_source "Heaven's Hell-Sent Gift" "$HEAVEN_SOURCE" 215000
 validate_source "Arc - Enemy" "$ARC_SOURCE" 60000
-validate_source "Stronghold Black Signal" "$STRONGHOLD_SOURCE" 131000
-validate_source "Nucleus Silent Carrier" "$NUCLEUS_SOURCE" 115000
-validate_source "Tesla Breach" "$TESLA_SOURCE" 103000
 
 encode_full() {
   local key="$1"
   local source="$2"
   local target="$TARGET_DIR/$key.ogg"
-
   ffmpeg -hide_banner -loglevel error -y \
-    -i "$source" \
-    -map_metadata -1 -vn \
+    -i "$source" -map_metadata -1 -vn \
     -af "volume=$HEADROOM_DB" \
     -ar "$OUTPUT_RATE" -ac 2 -c:a libvorbis -q:a 5 \
     "$target"
@@ -92,14 +94,10 @@ encode_full "tale_cruel_world" "$TALE_SOURCE"
 encode_full "darkest_of_days" "$DARKEST_SOURCE"
 encode_full "heavens_hell_sent_gift" "$HEAVEN_SOURCE"
 encode_full "arc_enemy" "$ARC_SOURCE"
-encode_full "stronghold_black_signal" "$STRONGHOLD_SOURCE"
-encode_full "nucleus_silent_carrier" "$NUCLEUS_SOURCE"
-encode_full "tesla_breach" "$TESLA_SOURCE"
 
 ffmpeg -hide_banner -loglevel error -y \
   -ss "$KAPTAIN_START" -i "$DVN_SOURCE" \
-  -t "$KAPTAIN_DURATION" \
-  -map_metadata -1 -vn \
+  -t "$KAPTAIN_DURATION" -map_metadata -1 -vn \
   -af "volume=$HEADROOM_DB" \
   -ar "$OUTPUT_RATE" -ac 2 -c:a libvorbis -q:a 5 \
   "$TARGET_DIR/kaptain_music_box.ogg"
@@ -110,9 +108,6 @@ tracks=(
   kaptain_music_box
   heavens_hell_sent_gift
   arc_enemy
-  stronghold_black_signal
-  nucleus_silent_carrier
-  tesla_breach
 )
 
 declare -A min_ms=(
@@ -121,9 +116,6 @@ declare -A min_ms=(
   [kaptain_music_box]=139000
   [heavens_hell_sent_gift]=215000
   [arc_enemy]=60000
-  [stronghold_black_signal]=131000
-  [nucleus_silent_carrier]=115000
-  [tesla_breach]=103000
 )
 declare -A max_ms=(
   [tale_cruel_world]=263000
@@ -131,31 +123,42 @@ declare -A max_ms=(
   [kaptain_music_box]=141000
   [heavens_hell_sent_gift]=219000
   [arc_enemy]=600000
-  [stronghold_black_signal]=133000
-  [nucleus_silent_carrier]=117000
-  [tesla_breach]=105000
 )
+
+# 5.60 player approval: only these two additions are accepted. We do not download
+# commercial OST audio in CI. If the owner supplies a legitimate local master with
+# the exact filename stem below, it is validated, encoded and immediately becomes a
+# real menu track. Missing optional masters simply stay out of the playlist.
+if [ -n "$STRANGER_SOURCE" ] && [ -f "$STRANGER_SOURCE" ]; then
+  validate_optional_source "A Stranger I Remain" "$STRANGER_SOURCE" 135000 160000
+  encode_full "a_stranger_i_remain" "$STRANGER_SOURCE"
+  tracks+=(a_stranger_i_remain)
+  min_ms[a_stranger_i_remain]=135000
+  max_ms[a_stranger_i_remain]=160000
+else
+  echo "SIEGE optional: A Stranger I Remain approved, source master not supplied yet."
+fi
+
+if [ -n "$RECEIVE_SOURCE" ] && [ -f "$RECEIVE_SOURCE" ]; then
+  validate_optional_source "Receive You The Hyperactive" "$RECEIVE_SOURCE" 275000 305000
+  encode_full "receive_you_the_hyperactive" "$RECEIVE_SOURCE"
+  tracks+=(receive_you_the_hyperactive)
+  min_ms[receive_you_the_hyperactive]=275000
+  max_ms[receive_you_the_hyperactive]=305000
+else
+  echo "SIEGE optional: Receive You The Hyperactive approved, source master not supplied yet."
+fi
 
 for key in "${tracks[@]}"; do
   target="$TARGET_DIR/$key.ogg"
   codec="$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 "$target")"
   rate="$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of csv=p=0 "$target")"
   channels="$(ffprobe -v error -select_streams a:0 -show_entries stream=channels -of csv=p=0 "$target")"
-  if [ "$codec" != "vorbis" ]; then
-    echo "Prepared track $key is not Ogg Vorbis: $codec" >&2
-    exit 1
-  fi
-  if [ "$rate" != "$OUTPUT_RATE" ]; then
-    echo "Prepared track $key has wrong sample rate: $rate" >&2
-    exit 1
-  fi
-  if [ "$channels" -ne 2 ]; then
-    echo "Prepared track $key must remain stereo: $channels channels" >&2
-    exit 1
-  fi
+  test "$codec" = "vorbis" || { echo "Prepared track $key is not Ogg Vorbis: $codec" >&2; exit 1; }
+  test "$rate" = "$OUTPUT_RATE" || { echo "Prepared track $key has wrong sample rate: $rate" >&2; exit 1; }
+  test "$channels" -eq 2 || { echo "Prepared track $key must remain stereo: $channels channels" >&2; exit 1; }
 
   ffmpeg -v error -xerror -i "$target" -f null -
-
   duration_ms="$(probe_ms "$target")"
   if [ "$duration_ms" -lt "${min_ms[$key]}" ] || [ "$duration_ms" -gt "${max_ms[$key]}" ]; then
     echo "Prepared track $key has unexpected duration: ${duration_ms}ms" >&2
@@ -164,18 +167,14 @@ for key in "${tracks[@]}"; do
 
   peak="$(ffmpeg -hide_banner -nostats -i "$target" -af volumedetect -f null - 2>&1 \
     | sed -n 's/.*max_volume: \([-0-9.]*\) dB.*/\1/p' | tail -n1)"
-  if [ -z "$peak" ]; then
-    echo "Could not measure decoded peak for $key" >&2
-    exit 1
-  fi
-  if ! awk -v p="$peak" 'BEGIN { exit !(p <= -1.0) }'; then
-    echo "Prepared track $key has insufficient decoded headroom: ${peak} dB" >&2
+  if [ -z "$peak" ] || ! awk -v p="$peak" 'BEGIN { exit !(p <= -1.0) }'; then
+    echo "Prepared track $key has invalid decoded headroom: ${peak:-unknown} dB" >&2
     exit 1
   fi
 
   printf '%s=%s\n' "$key" "$duration_ms" >> "$DURATION_FILE"
-  printf 'SIEGE music: %-30s %8sms  codec=%s rate=%s peak=%sdB\n' "$key" "$duration_ms" "$codec" "$rate" "$peak"
+  printf 'SIEGE music: %-28s %8sms  codec=%s rate=%s peak=%sdB\n' "$key" "$duration_ms" "$codec" "$rate" "$peak"
 done
 
-printf '\nGenerated duration metadata:\n'
+printf '\nApproved duration metadata:\n'
 cat "$DURATION_FILE"

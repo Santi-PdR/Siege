@@ -1,448 +1,107 @@
-## SIEGE 1.26.0 — integración visual sobre 1.25
+# Eternal Craft — SIEGE
 
-Cuatro fondos nuevos, Tempest Jutcherson como anomalía rara, proporciones nativas, fallback clasificado de Intel y correcciones de portada/accesibilidad sobre la arquitectura 1.25.
+Cliente Forge **1.20.1** para Eternal Craft: SIEGE. Reemplaza y amplía la experiencia de menús de Minecraft con una interfaz táctica propia, Intel, multimedia, fondos operacionales, navegación del servidor y herramientas de diagnóstico.
 
-[Cambios](docs/CHANGELOG-1.26.0.md)
+## SIEGE 5.60 — Adaptive Command
 
-## Actualización 0.21.1
+La versión actual en desarrollo es **5.60.0**. Esta revisión concentra el trabajo reciente en que la interfaz muestre y controle el estado real del cliente en lugar de conservar opciones decorativas o información vieja.
 
-La Guía SIEGE queda escrita como un archivo interno de 2044: escala de amenaza militar, crónicas históricas y lore breve de cada inspiración, sin etiquetas externas ni explicaciones técnicas de las capturas.
+### Presentación y fondos
 
-[Cambios](docs/CHANGELOG-0.21.1.md)
+- 21 fondos normales auditados, incluyendo seis escenas oficiales de Dummies vs Noobs a su resolución nativa `768×432` y tres tratamientos SIEGE construidos sobre fuentes verificadas.
+- Rotación automática sin depender de un orden fijo repetitivo.
+- Duración de escena configurable entre **12 y 60 segundos**.
+- Crossfade configurable entre **0 y 10 segundos**.
+- Movimiento cinematográfico configurable entre **0 y 100%**, con overscan seguro y sin deformar la imagen.
+- `Reduced Motion`, `Reduce Flashes` y `Performance` tienen prioridad y pueden anular el movimiento visual.
+- La galería permite navegar, fijar una escena, reactivar la rotación, deshacer la última selección y usar vista limpia.
+- El modo Contraste de la galería usa la misma oscuridad efectiva del menú, incluyendo sesgo por escena y Auto/High Contrast.
 
-## Actualización 0.21.0
+### Portada
 
-Nueva **Guía SIEGE** desde Intel o Configuración → Resumen: Giro de Raza, lore de 2044/Dominia, dificultades, crónicas con spoilers opcionales e inspiraciones con imágenes originales completas. 27 artículos bilingües; no modifica gameplay ni probabilidades.
+- Título centrado `ETERNAL CRAFT / SIEGE` usando la tipografía de Minecraft.
+- Interferencia opcional cuyo slider de intensidad controla realmente frecuencia, duración, desplazamiento y visibilidad del efecto.
+- Columna de navegación compacta a la izquierda.
+- Intel de portada limitado a Unidades y Avanzados cuando el espacio lo permite.
+- `Ctrl+S` conserva el acceso oculto a Singleplayer; no se agregan atajos nuevos sin una necesidad explícita.
+- El aviso `REC` aparece únicamente durante el aviso inicial de una pista y junto a su nombre.
 
-[Cambios y comprobación visual pendiente](docs/CHANGELOG-0.21.0.md)
+### Intel y conocimiento
 
-## Actualización 0.20.1
+- Expedientes navegables para Unidades, Avanzados, Tanques, Bosses, Élites y Super Units.
+- Búsqueda, lectura, visor de imágenes y navegación anterior/siguiente.
+- Atlas, progresión, razas y guía operativa separados de los dossiers de combate.
+- La capa de conocimiento actual cubre el frente de 2044, El Núcleo, Stronghold 5-5, facciones, clases de amenaza y la diferencia entre Gates, Rifts y Agreements.
+- Los campos desconocidos permanecen explícitamente desconocidos: el cliente no rellena capacidades o estadísticas sin información confirmada.
+- Los controles Intel retirados en revisiones anteriores no se recuperan accidentalmente mediante actualizaciones nuevas.
 
-Corrige el regreso desde mundos, servidores, desconexiones y errores para que las rutas finales permanezcan en las interfaces de SIEGE. También persiste correctamente el servidor oficial en primer lugar.
+### Third Justice
 
-[Cambios](docs/CHANGELOG-0.20.1.md) · [Comprobación en Minecraft pendiente](docs/QA-0.20.1.md)
+Las capturas de Third Justice se restauran desde fuentes canónicas **full-color** y el reel completo se reconstruye durante el build. CI rechaza imágenes posterizadas/de pocos colores y protege el video completo de **313 frames / ~31.33 s**.
 
-## Actualización 0.20.0
+### Audio y Sala Multimedia
 
-Agreement incorpora el reporte sobre Gates, Rifts y sabotaje con su procedencia señalada. Además, 50 mejoras de interfaz en Configuración, Galería, visor e Intel.
+La playlist normal utiliza únicamente archivos que existen realmente dentro del build. No se crean entradas silenciosas para una canción ausente.
 
-[Todos los cambios](docs/CHANGELOG-0.20.0.md) · [Revisión visual pendiente](docs/QA-0.20.0.md)
+Pistas actualmente obligatorias del pipeline:
 
-## Actualización 0.19.0
+1. `Tale of a Cruel World`
+2. `Darkest of Days`
+3. `Kaptain Music Box`
+4. `Heaven's Hell-Sent Gift`
+5. `Arc - Enemy · Potoe`
 
-Sliders más precisos, contraste cálido e indicación clara del foco de teclado.
+Dos incorporaciones fueron aprobadas para 5.60:
 
-[Cambios](docs/CHANGELOG-0.19.0.md). Revisión visual en Minecraft pendiente.
+- `A Stranger I Remain (Maniac Agenda Mix)`
+- `Receive You The Hyperactive`
 
-## Actualización 0.18.0
+Son slots **opcionales**: sólo aparecen como pistas jugables cuando el build contiene un master preparado legítimamente. El repositorio y CI no descargan ni ripean esas bandas sonoras comerciales.
 
-Tema común para conexión, desconexión, formularios y confirmaciones del menú. Nuevos acabados de botones, ayudas, iconos, Intel y Galería, respetando la distribución aprobada.
+La Sala Multimedia ofrece anterior, reiniciar, siguiente, aleatorio sin repetir / pista fijada, progreso y reloj real de reproducción. Los presets Stronghold, Núcleo y Tesla cambian sólo la escena; no fuerzan música.
 
-[Cambios](docs/CHANGELOG-0.18.0.md) · [Verificación visual pendiente](docs/QA-0.18.0.md)
+Las pistas sintéticas experimentales `Black Signal`, `Silent Carrier` y `Tesla Breach` fueron retiradas y sus generadores ya no forman parte del proyecto.
 
-## Actualización 0.17.0
+### Centro de Comando y configuración
 
-[100 mejoras y correcciones](docs/CHANGELOG-0.17.0.md) · [Revisión visual pendiente](docs/QA-0.17.0.md)
+- Perfiles completos para distintos objetivos visuales y de rendimiento.
+- Estado real de música, modo aleatorio/fijado y número de pistas disponibles.
+- Estado de fondo, escena actual, tiempos y movimiento efectivo.
+- Diagnóstico y recuperación de preferencias del cliente.
+- Configuración dividida en Apariencia, Movimiento, Audio, Intel, Accesibilidad, Fondos y Sistema.
+- Los encabezados muestran la versión real instalada en vez de números escritos a mano.
 
-Búsqueda, lectura, controles, audio, Multiplayer y actualización segura. Conserva la disposición aprobada y el gameplay.
+## Principios de medios
 
-## 0.14.0 — Atlas y 50 mejoras nuevas
+SIEGE conserva algunas reglas de calidad que el build comprueba automáticamente:
 
-**Atlas** entra como `SUP-001`, primera Super Unit de la base Intel, con **125.000.000 HP** y un expediente Omega creado desde el video entregado. La actualización mejora búsqueda, navegación, lectura, ficha táctica, visor y validación sin mover el dossier ni recuperar controles descartados. [Lista exacta de 50 cambios](docs/CHANGELOG-0.14.0.md).
+- no inventar detalle mediante fake-HD;
+- no introducir fondos normales desde fuentes no verificadas;
+- `Tempest Jutcherson` permanece aislado como easter egg y no entra en la rotación normal;
+- Third Justice debe permanecer full-color y completo;
+- ninguna pista nueva se trata como instalada si el archivo preparado no existe;
+- la información de gameplay no se inventa para completar expedientes.
 
-## 0.13.0 — Primeras unidades Élite
+## Instalación — Fedora KDE / SKLauncher
 
-La categoría ÉLITES ya contiene expedientes completos para **Agares**, **Ghost** y **Aurelionis**, con retratos clasificados creados a partir del metraje entregado. Agares y Ghost incluyen inteligencia bilingüe; el expediente de Aurelionis conserva `???` y no atribuye capacidades no confirmadas. Esta versión también corrige un posible cruce entre la clasificación y la referencia del dossier, y endurece la validación del catálogo y de sus recursos. [Cambios completos](docs/CHANGELOG-0.13.0.md).
-
-## 0.12.0 — 50 mejoras nuevas
-
-Pulido amplio de Intel, portada, controles, Configuración, Galería y estabilidad de audio. El dossier continúa a la derecha; la advertencia táctica aparece únicamente bajo la imagen y ahora tiene barra arrastrable propia. [Lista exacta de 50 mejoras](docs/CHANGELOG-0.12.0.md) · [Cambios incorporados después de 0.11.0](docs/NOVEDADES-DESDE-0.11.0.md) · [Validación visual pendiente](docs/QA-0.12.0.md).
-
-## 0.11.1 — Advertencia táctica corregida
-
-La advertencia fue retirada del lector izquierdo y permanece completa sólo en la ficha derecha.
-
-## 0.11.0 — Revisión aplicada
-
-Advertencias completas, Intel optimizado, catálogo independiente, audio con recuperación controlada y entrega verificada. [Cambios y límites](docs/CHANGELOG-0.11.0.md) · [Pruebas visuales pendientes](docs/QA-0.11.0.md).
-
-## 0.10.5 — Ficha táctica y lectura Intel
-
-Bajo la imagen aparece una ficha táctica basada en datos existentes, ajustada a su espacio. Eliminada la etiqueta Ampliar duplicada; permanece el botón superior.
-
-20 mejoras adicionales:
-1. Selección recordada por categoría durante la sesión.
-2. Búsqueda conserva la selección si sigue coincidiendo.
-3. Búsqueda incluye el estado del archivo.
-4. Búsqueda incluye variantes.
-5. Búsqueda incluye vida y defensa.
-6. Resultados de búsqueda almacenados hasta cambiar consulta, categoría o idioma.
-7. Posición de lectura separada para vista con imagen y vista de texto.
-8. Botón de lectura indica CON IMAGEN para volver.
-9. Ayuda del botón Ampliar explica su función.
-10. Ayuda para expediente anterior.
-11. Ayuda para expediente siguiente.
-12. Flechas desactivadas si hay un solo expediente.
-13. Rueda de navegación limitada al área de archivos.
-14. Arrastre conserva el punto donde se agarró la barra.
-15. Progreso muestra líneas visibles y total.
-16. Seleccionar el mismo expediente no repite sonido.
-17. Límites de scroll limpios cuando no hay resultados.
-18. Animación de jefe reiniciada al cambiar expediente.
-19. Bordes laterales sutiles del papel.
-20. Imagen responde al hover con bordes discretos.
-
-Sin nuevos atajos ni controles retirados. Geometría y compilación en CI; revisión visual dentro de Minecraft pendiente.
-
-## 0.10.4 — Intel lateral restaurado
-
-Corrección principal: dossier a la derecha y categorías/expedientes a la izquierda en todas las escalas admitidas, incluidas 640×360 y 480×270 lógicas.
-
-Diez mejoras adicionales:
-1. Barra de búsqueda y acciones en dos filas cuando falta anchura.
-2. Cabecera ajustada al espacio disponible.
-3. Eliminado contador duplicado que competía con la cabecera.
-4. Ayuda de categorías con nombres traducidos.
-5. Ayuda de expedientes con nombre completo.
-6. Papel común gris neutro, menos amarillento.
-7. Imagen situada a la derecha del texto cuando hay espacio.
-8. Imagen compacta centrada y limitada al ancho del papel.
-9. Flechas de inicio/final de lectura ocultas cuando no hay desplazamiento.
-10. Estado COMPLETO cuando el texto cabe entero.
-
-Pruebas de geometría ampliadas para columna lateral, lectura y herramientas. Pendiente comprobación visual dentro de Minecraft. Sin Favoritos, Índice, Guardar, Copiar ni nuevos atajos.
-
-## 0.10.3 — Respuesta visual de botones
-
-Etiquetas estables durante hover, transiciones suaves de color en botones normales y placas grises, pulsación visible también en configuración y galería. Las etiquetas largas del menú admiten una reducción moderada hasta 85% antes de truncarse, manteniendo reservado el selector. Movimiento reducido conserva respuesta inmediata. Distribución 0.10.2 y controles simplificados conservados. Pendiente revisión visual en Minecraft.
-
-## 0.10.2 — Composición clásica y fondos completos
-
-Título alineado con la columna izquierda y botones elevados. Intel vuelve a seis categorías: sin Favoritos, Índice, Guardar ni Copiar; conserva búsqueda, lectura, Ampliar y flechas. Fondos se abre desde Configuración. Imágenes completas en portada, galería y miniaturas, sin zoom ni paneo que recorte bordes; transiciones suaves conservadas. Vista completa accesible desde la galería. CI protege la retirada de controles. Pendiente comprobación visual en Minecraft.
-
-## 0.10.1 — Índice visual
-
-Retratos en las filas de Intel y vista previa de lectura al señalar o enfocar un expediente en ventanas amplias. En tamaños compactos se conserva una única lista. Mensaje sin resultados centrado dentro del área de contenido. La rueda de la lista queda limitada a su propia región. Comprobaciones geométricas ampliadas; pendiente revisión visual dentro de Minecraft.
-
-## SIEGE 0.10.0 — 36 mejoras
-
-La actualización amplía el índice de Intel con favoritos editables, filtros combinables y orden persistente; mejora la lectura con papel oscuro, espaciado y posición por expediente; añade controles de encuadre y deshacer en la galería; y reorganiza Configuración con Intel, muestras de sonido y un panel musical fijo.
-
-[Lista de las 36 mejoras](docs/CHANGELOG-0.10.0.md).
-
-Los favoritos se conservan al restaurar ajustes. Vaciar favoritos requiere una acción explícita y confirmación. No se añaden atajos. La revisión visual dentro de Minecraft continúa pendiente; CI verifica geometría, modelos, persistencia y compilación Forge.
-
-Instalación en Fedora KDE / Konsole, con Minecraft cerrado:
+Con Minecraft cerrado, desde Konsole:
 
 ```bash
-gh api repos/Santi-PdR/Siege/contents/scripts/install-latest.sh --jq .content | base64 -d | bash
+bash <(gh api repos/Santi-PdR/Siege/contents/scripts/install-latest.sh --jq .content | base64 -d)
 ```
 
-## SIEGE 0.9.2 — Índice de expedientes
+El instalador usa el JAR validado y publicado desde `main`, verifica la descarga y reemplaza versiones anteriores dentro de la instancia configurada. El entorno de uso actual es Forge 1.20.1 / Java 17.
 
-Intel tiene un botón visible **Índice** en escalas amplias y compactas. Abre una lista de los resultados actuales de la categoría, con:
+## Build y validación
 
-- Selección directa de expedientes mediante su código estable.
-- Búsqueda por nombre, código, origen y armamento, sin distinguir tildes/mayúsculas.
-- Orden por código, nombre o amenaza descendente.
-- Filas con nombre, amenaza, vida, armamento y estrella de favorito.
-- Marca del expediente que estaba abierto y página inicial situada sobre él.
-- Paginación con botones y rueda sobre la lista, extremos desactivados y estado sin resultados.
-- Vuelta al expediente elegido conservando categoría, filtro y modo de lectura de Intel; Volver/Escape cancela sin cambiar la selección.
+GitHub Actions es el entorno autoritativo de build. El workflow prepara los recursos, audita fondos, reconstruye medios derivados, valida audio Ogg Vorbis, ejecuta contratos de regresión y finalmente compila el mod Forge.
 
-No añade atajos. CI comprueba orden, identidad, búsqueda, páginas vacías y espacio entre índice/favoritos/flechas en escalas compactas. La revisión visual en Minecraft sigue pendiente.
+Un PR no se considera listo sólo porque el código compile: también deben pasar las protecciones de Intel, navegación, fondos, Third Justice, audio y recursos GUI.
 
-## SIEGE 0.9.1 — Inspección y navegación
+## Documentación actual
 
-- El zoom del visor conserva el punto bajo el cursor, salvo cuando los límites de la imagen requieren centrarlo.
-- Minimap interactivo al ampliar en pantallas de al menos 500×300 píxeles lógicos: muestra el área visible y permite moverla con clic/arrastre.
-- El arrastre debe comenzar dentro de la imagen o del minimapa; soltar fuera finaliza correctamente la interacción.
-- Zoom entre 1× y 4×, sin sonidos repetidos al alcanzar un límite. El porcentaje tiene espacio propio y Ajustar centra el arte completo.
-- La galería tiene botones para recorrer páginas de miniaturas sin cambiar la imagen seleccionada. La rueda sobre miniaturas pasa páginas; sobre la vista previa cambia la imagen.
-- Los controles de página se desactivan en los extremos; el nombre del fondo tiene espacio reservado junto a ellos.
-- Sonido de hover corregido: el widget bajo el mouse tiene prioridad sobre el foco del teclado.
-- Flechas, +, − y otros botones pequeños conservan su símbolo centrado durante hover; los textos demasiado estrechos no dibujan puntos fuera del botón.
-- CI prueba la cámara real del visor: punto de zoom, minimapa, límites, redimensionado y Ajustar, además de las pruebas de escala de 0.9.0.
+- [Cambios de SIEGE 5.60](docs/CHANGELOG-5.60.0.md)
+- [Política/candidatos musicales de 5.60](docs/MUSIC-CANDIDATES-5.60.md)
+- [Reconstrucción y restricciones históricas](docs/RECONSTRUCTION.md)
 
-Compilación y pruebas automáticas no equivalen a verificación visual dentro de Minecraft; esa comprobación continúa pendiente.
-
-## SIEGE 0.9.0 — Galería visual y lectura Intel
-
-La galería pasa a tener miniaturas seleccionables y una vista previa grande. Intel añade búsqueda, lectura completa y un visor de imágenes. Los controles son visibles; no se agregan atajos.
-
-- **Galería:** miniaturas nativas, selección directa, paginación automática, marca del fondo fijado, transición de 260 ms y vista limpia que se cierra con clic o Escape. La selección no cambia el fondo guardado hasta pulsar Fijar.
-- **Intel:** búsqueda literal por nombre, código, origen, armamento y texto; ignora tildes/mayúsculas y admite varias palabras. Botón para limpiar, estados vacíos y búsqueda compatible con Favoritos.
-- **Lectura:** área de texto delimitada, metadatos dentro del scroll, progreso y barra arrastrable. El modo Lectura dedica el espacio al texto; Ampliar abre el arte original con zoom 1–4×, arrastre limitado y Ajustar.
-- **Portada:** acceso visible a Fondos, título ajustado al ancho, interferencia breve, aviso musical separado de los botones y dossiers. La doble tarjeta requiere altura suficiente.
-- **Configuración:** pestañas compactas con más espacio útil, controles de pista en una fila, barra arrastrable, scroll conservado al volver y valores correctos en segundos/porcentaje.
-- **Correcciones:** Favoritos se actualiza al pasar de expediente; contador separado del botón; la rueda fuera del texto no cambia archivos por accidente; eliminadas ayudas antiguas de F/F1 y números de atajos.
-- **Fuente Intel:** `src/main/java/uy/santipdr/siege/client/IntelScreenV3.java` es ahora la fuente canónica legible. CI ya no restaura una copia comprimida que pueda deshacer los cambios.
-
-### Verificación 0.9.0
-
-CI ejecuta `tests/UiRegressionTest.java` sobre la geometría usada por las pantallas: barrido de tamaños lógicos desde 320×240, resoluciones 720p/768p/1080p/1440p/ultrawide y escalas solicitadas 1–4, además de búsqueda con tildes, múltiples palabras y caracteres literales. Después ejecuta las protecciones de navegación/recursos y compila Forge.
-
-Estas pruebas verifican geometría y lógica; no sustituyen una comprobación visual dentro de Minecraft con sus fuentes y paquetes de recursos. La lista de comprobación está en `docs/QA-0.9.0.md`.
-
-Instalación actual: Fedora KDE, Konsole, SKLauncher `test-1`, `/home/Santipdr/.sklauncher/instances/test-1/mods`. Cerrar Minecraft y ejecutar:
-
-```bash
-gh api repos/Santi-PdR/Siege/contents/scripts/install-latest.sh --jq .content | base64 -d | bash
-```
-
-Las secciones siguientes conservan el historial de versiones; los comportamientos actuales se describen arriba.
-
-## SIEGE 0.8.1
-
-- Removed the unrequested title-screen music, gallery, Intel and rotation keyboard shortcuts.
-- Removed the unrequested gallery keyboard/mouse chords and Intel category/favorite shortcuts.
-- The only special keyboard inputs retained are requested dossier `Left/Right` navigation and the established hidden staff `Ctrl+S` Singleplayer access.
-- Gallery actions now use visible Previous, Next, Pin, Auto Rotation, Clean View and Back controls.
-- Intel Favorites now use a visible Save/Saved button in both compact and wide layouts.
-- The main-menu dossier hover fix remains explicit: hovering pauses it, leaving starts one two-second grace period, and expiry advances exactly once.
-- A one-time 0.8.1 settings migration clears the persisted stopped state that the removed `P` shortcut could leave behind; the visible setting works normally afterward.
-- CI rejects reintroduction of the removed shortcuts and verifies the visible replacements.
-
-## SIEGE 0.8.0
-
-1. Intel hover pause uses an explicit reading state instead of extending the rotation deadline every frame.
-2. Leaving a hovered dossier starts one fixed two-second grace period.
-3. Automatic rotation is forced to advance after that grace period and cannot remain suspended.
-4. Disabling main-menu Intel clears stale hover state.
-5. Dossiers expose `READING`, `FIXED` or a live `AUTO Ns` status.
-6. A subtle progress line shows time until the next automatic dossier.
-7. Hover pausing has its own persistent setting.
-8. Dossier progress can be hidden independently.
-9. Dossier state text can be hidden independently.
-10. `P` toggles dossier auto-rotation from the title screen.
-11. Home/End select the first/last title-screen dossier.
-12. Quit now has an optional confirmation screen.
-13. Quit confirmation can be disabled in Interface settings.
-14. The build label has its own visibility setting.
-15. Background darkness is adjustable without changing the graphics profile.
-16. Left-panel darkness is independently adjustable.
-17. Previous Track is available in Music settings.
-18. Restart Track restarts the current complete stream with the normal short fade.
-19. New-track notice duration is adjustable from 3 to 15 seconds.
-20. Notice fade/progress calculations follow the configured duration.
-21. Shift+M plays the previous track from the title screen.
-22. Ctrl+M toggles menu music without opening settings.
-23. `R` restarts the current track.
-24. `G` opens the background gallery.
-25. Intel has a persistent Favorites category.
-26. `F` adds/removes the current dossier from Favorites.
-27. Middle-click also toggles the current Intel favorite.
-28. Favorite dossiers display a star in the file list.
-29. Favorite dossiers display a star on the classified stamp.
-30. Favorite codes persist safely in `siege-client.properties`.
-31. `Q/E` cycle Intel categories in either direction.
-32. Shift+wheel cycles Intel categories.
-33. Number key 7 opens Favorites directly.
-34. Intel Home/End select the first/last dossier.
-35. Ctrl+Home/Ctrl+End jump to the top/bottom of dossier text.
-36. Backspace returns from Intel like the visible Back control.
-37. Intel remembers the last category during the current game session.
-38. Intel remembers the last selected dossier during the current game session.
-39. Empty Favorites explains how to add a dossier instead of showing a generic empty message.
-40. Detail wheel scrolling moves one line at a time for more precise reading.
-41. Wide Intel layouts show a compact shortcut guide.
-42. Gallery `P` pins the current background.
-43. Gallery `R` resumes automatic background rotation.
-44. Number keys 1-9 select gallery backgrounds directly.
-45. Gallery `X` jumps to a different random scene.
-46. Space toggles gallery clean view.
-47. Left-click exits clean view, middle-click pins and right-click returns.
-48. Gallery header distinguishes Pinned, Preview and Rotation Active states.
-
-## SIEGE 0.7.9
-
-- Clicking a Unit or Advanced dossier on the main menu opens that exact record in the full Intel database.
-- Dual-card layouts resolve each card independently; clicking the second preview never opens the first.
-- Hovering a dossier body reveals a restrained `OPEN DOSSIER` action without adding another permanent button.
-- The `I` key opens the primary dossier currently shown on the title screen.
-- Main-menu cards now expose their position within the Unit/Advanced feed, such as `UNIT 04/16`.
-- Dossier changes use a short directional slide that follows previous/next input and is disabled by Reduced Motion.
-- The packaged Intel V3 source accepts an exact requested category and code while preserving normal navigation afterward.
-- CI validates the direct-open constructor and the main-menu interaction path before Forge compilation.
-
-## SIEGE 0.7.8
-
-- Main-menu Intel pauses while the cursor is over a dossier and waits two seconds after leaving before rotation resumes.
-- Both dossier footers work in the two-card layout; the first card no longer shows a dead navigation control.
-- Hovering either half of a dossier footer now gives restrained directional feedback without changing the approved card design.
-- Background Gallery supports the mouse wheel plus Home/End navigation, including clean view.
-- Background names are curated and localized in Spanish and English instead of exposing lowercase resource IDs.
-- Main-menu Intel interaction geometry is covered by CI checks for single- and dual-card layouts.
-- Validation: Forge compilation in GitHub Actions; in-game visual/audio review remains required.
-
-## SIEGE 0.7.7
-
-- New Background Gallery in Graphics settings; F1 opens it directly from the main menu.
-- Browse all nine supplied backgrounds with buttons or arrow keys. Pinning persists the selected scene; browsing alone changes no preference.
-- Gallery F1 hides controls for a clean view. Escape restores controls first, then returns to the parent screen. Hidden buttons cannot be activated.
-- Resume Background Rotation returns to the existing automatic sequence.
-- Background rendering preserves 16:9 proportions with centered cover cropping, including narrow and ultrawide windows.
-- Music settings can select any of the four complete tracks for persistent repeat, or resume shuffle without restarting the active track.
-- Next Track in repeat mode advances the pinned selection. Changes preserve the short audio fade.
-- A playback progress bar and repeat/shuffle status appear below music controls.
-- New labels follow the existing Spanish/English locale selection.
-- Validation: Forge compilation in GitHub Actions; geometry checks for gallery controls and cover bounds. In-game rendering/audio still needs runtime review.
-
-## SIEGE 0.7.6
-
-- Settings scroll within their own panel, with a scrollbar, mouse wheel and Page Up/Page Down. Tab/Shift+Tab brings each control into view.
-- Help and playback text are placed after the actual controls, fixing Overview/Graphics overlap and high-scale overflow.
-- Reset opens a confirmation; cancelling preserves preferences. Long control labels have full-text tooltips.
-- Independent UI effects volume and hover/focus sound switch; hover easing uses elapsed time instead of frame count.
-- Main-menu Intel auto-rotation can be disabled. Manual navigation still works and automatic rotation resumes sequentially after the 15-second reading pause.
-- Hidden preview cards no longer retain clickable regions after resizing or disabling previews.
-- Settings use staged atomic writes where supported; malformed booleans fall back to defaults and save errors are logged.
-- Music volume updates live but disk persistence happens on release/close instead of each drag event.
-- Fedora installer verifies its staged copy before replacement and keeps previous JARs outside mods for recovery.
-- Validation: GitHub Actions compiles Forge; GUI layout calculations cover 320x240 through 1920x1080. In-game visual/audio review remains required.
-
-# Eternal Craft - SIEGE
-
-Forge 1.20.1 client menu for Eternal Craft: SIEGE.
-
-## SIEGE 0.7.5
-
-- Left and Right now move backward and forward through dossiers in the packaged Intel V3 screen.
-- Dossier navigation remains circular at category boundaries.
-- The main-menu Unit/Advanced preview supports Left/Right, mouse wheel and clickable footer arrows.
-- A manually selected preview remains stable for 15 seconds before automatic rotation resumes.
-- The dossier footer now communicates its navigation directly without adding large controls.
-- CI patches and validates the generated Intel V3 source actually packaged into the JAR.
-
-## SIEGE 0.7.4
-
-- Title interference can now be disabled independently without removing button effects.
-- New-track `REC` announcements have their own persistent toggle.
-- The settings overview can safely restore only SIEGE client preferences.
-- Main-menu keyboard navigation starts on Deployment instead of having no initial focus.
-- Reference-style command plates now provide a short physical press response.
-- Settings layout and help text were updated for the new controls.
-
-## SIEGE 0.7.3
-
-- The generated wordmark was removed; the centered title now uses Minecraft's own font.
-- The title recreates the old interference effect with short animated slices instead of a malformed permanent shadow.
-- Main-menu command plates return to the older solid-grey, double-rimmed style with a compact lower/right shadow.
-- GUI scale 3 command sizing is rebalanced and the left shade remains neutral rather than blue.
-
-## SIEGE 0.7.2
-
-- Removed the runtime `REC / STILL` frame badge from the Intel V3 screen that is actually packaged.
-- Boss dossier artwork no longer prints frame numbers; CI now checks the restored V3 source and the artwork generator.
-- Main-menu Intel rotation is restricted to Unit and Advanced records.
-- The title, GUI-scale-3 command column and command plates are smaller and better balanced.
-- The left panel is now neutral black/grey without the cyan divider or blue scanline cast.
-- Removed `MENU COMMAND LINK`; the footer is a smaller `BUILD 0.7.2` label without `SECURE CHANNEL`.
-- `REC` and the current track name now appear together for 8.5 seconds whenever a track actually starts.
-- Fedora's installer prefers the authenticated GitHub CLI, avoiding private-repository clone failures.
-
-## SIEGE 0.7.1
-
-- The main-screen title is now a dedicated transparent wordmark derived from the supplied visual reference instead of enlarged vanilla lettering.
-- The command buttons use the reference's medium-grey industrial plates, centered labels and red selection arrow.
-- GUI scale 3 receives wider 286 px command plates with 31 px height and more vertical breathing room.
-- The existing lower-right Intel dossier is intentionally unchanged.
-
-## SIEGE 0.7.0
-
-- New persistent Tactical Effects toggle in Interface settings.
-- Hover motion now eases smoothly instead of shifting text abruptly.
-- Buttons gain a progressive accent underline, restrained sweep and clearer keyboard focus brackets.
-- Reduced Motion automatically disables animated sweeps while preserving clear hover/focus feedback.
-- The centered title divider gains a subtle tactical pulse and balanced cyan end markers.
-
-## SIEGE 0.6.9
-
-- The title is narrower and closer to the supplied tactical pixel lettering.
-- The oversized black spikes are replaced by a short clean extrusion, fine red edge and restrained face highlight.
-- GUI scale 3 gets wider, taller command buttons with increased spacing.
-- Buttons now have eased hover response, a clipped light sweep and tactical corner brackets.
-
-## SIEGE 0.6.8
-
-- The main title is now a large centered tactical wordmark.
-- `ETERNAL CRAFT` uses a pale pixel face, red keyline and deep black extrusion matching the supplied reference.
-- `S I E G E` sits beneath it with responsive sizing for GUI scales 1-4.
-- The existing lower-right Intel dossier is preserved.
-
-## SIEGE 0.6.7
-
-- The per-frame boss `REC / STILL` counter is forbidden by the build and cannot be reintroduced accidentally.
-- The dossier keeps its six-frame animation without drawing frame numbers over the image.
-
-## SIEGE 0.6.6
-
-- Boss images no longer show the intrusive runtime `REC / STILL` badge.
-- Main-menu Intel cards can now be hidden independently.
-- Scanlines can now be disabled independently from the graphics profile.
-- The new client preferences persist in `config/siege-client.properties`.
-
-## SIEGE 0.6.5
-
-### Intel dossiers
-
-- Intel keeps numbered `ALL`, `UNITS`, `ADVANCED`, `TANKS`, `BOSSES`, `ELITES` and `SUPER-UNITS` categories with live dossier counts.
-- Arrow controls, mouse wheel and keyboard arrows move through troops in the active category. Number keys `0-6` switch categories directly.
-- The wide `CATEGORIES` header no longer shares a full-width rule with its label. `FILES` keeps its separate darker divider because that treatment remains readable.
-- GUI scale 4 has a dedicated compact layout with reduced navigation chrome, condensed metadata and more height for dossier text.
-- The main menu rotates reduced Unit and Advanced Intel cards at normal GUI scales and hides them automatically when the logical viewport is too small.
-- Main-menu Intel cards are taller and use curated two-sentence summaries where space permits. Narrow layouts remove whole sentences instead of cutting a phrase in half.
-- Tank dossiers now include Zapper, Combatant, Agreement, Jagant and Strider with their supplied HP/DEF data and owner-provided renders.
-- Boss dossiers now include Tempest, Fusilier, Achilles, Trident, Prometheus, Daedalus, Hermes, Lelantos and Gaia. Each uses the same six-frame classified-video treatment derived from its owner-supplied footage.
-- Hermes receives exactly the same dossier-video treatment as every other boss. Hermes, Lelantos and Gaia keep their unknown abilities explicit rather than inventing information from their appearance.
-- Patriot uses a visible paper-rooted sketch preserving the silhouette of its supplied Roblox form, helmet, rifle and Nusia flag; the unrelated Minecraft background and stand-in presentation are gone.
-- Intel now shows a proportional reading scrollbar, Page Up/Page Down support and real `0-6` category shortcuts. Metadata and body text no longer overlap at narrow sizes.
-- Nusia affiliation blocks use worn printed/technical treatment; unknown origins use distressed censor ink instead of digital-looking `REDACTED` overlays.
-- Boss footage advances as a lightweight archival contact sequence and can be disabled independently. Reduced Motion also freezes every record on its first frame.
-
-### SIEGE Settings
-
-- Settings remain divided into `Overview`, `Music`, `Interface`, `Accessibility` and `Graphics` sections.
-- Music keeps the custom live 0-100 slider, current-track state and manual `Next Track` control.
-- The main-screen track control is the compact `> MÚSICA` / `> MUSIC`, so its complete label fits. The `M` key triggers the same short manual fade.
-- Interface settings now include an independent Intel-animation toggle alongside UI sounds and rotating backgrounds.
-- SIEGE controls use custom tactical widgets rather than vanilla button textures or vanilla click sounds.
-
-### Complete soundtrack masters
-
-The authoritative soundtrack sources are the clean files supplied by the owner in chat on 2026-09-09. CI converts them to Minecraft-safe Ogg Vorbis and measures the encoded duration with `ffprobe` before compiling.
-
-- `The Tale of a Cruel World`: complete source, approximately 261.54 s.
-- `The Darkest of Days`: complete source, approximately 281.94 s.
-- `Heaven's Hell-Sent Gift`: complete source, approximately 217.22 s.
-- `DVN lobby music`: this 539.54 s compilation is **not** packaged whole. Only `Kaptain - Music Box` is used. Silence analysis of the supplied file places the Music Box section from 179.599646 s to 319.568250 s, approximately 139.97 s.
-
-`Tale`, `Darkest` and `Heaven` are always encoded from first packet to final packet: the build script deliberately uses no seek/time-cut filter for them. `DVN` is the only source intentionally split.
-
-Automatic transitions are duration-driven. `SoundManager.isActive(false)` is never used as the automatic-next signal. A natural fade-out starts exactly eight seconds before the measured encoded end, then the next shuffled track fades in. Manual `Next Track` uses its own shorter fade. Changing SIEGE volume never restarts the active stream.
-
-CI rejects the old damaged 22-25 second repository blobs by enforcing minimum source durations before compilation, so a truncated soundtrack cannot silently ship again.
-
-### Background presentation
-
-- Background scenes hold longer and use a 4.8-second quintic crossfade.
-- Cinematic/Balanced modes use safe overscan with deterministic slow pan so transitions do not expose black edges or jump camera direction.
-- Reduced Motion keeps the crossfade but removes camera travel.
-
-The full category palette, origin rules and client constraints are documented in `docs/RECONSTRUCTION.md`.
-
-## Build and deploy
-
-GitHub Actions is the only build environment.
-
-### Current environment: Fedora KDE
-
-The active workstation now uses Fedora with KDE Plasma and Konsole. Run `bash scripts/install-latest.sh` from Konsole. It clones the current `main` and installs only the GitHub-validated JAR into:
-
-`/home/Santipdr/.sklauncher/instances/test-1/mods`
-
-The Fedora installer never invokes local Java or Gradle. It verifies a staged copy, backs up previous `siege-menu-*.jar` files outside `mods`, then replaces the installed build.
-
-### Legacy Windows environment
-
-`scripts/install-latest.ps1` remains available only for the previous Windows setup.
+Los changelogs anteriores permanecen en `docs/` como historial. El README describe el comportamiento actual y no pretende repetir todas las funciones transitorias de versiones antiguas.

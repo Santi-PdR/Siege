@@ -72,17 +72,30 @@ public final class SiegeRuntimeStatus {
     }
 
     public static String audioLabel(boolean spanish) {
-        if (!SiegeConfig.music) return spanish ? "MÚSICA OFF" : "MUSIC OFF";
-        if (SiegeConfig.musicVolume == 0) return spanish ? "MÚSICA 0%" : "MUSIC 0%";
+        int tracks = SiegeMusic.trackNames().size();
+        String catalog = tracks + " " + (spanish ? (tracks == 1 ? "PISTA" : "PISTAS") : (tracks == 1 ? "TRACK" : "TRACKS"));
+        String order = SiegeMusic.shuffleEnabled()
+                ? (spanish ? "ALEATORIO" : "SHUFFLE")
+                : (spanish ? "FIJA " : "PINNED ") + SiegeMusic.pinnedTrackNumber();
+        if (!SiegeConfig.music) return (spanish ? "MÚSICA OFF" : "MUSIC OFF") + " · " + order + " · " + catalog;
+        if (SiegeConfig.musicVolume == 0) return (spanish ? "MÚSICA 0%" : "MUSIC 0%") + " · " + order + " · " + catalog;
         String state = SiegeMusic.isActuallyPlaying() ? SiegeMusic.currentTrackName() : (spanish ? "EN ESPERA" : "WAITING");
-        return state + " · " + SiegeConfig.musicVolume + "%";
+        return state + " · " + SiegeConfig.musicVolume + "% · " + order + " · " + catalog;
     }
 
     public static String backgroundLabel(boolean spanish) {
         int index = SiegeBackgrounds.currentIndex(System.currentTimeMillis());
         String state = SiegeConfig.selectedScene >= 0 ? (spanish ? "FIJO" : "PINNED")
                 : SiegeConfig.animatedBackgrounds ? (spanish ? "ROTACIÓN" : "ROTATING") : (spanish ? "ESTÁTICO" : "STATIC");
-        return state + " · " + SiegeBackgrounds.sceneTag(index, spanish) + " · " + SiegeBackgrounds.name(index, spanish);
+        boolean motionSuppressed = SiegeConfig.reducedMotion || SiegeConfig.reduceFlashes
+                || SiegeConfig.graphics == SiegeConfig.Graphics.PERFORMANCE;
+        String motion = motionSuppressed
+                ? (spanish ? "MOV OFF" : "MOTION OFF")
+                : (spanish ? "MOV " : "MOTION ") + SiegeConfig.backgroundMotionIntensity + "%";
+        String timing = SiegeConfig.backgroundSceneSeconds + "s · "
+                + (spanish ? "FUNDIDO " : "FADE ") + SiegeConfig.backgroundCrossfadeSeconds + "s · " + motion;
+        return state + " · " + SiegeBackgrounds.sceneTag(index, spanish) + " · "
+                + SiegeBackgrounds.name(index, spanish) + " · " + timing;
     }
 
     public static String intelLabel(boolean spanish) {

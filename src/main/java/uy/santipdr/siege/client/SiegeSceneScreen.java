@@ -98,7 +98,8 @@ public final class SiegeSceneScreen extends Screen {
             tile.visible = tile.active && !cleanView;
             if (!tile.active && getFocused() == tile) setFocused(null);
             tile.setMessage(tile.active ? Component.literal(SiegeBackgrounds.name(tile.scene, spanish())) : Component.empty());
-            if (tile.active) tile.setTooltip(Tooltip.create(Component.literal((tile.scene + 1) + " / " + SiegeBackgrounds.count() + " · " + tile.getMessage().getString())));
+            if (tile.active) tile.setTooltip(Tooltip.create(Component.literal((tile.scene + 1) + " / " + SiegeBackgrounds.count()
+                    + " · " + SiegeBackgrounds.sceneTag(tile.scene, spanish()) + " · " + tile.getMessage().getString())));
         }
         for (var child : children()) if (child instanceof AbstractWidget widget)
             if (widget.getTooltip() == null) widget.setTooltip(Tooltip.create(widget.getMessage()));
@@ -107,7 +108,7 @@ public final class SiegeSceneScreen extends Screen {
         clean.withIcon("eye"); pin.withIcon("pin"); auto.withIcon("image");
         current.withIcon("image");
         undo.withIcon("settings");
-        contrast.setTooltip(Tooltip.create(text("Previsualizar la oscuridad de fondo y panel del menú", "Preview the menu background and panel darkness")));
+        contrast.setTooltip(Tooltip.create(text("Previsualizar la oscuridad efectiva y el panel exactamente como los aplica el menú", "Preview effective darkness and panel exactly as the menu applies them")));
         undo.active = undoAvailable;
         undo.setTooltip(Tooltip.create(undoAvailable ? text("Restaurar el fondo y la rotación anteriores", "Restore the previous background and rotation")
                 : text("Disponible después de fijar un fondo o reactivar la rotación", "Available after pinning a background or resuming rotation")));
@@ -180,7 +181,8 @@ public final class SiegeSceneScreen extends Screen {
                 : index == liveScene ? label("EN USO", "IN USE") : label("SIN APLICAR", "NOT APPLIED");
         String heading = String.format("%02d / %02d  ·  %s", index + 1, SiegeBackgrounds.count(), SiegeBackgrounds.name(index, spanish()));
         g.drawString(font, font.plainSubstrByWidth(heading, width - 82), 8, 36, 0xFFF0EEE8, false);
-        String detail = state + "  ·  " + label("GALERÍA", "GALLERY") + " " + (page + 1) + "/"
+        String detail = state + "  ·  " + SiegeBackgrounds.sceneTag(index, spanish()) + "  ·  "
+                + label("GALERÍA", "GALLERY") + " " + (page + 1) + "/"
                 + ((SiegeBackgrounds.count() + layout.capacity() - 1) / layout.capacity());
         g.drawString(font, font.plainSubstrByWidth(detail, width - 82), 8, 49, 0xFFBCA56D, false);
         super.render(g, mouseX, mouseY, partialTick);
@@ -221,7 +223,8 @@ public final class SiegeSceneScreen extends Screen {
     }
     private void renderContrast(GuiGraphics g, int x, int y, int w, int h) {
         if (!menuPreview) return;
-        g.fill(x, y, x + w, y + h, (SiegeConfig.backgroundDarkness * 255 / 100) << 24);
+        int darkness = SiegeBackgrounds.effectiveBackgroundDarkness(index);
+        g.fill(x, y, x + w, y + h, (darkness * 255 / 100) << 24);
         SiegeBackgrounds.renderPanel(g, x, y, (int)Math.round(w * SiegeBackgrounds.panelFraction(width, height, minecraft.getWindow().getGuiScale())), h);
     }
     private void rememberBackground() {
@@ -312,4 +315,3 @@ public final class SiegeSceneScreen extends Screen {
         }
     }
 }
-
