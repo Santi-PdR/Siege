@@ -84,7 +84,8 @@ public final class SiegeRuntimeStatus {
     }
 
     public static String backgroundLabel(boolean spanish) {
-        int index = SiegeBackgrounds.currentIndex(System.currentTimeMillis());
+        long now = System.currentTimeMillis();
+        int index = SiegeBackgrounds.currentIndex(now);
         String state = SiegeConfig.selectedScene >= 0 ? (spanish ? "FIJO" : "PINNED")
                 : SiegeConfig.animatedBackgrounds ? (spanish ? "ROTACIÓN" : "ROTATING") : (spanish ? "ESTÁTICO" : "STATIC");
         boolean motionSuppressed = SiegeConfig.reducedMotion || SiegeConfig.reduceFlashes
@@ -94,8 +95,12 @@ public final class SiegeRuntimeStatus {
                 : (spanish ? "MOV " : "MOTION ") + SiegeConfig.backgroundMotionIntensity + "%";
         String timing = SiegeConfig.backgroundSceneSeconds + "s · "
                 + (spanish ? "FUNDIDO " : "FADE ") + SiegeConfig.backgroundCrossfadeSeconds + "s · " + motion;
-        return state + " · " + SiegeBackgrounds.sceneTag(index, spanish) + " · "
-                + SiegeBackgrounds.name(index, spanish) + " · " + timing;
+        String source = SiegeBackgrounds.sourceTag(index, spanish);
+        String next = SiegeConfig.selectedScene < 0 && SiegeConfig.animatedBackgrounds
+                ? " · " + (spanish ? "PRÓX. " : "NEXT ") + SiegeBackgrounds.name(SiegeBackgrounds.nextIndex(now), spanish)
+                : "";
+        return state + " · " + source + " · " + SiegeBackgrounds.sceneTag(index, spanish) + " · "
+                + SiegeBackgrounds.name(index, spanish) + next + " · " + timing;
     }
 
     public static String intelLabel(boolean spanish) {
