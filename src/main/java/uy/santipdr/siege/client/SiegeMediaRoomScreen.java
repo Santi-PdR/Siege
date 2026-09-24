@@ -13,6 +13,7 @@ public final class SiegeMediaRoomScreen extends Screen {
     private int panelX, panelY, panelW, panelH, contentX, contentY, contentW, contentH;
     private int listOffset;
     private boolean compact;
+    private SiegeButton playbackModeButton;
 
     public SiegeMediaRoomScreen(Screen parent) {
         super(Component.literal("SIEGE // MEDIA ROOM"));
@@ -22,6 +23,7 @@ public final class SiegeMediaRoomScreen extends Screen {
     @Override
     protected void init() {
         SiegeUiSounds.resetHover();
+        playbackModeButton = null;
         compact = width < 640 || height < 370;
         int margin = compact ? 7 : Math.max(12, width / 80);
         panelX = margin;
@@ -84,7 +86,11 @@ public final class SiegeMediaRoomScreen extends Screen {
                 b -> { SiegeMusic.nextTrack(); SiegeUiSounds.click(); }, SiegeTheme.CYAN)
                 .withIcon("music").setCompactCenter(true));
 
-        int sceneY = y + 58;
+        playbackModeButton = addRenderableWidget(new SiegeButton(contentX, y + 25, contentW, 19,
+                Component.literal(playbackModeLabel()), b -> togglePlaybackMode(), SiegeTheme.GOLD)
+                .withIcon("music").setCompactCenter(true));
+
+        int sceneY = y + 72;
         addRenderableWidget(new SiegeButton(contentX, sceneY, w, 19, Component.literal(label("◀ FONDO", "◀ SCENE")),
                 b -> shiftScene(-1), SiegeTheme.BLUE).withIcon("image").setCompactCenter(true));
         addRenderableWidget(new SiegeButton(contentX + w + gap, sceneY, w, 19,
@@ -95,6 +101,26 @@ public final class SiegeMediaRoomScreen extends Screen {
                 contentX + contentW - (contentX + (w + gap) * 2), 19,
                 Component.literal(label("FONDO ▶", "SCENE ▶")), b -> shiftScene(1), SiegeTheme.BLUE)
                 .withIcon("image").setCompactCenter(true));
+    }
+
+    private void togglePlaybackMode() {
+        if (SiegeConfig.selectedTrack >= 0) {
+            SiegeMusic.selectTrack(-1);
+        } else if (!SiegeMusic.trackNames().isEmpty()) {
+            int current = SiegeMusic.currentTrackNumber() - 1;
+            SiegeMusic.selectTrack(current >= 0 ? current : 0);
+        }
+        SiegeUiSounds.confirm();
+        if (playbackModeButton != null) playbackModeButton.setMessage(Component.literal(playbackModeLabel()));
+    }
+
+    private String playbackModeLabel() {
+        if (SiegeConfig.selectedTrack >= 0) {
+            return compact ? label("VOLVER A ALEATORIO", "RETURN TO SHUFFLE")
+                    : label("PISTA FIJA · VOLVER A ALEATORIO", "PINNED TRACK · RETURN TO SHUFFLE");
+        }
+        return compact ? label("FIJAR PISTA ACTUAL", "PIN CURRENT TRACK")
+                : label("ALEATORIO SIN REPETIR · FIJAR PISTA ACTUAL", "SHUFFLE WITHOUT REPEATS · PIN CURRENT TRACK");
     }
 
     /** 5.60 presets deliberately affect only the scene; music remains under explicit player control. */
@@ -130,7 +156,7 @@ public final class SiegeMediaRoomScreen extends Screen {
         SiegeBackgrounds.render(g, width, height, System.currentTimeMillis());
         g.fill(0, 0, width, height, SiegeConfig.highContrast ? 0xC9000000 : 0xA0000000);
         SiegeTheme.panel(g, panelX, panelY, panelW, panelH, SiegeTheme.CYAN);
-        g.drawString(font, fit(label("SALA MULTIMEDIA 5.60", "MEDIA ROOM 5.60") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
+        g.drawString(font, fit(label("SALA MULTIMEDIA", "MEDIA ROOM") + " // " + SiegeRuntimeStatus.version(), panelW - 24),
                 panelX + 12, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
                 "Música disponible, escenas y dirección audiovisual del frente actual.",
@@ -146,6 +172,7 @@ public final class SiegeMediaRoomScreen extends Screen {
         }
 
         super.render(g, mouseX, mouseY, partialTick);
+        if (playbackModeButton != null) playbackModeButton.setMessage(Component.literal(playbackModeLabel()));
         SiegeUiSounds.updateHover(children());
         SiegeScreenChrome.renderOverlay(this, g);
     }
@@ -163,14 +190,14 @@ public final class SiegeMediaRoomScreen extends Screen {
         g.fill(x, y, x + w, y + 3, 0xFF272C30);
         g.fill(x, y, x + Math.round(w * SiegeMusic.currentProgress()), y + 3, SiegeTheme.GOLD);
 
-        int sceneY = contentY + 86;
+        int sceneY = contentY + 105;
         int scene = SiegeBackgrounds.currentIndex(System.currentTimeMillis());
         g.drawString(font, fit(label("ESCENA: ", "SCENE: ") + SiegeBackgrounds.name(scene, spanish())
                 + " · " + SiegeBackgrounds.sceneTag(scene, spanish()), w), x, sceneY, SiegeTheme.CYAN, false);
         g.drawString(font, fit(SiegeBackgrounds.rotationState(spanish(), System.currentTimeMillis()), w),
                 x, sceneY + 12, SiegeTheme.MUTED, false);
 
-        int listY = contentY + 127;
+        int listY = contentY + 153;
         if (listY + 10 < contentY + contentH) {
             g.drawString(font, label("PLAYLIST DISPONIBLE EN ESTE BUILD", "PLAYLIST AVAILABLE IN THIS BUILD"), x, listY, SiegeTheme.INK, false);
             int yy = listY + 13;
@@ -219,8 +246,8 @@ public final class SiegeMediaRoomScreen extends Screen {
                 x, y, SiegeTheme.GOLD, false);
         y += 14;
         g.drawString(font, fit(label(
-                "Distingue las pistas ya disponibles de las dos incorporaciones 5.60 aprobadas y otras referencias históricas.",
-                "Separates currently available tracks, the two approved 5.60 additions and historical references."), w),
+                "Separa las pistas instaladas, las dos elecciones 5.60 aprobadas y otras referencias. Las aprobadas sólo aparecen en la playlist cuando existe su master preparado.",
+                "Separates installed tracks, the two approved 5.60 choices and other references. Approved additions enter the playlist only when a prepared master exists."), w),
                 x, y, SiegeTheme.MUTED, false);
         y += 18;
         var tracks = SiegeMediaReferenceData.dvnTracks();
