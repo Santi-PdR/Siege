@@ -3,7 +3,7 @@
 
 5.60 removes the rejected generated music, accepts exactly two player-approved new
 songs when legitimate source masters are supplied, and makes adaptive background
-settings real runtime controls.
+settings real player-facing runtime controls.
 """
 from pathlib import Path
 
@@ -18,6 +18,8 @@ PREP = read("scripts/prepare-music.sh")
 PRESETS = read("src/main/java/uy/santipdr/siege/client/SiegeMediaPresets.java")
 CONFIG = read("src/main/java/uy/santipdr/siege/client/SiegeConfig.java")
 BACKGROUNDS = read("src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java")
+SETTINGS = read("src/main/java/uy/santipdr/siege/client/SiegeSettingsScreen.java")
+MEDIA_ROOM = read("src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java")
 APPROVED = read("docs/MUSIC-CANDIDATES-5.60.md")
 WORKFLOW = read(".github/workflows/build.yml")
 
@@ -80,10 +82,14 @@ assert "String track" not in PRESETS
 for scene in ("stronghold_red_alert", "nucleus_interference", "tesla_breach"):
     assert f'"{scene}"' in PRESETS
 
-# 5.60 background controls are persisted and actually consumed by the renderer.
+# 5.60 background controls are persisted, consumed by the renderer and reachable from
+# the actual Settings UI. A config field that cannot be changed in-game is not complete.
 for option in ("backgroundMotionIntensity", "backgroundSceneSeconds", "backgroundCrossfadeSeconds"):
     assert option in CONFIG
     assert f"SiegeConfig.{option}" in BACKGROUNDS
+    assert f"SiegeConfig.{option}" in SETTINGS
+for label in ("BACKGROUND MOTION", "SCENE DURATION", "SCENE CROSSFADE"):
+    assert label in SETTINGS
 assert "private static long sceneMs()" in BACKGROUNDS
 assert "private static long crossfadeMs()" in BACKGROUNDS
 assert "fadeDuration > 0L" in BACKGROUNDS, "zero-crossfade mode must avoid division by zero"
@@ -92,10 +98,22 @@ assert "SiegeConfig.reducedMotion" in BACKGROUNDS
 assert "SiegeConfig.reduceFlashes" in BACKGROUNDS
 assert "SiegeConfig.Graphics.PERFORMANCE" in BACKGROUNDS
 assert "Math.max(w / (double)sourceW, h / (double)sourceH)" in BACKGROUNDS
+assert '" // SIEGE " + SiegeRuntimeStatus.version()' in SETTINGS
+assert "SIEGE 1.25" not in SETTINGS
+
+# Media Room exposes shuffle/pin state directly, reports the real runtime version and
+# never claims an approved optional master is already installed when it is absent.
+assert "togglePlaybackMode" in MEDIA_ROOM
+assert "PIN CURRENT TRACK" in MEDIA_ROOM
+assert "RETURN TO SHUFFLE" in MEDIA_ROOM
+assert "SiegeMusic.selectTrack(-1)" in MEDIA_ROOM
+assert 'label("SALA MULTIMEDIA", "MEDIA ROOM") + " // " + SiegeRuntimeStatus.version()' in MEDIA_ROOM
+assert "prepared master exists" in MEDIA_ROOM
+assert "MEDIA ROOM 5.60" not in MEDIA_ROOM
 
 # CI itself must execute the 5.60 contract and must not require deleted generators.
 assert "python3 tests/test_release_560.py" in WORKFLOW
 assert "generate-stronghold-signal.py" not in WORKFLOW
 assert "generate-frontline-signal-550.py" not in WORKFLOW
 
-print("SIEGE 5.60 approved-music gate, rejected-music cleanup and adaptive backgrounds passed")
+print("SIEGE 5.60 approved-music gate, player-facing adaptive backgrounds and Media Room controls passed")
