@@ -42,7 +42,7 @@ assert "SiegeBackgrounds.sourceTag(tile.scene, spanish())" in GALLERY
 assert "SiegeBackgrounds.sourceTag(index, spanish())" in GALLERY
 assert "SiegeBackgrounds.sourceTag(scene, spanish())" in MEDIA
 assert "SiegeBackgrounds.rotationDetail(spanish(), now)" in MEDIA
-assert "SiegeBackgrounds.sourceTag(index, spanish())" in RUNTIME
+assert "SiegeBackgrounds.sourceTag(index, spanish)" in RUNTIME
 assert "SiegeBackgrounds.nextIndex(now)" in RUNTIME
 assert 'case VISUALS -> label("FONDOS", "VISUALS")' in MEDIA
 
