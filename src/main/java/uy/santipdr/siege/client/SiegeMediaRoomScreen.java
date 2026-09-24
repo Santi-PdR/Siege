@@ -198,8 +198,10 @@ public final class SiegeMediaRoomScreen extends Screen {
                 + " · " + SiegeBackgrounds.sceneTag(scene, spanish())
                 + " · " + SiegeBackgrounds.sourceTag(scene, spanish());
         g.drawString(font, fit(sceneLine, w), x, sceneY, SiegeTheme.CYAN, false);
-        g.drawString(font, fit(SiegeBackgrounds.rotationDetail(spanish(), now), w),
-                x, sceneY + 12, SiegeTheme.MUTED, false);
+        String rotationState = SiegeBackgrounds.rotationState(spanish(), now);
+        String rotationDetail = SiegeConfig.selectedScene < 0 && SiegeConfig.animatedBackgrounds
+                ? SiegeBackgrounds.rotationDetail(spanish(), now) : rotationState;
+        g.drawString(font, fit(rotationDetail, w), x, sceneY + 12, SiegeTheme.MUTED, false);
 
         int listY = contentY + 153;
         if (listY + 10 < contentY + contentH) {
