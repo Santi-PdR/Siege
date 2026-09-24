@@ -21,6 +21,7 @@ BACKGROUNDS = read("src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
 SETTINGS = read("src/main/java/uy/santipdr/siege/client/SiegeSettingsScreen.java")
 MEDIA_ROOM = read("src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java")
 RUNTIME = read("src/main/java/uy/santipdr/siege/client/SiegeRuntimeStatus.java")
+DIAGNOSTIC = read("src/main/java/uy/santipdr/siege/client/SiegeDiagnosticReport.java")
 TITLE = read("src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java")
 SCENE_SCREEN = read("src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java")
 APPROVED = read("docs/MUSIC-CANDIDATES-5.60.md")
@@ -128,6 +129,16 @@ assert "1 + Math.round(interference * 3.0F / 100.0F)" in TITLE
 assert "SiegeConfig.reducedMotion" in TITLE
 assert "SiegeConfig.reduceFlashes" in TITLE
 
+# Reduce Flashes is a successful runtime override, not an error condition. Diagnostics
+# must report suppression truthfully and never lower readiness merely because a guarded
+# decorative effect remains configured underneath the safeguard.
+assert "INTERFERENCIA SUPRIMIDA POR ACCESIBILIDAD" in DIAGNOSTIC
+assert "INTERFERENCE SUPPRESSED BY ACCESSIBILITY" in DIAGNOSTIC
+assert "boolean interferenceConfigured" in DIAGNOSTIC
+assert "SiegeConfig.reduceFlashes && interferenceConfigured" in DIAGNOSTIC
+assert "Severity.OK, Recovery.NONE" in DIAGNOSTIC
+assert "Reducción de destellos y la interferencia están en conflicto" not in DIAGNOSTIC
+
 # Media Room exposes shuffle/pin state directly, a measured playback clock and the real
 # runtime version without claiming optional masters are already installed.
 assert "togglePlaybackMode" in MEDIA_ROOM
@@ -151,9 +162,26 @@ assert "SiegeConfig.reducedMotion || SiegeConfig.reduceFlashes" in RUNTIME
 assert "SiegeConfig.Graphics.PERFORMANCE" in RUNTIME
 assert 'spanish ? "MOV OFF" : "MOTION OFF"' in RUNTIME
 
-# CI itself must execute the 5.60 contract and must not require deleted generators.
+# CI itself must execute the 5.60 contract, avoid deleted generators and run on the
+# current Node-24-compatible major releases instead of deprecated v4 action majors.
 assert "python3 tests/test_release_560.py" in WORKFLOW
 assert "generate-stronghold-signal.py" not in WORKFLOW
 assert "generate-frontline-signal-550.py" not in WORKFLOW
+for action in (
+    "actions/checkout@v7",
+    "actions/setup-java@v6",
+    "gradle/actions/setup-gradle@v6",
+    "actions/cache@v6",
+    "actions/upload-artifact@v7",
+):
+    assert action in WORKFLOW, action
+for old in (
+    "actions/checkout@v4",
+    "actions/setup-java@v4",
+    "gradle/actions/setup-gradle@v4",
+    "actions/cache@v4",
+    "actions/upload-artifact@v4",
+):
+    assert old not in WORKFLOW, old
 
-print("SIEGE 5.60 approved music gate, adaptive presentation, gallery, Media Room and runtime status passed")
+print("SIEGE 5.60 approved music gate, adaptive presentation, truthful diagnostics and modern CI passed")
