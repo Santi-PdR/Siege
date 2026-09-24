@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SIEGE 5.62 rotation-fairness and continuity contracts."""
+"""SIEGE 5.62 rotation-fairness, continuity and command-workspace contracts."""
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -10,6 +10,7 @@ SCHEDULE = read("src/main/java/uy/santipdr/siege/client/SiegeSceneSchedule.java"
 SCENE_TEST = read("tests/SceneScheduleTest.java")
 CATALOG = read("src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java")
 BACKGROUNDS = read("src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java")
+OPERATIONS = read("src/main/java/uy/santipdr/siege/client/SiegeOperationsHubScreen.java")
 EASTER = read("src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java")
 
 assert "version = '5.62.0'" in BUILD
@@ -28,9 +29,18 @@ assert "enum Source { SIEGE_ARCHIVE, DVN_OFFICIAL, SIEGE_TREATMENT }" in CATALOG
 for symbol in ("nextIndex(long now)", "rotationProgress(long now)", "rotationDetail(boolean spanish, long now)", "sourceTag(int index, boolean spanish)"):
     assert symbol in BACKGROUNDS, symbol
 
+# Operations behaves as one persistent in-session workspace. Changing a lane,
+# resizing/rebuilding widgets or returning from a child screen must not blank the query.
+assert 'private String searchQuery = "";' in OPERATIONS
+assert "searchBox.setValue(searchQuery);" in OPERATIONS
+assert "searchQuery = value;" in OPERATIONS
+assert "rebuildWidgets();" in OPERATIONS
+assert "new IntelScreenV3(this" in OPERATIONS
+assert "new SiegeKnowledgeFileScreen(this" in OPERATIONS
+
 # Normal rotation still cannot leak the isolated Tempest easter egg.
 assert '"tempest_jutcherson"' in EASTER
 assert '"tempest_jutcherson"' not in CATALOG
 assert "SiegeSceneCatalog.featuredIndex()" in SCHEDULE
 
-print("SIEGE 5.62 featured-insert fairness, complete standard bags and 5.61 continuity passed")
+print("SIEGE 5.62 rotation fairness, Operations context persistence and 5.61 continuity passed")
