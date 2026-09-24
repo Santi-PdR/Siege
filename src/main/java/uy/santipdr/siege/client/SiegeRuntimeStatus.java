@@ -74,9 +74,9 @@ public final class SiegeRuntimeStatus {
     public static String audioLabel(boolean spanish) {
         int tracks = SiegeMusic.trackNames().size();
         String catalog = tracks + " " + (spanish ? (tracks == 1 ? "PISTA" : "PISTAS") : (tracks == 1 ? "TRACK" : "TRACKS"));
-        String order = SiegeConfig.selectedTrack < 0
+        String order = SiegeMusic.shuffleEnabled()
                 ? (spanish ? "ALEATORIO" : "SHUFFLE")
-                : (spanish ? "FIJA " : "PINNED ") + (SiegeConfig.selectedTrack + 1);
+                : (spanish ? "FIJA " : "PINNED ") + SiegeMusic.pinnedTrackNumber();
         if (!SiegeConfig.music) return (spanish ? "MÚSICA OFF" : "MUSIC OFF") + " · " + order + " · " + catalog;
         if (SiegeConfig.musicVolume == 0) return (spanish ? "MÚSICA 0%" : "MUSIC 0%") + " · " + order + " · " + catalog;
         String state = SiegeMusic.isActuallyPlaying() ? SiegeMusic.currentTrackName() : (spanish ? "EN ESPERA" : "WAITING");
