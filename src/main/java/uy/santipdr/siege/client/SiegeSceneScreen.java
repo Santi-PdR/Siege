@@ -99,7 +99,9 @@ public final class SiegeSceneScreen extends Screen {
             if (!tile.active && getFocused() == tile) setFocused(null);
             tile.setMessage(tile.active ? Component.literal(SiegeBackgrounds.name(tile.scene, spanish())) : Component.empty());
             if (tile.active) tile.setTooltip(Tooltip.create(Component.literal((tile.scene + 1) + " / " + SiegeBackgrounds.count()
-                    + " · " + SiegeBackgrounds.sceneTag(tile.scene, spanish()) + " · " + tile.getMessage().getString())));
+                    + " · " + SiegeBackgrounds.sourceTag(tile.scene, spanish())
+                    + " · " + SiegeBackgrounds.sceneTag(tile.scene, spanish())
+                    + " · " + tile.getMessage().getString())));
         }
         for (var child : children()) if (child instanceof AbstractWidget widget)
             if (widget.getTooltip() == null) widget.setTooltip(Tooltip.create(widget.getMessage()));
@@ -181,8 +183,8 @@ public final class SiegeSceneScreen extends Screen {
                 : index == liveScene ? label("EN USO", "IN USE") : label("SIN APLICAR", "NOT APPLIED");
         String heading = String.format("%02d / %02d  ·  %s", index + 1, SiegeBackgrounds.count(), SiegeBackgrounds.name(index, spanish()));
         g.drawString(font, font.plainSubstrByWidth(heading, width - 82), 8, 36, 0xFFF0EEE8, false);
-        String detail = state + "  ·  " + SiegeBackgrounds.sceneTag(index, spanish()) + "  ·  "
-                + label("GALERÍA", "GALLERY") + " " + (page + 1) + "/"
+        String detail = state + "  ·  " + SiegeBackgrounds.sourceTag(index, spanish()) + "  ·  "
+                + SiegeBackgrounds.sceneTag(index, spanish()) + "  ·  " + label("GALERÍA", "GALLERY") + " " + (page + 1) + "/"
                 + ((SiegeBackgrounds.count() + layout.capacity() - 1) / layout.capacity());
         g.drawString(font, font.plainSubstrByWidth(detail, width - 82), 8, 49, 0xFFBCA56D, false);
         super.render(g, mouseX, mouseY, partialTick);
