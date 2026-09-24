@@ -48,18 +48,22 @@ public final class SceneScheduleTest {
         }
 
         // 5.62: featured inserts are interleaved, not substituted for standard scenes.
-        // Every consecutive group of standardCount non-featured outputs must still be
-        // a complete shuffled bag. This catches the old bug where phase 8/26/etc.
-        // advanced the standard ordinal and silently skipped normal backgrounds.
-        for (long globalStart : new long[]{-2500L, 0L, 2500L, 74000000L}) {
+        // Each start below maps to an exact shuffled-bag boundary in the compressed
+        // standard-only timeline. Thirty consecutive bags must remain complete even
+        // while featured scenes are inserted into the visible global schedule.
+        for (long globalStart : new long[]{-2596L, 0L, 2404L, 74000000L}) {
+            check(Math.floorMod(SiegeSceneSchedule.standardSlotOrdinal(globalStart), standardCount) == 0,
+                    "Test start must align to a compressed standard-bag boundary");
             long slot = globalStart;
             for (int bagNumber = 0; bagNumber < 30; bagNumber++) {
                 Set<Integer> bag = new HashSet<>();
-                while (bag.size() < standardCount) {
+                int standardSeen = 0;
+                while (standardSeen < standardCount) {
                     if (!SiegeSceneSchedule.isFeaturedSlot(slot)) {
                         int current = SiegeSceneSchedule.index(slot, true);
                         check(current != featuredIndex, "Featured scene leaked into compressed standard bag");
                         check(bag.add(current), "Featured insertion skipped/repeated a standard scene");
+                        standardSeen++;
                     }
                     slot++;
                 }
