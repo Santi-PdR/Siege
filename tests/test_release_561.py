@@ -11,6 +11,7 @@ BACKGROUNDS = read("src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
 MEDIA = read("src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java")
 GALLERY = read("src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java")
 RUNTIME = read("src/main/java/uy/santipdr/siege/client/SiegeRuntimeStatus.java")
+BRIEFING = read("src/main/java/uy/santipdr/siege/client/SiegeBriefingScreen.java")
 EASTER = read("src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java")
 WORKFLOW = read(".github/workflows/build.yml")
 
@@ -46,6 +47,10 @@ assert "SiegeBackgrounds.sourceTag(index, spanish)" in RUNTIME
 assert "SiegeBackgrounds.nextIndex(now)" in RUNTIME
 assert 'case VISUALS -> label("FONDOS", "VISUALS")' in MEDIA
 
+# Player-facing version labels must never freeze at an older 5.x release.
+assert '"BRIEFING // " + SiegeRuntimeStatus.version()' in BRIEFING
+assert "BRIEFING 5.40" not in BRIEFING
+
 # The normal catalog must still keep the Tempest easter egg isolated.
 assert '"tempest_jutcherson"' in EASTER
 assert '"tempest_jutcherson"' not in CATALOG
@@ -53,4 +58,4 @@ assert '"tempest_jutcherson"' not in CATALOG
 # CI executes this release gate and no later release is allowed to silently remove it.
 assert "python3 tests/test_release_561.py" in WORKFLOW
 
-print("SIEGE 5.61 scene provenance, next-scene state and gallery/media integration passed")
+print("SIEGE 5.61 scene provenance, next-scene state, dynamic Briefing version and gallery/media integration passed")
