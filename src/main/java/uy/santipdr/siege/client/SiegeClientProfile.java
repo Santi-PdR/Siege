@@ -69,8 +69,8 @@ public final class SiegeClientProfile {
                     ? "Equilibrio operativo: información visible, animación moderada y contraste automático."
                     : "Operational balance: visible information, moderate animation and automatic contrast.";
             case STRONGHOLD -> spanish
-                    ? "Perfil 5.0 inspirado en Stronghold/DVN: fondos activos, lectura oscura, scanlines suaves y destellos reducidos."
-                    : "5.0 Stronghold/DVN-inspired profile: active scenes, dark readability, soft scanlines and reduced flashes.";
+                    ? "Perfil de frente: fondos activos, scanlines suaves, contraste automático y destellos reducidos."
+                    : "Front-line profile: active scenes, soft scanlines, automatic contrast and reduced flashes.";
             case PERFORMANCE -> spanish
                     ? "Reduce trabajo visual por frame: sin animaciones ambientales, scanlines ni interferencia."
                     : "Reduces per-frame visual work: no ambient animation, scanlines or interference.";
