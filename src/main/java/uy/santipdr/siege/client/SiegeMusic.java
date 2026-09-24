@@ -226,7 +226,23 @@ public final class SiegeMusic {
 
     public static float currentProgress() {
         long total = currentDurationMs();
-        return total <= 0L ? 0.0F : Math.max(0.0F, Math.min(1.0F, (total - currentRemainingMs()) / (float) total));
+        return total <= 0L ? 0.0F : Math.max(0.0F, Math.min(1.0F, currentElapsedMs() / (float) total));
+    }
+
+    public static long currentElapsedMs() {
+        if (!clockAnchored || active == null) return 0L;
+        return Math.max(0L, Math.min(currentDurationMs(), (System.nanoTime() / 1_000_000L) - playbackAnchorAt));
+    }
+
+    public static String currentTimeLabel() {
+        return formatTime(currentElapsedMs()) + " / " + formatTime(currentDurationMs());
+    }
+
+    private static String formatTime(long millis) {
+        long totalSeconds = Math.max(0L, millis) / 1_000L;
+        long minutes = totalSeconds / 60L;
+        long seconds = totalSeconds % 60L;
+        return String.format(java.util.Locale.ROOT, "%d:%02d", minutes, seconds);
     }
 
     public static void selectTrack(int index) {
@@ -285,8 +301,7 @@ public final class SiegeMusic {
     }
 
     public static long currentRemainingMs() {
-        if (!clockAnchored || active == null) return currentDurationMs();
-        return Math.max(0L, currentDurationMs() - ((System.nanoTime() / 1_000_000L) - playbackAnchorAt));
+        return Math.max(0L, currentDurationMs() - currentElapsedMs());
     }
 
     public static String transitionLabel(boolean spanish) {
