@@ -20,6 +20,7 @@ CONFIG = read("src/main/java/uy/santipdr/siege/client/SiegeConfig.java")
 BACKGROUNDS = read("src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java")
 SETTINGS = read("src/main/java/uy/santipdr/siege/client/SiegeSettingsScreen.java")
 MEDIA_ROOM = read("src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java")
+RUNTIME = read("src/main/java/uy/santipdr/siege/client/SiegeRuntimeStatus.java")
 APPROVED = read("docs/MUSIC-CANDIDATES-5.60.md")
 WORKFLOW = read(".github/workflows/build.yml")
 
@@ -111,9 +112,19 @@ assert 'label("SALA MULTIMEDIA", "MEDIA ROOM") + " // " + SiegeRuntimeStatus.ver
 assert "prepared master exists" in MEDIA_ROOM
 assert "MEDIA ROOM 5.60" not in MEDIA_ROOM
 
+# Command/diagnostic status must describe effective runtime state rather than only raw
+# config values: pinned/shuffle audio and motion overrides are visible to the player.
+assert 'SiegeConfig.selectedTrack < 0' in RUNTIME
+assert 'spanish ? "ALEATORIO" : "SHUFFLE"' in RUNTIME
+assert 'spanish ? "FIJA " : "PINNED "' in RUNTIME
+assert "motionSuppressed" in RUNTIME
+assert "SiegeConfig.reducedMotion || SiegeConfig.reduceFlashes" in RUNTIME
+assert "SiegeConfig.Graphics.PERFORMANCE" in RUNTIME
+assert 'spanish ? "MOV OFF" : "MOTION OFF"' in RUNTIME
+
 # CI itself must execute the 5.60 contract and must not require deleted generators.
 assert "python3 tests/test_release_560.py" in WORKFLOW
 assert "generate-stronghold-signal.py" not in WORKFLOW
 assert "generate-frontline-signal-550.py" not in WORKFLOW
 
-print("SIEGE 5.60 approved-music gate, player-facing adaptive backgrounds and Media Room controls passed")
+print("SIEGE 5.60 approved-music gate, adaptive controls, Media Room and runtime status passed")
