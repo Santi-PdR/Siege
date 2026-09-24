@@ -2,14 +2,17 @@
 
 Cliente Forge **1.20.1** para Eternal Craft: SIEGE. Reemplaza y amplía la experiencia de menús de Minecraft con una interfaz táctica propia, Intel, multimedia, fondos operacionales, navegación del servidor y herramientas de diagnóstico.
 
-## SIEGE 5.60 — Adaptive Command
+## SIEGE 5.61 — Scene Intelligence
 
-La versión actual en desarrollo es **5.60.0**. Esta revisión concentra el trabajo reciente en que la interfaz muestre y controle el estado real del cliente en lugar de conservar opciones decorativas o información vieja.
+La versión actual en desarrollo es **5.61.0**. Esta revisión continúa el trabajo de 5.60 fuera del soundtrack y se centra en que los fondos indiquen con precisión qué son, de dónde salen y qué escena viene después.
 
 ### Presentación y fondos
 
 - 21 fondos normales auditados, incluyendo seis escenas oficiales de Dummies vs Noobs a su resolución nativa `768×432` y tres tratamientos SIEGE construidos sobre fuentes verificadas.
+- Cada fondo tiene procedencia explícita: **DVN OFICIAL**, **TRATAMIENTO SIEGE** o **ARCHIVO SIEGE**.
+- La Galería, la Sala Multimedia y el estado del cliente leen esa procedencia desde el mismo catálogo; no la deducen por el nombre del archivo.
 - Rotación automática sin depender de un orden fijo repetitivo.
+- La interfaz puede mostrar la escena actual, la próxima escena y el tiempo restante de la rotación.
 - Duración de escena configurable entre **12 y 60 segundos**.
 - Crossfade configurable entre **0 y 10 segundos**.
 - Movimiento cinematográfico configurable entre **0 y 100%**, con overscan seguro y sin deformar la imagen.
@@ -60,13 +63,15 @@ Son slots **opcionales**: sólo aparecen como pistas jugables cuando el build co
 
 La Sala Multimedia ofrece anterior, reiniciar, siguiente, aleatorio sin repetir / pista fijada, progreso y reloj real de reproducción. Los presets Stronghold, Núcleo y Tesla cambian sólo la escena; no fuerzan música.
 
+En 5.61 la parte visual de la Sala Multimedia también enseña la procedencia de la escena activa y la siguiente escena de la rotación. La pestaña de fondos ya no se etiqueta únicamente como DVN porque contiene material DVN y SIEGE.
+
 Las pistas sintéticas experimentales `Black Signal`, `Silent Carrier` y `Tesla Breach` fueron retiradas y sus generadores ya no forman parte del proyecto.
 
 ### Centro de Comando y configuración
 
 - Perfiles completos para distintos objetivos visuales y de rendimiento.
 - Estado real de música, modo aleatorio/fijado y número de pistas disponibles.
-- Estado de fondo, escena actual, tiempos y movimiento efectivo.
+- Estado de fondo, procedencia, escena actual, próxima escena, tiempos y movimiento efectivo.
 - Diagnóstico y recuperación de preferencias del cliente.
 - Configuración dividida en Apariencia, Movimiento, Audio, Intel, Accesibilidad, Fondos y Sistema.
 - Los encabezados muestran la versión real instalada en vez de números escritos a mano.
@@ -77,6 +82,7 @@ SIEGE conserva algunas reglas de calidad que el build comprueba automáticamente
 
 - no inventar detalle mediante fake-HD;
 - no introducir fondos normales desde fuentes no verificadas;
+- distinguir explícitamente una captura oficial DVN de un tratamiento visual SIEGE;
 - `Tempest Jutcherson` permanece aislado como easter egg y no entra en la rotación normal;
 - Third Justice debe permanecer full-color y completo;
 - ninguna pista nueva se trata como instalada si el archivo preparado no existe;
@@ -100,6 +106,7 @@ Un PR no se considera listo sólo porque el código compile: también deben pasa
 
 ## Documentación actual
 
+- [Cambios de SIEGE 5.61](docs/CHANGELOG-5.61.0.md)
 - [Cambios de SIEGE 5.60](docs/CHANGELOG-5.60.0.md)
 - [Política/candidatos musicales de 5.60](docs/MUSIC-CANDIDATES-5.60.md)
 - [Reconstrucción y restricciones históricas](docs/RECONSTRUCTION.md)
