@@ -4,7 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** SIEGE 5.60 audiovisual room: installed media, approved additions and visual direction. */
+/** SIEGE 5.61 audiovisual room: installed media, scene provenance and visual direction. */
 public final class SiegeMediaRoomScreen extends Screen {
     private enum Mode { BUNDLED, MOODS, DVN_AUDIO, VISUALS }
 
@@ -123,7 +123,7 @@ public final class SiegeMediaRoomScreen extends Screen {
                 : label("ALEATORIO SIN REPETIR · FIJAR PISTA ACTUAL", "SHUFFLE WITHOUT REPEATS · PIN CURRENT TRACK");
     }
 
-    /** 5.60 presets deliberately affect only the scene; music remains under explicit player control. */
+    /** Presets deliberately affect only the scene; music remains under explicit player control. */
     private void initMoodControls() {
         var presets = SiegeMediaPresets.presets();
         if (presets.isEmpty()) return;
@@ -192,10 +192,13 @@ public final class SiegeMediaRoomScreen extends Screen {
         g.fill(x, y, x + Math.round(w * SiegeMusic.currentProgress()), y + 3, SiegeTheme.GOLD);
 
         int sceneY = contentY + 105;
-        int scene = SiegeBackgrounds.currentIndex(System.currentTimeMillis());
-        g.drawString(font, fit(label("ESCENA: ", "SCENE: ") + SiegeBackgrounds.name(scene, spanish())
-                + " · " + SiegeBackgrounds.sceneTag(scene, spanish()), w), x, sceneY, SiegeTheme.CYAN, false);
-        g.drawString(font, fit(SiegeBackgrounds.rotationState(spanish(), System.currentTimeMillis()), w),
+        long now = System.currentTimeMillis();
+        int scene = SiegeBackgrounds.currentIndex(now);
+        String sceneLine = label("ESCENA: ", "SCENE: ") + SiegeBackgrounds.name(scene, spanish())
+                + " · " + SiegeBackgrounds.sceneTag(scene, spanish())
+                + " · " + SiegeBackgrounds.sourceTag(scene, spanish());
+        g.drawString(font, fit(sceneLine, w), x, sceneY, SiegeTheme.CYAN, false);
+        g.drawString(font, fit(SiegeBackgrounds.rotationDetail(spanish(), now), w),
                 x, sceneY + 12, SiegeTheme.MUTED, false);
 
         int listY = contentY + 153;
@@ -247,8 +250,8 @@ public final class SiegeMediaRoomScreen extends Screen {
                 x, y, SiegeTheme.GOLD, false);
         y += 14;
         g.drawString(font, fit(label(
-                "Separa las pistas instaladas, las dos elecciones 5.60 aprobadas y otras referencias. Las aprobadas sólo aparecen en la playlist cuando existe su master preparado.",
-                "Separates installed tracks, the two approved 5.60 choices and other references. Approved additions enter the playlist only when a prepared master exists."), w),
+                "Separa las pistas instaladas, las incorporaciones aprobadas y otras referencias. Las opcionales sólo aparecen cuando existe su master preparado.",
+                "Separates installed tracks, approved additions and other references. Optional additions appear only when a prepared master exists."), w),
                 x, y, SiegeTheme.MUTED, false);
         y += 18;
         var tracks = SiegeMediaReferenceData.dvnTracks();
@@ -271,8 +274,8 @@ public final class SiegeMediaRoomScreen extends Screen {
         g.drawString(font, fit(label("DIRECCIÓN DE FONDOS DVN / SIEGE", "DVN / SIEGE BACKGROUND DIRECTION"), w), x, y, SiegeTheme.BLUE, false);
         y += 15;
         g.drawString(font, fit(label(
-                "Se distinguen las capturas oficiales de los tratamientos SIEGE generados desde fuentes verificadas.",
-                "Official captures are kept distinct from SIEGE treatments generated from verified sources."), w),
+                "Se distinguen las capturas oficiales, tratamientos SIEGE y escenas de archivo.",
+                "Official captures, SIEGE treatments and archive scenes stay explicitly distinct."), w),
                 x, y, SiegeTheme.MUTED, false);
         y += 20;
         var visuals = SiegeMediaReferenceData.visualReferences();
@@ -319,7 +322,7 @@ public final class SiegeMediaRoomScreen extends Screen {
             case BUNDLED -> label("ACTUAL", "CURRENT");
             case MOODS -> label("AMBI.", "MOODS");
             case DVN_AUDIO -> label("MÚSICA", "MUSIC");
-            case VISUALS -> "DVN BG";
+            case VISUALS -> "BG";
         };
     }
 
@@ -328,7 +331,7 @@ public final class SiegeMediaRoomScreen extends Screen {
             case BUNDLED -> label("ACTUAL", "CURRENT");
             case MOODS -> label("AMBIENTES", "MOODS");
             case DVN_AUDIO -> label("MÚSICA / REF.", "MUSIC / REF.");
-            case VISUALS -> label("FONDOS DVN", "DVN VISUALS");
+            case VISUALS -> label("FONDOS", "VISUALS");
         };
     }
 
