@@ -2,7 +2,7 @@
 """SIEGE 5.60 release contracts.
 
 5.60 removes the rejected generated music, accepts exactly two player-approved new
-songs when legitimate source masters are supplied, and makes adaptive background
+songs when legitimate source masters are supplied, and makes adaptive presentation
 settings real player-facing runtime controls.
 """
 from pathlib import Path
@@ -21,6 +21,7 @@ BACKGROUNDS = read("src/main/java/uy/santipdr/siege/client/SiegeBackgrounds.java
 SETTINGS = read("src/main/java/uy/santipdr/siege/client/SiegeSettingsScreen.java")
 MEDIA_ROOM = read("src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java")
 RUNTIME = read("src/main/java/uy/santipdr/siege/client/SiegeRuntimeStatus.java")
+TITLE = read("src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java")
 APPROVED = read("docs/MUSIC-CANDIDATES-5.60.md")
 WORKFLOW = read(".github/workflows/build.yml")
 
@@ -53,9 +54,15 @@ for constant, key, title in approved:
     assert title in APPROVED
 
 # Optional commercial tracks must never become broken/silent entries. They are visible
-# only when a prepared OGG exists in the built resources.
+# only when a prepared OGG exists in the built resources. A stale pin to an optional
+# track from another build must self-heal to shuffle.
 assert "hasPreparedAudio" in MUSIC
 assert '.filter(track -> track.required() || hasPreparedAudio(track.key()))' in MUSIC
+assert "private static void sanitizeSelection()" in MUSIC
+assert "SiegeConfig.selectedTrack >= TRACKS.size()" in MUSIC
+assert "SiegeConfig.selectedTrack = -1" in MUSIC
+assert "public static boolean shuffleEnabled()" in MUSIC
+assert "public static int pinnedTrackNumber()" in MUSIC
 assert "source master not supplied yet" in PREP
 assert "no descarga ni ripea audio" in APPROVED
 
@@ -102,19 +109,30 @@ assert "Math.max(w / (double)sourceW, h / (double)sourceH)" in BACKGROUNDS
 assert '" // SIEGE " + SiegeRuntimeStatus.version()' in SETTINGS
 assert "SIEGE 1.25" not in SETTINGS
 
+# The title interference slider now controls the actual effect rather than being a dead
+# setting. Accessibility still has hard priority over any visual signal effect.
+assert "SiegeConfig.interferenceIntensity" in TITLE
+assert "interference > 0" in TITLE
+assert "58 - Math.round(interference * 45.0F / 100.0F)" in TITLE
+assert "1 + Math.round(interference * 3.0F / 100.0F)" in TITLE
+assert "SiegeConfig.reducedMotion" in TITLE
+assert "SiegeConfig.reduceFlashes" in TITLE
+
 # Media Room exposes shuffle/pin state directly, reports the real runtime version and
 # never claims an approved optional master is already installed when it is absent.
 assert "togglePlaybackMode" in MEDIA_ROOM
 assert "PIN CURRENT TRACK" in MEDIA_ROOM
 assert "RETURN TO SHUFFLE" in MEDIA_ROOM
 assert "SiegeMusic.selectTrack(-1)" in MEDIA_ROOM
+assert "SiegeMusic.shuffleEnabled()" in MEDIA_ROOM
 assert 'label("SALA MULTIMEDIA", "MEDIA ROOM") + " // " + SiegeRuntimeStatus.version()' in MEDIA_ROOM
 assert "prepared master exists" in MEDIA_ROOM
 assert "MEDIA ROOM 5.60" not in MEDIA_ROOM
 
 # Command/diagnostic status must describe effective runtime state rather than only raw
-# config values: pinned/shuffle audio and motion overrides are visible to the player.
-assert 'SiegeConfig.selectedTrack < 0' in RUNTIME
+# config values: sanitized pin/shuffle audio and motion overrides are visible.
+assert "SiegeMusic.shuffleEnabled()" in RUNTIME
+assert "SiegeMusic.pinnedTrackNumber()" in RUNTIME
 assert 'spanish ? "ALEATORIO" : "SHUFFLE"' in RUNTIME
 assert 'spanish ? "FIJA " : "PINNED "' in RUNTIME
 assert "motionSuppressed" in RUNTIME
@@ -127,4 +145,4 @@ assert "python3 tests/test_release_560.py" in WORKFLOW
 assert "generate-stronghold-signal.py" not in WORKFLOW
 assert "generate-frontline-signal-550.py" not in WORKFLOW
 
-print("SIEGE 5.60 approved-music gate, adaptive controls, Media Room and runtime status passed")
+print("SIEGE 5.60 approved music gate, adaptive presentation, Media Room and runtime status passed")
