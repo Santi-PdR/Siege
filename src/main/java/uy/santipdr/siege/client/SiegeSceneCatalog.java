@@ -7,20 +7,22 @@ import java.util.stream.IntStream;
  * Authoritative metadata for every normal SIEGE menu scene.
  * Rendering, gallery labels, contrast bias, scheduling and CI all read the same table.
  *
- * SIEGE 5.50 keeps the six official DVN thumbnails at their native 768x432 and adds
- * three clearly-labelled SIEGE treatments generated from those verified sources:
- * Nucleus interference, Tesla breach and Stronghold red alert. No scene is fake-HD.
+ * SIEGE 5.61 keeps source provenance explicit: official DVN captures, SIEGE treatments
+ * generated from verified DVN sources, and older SIEGE archive scenes are never shown
+ * under the same source label. No scene is fake-HD.
  * Tempest Jutcherson is deliberately NOT part of this catalog: it remains an
  * easter-egg asset and cannot leak into normal rotation or the background gallery.
  */
 public final class SiegeSceneCatalog {
     public enum Kind { STANDARD, FEATURED, ANOMALY }
+    public enum Source { SIEGE_ARCHIVE, DVN_OFFICIAL, SIEGE_TREATMENT }
 
     public record Scene(String id, String es, String en, int width, int height,
-                        int darknessBias, Kind kind, boolean comfortEligible) {
+                        int darknessBias, Kind kind, Source source, boolean comfortEligible) {
         public Scene {
             if (id == null || id.isBlank()) throw new IllegalArgumentException("scene id");
             if (width <= 0 || height <= 0) throw new IllegalArgumentException("scene dimensions");
+            if (source == null) throw new IllegalArgumentException("scene source");
             darknessBias = Math.max(0, Math.min(30, darknessBias));
         }
         public String label(boolean spanish) { return spanish ? es : en; }
@@ -57,7 +59,7 @@ public final class SiegeSceneCatalog {
             compact("night_operation", "Operación nocturna", "Night Operation", 0),
             compact("urban_rendezvous", "Encuentro urbano", "Urban Rendezvous", 2),
             new Scene("rooftop_squad", "Escuadrón en azotea · Especial", "Rooftop Squad · Special",
-                    ROOFTOP_W, ROOFTOP_H, 3, Kind.FEATURED, true)
+                    ROOFTOP_W, ROOFTOP_H, 3, Kind.FEATURED, Source.SIEGE_ARCHIVE, true)
     );
 
     private static final List<Integer> STANDARD_INDICES = IntStream.range(0, SCENES.size())
@@ -67,21 +69,25 @@ public final class SiegeSceneCatalog {
     private SiegeSceneCatalog() { }
 
     private static Scene legacy(String id, String es, String en, int darknessBias) {
-        return new Scene(id, es, en, LEGACY_W, LEGACY_H, darknessBias, Kind.STANDARD, true);
+        return new Scene(id, es, en, LEGACY_W, LEGACY_H, darknessBias,
+                Kind.STANDARD, Source.SIEGE_ARCHIVE, true);
     }
 
     private static Scene compact(String id, String es, String en, int darknessBias) {
-        return new Scene(id, es, en, COMPACT_W, COMPACT_H, darknessBias, Kind.STANDARD, true);
+        return new Scene(id, es, en, COMPACT_W, COMPACT_H, darknessBias,
+                Kind.STANDARD, Source.SIEGE_ARCHIVE, true);
     }
 
     /** Official DVN thumbnails stay at their native 768x432 instead of being fake-upscaled. */
     private static Scene dvn(String id, String es, String en, int darknessBias) {
-        return new Scene(id, es, en, DVN_W, DVN_H, darknessBias, Kind.STANDARD, true);
+        return new Scene(id, es, en, DVN_W, DVN_H, darknessBias,
+                Kind.STANDARD, Source.DVN_OFFICIAL, true);
     }
 
     /** SIEGE treatments preserve the same native canvas and remain normal rotation scenes. */
     private static Scene generated(String id, String es, String en, int darknessBias) {
-        return new Scene(id, es, en, DVN_W, DVN_H, darknessBias, Kind.STANDARD, true);
+        return new Scene(id, es, en, DVN_W, DVN_H, darknessBias,
+                Kind.STANDARD, Source.SIEGE_TREATMENT, true);
     }
 
     public static int count() { return SCENES.size(); }
@@ -92,7 +98,15 @@ public final class SiegeSceneCatalog {
     public static int height(int index) { return get(index).height(); }
     public static int darknessBias(int index) { return get(index).darknessBias(); }
     public static Kind kind(int index) { return get(index).kind(); }
+    public static Source source(int index) { return get(index).source(); }
     public static boolean comfortEligible(int index) { return get(index).comfortEligible(); }
+    public static String sourceLabel(int index, boolean spanish) {
+        return switch (source(index)) {
+            case DVN_OFFICIAL -> spanish ? "DVN OFICIAL" : "OFFICIAL DVN";
+            case SIEGE_TREATMENT -> spanish ? "TRATAMIENTO SIEGE" : "SIEGE TREATMENT";
+            case SIEGE_ARCHIVE -> spanish ? "ARCHIVO SIEGE" : "SIEGE ARCHIVE";
+        };
+    }
     public static int anomalyIndex() { return indexOf(Kind.ANOMALY); }
     public static int featuredIndex() { return indexOf(Kind.FEATURED); }
     public static int standardCount() { return STANDARD_INDICES.size(); }

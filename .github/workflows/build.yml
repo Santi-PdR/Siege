@@ -86,6 +86,7 @@ jobs:
           python3 tests/test_release_540.py
           python3 tests/test_release_550.py
           python3 tests/test_release_560.py
+          python3 tests/test_release_561.py
 
       - name: Verify menu theme scope and drawing bounds
         run: |
@@ -102,10 +103,10 @@ jobs:
           javac -d build/theme-drawing tests/theme-stubs/net/minecraft/client/gui/GuiGraphics.java src/main/java/uy/santipdr/siege/client/SiegeTheme.java tests/MenuThemeDrawingTest.java
           java -cp build/theme-drawing MenuThemeDrawingTest
 
-      - name: Verify SIEGE 5.60 player-facing contracts
+      - name: Verify SIEGE 5.61 player-facing contracts
         shell: bash
         run: |
-          grep -q "version = '5.60.0'" build.gradle
+          grep -q "version = '5.61.0'" build.gradle
           grep -q 'class SiegeKnowledgeExpansion50' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeExpansion50.java
           grep -q 'class SiegeKnowledgeCorpus50' src/main/java/uy/santipdr/siege/client/SiegeKnowledgeCorpus50.java
           grep -q 'class SiegeKnowledgePlayer510' src/main/java/uy/santipdr/siege/client/SiegeKnowledgePlayer510.java
@@ -127,6 +128,7 @@ jobs:
           for scene in dvn_official_01 dvn_official_02 dvn_official_03 dvn_official_04 dvn_official_05 dvn_official_06 nucleus_interference tesla_breach stronghold_red_alert; do
             grep -q "$scene" src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
           done
+          grep -q 'enum Source { SIEGE_ARCHIVE, DVN_OFFICIAL, SIEGE_TREATMENT }' src/main/java/uy/santipdr/siege/client/SiegeSceneCatalog.java
           grep -q 'generate-siege-backgrounds-550.py' scripts/prepare-backgrounds-hd.py
           grep -q 'SiegeThirdJusticeVideo' src/main/java/uy/santipdr/siege/client/SiegeEvidenceReelScreen.java
           grep -q 'third_justice_full.mp4' scripts/prepare-third-justice-media.py

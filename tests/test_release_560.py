@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""SIEGE 5.60 release contracts.
+"""Durable SIEGE 5.60 release contracts kept across later 5.x releases.
 
 5.60 removes the rejected generated music, accepts exactly two player-approved new
 songs when legitimate source masters are supplied, and makes adaptive presentation
 settings real player-facing runtime controls.
 """
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 read = lambda p: (ROOT / p).read_text(encoding="utf-8")
@@ -27,7 +28,8 @@ SCENE_SCREEN = read("src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.jav
 APPROVED = read("docs/MUSIC-CANDIDATES-5.60.md")
 WORKFLOW = read(".github/workflows/build.yml")
 
-assert "version = '5.60.0'" in BUILD
+version = re.search(r"version = '5\.(\d+)\.0'", BUILD)
+assert version and int(version.group(1)) >= 60
 
 # Rejected 5.40/5.50 generated audio must not be active, registered or rebuilt.
 rejected_constants = ("STRONGHOLD_BLACK_SIGNAL", "NUCLEUS_SILENT_CARRIER", "TESLA_BREACH")
@@ -184,4 +186,4 @@ for old in (
 ):
     assert old not in WORKFLOW, old
 
-print("SIEGE 5.60 approved music gate, adaptive presentation, truthful diagnostics and modern CI passed")
+print("SIEGE 5.60 durable approved-music, adaptive-presentation and diagnostics contracts passed")

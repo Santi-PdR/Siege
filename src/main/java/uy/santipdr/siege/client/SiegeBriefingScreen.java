@@ -7,7 +7,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** SIEGE 5.40 newcomer path: current context first, then the systems a player needs. */
+/** Current newcomer path: front context first, then the systems a player needs. */
 public final class SiegeBriefingScreen extends Screen {
     private static final List<String> STEPS = List.of(
             "server-overview",
@@ -142,8 +142,8 @@ public final class SiegeBriefingScreen extends Screen {
 
         int x = panelX + 12;
         int headerW = Math.max(30, panelW - (compact ? 112 : 160));
-        g.drawString(font, fit(label("BRIEFING 5.40", "BRIEFING 5.40") + " // "
-                + SiegeRuntimeStatus.version(), headerW), x, panelY + 9, SiegeTheme.INK, false);
+        g.drawString(font, fit("BRIEFING // " + SiegeRuntimeStatus.version(), headerW),
+                x, panelY + 9, SiegeTheme.INK, false);
         g.drawString(font, fit(label(
                 "Primero entendé el frente, El Núcleo y Stronghold 5-5; después pasá a tu progresión.",
                 "Understand the front, the Nucleus and Stronghold 5-5 first; then move into your progression."), panelW - 24),
