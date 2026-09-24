@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Durable SIEGE 5.61 scene-intelligence contracts for later 5.x releases."""
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -59,7 +61,11 @@ assert "BRIEFING 5.40" not in BRIEFING
 assert '"tempest_jutcherson"' in EASTER
 assert '"tempest_jutcherson"' not in CATALOG
 
-# CI executes this durable gate.
+# CI executes this durable gate. While the workflow still has the 5.61 entry point,
+# later minor releases chain their own release gate from here as well.
 assert "python3 tests/test_release_561.py" in WORKFLOW
 
 print("Durable SIEGE 5.61 scene provenance, next-scene state and dynamic Briefing contracts passed")
+
+if (major, minor, patch) >= (5, 62, 0):
+    subprocess.run([sys.executable, str(ROOT / "tests/test_release_562.py")], check=True)
