@@ -46,6 +46,40 @@ public final class SceneScheduleTest {
             }
             check(featured == 6, "Six featured slots per 100");
         }
-        System.out.println("Scene schedule: shuffled bags, no easter-egg leakage, bounds and continuity passed");
+
+        // 5.62: featured inserts are interleaved, not substituted for standard scenes.
+        // Each start below maps to an exact shuffled-bag boundary in the compressed
+        // standard-only timeline. Thirty consecutive bags must remain complete even
+        // while featured scenes are inserted into the visible global schedule.
+        for (long globalStart : new long[]{-2596L, 0L, 2404L, 74000000L}) {
+            check(Math.floorMod(SiegeSceneSchedule.standardSlotOrdinal(globalStart), standardCount) == 0,
+                    "Test start must align to a compressed standard-bag boundary");
+            long slot = globalStart;
+            for (int bagNumber = 0; bagNumber < 30; bagNumber++) {
+                Set<Integer> bag = new HashSet<>();
+                int standardSeen = 0;
+                while (standardSeen < standardCount) {
+                    if (!SiegeSceneSchedule.isFeaturedSlot(slot)) {
+                        int current = SiegeSceneSchedule.index(slot, true);
+                        check(current != featuredIndex, "Featured scene leaked into compressed standard bag");
+                        check(bag.add(current), "Featured insertion skipped/repeated a standard scene");
+                        standardSeen++;
+                    }
+                    slot++;
+                }
+                check(bag.size() == standardCount, "Compressed standard bag did not cover every scene");
+            }
+        }
+
+        // Ordinals remain contiguous across the featured phase itself, including
+        // negative slots where floorDiv/floorMod behavior is easy to get wrong.
+        check(SiegeSceneSchedule.standardSlotOrdinal(7) == 7, "Pre-feature ordinal drift");
+        check(SiegeSceneSchedule.standardSlotOrdinal(9) == 8, "Post-feature ordinal must compress phase 8");
+        check(SiegeSceneSchedule.isFeaturedSlot(8), "Phase 8 should be featured");
+        check(SiegeSceneSchedule.isFeaturedSlot(-2), "Negative phase 98 should be featured");
+        check(SiegeSceneSchedule.standardSlotOrdinal(-3) == -2, "Negative pre-feature compression drift");
+        check(SiegeSceneSchedule.standardSlotOrdinal(-1) == -1, "Negative post-feature compression drift");
+
+        System.out.println("Scene schedule: complete shuffled bags survive featured inserts; bounds and continuity passed");
     }
 }

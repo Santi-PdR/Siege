@@ -8,12 +8,13 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** SIEGE 5.00 Operations: a small set of useful routes instead of a wall of tools. */
+/** Focused Operations hub: useful routes plus a persistent in-session search context. */
 public final class SiegeOperationsHubScreen extends Screen {
     private final Screen parent;
     private final List<SiegeButton> resultButtons = new ArrayList<>();
     private List<SiegeOperationsIndex.Entry> results = List.of();
     private SiegeCommandNetwork.Lane lane = SiegeCommandNetwork.Lane.DEPLOYMENT;
+    private String searchQuery = "";
     private EditBox searchBox;
     private int panelX, panelY, panelW, panelH;
     private int laneTop, routeTop, routeButtonH, routeGap;
@@ -89,7 +90,13 @@ public final class SiegeOperationsHubScreen extends Screen {
         searchBox.setHint(Component.literal(label(
                 "Raza, Trial, Executor, unidad, reliquia o tema…",
                 "Race, Trial, Executor, unit, relic or topic…")));
-        searchBox.setResponder(value -> refreshResults());
+        // Keep the current query when switching lanes, resizing the GUI or returning
+        // from a dossier. The hub is a workspace, not a disposable search box.
+        searchBox.setValue(searchQuery);
+        searchBox.setResponder(value -> {
+            searchQuery = value;
+            refreshResults();
+        });
         addRenderableWidget(searchBox);
 
         resultsY = searchY + 25;

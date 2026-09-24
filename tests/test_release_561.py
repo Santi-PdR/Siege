@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""SIEGE 5.61 scene-intelligence release contracts."""
+"""Durable SIEGE 5.61 scene-intelligence contracts for later 5.x releases."""
+import re
+import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,7 +18,10 @@ BRIEFING = read("src/main/java/uy/santipdr/siege/client/SiegeBriefingScreen.java
 EASTER = read("src/main/java/uy/santipdr/siege/client/SiegeEasterEggVault.java")
 WORKFLOW = read(".github/workflows/build.yml")
 
-assert "version = '5.61.0'" in BUILD
+match = re.search(r"^version\s*=\s*'([0-9]+)\.([0-9]+)\.([0-9]+)'", BUILD, re.MULTILINE)
+assert match
+major, minor, patch = map(int, match.groups())
+assert (major, minor, patch) >= (5, 61, 0)
 
 # Scene provenance is explicit and shared by every surface instead of inferred from names.
 assert "enum Source { SIEGE_ARCHIVE, DVN_OFFICIAL, SIEGE_TREATMENT }" in CATALOG
@@ -31,7 +37,7 @@ for scene in (
 for scene in ("nucleus_interference", "tesla_breach", "stronghold_red_alert"):
     assert f'generated("{scene}"' in CATALOG
 
-# Rotation exposes current/next state without changing the deterministic schedule.
+# Rotation exposes current/next state without changing the provenance model.
 for symbol in ("public static int nextIndex(long now)", "public static float rotationProgress(long now)",
                "public static String rotationDetail(boolean spanish, long now)",
                "public static String sourceTag(int index, boolean spanish)"):
@@ -55,7 +61,11 @@ assert "BRIEFING 5.40" not in BRIEFING
 assert '"tempest_jutcherson"' in EASTER
 assert '"tempest_jutcherson"' not in CATALOG
 
-# CI executes this release gate and no later release is allowed to silently remove it.
+# CI executes this durable gate. While the workflow still has the 5.61 entry point,
+# later minor releases chain their own release gate from here as well.
 assert "python3 tests/test_release_561.py" in WORKFLOW
 
-print("SIEGE 5.61 scene provenance, next-scene state, dynamic Briefing version and gallery/media integration passed")
+print("Durable SIEGE 5.61 scene provenance, next-scene state and dynamic Briefing contracts passed")
+
+if (major, minor, patch) >= (5, 62, 0):
+    subprocess.run([sys.executable, str(ROOT / "tests/test_release_562.py")], check=True)
