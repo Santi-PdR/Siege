@@ -69,6 +69,26 @@ public final class SiegeMusic {
                 .getResource("assets/siege/sounds/music/" + key + ".ogg") != null;
     }
 
+    /**
+     * A pinned optional track may disappear between builds when its commercial master
+     * is not supplied. Heal that persisted selection back to shuffle instead of leaving
+     * the UI claiming that a non-existent track is pinned.
+     */
+    private static void sanitizeSelection() {
+        if (SiegeConfig.selectedTrack >= TRACKS.size()) {
+            SiegeConfig.selectedTrack = -1;
+            SiegeConfig.save();
+        }
+    }
+
+    public static boolean shuffleEnabled() {
+        return SiegeConfig.selectedTrack < 0 || SiegeConfig.selectedTrack >= TRACKS.size();
+    }
+
+    public static int pinnedTrackNumber() {
+        return shuffleEnabled() ? 0 : SiegeConfig.selectedTrack + 1;
+    }
+
     public static void tick() {
         if (!shouldPlay()) {
             stop();
@@ -135,6 +155,7 @@ public final class SiegeMusic {
     }
 
     public static void ensurePlaying() {
+        sanitizeSelection();
         if (!shouldPlay()) {
             stop();
             return;
@@ -150,6 +171,7 @@ public final class SiegeMusic {
     }
 
     public static void nextTrack() {
+        sanitizeSelection();
         requestedNext = -1;
         if (SiegeConfig.selectedTrack >= 0 && !TRACKS.isEmpty()) {
             SiegeConfig.selectedTrack = (SiegeConfig.selectedTrack + 1) % TRACKS.size();
@@ -168,6 +190,7 @@ public final class SiegeMusic {
     }
 
     public static void previousTrack() {
+        sanitizeSelection();
         if (TRACKS.isEmpty()) return;
         int fallback = previous < 0 ? 0 : Math.floorMod(previous - 1, TRACKS.size());
         requestedNext = beforePrevious >= 0 ? beforePrevious : fallback;
@@ -287,6 +310,7 @@ public final class SiegeMusic {
     }
 
     private static void startNext(boolean fadeIn) {
+        sanitizeSelection();
         if (!shouldPlay() || TRACKS.isEmpty()) return;
         int next;
         if (requestedNext >= 0 && requestedNext < TRACKS.size()) {
