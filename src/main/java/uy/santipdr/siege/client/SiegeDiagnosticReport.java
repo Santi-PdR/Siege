@@ -57,14 +57,26 @@ public final class SiegeDiagnosticReport {
                 "El estado coincide con la preferencia actual.", "State matches the current preference.",
                 "Sin acción necesaria.", "No action required.", Severity.OK, Recovery.NONE));
 
-        boolean flashConflict = SiegeConfig.reduceFlashes
-                && (SiegeConfig.titleInterference || SiegeConfig.interferenceIntensity > 0);
-        if (flashConflict) out.add(e("VIS", spanish, "EFECTOS VISUALES", "VISUAL EFFECTS",
-                "Reducción de destellos y la interferencia están en conflicto.", "Flash reduction conflicts with interference.",
-                "Puede producir cambios de luminancia que contradicen la preferencia de accesibilidad.",
-                "It can produce luminance changes that contradict the accessibility preference.",
-                "Desactivá la interferencia y llevá su intensidad a 0%.", "Disable interference and set its intensity to 0%.",
-                Severity.WARNING, Recovery.DISABLE_INTERFERENCE));
+        // Reduce Flashes is an override, not a conflict: the renderer deliberately
+        // suppresses title interference while the safeguard is active. Reporting that
+        // state as a warning made diagnostics contradict the actual runtime behavior.
+        boolean interferenceConfigured = SiegeConfig.titleInterference && SiegeConfig.interferenceIntensity > 0;
+        if (SiegeConfig.reduceFlashes && interferenceConfigured) out.add(e("VIS", spanish,
+                "EFECTOS VISUALES", "VISUAL EFFECTS",
+                "INTERFERENCIA SUPRIMIDA POR ACCESIBILIDAD", "INTERFERENCE SUPPRESSED BY ACCESSIBILITY",
+                "Reducir destellos tiene prioridad y evita que la interferencia del título se dibuje.",
+                "Reduce Flashes has priority and prevents title interference from being rendered.",
+                "Sin acción necesaria; desactivá Reducir destellos sólo si querés recuperar el efecto.",
+                "No action required; disable Reduce Flashes only if you want the effect back.",
+                Severity.OK, Recovery.NONE));
+        else if (SiegeConfig.titleInterference && SiegeConfig.interferenceIntensity == 0) out.add(e("VIS", spanish,
+                "EFECTOS VISUALES", "VISUAL EFFECTS",
+                "INTERFERENCIA ACTIVA CON INTENSIDAD 0%", "INTERFERENCE ENABLED AT 0% INTENSITY",
+                "El interruptor está activo, pero el renderer no dibuja el efecto a intensidad cero.",
+                "The toggle is enabled, but the renderer draws no effect at zero intensity.",
+                "Subí la intensidad o desactivá el interruptor para que la configuración sea más clara.",
+                "Raise the intensity or disable the toggle to make the configuration clearer.",
+                Severity.NOTICE, Recovery.NONE));
         else out.add(e("VIS", spanish, "EFECTOS VISUALES", "VISUAL EFFECTS",
                 "EFECTOS COHERENTES", "EFFECTS COHERENT",
                 "No hay conflicto entre movimiento, destellos e interferencia.", "Motion, flash and interference settings do not conflict.",
