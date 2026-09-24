@@ -11,7 +11,7 @@ import net.minecraft.client.gui.screens.OptionsScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/** SIEGE 1.25 settings: seven clear domains and one responsive control language. */
+/** SIEGE 5.60 settings: seven clear domains and one responsive control language. */
 public final class SiegeSettingsScreen extends Screen {
     private static final int ACCENT = 0xFFE54852;
     private static final int GOLD = 0xFFD6AE65;
@@ -114,6 +114,7 @@ public final class SiegeSettingsScreen extends Screen {
 
     private void buildSectionControls() {
         int h = compact ? 20 : 22;
+        int sliderH = compact ? 26 : 30;
         int gap = compact ? 5 : 6;
         int y = 0;
         switch (section) {
@@ -121,11 +122,11 @@ public final class SiegeSettingsScreen extends Screen {
                 add(graphicsButton(h), y); y += h + gap;
                 add(toggle(label("MOSTRAR BUILD", "SHOW BUILD LABEL"), () -> SiegeConfig.showBuildLabel,
                         () -> SiegeConfig.showBuildLabel = !SiegeConfig.showBuildLabel, SiegeTheme.RED, h), y); y += h + gap;
-                add(new SiegeSlider(0, 0, 100, compact ? 26 : 30,
+                add(new SiegeSlider(0, 0, 100, sliderH,
                         Component.literal(label("OSCURIDAD DEL PANEL", "PANEL DARKNESS")),
                         Math.round((SiegeConfig.panelDarkness - 20) * 100.0F / 70.0F),
                         p -> SiegeConfig.panelDarkness = 20 + Math.round(p * 70.0F / 100.0F))
-                        .withValueText(p -> (20 + Math.round(p * 70.0F / 100.0F)) + "%"), y); y += (compact ? 26 : 30) + gap;
+                        .withValueText(p -> (20 + Math.round(p * 70.0F / 100.0F)) + "%"), y); y += sliderH + gap;
                 add(profileButton(SiegeClientProfile.Profile.CINEMATIC, h), y); y += h + gap;
                 add(profileButton(SiegeClientProfile.Profile.TACTICAL, h), y); y += h + gap;
                 add(profileButton(SiegeClientProfile.Profile.PERFORMANCE, h), y); y += h + gap;
@@ -139,17 +140,17 @@ public final class SiegeSettingsScreen extends Screen {
                         () -> SiegeConfig.reduceFlashes = !SiegeConfig.reduceFlashes, SiegeTheme.GREEN, h), y); y += h + gap;
                 add(toggle(label("INTERFERENCIA DEL TÍTULO", "TITLE INTERFERENCE"), () -> SiegeConfig.titleInterference,
                         () -> SiegeConfig.titleInterference = !SiegeConfig.titleInterference, SiegeTheme.RED, h), y); y += h + gap;
-                add(new SiegeSlider(0, 0, 100, compact ? 26 : 30,
+                add(new SiegeSlider(0, 0, 100, sliderH,
                         Component.literal(label("INTENSIDAD DE INTERFERENCIA", "INTERFERENCE INTENSITY")),
                         SiegeConfig.interferenceIntensity, p -> SiegeConfig.interferenceIntensity = p)
-                        .withValueText(p -> p + "%"), y); y += (compact ? 26 : 30) + gap;
+                        .withValueText(p -> p + "%"), y); y += sliderH + gap;
             }
             case AUDIO -> {
                 add(toggle(label("MÚSICA", "MUSIC"), () -> SiegeConfig.music,
                         () -> SiegeConfig.music = !SiegeConfig.music, GOLD, h), y); y += h + gap;
-                add(new SiegeSlider(0, 0, 100, compact ? 26 : 30,
+                add(new SiegeSlider(0, 0, 100, sliderH,
                         Component.literal(label("VOLUMEN DE MÚSICA", "MUSIC VOLUME")), SiegeConfig.musicVolume,
-                        SiegeMusic::setVolumeLive).withAccent(GOLD), y); y += (compact ? 26 : 30) + gap;
+                        SiegeMusic::setVolumeLive).withAccent(GOLD), y); y += sliderH + gap;
                 int third = Math.max(46, (contentWidth - gap * 2) / 3);
                 SiegeButton prev = new SiegeButton(0, 0, third, h, Component.literal("← " + label("ANT.", "PREV")), b -> { SiegeMusic.previousTrack(); SiegeUiSounds.nextTrack(); }, GOLD).setCompactCenter(true);
                 SiegeButton restart = new SiegeButton(0, 0, third, h, Component.literal(label("REINICIAR", "RESTART")), b -> { SiegeMusic.restartTrack(); SiegeUiSounds.confirm(); }, GOLD).setCompactCenter(true);
@@ -157,11 +158,11 @@ public final class SiegeSettingsScreen extends Screen {
                 addRow(List.of(prev, restart, next), y, gap); y += h + gap;
                 add(toggle(label("AVISO DE NUEVA PISTA", "NEW TRACK NOTICE"), () -> SiegeConfig.trackAnnouncements,
                         () -> SiegeConfig.trackAnnouncements = !SiegeConfig.trackAnnouncements, GOLD, h), y); y += h + gap;
-                add(new SiegeSlider(0, 0, 100, compact ? 26 : 30,
+                add(new SiegeSlider(0, 0, 100, sliderH,
                         Component.literal(label("DURACIÓN DEL AVISO", "NOTICE DURATION")),
                         Math.round((SiegeConfig.trackNoticeSeconds - 3) * 100.0F / 12.0F),
                         p -> SiegeConfig.trackNoticeSeconds = 3 + Math.round(p * 12.0F / 100.0F))
-                        .withAccent(GOLD).withValueText(p -> (3 + Math.round(p * 12.0F / 100.0F)) + "s"), y); y += (compact ? 26 : 30) + gap;
+                        .withAccent(GOLD).withValueText(p -> (3 + Math.round(p * 12.0F / 100.0F)) + "s"), y); y += sliderH + gap;
                 shuffleButton = new SiegeButton(0, 0, contentWidth, h, Component.literal(label("ORDEN ALEATORIO SIN REPETIR", "SHUFFLE WITHOUT REPEATS")),
                         b -> { SiegeMusic.selectTrack(-1); SiegeUiSounds.confirm(); refreshMusicStates(); }, GOLD).withIcon("music");
                 add(shuffleButton, y); y += h + gap;
@@ -174,9 +175,9 @@ public final class SiegeSettingsScreen extends Screen {
                 }
                 add(toggle(label("SONIDOS DE INTERFAZ", "UI SOUNDS"), () -> SiegeConfig.uiSounds,
                         () -> SiegeConfig.uiSounds = !SiegeConfig.uiSounds, SiegeTheme.CYAN, h), y); y += h + gap;
-                add(new SiegeSlider(0, 0, 100, compact ? 26 : 30,
+                add(new SiegeSlider(0, 0, 100, sliderH,
                         Component.literal(label("VOLUMEN UI", "UI VOLUME")), SiegeConfig.uiVolume,
-                        p -> SiegeConfig.uiVolume = p).withAccent(SiegeTheme.CYAN), y); y += (compact ? 26 : 30) + gap;
+                        p -> SiegeConfig.uiVolume = p).withAccent(SiegeTheme.CYAN), y); y += sliderH + gap;
                 add(toggle(label("SONIDO AL SEÑALAR", "HOVER SOUND"), () -> SiegeConfig.hoverSounds,
                         () -> SiegeConfig.hoverSounds = !SiegeConfig.hoverSounds, SiegeTheme.CYAN, h), y); y += h + gap;
             }
@@ -217,17 +218,32 @@ public final class SiegeSettingsScreen extends Screen {
             case BACKGROUNDS -> {
                 add(toggle(label("FONDOS ANIMADOS", "ANIMATED BACKGROUNDS"), () -> SiegeConfig.animatedBackgrounds,
                         () -> SiegeConfig.animatedBackgrounds = !SiegeConfig.animatedBackgrounds, SiegeTheme.BLUE, h), y); y += h + gap;
-                add(new SiegeSlider(0, 0, 100, compact ? 26 : 30,
+                add(new SiegeSlider(0, 0, 100, sliderH,
+                        Component.literal(label("MOVIMIENTO DEL FONDO", "BACKGROUND MOTION")),
+                        SiegeConfig.backgroundMotionIntensity,
+                        p -> SiegeConfig.backgroundMotionIntensity = p)
+                        .withAccent(SiegeTheme.CYAN).withValueText(p -> p + "%"), y); y += sliderH + gap;
+                add(new SiegeSlider(0, 0, 100, sliderH,
+                        Component.literal(label("DURACIÓN DE ESCENA", "SCENE DURATION")),
+                        Math.round((SiegeConfig.backgroundSceneSeconds - 12) * 100.0F / 48.0F),
+                        p -> SiegeConfig.backgroundSceneSeconds = 12 + Math.round(p * 48.0F / 100.0F))
+                        .withAccent(SiegeTheme.BLUE).withValueText(p -> (12 + Math.round(p * 48.0F / 100.0F)) + "s"), y); y += sliderH + gap;
+                add(new SiegeSlider(0, 0, 100, sliderH,
+                        Component.literal(label("FUNDIDO ENTRE ESCENAS", "SCENE CROSSFADE")),
+                        SiegeConfig.backgroundCrossfadeSeconds * 10,
+                        p -> SiegeConfig.backgroundCrossfadeSeconds = Math.round(p * 10.0F / 100.0F))
+                        .withAccent(SiegeTheme.CYAN).withValueText(p -> Math.round(p * 10.0F / 100.0F) + "s"), y); y += sliderH + gap;
+                add(new SiegeSlider(0, 0, 100, sliderH,
                         Component.literal(label("OSCURIDAD DEL FONDO", "BACKGROUND DARKNESS")),
                         Math.round(SiegeConfig.backgroundDarkness * 100.0F / 70.0F),
                         p -> SiegeConfig.backgroundDarkness = Math.round(p * 70.0F / 100.0F))
-                        .withAccent(SiegeTheme.BLUE).withValueText(p -> Math.round(p * 70.0F / 100.0F) + "%"), y); y += (compact ? 26 : 30) + gap;
+                        .withAccent(SiegeTheme.BLUE).withValueText(p -> Math.round(p * 70.0F / 100.0F) + "%"), y); y += sliderH + gap;
                 add(toggle(label("LÍNEAS DE ESCANEO", "SCANLINES"), () -> SiegeConfig.scanlines,
                         () -> { SiegeConfig.scanlines = !SiegeConfig.scanlines; if (SiegeConfig.scanlines && SiegeConfig.scanlineIntensity == 0) SiegeConfig.scanlineIntensity = 45; }, SiegeTheme.BLUE, h), y); y += h + gap;
-                add(new SiegeSlider(0, 0, 100, compact ? 26 : 30,
+                add(new SiegeSlider(0, 0, 100, sliderH,
                         Component.literal(label("INTENSIDAD DE SCANLINES", "SCANLINE INTENSITY")), SiegeConfig.scanlineIntensity,
                         p -> { SiegeConfig.scanlineIntensity = p; SiegeConfig.scanlines = p > 0; })
-                        .withAccent(SiegeTheme.BLUE), y); y += (compact ? 26 : 30) + gap;
+                        .withAccent(SiegeTheme.BLUE), y); y += sliderH + gap;
                 add(new SiegeButton(0, 0, contentWidth, h, Component.literal(label("GALERÍA DE FONDOS", "BACKGROUND GALLERY")),
                         b -> { SECTION_SCROLL.put(section, scrollOffset); SiegeUiSounds.confirm(); minecraft.setScreen(new SiegeSceneScreen(this)); }, SiegeTheme.BLUE)
                         .withIcon("image"), y); y += h + gap;
@@ -441,6 +457,15 @@ public final class SiegeSettingsScreen extends Screen {
         if (text.contains("INTERFERENCIA") || text.contains("INTERFERENCE")) return label(
                 "Controla el efecto de señal del título. Reducir destellos tiene prioridad.",
                 "Controls the title signal effect. Reduce Flashes takes priority.");
+        if (text.contains("MOVIMIENTO DEL FONDO") || text.contains("BACKGROUND MOTION")) return label(
+                "Define cuánto se desplazan lentamente las escenas. Movimiento reducido y Rendimiento lo anulan.",
+                "Sets how much scenes drift slowly. Reduced Motion and Performance override it.");
+        if (text.contains("DURACIÓN DE ESCENA") || text.contains("SCENE DURATION")) return label(
+                "Tiempo que una escena permanece activa antes de pasar a la siguiente.",
+                "How long a scene remains active before rotating to the next one.");
+        if (text.contains("FUNDIDO") || text.contains("CROSSFADE")) return label(
+                "Duración de la transición entre fondos. En 0 s el cambio es inmediato.",
+                "Duration of the transition between scenes. At 0 s the change is immediate.");
         if (text.contains("SCAN") || text.contains("ESCANEO")) return label(
                 "Líneas discretas sobre el fondo; Rendimiento las desactiva.", "Subtle lines over the background; Performance disables them.");
         if (text.contains("CONTRASTE") || text.contains("CONTRAST")) return label(
@@ -477,7 +502,7 @@ public final class SiegeSettingsScreen extends Screen {
         };
     }
 
-    private String sectionTitle(Section value) { return sectionLabel(value) + " // SIEGE 1.25"; }
+    private String sectionTitle(Section value) { return sectionLabel(value) + " // SIEGE " + SiegeRuntimeStatus.version(); }
 
     private String sectionDescription(Section value) {
         return switch (value) {
@@ -486,7 +511,8 @@ public final class SiegeSettingsScreen extends Screen {
             case AUDIO -> label("Música, transiciones, avisos y sonidos UI.", "Music, transitions, notices and UI sounds.");
             case INTEL -> label("Lectura, dossier y rotación de expedientes.", "Reading, dossier and file rotation.");
             case ACCESSIBILITY -> label("Contraste, destellos y perfiles de confort.", "Contrast, flashes and comfort profiles.");
-            case BACKGROUNDS -> label("Escena, oscuridad, scanlines y galería.", "Scene, darkness, scanlines and gallery.");
+            case BACKGROUNDS -> label("Escena, movimiento, tiempos, oscuridad, scanlines y galería.",
+                    "Scene, motion, timing, darkness, scanlines and gallery.");
             case SYSTEM -> label("Comando, diagnóstico, opciones nativas y recuperación.", "Command, diagnostics, native options and recovery.");
         };
     }
