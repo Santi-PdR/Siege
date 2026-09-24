@@ -104,7 +104,7 @@ public final class SiegeMediaRoomScreen extends Screen {
     }
 
     private void togglePlaybackMode() {
-        if (SiegeConfig.selectedTrack >= 0) {
+        if (!SiegeMusic.shuffleEnabled()) {
             SiegeMusic.selectTrack(-1);
         } else if (!SiegeMusic.trackNames().isEmpty()) {
             int current = SiegeMusic.currentTrackNumber() - 1;
@@ -115,7 +115,7 @@ public final class SiegeMediaRoomScreen extends Screen {
     }
 
     private String playbackModeLabel() {
-        if (SiegeConfig.selectedTrack >= 0) {
+        if (!SiegeMusic.shuffleEnabled()) {
             return compact ? label("VOLVER A ALEATORIO", "RETURN TO SHUFFLE")
                     : label("PISTA FIJA · VOLVER A ALEATORIO", "PINNED TRACK · RETURN TO SHUFFLE");
         }
