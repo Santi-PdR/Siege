@@ -3,19 +3,23 @@ package uy.santipdr.siege.client;
 /** Stable slot selection shared by the displayed scene and its incoming crossfade. */
 public final class SiegeSceneSchedule {
     public static final int COUNT = SiegeSceneCatalog.count();
+    private static final int[] FEATURED_PHASES = {8, 26, 44, 62, 80, 98};
+
     private SiegeSceneSchedule() { }
 
     public static int index(long slot, boolean surprises) {
         int phase = (int)Math.floorMod(slot, 100L);
         int featured = SiegeSceneCatalog.featuredIndex();
 
-        // 2.50 keeps the actual menu rotation clean. Easter-egg art is not part
-        // of SiegeSceneCatalog, so the surprise flag no longer changes menu art.
-        // The parameter remains for binary/source compatibility with callers.
-        if (featured >= 0 && (phase == 8 || phase == 26 || phase == 44 || phase == 62 || phase == 80 || phase == 98))
-            return featured;
+        // Easter-egg art remains outside SiegeSceneCatalog. Featured art is a normal,
+        // explicitly catalogued scene inserted at six stable phases per 100 slots.
+        // The surprise flag remains for binary/source compatibility with callers.
+        if (featured >= 0 && isFeaturedPhase(phase)) return featured;
 
-        return standardIndex(slot);
+        // Featured inserts must not consume a standard-scene position. Compress the
+        // global slot timeline into a contiguous standard-only ordinal before feeding
+        // the shuffled bag, otherwise every insert silently skips one normal scene.
+        return standardIndex(standardSlotOrdinal(slot));
     }
 
     /**
@@ -33,6 +37,29 @@ public final class SiegeSceneSchedule {
         int offset = (int)Math.floorMod(cycle * shift, count);
         int ordinal = Math.floorMod(offset + position * step, count);
         return SiegeSceneCatalog.standardIndex(ordinal);
+    }
+
+    /** Number of standard-scene positions reached before/at a non-featured slot. */
+    public static long standardSlotOrdinal(long slot) {
+        long hundredBlock = Math.floorDiv(slot, 100L);
+        int phase = (int)Math.floorMod(slot, 100L);
+        long featuredBefore = hundredBlock * FEATURED_PHASES.length;
+        for (int featuredPhase : FEATURED_PHASES) {
+            if (featuredPhase >= phase) break;
+            featuredBefore++;
+        }
+        return slot - featuredBefore;
+    }
+
+    public static boolean isFeaturedSlot(long slot) {
+        return SiegeSceneCatalog.featuredIndex() >= 0 && isFeaturedPhase((int)Math.floorMod(slot, 100L));
+    }
+
+    private static boolean isFeaturedPhase(int phase) {
+        for (int featuredPhase : FEATURED_PHASES) {
+            if (phase == featuredPhase) return true;
+        }
+        return false;
     }
 
     private static int permutationStep(int count) {
