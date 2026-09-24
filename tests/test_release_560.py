@@ -22,6 +22,7 @@ SETTINGS = read("src/main/java/uy/santipdr/siege/client/SiegeSettingsScreen.java
 MEDIA_ROOM = read("src/main/java/uy/santipdr/siege/client/SiegeMediaRoomScreen.java")
 RUNTIME = read("src/main/java/uy/santipdr/siege/client/SiegeRuntimeStatus.java")
 TITLE = read("src/main/java/uy/santipdr/siege/client/SiegeTitleScreen.java")
+SCENE_SCREEN = read("src/main/java/uy/santipdr/siege/client/SiegeSceneScreen.java")
 APPROVED = read("docs/MUSIC-CANDIDATES-5.60.md")
 WORKFLOW = read(".github/workflows/build.yml")
 
@@ -109,6 +110,13 @@ assert "Math.max(w / (double)sourceW, h / (double)sourceH)" in BACKGROUNDS
 assert '" // SIEGE " + SiegeRuntimeStatus.version()' in SETTINGS
 assert "SIEGE 1.25" not in SETTINGS
 
+# Gallery "contrast" is a real menu preview: it must use scene bias + auto/high
+# contrast through the same effective-darkness path used by the main renderer.
+assert "SiegeBackgrounds.effectiveBackgroundDarkness(index)" in SCENE_SCREEN
+assert "SiegeBackgrounds.panelFraction" in SCENE_SCREEN
+assert "SiegeBackgrounds.sceneTag(tile.scene, spanish())" in SCENE_SCREEN
+assert "SiegeBackgrounds.sceneTag(index, spanish())" in SCENE_SCREEN
+
 # The title interference slider now controls the actual effect rather than being a dead
 # setting. Accessibility still has hard priority over any visual signal effect.
 assert "SiegeConfig.interferenceIntensity" in TITLE
@@ -145,4 +153,4 @@ assert "python3 tests/test_release_560.py" in WORKFLOW
 assert "generate-stronghold-signal.py" not in WORKFLOW
 assert "generate-frontline-signal-550.py" not in WORKFLOW
 
-print("SIEGE 5.60 approved music gate, adaptive presentation, Media Room and runtime status passed")
+print("SIEGE 5.60 approved music gate, adaptive presentation, truthful gallery and runtime status passed")
