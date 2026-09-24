@@ -20,11 +20,23 @@ Esto conserva:
 - todos los fondos estándar antes de repetir una bolsa completa;
 - comportamiento correcto también con índices negativos, usado por las pruebas de continuidad.
 
+## Operaciones conserva el contexto
+
+El Centro de Operaciones ahora se comporta como un espacio de trabajo continuo durante la sesión. La búsqueda que estés usando queda guardada en la propia pantalla y se restaura cuando la interfaz reconstruye sus controles.
+
+Esto evita perder el texto al:
+
+- cambiar entre las áreas de Despliegue, Inteligencia y Referencia;
+- redimensionar la ventana o cambiar una escala que obligue a reconstruir la pantalla;
+- abrir un dossier Intel o una ficha de conocimiento y volver a Operaciones.
+
+La consulta no se guarda permanentemente en disco: es contexto de navegación de esa sesión/pantalla, por lo que tampoco contamina las preferencias del cliente.
+
 ## Pruebas
 
 `SceneScheduleTest` ahora recorre múltiples bloques positivos, negativos y muy alejados del origen. Además de comprobar los seis slots destacados, junta grupos completos de escenas no destacadas y exige que cada grupo contenga todos los fondos estándar exactamente una vez.
 
-Se agrega `test_release_562.py` para proteger la compresión de slots, la continuidad de Scene Intelligence 5.61 y el aislamiento de `Tempest Jutcherson`.
+`test_release_562.py` protege la compresión de slots, la continuidad de Scene Intelligence 5.61, el aislamiento de `Tempest Jutcherson` y la persistencia de búsqueda de Operaciones.
 
 El contrato durable de 5.61 pasa a aceptar versiones posteriores y, durante la transición del workflow, ejecuta automáticamente el gate 5.62 cuando detecta una versión `5.62.0` o superior.
 
