@@ -142,19 +142,29 @@ public final class SiegeTitleScreen extends Screen {
         g.drawString(font, main, 0, 0, 0xFFF0EDEA, false);
         g.pose().popPose();
 
+        int interference = Math.max(0, Math.min(100, SiegeConfig.interferenceIntensity));
         if (SiegeConfig.titleInterference && SiegeConfig.menuEffects && !SiegeConfig.reducedMotion && !SiegeConfig.reduceFlashes
-                && (System.currentTimeMillis() / 110L) % 43 < 3) {
+                && interference > 0) {
             long phase = System.currentTimeMillis() / 110L;
-            int sliceWidth = Math.max(16, mainWidth / 7);
-            int sliceX = x + (int) ((phase * 37L) % Math.max(1, mainWidth - sliceWidth));
-            int sliceY = y + 4 + (int) ((phase * 5L) % Math.max(5, Math.round(7 * scale)));
-            g.enableScissor(sliceX, sliceY, sliceX + sliceWidth, sliceY + 2);
-            g.pose().pushPose();
-            g.pose().translate(x + ((phase & 1L) == 0L ? 2 : -2), y, 0.0F);
-            g.pose().scale(scale, scale, 1.0F);
-            g.drawString(font, main, 0, 0, 0xFFE54852, false);
-            g.pose().popPose();
-            g.disableScissor();
+            int cycle = Math.max(13, 58 - Math.round(interference * 45.0F / 100.0F));
+            int burst = 1 + Math.round(interference * 3.0F / 100.0F);
+            if (phase % cycle < burst) {
+                int minSlice = Math.max(12, mainWidth / 10);
+                int extraSlice = Math.round(mainWidth * 0.12F * interference / 100.0F);
+                int sliceWidth = Math.min(mainWidth, minSlice + extraSlice);
+                int sliceX = x + (int) ((phase * 37L) % Math.max(1, mainWidth - sliceWidth + 1));
+                int sliceY = y + 4 + (int) ((phase * 5L) % Math.max(5, Math.round(7 * scale)));
+                int shift = 1 + Math.round(interference * 3.0F / 100.0F);
+                int alpha = 105 + Math.round(interference * 150.0F / 100.0F);
+                int glitchColor = (Math.min(255, alpha) << 24) | 0x00E54852;
+                g.enableScissor(sliceX, sliceY, sliceX + sliceWidth, sliceY + 2);
+                g.pose().pushPose();
+                g.pose().translate(x + ((phase & 1L) == 0L ? shift : -shift), y, 0.0F);
+                g.pose().scale(scale, scale, 1.0F);
+                g.drawString(font, main, 0, 0, glitchColor, false);
+                g.pose().popPose();
+                g.disableScissor();
+            }
         }
 
         float subScale = compact ? 1.25F : 1.55F;
@@ -566,4 +576,3 @@ public final class SiegeTitleScreen extends Screen {
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }
-
