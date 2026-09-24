@@ -2,9 +2,9 @@
 
 Cliente Forge **1.20.1** para Eternal Craft: SIEGE. Reemplaza y amplía la experiencia de menús de Minecraft con una interfaz táctica propia, Intel, multimedia, fondos operacionales, navegación del servidor y herramientas de diagnóstico.
 
-## SIEGE 5.61 — Scene Intelligence
+## SIEGE 5.62 — Rotation Fairness + Command Polish
 
-La versión actual en desarrollo es **5.61.0**. Esta revisión continúa el trabajo de 5.60 fuera del soundtrack y se centra en que los fondos indiquen con precisión qué son, de dónde salen y qué escena viene después.
+La versión actual en desarrollo es **5.62.0**. Esta revisión continúa Scene Intelligence y corrige dos problemas de uso: la rotación destacada ya no puede saltear fondos normales y el Centro de Operaciones conserva el contexto de búsqueda mientras navegás.
 
 ### Presentación y fondos
 
@@ -12,6 +12,7 @@ La versión actual en desarrollo es **5.61.0**. Esta revisión continúa el trab
 - Cada fondo tiene procedencia explícita: **DVN OFICIAL**, **TRATAMIENTO SIEGE** o **ARCHIVO SIEGE**.
 - La Galería, la Sala Multimedia y el estado del cliente leen esa procedencia desde el mismo catálogo; no la deducen por el nombre del archivo.
 - Rotación automática sin depender de un orden fijo repetitivo.
+- Las escenas destacadas son inserciones: no consumen ni saltean posiciones de la bolsa normal. Todos los fondos estándar aparecen antes de repetir una bolsa completa.
 - La interfaz puede mostrar la escena actual, la próxima escena y el tiempo restante de la rotación.
 - Duración de escena configurable entre **12 y 60 segundos**.
 - Crossfade configurable entre **0 y 10 segundos**.
@@ -63,7 +64,7 @@ Son slots **opcionales**: sólo aparecen como pistas jugables cuando el build co
 
 La Sala Multimedia ofrece anterior, reiniciar, siguiente, aleatorio sin repetir / pista fijada, progreso y reloj real de reproducción. Los presets Stronghold, Núcleo y Tesla cambian sólo la escena; no fuerzan música.
 
-En 5.61 la parte visual de la Sala Multimedia también enseña la procedencia de la escena activa y la siguiente escena de la rotación. La pestaña de fondos ya no se etiqueta únicamente como DVN porque contiene material DVN y SIEGE.
+Desde 5.61 la parte visual de la Sala Multimedia también enseña la procedencia de la escena activa y la siguiente escena de la rotación. La pestaña de fondos ya no se etiqueta únicamente como DVN porque contiene material DVN y SIEGE.
 
 Las pistas sintéticas experimentales `Black Signal`, `Silent Carrier` y `Tesla Breach` fueron retiradas y sus generadores ya no forman parte del proyecto.
 
@@ -75,6 +76,7 @@ Las pistas sintéticas experimentales `Black Signal`, `Silent Carrier` y `Tesla 
 - Diagnóstico y recuperación de preferencias del cliente.
 - Configuración dividida en Apariencia, Movimiento, Audio, Intel, Accesibilidad, Fondos y Sistema.
 - Los encabezados muestran la versión real instalada en vez de números escritos a mano.
+- El Centro de Operaciones conserva la búsqueda al cambiar de área, reconstruir la interfaz o volver desde un dossier/ficha dentro de la misma sesión.
 
 ## Principios de medios
 
@@ -106,6 +108,7 @@ Un PR no se considera listo sólo porque el código compile: también deben pasa
 
 ## Documentación actual
 
+- [Cambios de SIEGE 5.62](docs/CHANGELOG-5.62.0.md)
 - [Cambios de SIEGE 5.61](docs/CHANGELOG-5.61.0.md)
 - [Cambios de SIEGE 5.60](docs/CHANGELOG-5.60.0.md)
 - [Política/candidatos musicales de 5.60](docs/MUSIC-CANDIDATES-5.60.md)
