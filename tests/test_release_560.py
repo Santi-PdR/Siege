@@ -64,6 +64,8 @@ assert "SiegeConfig.selectedTrack >= TRACKS.size()" in MUSIC
 assert "SiegeConfig.selectedTrack = -1" in MUSIC
 assert "public static boolean shuffleEnabled()" in MUSIC
 assert "public static int pinnedTrackNumber()" in MUSIC
+assert "public static long currentElapsedMs()" in MUSIC
+assert "public static String currentTimeLabel()" in MUSIC
 assert "source master not supplied yet" in PREP
 assert "no descarga ni ripea audio" in APPROVED
 
@@ -126,13 +128,14 @@ assert "1 + Math.round(interference * 3.0F / 100.0F)" in TITLE
 assert "SiegeConfig.reducedMotion" in TITLE
 assert "SiegeConfig.reduceFlashes" in TITLE
 
-# Media Room exposes shuffle/pin state directly, reports the real runtime version and
-# never claims an approved optional master is already installed when it is absent.
+# Media Room exposes shuffle/pin state directly, a measured playback clock and the real
+# runtime version without claiming optional masters are already installed.
 assert "togglePlaybackMode" in MEDIA_ROOM
 assert "PIN CURRENT TRACK" in MEDIA_ROOM
 assert "RETURN TO SHUFFLE" in MEDIA_ROOM
 assert "SiegeMusic.selectTrack(-1)" in MEDIA_ROOM
 assert "SiegeMusic.shuffleEnabled()" in MEDIA_ROOM
+assert "SiegeMusic.currentTimeLabel()" in MEDIA_ROOM
 assert 'label("SALA MULTIMEDIA", "MEDIA ROOM") + " // " + SiegeRuntimeStatus.version()' in MEDIA_ROOM
 assert "prepared master exists" in MEDIA_ROOM
 assert "MEDIA ROOM 5.60" not in MEDIA_ROOM
@@ -153,4 +156,4 @@ assert "python3 tests/test_release_560.py" in WORKFLOW
 assert "generate-stronghold-signal.py" not in WORKFLOW
 assert "generate-frontline-signal-550.py" not in WORKFLOW
 
-print("SIEGE 5.60 approved music gate, adaptive presentation, truthful gallery and runtime status passed")
+print("SIEGE 5.60 approved music gate, adaptive presentation, gallery, Media Room and runtime status passed")
